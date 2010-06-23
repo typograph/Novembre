@@ -54,18 +54,12 @@ public:
 // >> virtual bool canLoadFile(QString filename) =0;
 
   /// Load full file data from \param file
-  virtual NVBFileStruct * loadFile(QFile & file) const =0;
-  /// Load file information from \param file
-  virtual NVBFileInfo * loadFileInfo(QFile & file) const =0;
-  virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo * info) const {
-		if (info->generator != this) return 0;
-		QFile f(info->files.first());
-		if (!f.open(QIODevice::ReadOnly)) return 0;
-		return loadFileInfo(f);
-		}
+	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw() = 0;
+	/// Load file information from \param info
+	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw() = 0;
 
   /// Possible info keys in comments (used in user column format GUI)
-  virtual QStringList availableInfoFields() const =0;
+	virtual QStringList availableInfoFields() const = 0;
   /// Files that will be open on loading this file (including the file itself)
   virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const {
       return NVBAssociatedFilesInfo(filename, QStringList(filename), this);

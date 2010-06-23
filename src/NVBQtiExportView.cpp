@@ -10,6 +10,7 @@
 //
 //
 #include "NVBQtiExportView.h"
+#include "NVBFile.h"
 
 #include <QString>
 #include <QTextStream>
@@ -67,7 +68,7 @@ NVBQtiExportView::~NVBQtiExportView()
 
 void NVBQtiExportView::addSource( NVBDataSource * page, NVBVizUnion /* viz */ )
 {
-  QFileInfo finfo(page->fileName());
+	QFileInfo finfo(page->owner()->name());
 
   QString comment = QInputDialog::getText(this,"Enter page comment",QString());
   

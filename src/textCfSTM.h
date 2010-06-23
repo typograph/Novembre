@@ -31,8 +31,8 @@ public:
   virtual inline QString extFilter() { return QString("*.sch"); }; // single semicolon as separator
 
   virtual bool canLoadFile(QString filename);
-  virtual NVBFileStruct * loadFile(QString filename);
-  virtual NVBFileInfo * loadFileInfo(QString filename);
+	virtual NVBFileStruct * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
 };
 

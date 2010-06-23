@@ -59,7 +59,6 @@ private:
   NVBDimension ld,hd;
   QwtArrayData * av_data;
   QPointF pt_at;
-  QString filename;
 
   NVBViewController * pr_window;
 
@@ -75,8 +74,7 @@ public:
   static QAction * action();
 
   virtual QString name() const { return QString("Circular average"); }
-  virtual QString fileName() const { return filename;}
-  virtual void setFileName(QString) {;}
+	virtual const NVBFile * owner() const { return provider->owner();}
 
   virtual NVBDimension xDim() const { return ld; }
   virtual NVBDimension yDim() const { return ld; }

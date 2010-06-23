@@ -115,42 +115,81 @@ bool CreatecFileGenerator::canLoadFile( QString filename )
 }
 */
 
-NVBFileStruct * CreatecFileGenerator::loadFile(QFile & file) const
+NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
-	if (!QString(file.readLine(100)).contains("[param",Qt::CaseInsensitive))
-		return 0;
-
-	QString filename = file.fileName();
-	NVBFileStruct * s = new NVBFileStruct(filename);
-	if (!s) throw nvberr_not_enough_memory;
-
-	QString ext = filename.right(filename.size()-filename.lastIndexOf('.')-1).toLower();
-	if (ext == "dat")
-		s->pages.append( CreatecDatPage::loadAllChannels(file) );
-	else if (ext == "lat")
-		s->pages.append( new CreatecLatPage(file) );
-	else if (ext == "vert")
-		s->pages.append( CreatecVertPage::loadAllChannels(file) );
-	else if (ext == "tspec")
-		s->pages.append( new CreatecTSpecPage(file) );
-	else {
-		delete s;
+	if (info.generator() != this) {
+		NVBOutputError("CreatecFileGenerator::loadFile","Associated files provided by other generator");
 		return 0;
 		}
 
-	return s;
+	if (info.count() == 0) {
+		NVBOutputError("CreatecFileGenerator::loadFile","No associated files");
+		return 0;
+		}
+
+	NVBFile * f = new NVBFile(info);
+	if (!f) {
+		NVBOutputError("CreatecFileGenerator::loadFile","Memory allocation failed");
+		return 0;
+		}
+
+	// OK, here we have a couple of possibilities
+	//     - we might have a (dat) file [just one]
+	//     - we might have a bunch of (vert) files
+	//     - we might have a (tspec) or a (lat) file [that we don't know how to read]
+
+	QString ffname = info.first();
+	QString ext = ffname.right(ffname.size()-ffname.lastIndexOf('.')-1).toLower();
+	if (ext == "dat")
+		f->addSources( CreatecDatPage::loadAllChannels(ffname) );
+		if (info.count() > 1) {
+			NVBOutputPMsg("CreatecFileGenerator::loadFile","Associated files include more that one *.dat file");
+			}
+//	else if (ext == "lat")
+//		f->addSource( new CreatecLatPage(file) );
+	else if (ext == "vert")
+		f->addSources( CreatecVertPage::loadAllChannels(info) );
+//	else if (ext == "tspec")
+//	f->addSource( new CreatecTSpecPage(file) );
+	else {
+		NVBOutputError("CreatecFileGenerator::loadFile",QString("Didn't recognise file format of %1").arg(ffname));
+		}
+
+	if (f->rowCount() == 0) {
+		delete f;
+		return 0;
+		}
+
+	return f;
 }
 
-NVBFileInfo * CreatecFileGenerator::loadFileInfo( QFile & file ) const
+NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo & info ) const throw()
 {
+	if (info.generator() != this) {
+		NVBOutputError("CreatecFileGenerator::loadFile","Associated files provided by other generator");
+		return 0;
+		}
+
+	if (info.count() == 0) {
+		NVBOutputError("CreatecFileGenerator::loadFile","No associated files");
+		return 0;
+		}
+
+	QFile file(info.first());
+
+	if (!file.open(QIODevice::ReadOnly)) {
+		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %s").arg(info.first(),file.errorString()));
+		return 0;
+		}
+
 	if (!QString(file.readLine(100)).contains("[param",Qt::CaseInsensitive))
 		return 0;
 
 	CreatecHeader header = getCreatecHeader(file);
 	file.close();
 	
-	NVBFileInfo * fi = new NVBFileInfo(file);
-	if (!fi) throw nvberr_not_enough_memory;
+	NVBFileInfo * fi = new NVBFileInfo(info);
+	if (!fi) return 0;
 	
 	//  QString name;
 	NVB::PageType type;
@@ -183,9 +222,19 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( QFile & file ) const
 
 QStringList CreatecDatPage::channelNames = QStringList( QStringList("Topography") + QStringList("Current") + QStringList("ADC1") + QStringList("ADC2") );
 
-QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QFile & file) {
+QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
 
-  QList<NVBDataSource*> result;
+	QList<NVBDataSource*> result;
+	QFile file(filename);
+
+	if (!file.open(QIODevice::ReadOnly)) {
+		NVBOutputError("CreatecDatPage::loadAllChannels",QString("Couldn't open file %1 : %2").arg(filename, file.errorString()));
+		return result;
+		}
+	if ( !QString(file.readLine(100)).contains("[param",Qt::CaseInsensitive) ) {
+		NVBOutputError("CreatecDatPage::loadAllChannels",QString("Unknown file format in %1").arg(filename));
+		return result;
+		}
 
   CreatecHeader file_header = CreatecFileGenerator::getCreatecHeader(file);
 
@@ -195,7 +244,10 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QFile & file) {
 
   int data_points = file_header.value("Num.X",0).toInt() * file_header.value("Num.Y",0).toInt();
 
-  if (data_points == 0) return result;
+	if (data_points == 0) {
+		NVBOutputError("CreatecDatPage::loadAllChannels",QString("Zero data size in %1").arg(filename));
+		return result;
+		}
 
   file.seek(0);
 
@@ -316,42 +368,125 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
   setColorModel(new NVBGrayRampContColorModel(0,1,zMin,zMax));
 }
 
-CreatecVertPage::CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data ):header(file_header)
+CreatecVertPage::CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data ) // :header(file_header)
 {
 }
 
-QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QFile & file) {
+QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 
-  QList<NVBDataSource*> result;
+	/*
+		So, there are different types of *.vert files
 
-  CreatecHeader file_header = CreatecFileGenerator::getCreatecHeader(file);
+		1) -- A000000.000000.VERT
+
+				. One datapoint - load it
+
+		2) -- A000000.000000.R0000.VERT
+
+				. Measured several times on one datapoint
+
+		3) -- A000000.000000.L0000.[R0000.]VERT
+
+				. It's a line
+
+		4) -- A000000.000000.X0000.Y0000.[R0000.]VERT
+
+				. It's a grid
+	*/
+
+	filenames.sort();
+
+	QString reffname = filenames.last();
+	int nx=0, ny=0, nr=0;
+
+	if (reffname.length() > 19) {
+		QStringList tokens = reffname.mid(15,reffname.length()-20).split('.');
+		foreach (QString token, tokens) {
+			bool ok = false;
+			int value = token.mid(1).toInt(&ok,10)+1;
+			if (ok)
+				switch (token[0].toLatin1()) {
+					case 'R' : {
+						nr = value;
+						break;
+						}
+					case 'X' : {
+						nx = value;
+						break;
+						}
+					case 'Y' : {
+						ny = value;
+						break;
+						}
+					case 'L' : {
+						nx = value;
+						break;
+						}
+					}
+			else
+				NVBOutputError("CreatecVertPage::loadAllChannels",QString("Unknown token in filename: %1").arg(token));
+			}
+		}
+// Actually all that was rather unnecessary - this information is only needed for the new NVBAxedData
+	QList<CreatecVertPage*> result;
+
+	for (int i = 0; i<13; i++)
+		result << new CreatecVertPage();
+
+	foreach (QString filename, filenames) {
+		QFile file(filename);
+
+		if (!file.open(QIODevice::ReadOnly)) {
+				NVBOutputError("CreatecVertPage::loadAllChannels",QString("Couldn't open file %1 : %2").arg(filename,file.errorString()));
+				return QList<NVBDataSource*>();
+				}
+
+		CreatecHeader file_header = CreatecFileGenerator::getCreatecHeader(file);
+
+		file.seek(0);
+
+		QString format(file.readLine(20));
+		format.chop(2);
+
+		if (format != "[Parameter]") {
+			NVBOutputError("CreatecVertPage::loadAllChannels",QString("Don't know how to deal with format %1").arg(format));
+			return QList<NVBDataSource*>();
+		}
 
     // initialise data
 
-  int nchannels = file_header.value("Channels").toInt();
+		file.seek(0x4006);
+		QStringList sizes(QString(file.readLine(200)).split(' ',QString::SkipEmptyParts));
 
-  int data_points = file_header.value("Num.X",0).toInt() * file_header.value("Num.Y",0).toInt();
+		int npts = sizes.at(0).toInt();
+		int Xdac = sizes.at(1).toInt();
+		int Ydac = sizes.at(2).toInt();
 
-  if (data_points == 0) return result;
+//	int nchannels = file_header.value("Channels").toInt();
+//  int data_points = file_header.value("Num.X",0).toInt() * file_header.value("Num.Y",0).toInt();
+//  if (data_points == 0) return result;
 
-  file.seek(0);
+		QVector<double> xs(npts);
 
-  QString format(file.readLine(20));
-  format.chop(2);
+		QVector< QVector<double> > ys(13);
+		for (int i = 0; i<13; i++)
+			ys[i].reserve(npts);
 
-  if (format != "[Parameter]") {
-    NVBOutputError("CreatecVertPage::loadAllChannels",QString("Don�t know how to deal with format %1").arg(format));
-    return result;
-  }
+		while (!file.atEnd()) {
+			QList<QByteArray> pt_data = file.readLine(800).split('\t');
+			xs << pt_data.first().toDouble();
+			for (int i = 0; i<13; i++)
+				ys[i] << pt_data.at(i+1).toDouble();
+			}
 
-  file.seek(0x400C);
-  while (!file.atEnd()) {
-   QList<QByteArray> pt_data = file.readLine(800).split('\t');
+		for (int i = 0; i<13; i++)
+			result[i]->_data << new QwtArrayData(xs,ys.at(i));
 
-
-  }
-
-  return result;
+		}
+	QList<NVBDataSource*> rconv;
+	foreach(NVBDataSource * s, result)
+		rconv << s;
+	return rconv;
 }
 
 CreatecLatPage::CreatecLatPage( QFile & file ):header(CreatecFileGenerator::getCreatecHeader(file))

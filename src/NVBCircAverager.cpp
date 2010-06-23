@@ -102,7 +102,7 @@ void NVBBullsEyeViz::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 
 // CircAverager
 
-NVBCircAverager::NVBCircAverager(NVB3DDataSource * topo, NVBViewController * wnd):NVBSpecDataSource(),provider(topo),av_data(0),filename(topo->fileName()),pr_window(wnd),my_bullseye(0),colors(0)
+NVBCircAverager::NVBCircAverager(NVB3DDataSource * topo, NVBViewController * wnd):NVBSpecDataSource(),provider(topo),av_data(0),pr_window(wnd),my_bullseye(0),colors(0)
 {
 
   // Set a parent. Thus, if user interrupts the selection process, this delegate can be deleted as a child

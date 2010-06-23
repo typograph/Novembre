@@ -636,7 +636,7 @@ struct Header{
     qint16 lift_signal; // Lift signal identification flag
     LIAParam lia_settings; // Lock-in amplifier settings
     TempParam temp_param; // Temperature controller setting parameters
-    AFMFixedRef converted_afm; // COnverted values for AFM signal
+		AFMFixedRef converted_afm; // Converted values for AFM signal
     LMCantileverParam special_measurement_param; // Special mesurement parameter
     
     /* After all that there's a 3060 bytes buffer */
@@ -651,7 +651,7 @@ Q_INTERFACES(NVBFileGenerator);
 
 private:
 //   static NVBDataSource * loadNextPage(QFile * const file);
-  static void getWinSPMHeader(TWinSPM::Header &header, QFile * const file);
+	static void getWinSPMHeader(TWinSPM::Header &header, QFile & file);
 //   static QStringList loadWinSPMStrings(QFile * const file, qint16 nstrings);
 //   static QString getPageTypeString(qint32 type);
 //   static QString getGUIDString(GUID id);
@@ -667,16 +667,20 @@ public:
   WinSPMFileGenerator():NVBFileGenerator() {;}
   virtual ~WinSPMFileGenerator() {;}
 
-  virtual inline QString moduleName() { return QString("WinSPM files");}
-  virtual inline QString moduleDesc() { return QString("WinSPM STM file format, as specified in manual for v.2.12"); }
+	virtual inline QString moduleName() const { return QString("WinSPM files");}
+	virtual inline QString moduleDesc() const { return QString("WinSPM STM file format, as specified in manual for v.2.12"); }
 
-  virtual inline QString nameFilter() { return QString("WinSPM files (*.tif)"); } // double semicolon as separator
-  virtual inline QString extFilter() { return QString("*.tif;*.TIF;*.tiff;*.TIFF"); }; // single semicolon as separator
+	virtual inline QStringList extFilters() const {
+			static QStringList exts = QStringList() << "*.tif" << "*.tiff" ;
+			return exts;
+	}
 
-  virtual bool canLoadFile(QString filename);
-  virtual NVBFileStruct * loadFile(QString filename);
-  virtual NVBFileInfo * loadFileInfo(QString filename);
+	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
+	virtual QStringList availableInfoFields() const;
+
+	virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 };
 
 /*
@@ -692,7 +696,7 @@ Q_OBJECT
 private:
   TWinSPM::Header header;
 public:
-  WinSPMTopoPage(QFile * const file, const TWinSPM::Header & _header, quint32 data_offset, quint32 color_offset = 0);
+	WinSPMTopoPage(QFile & file, const TWinSPM::Header & _header, quint32 data_offset, quint32 color_offset = 0);
   virtual ~WinSPMTopoPage() {;}
 public slots:
   virtual void commit() {;}
@@ -704,10 +708,10 @@ protected:
   TWinSPM::Header theader;
 public:
   WinSPMSpecPage(const TWinSPM::Header & topo_header);
-  WinSPMSpecPage(QFile * const file, const TWinSPM::Header & topo_header, const TWinSPM::Header & _header, quint32 data_offset);
+	WinSPMSpecPage(QFile & file, const TWinSPM::Header & topo_header, const TWinSPM::Header & _header, quint32 data_offset);
   virtual ~WinSPMSpecPage() {;}
   
-  void addCurve(QFile * const file, const TWinSPM::Header & _header, quint32 data_offset);
+	void addCurve(QFile & file, const TWinSPM::Header & _header, quint32 data_offset);
 public slots:
   virtual void commit() {;}
 };
@@ -720,13 +724,13 @@ protected:
   TWinSPM::Header header;
   TWinSPM::CITS_Header cits_header;
   
-  static void getCITSHeader(TWinSPM::CITS_Header &header, QFile * const file);
-  static void getCITSImageHeader(TWinSPM::CITS_ImageHeader &header, QFile * const file);
+	static void getCITSHeader(TWinSPM::CITS_Header &header, QFile & file);
+	static void getCITSImageHeader(TWinSPM::CITS_ImageHeader &header, QFile & file);
 public:
-  WinSPMCITSPage(QFile * const file, const TWinSPM::Header & _header);
+	WinSPMCITSPage(QFile & file, const TWinSPM::Header & _header);
   virtual ~WinSPMCITSPage() {;}
   
-  static QList<NVBDataSource*> slices(QFile * const file, const TWinSPM::Header & _header);
+	static QList<NVBDataSource*> slices(QFile & file, const TWinSPM::Header & _header);
 public slots:
   virtual void commit() {;}
 };

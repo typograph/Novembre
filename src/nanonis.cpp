@@ -25,10 +25,18 @@
 #include "NVBDiscrColoring.h"
 #include <QDir>
 #include "NVBFileInfo.h"
+#include "NVBFile.h"
 #include <QDebug>
 #include <QRectF>
 
-NanonisHeader NanonisFileGenerator::getNanonisHeader( QFile * const file )
+QStringList NanonisFileGenerator::availableInfoFields() const {
+		return QStringList() \
+						<< "Bias" \
+						<< "User comment" \
+						;
+}
+
+NanonisHeader NanonisFileGenerator::getNanonisHeader( QFile & file )
 {
   NanonisHeader h;
 
@@ -37,7 +45,7 @@ NanonisHeader NanonisFileGenerator::getNanonisHeader( QFile * const file )
   QStringList value;
 
   while (true) {
-    tmp = QString(file->readLine(100)).trimmed();
+		tmp = QString(file.readLine(100)).trimmed();
     if (tmp.isEmpty())
       continue;
     else if (tmp.at(0) != ':') {
@@ -51,44 +59,37 @@ NanonisHeader NanonisFileGenerator::getNanonisHeader( QFile * const file )
       }
     }
 
-  file->read(4); // 0x0a 0x0a 0x1a 0x04 -- Whatever that means
+	file.read(4); // 0x0a 0x0a 0x1a 0x04 -- Whatever that means
 
   return h;
 }
 
-bool NanonisFileGenerator::canLoadFile( QString filename )
+NVBFile * NanonisFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
-#ifdef WITH_SPEC_AGGR
-  if (filename.right(4).toLower() != ".sxm" && filename.right(4).toLower() != ".nns") return false;
-#else
-  if (filename.right(4).toLower() != ".sxm") return false;
-#endif
+	if (info.generator() != this) {
+		NVBOutputError("NanonisFileGenerator::loadFile","Associated files provided by other generator");
+		return 0;
+		}
 
-/*  QFile file(filename);
-  if (!file.open(QIODevice::ReadOnly))
-    return false;
-  if (!QString(file.readLine(100)).contains("NANONIS",Qt::CaseInsensitive))
-    return false;*/
-  return true;
-}
+	if (info.count() == 0) {
+		NVBOutputError("NanonisFileGenerator::loadFile","No associated files");
+		return 0;
+		}
 
-NVBFileStruct * NanonisFileGenerator::loadFile( QString filename )
-{
-  QFile file(filename);
-  if (!file.open(QIODevice::ReadOnly))
-    return 0;
-#ifdef WITH_SPEC_AGGR
-  if (filename.right(4).toLower() == ".nns")
-    return loadSpecAggregation(file);
-  else {
-#endif
-  if (!QString(file.readLine(100)).contains("NANONIS",Qt::CaseInsensitive))
-    return 0;
-    
-  NVBFileStruct * fs = new NVBFileStruct(filename);
-  if (!fs) throw nvberr_not_enough_memory;
+	QFile file(info.first());
+
+	if (!file.open(QIODevice::ReadOnly)) {
+		NVBOutputError("NanonisFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		return 0;
+		}
+
+	if (!QString(file.readLine(100)).contains("NANONIS",Qt::CaseInsensitive))
+		return 0;
+
+	NVBFile * f = new NVBFile(info);
+	if (!f) return 0;
   
-  NanonisHeader h = getNanonisHeader(&file);
+	NanonisHeader h = getNanonisHeader(file);
 
   QStringList l = h.value("DATA_INFO");
   QStringList headers = l.takeFirst().split('\t'); // Headers
@@ -100,47 +101,57 @@ NVBFileStruct * NanonisFileGenerator::loadFile( QString filename )
   foreach(QString s, l) {
     QStringList e = s.split('\t');
     if (e.at(dirIndex) == "both") {
-      fs->pages.append( new NanonisPage(&file, h, headers, e) );
-      fs->pages.append( new NanonisPage(&file, h, headers, e, true) );
+			f->addSource( new NanonisPage(file, h, headers, e) );
+			f->addSource( new NanonisPage(file, h, headers, e, true) );
       }
     else
-      fs->pages.append( new NanonisPage(&file, h, headers, e) );
+			f->addSource( new NanonisPage(file, h, headers, e) );
     }
 
   file.close();
 
-  return fs;
-#ifdef WITH_SPEC_AGGR
-  }
-#endif
+	return f;
 }
 
-NVBFileInfo * NanonisFileGenerator::loadFileInfo( QString filename )
+NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info) const throw()
 {
-  QFile file(filename);
-  if (!file.open(QIODevice::ReadOnly))
-    return 0;
-#ifdef WITH_SPEC_AGGR
-  if (filename.right(4).toLower() == ".nns")
-    return loadSpecAggregationInfo(file);
-  else {
-#endif
-  if (!QString(file.readLine(100)).contains("NANONIS",Qt::CaseInsensitive))
+	if (info.generator() != this) {
+		NVBOutputError("NanonisFileGenerator::loadFileInfo","Associated files provided by other generator");
+		return 0;
+		}
+
+	if (info.count() == 0) {
+		NVBOutputError("NanonisFileGenerator::loadFileInfo","No associated files");
+		return 0;
+		}
+
+	QFile file(info.first());
+
+	if (!file.open(QIODevice::ReadOnly)) {
+		NVBOutputError("NanonisFileGenerator::loadFileInfo",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		return 0;
+		}
+
+	if (!QString(file.readLine(100)).contains("NANONIS",Qt::CaseInsensitive))
+		return 0;
+
+	if (!QString(file.readLine(100)).contains("NANONIS",Qt::CaseInsensitive))
     return 0;
     
-  NVBFileInfo * fi = new NVBFileInfo(filename);
-  if (!fi) throw nvberr_not_enough_memory;
-  
-  NanonisHeader h = getNanonisHeader(&file);
+	NanonisHeader h = getNanonisHeader(file);
   file.close();
 
-  if (!h.contains("DATA_INFO"))
-    throw nvberr_invalid_format;
+	if (!h.contains("DATA_INFO")) {
+		NVBOutputError("NanonisFileGenerator::loadFileInfo","File format error: no DATA_INFO field");
+		return 0;
+		}
 
   QStringList l = h.value("DATA_INFO");
 
-  if (l.isEmpty())
-    throw nvberr_invalid_format;
+	if (l.isEmpty()) {
+		NVBOutputError("NanonisFileGenerator::loadFileInfo","File format error: DATA_INFO field empty");
+		return 0;
+		}
 
   QStringList headers = l.takeFirst().split('\t'); // Headers
   while (l.last().isEmpty()) l.removeLast();
@@ -148,6 +159,13 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo( QString filename )
   int dirIndex = headers.indexOf("Direction");
 
   // Now we know the number of pages
+
+	NVBFileInfo * fi = new NVBFileInfo(info.first());
+	if (!fi) {
+		NVBOutputError("NanonisFileGenerator::loadFileInfo","NVBFileInfo allocation failure");
+		return 0;
+		}
+
   foreach(QString s, l) {
     QStringList e = s.split('\t');
 
@@ -173,12 +191,9 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo( QString filename )
     }
 
   return fi;
-#ifdef WITH_SPEC_AGGR
-  }
-#endif
 }
 
-NanonisPage::NanonisPage(QFile * const file, const NanonisHeader & header, const QStringList & di_headers, const QStringList & di_data, bool otherDirection):NVB3DPage()
+NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStringList & di_headers, const QStringList & di_data, bool otherDirection):NVB3DPage()
 {
   pagename = di_data.at(di_headers.indexOf("Name"));
 
@@ -216,7 +231,7 @@ NanonisPage::NanonisPage(QFile * const file, const NanonisHeader & header, const
 
   int data_points = _resolution.width() * _resolution.height();
 
-  QDataStream ds(file);
+	QDataStream ds(&file);
   float buffer;
   double * tdata = (double*) malloc(data_points*8);
   data = (double*) malloc(data_points*8);
@@ -234,182 +249,5 @@ NanonisPage::NanonisPage(QFile * const file, const NanonisHeader & header, const
 
   setColorModel(new NVBGrayRampContColorModel(0,1,zMin,zMax));
 }
-
-#ifdef WITH_SPEC_AGGR
-
-class NVBExpandableSpecPage : public NVBSpecPage {
-public:
-  NVBExpandableSpecPage(QString name, QString taxis ):NVBSpecPage() {
-    _datasize = QSize(0,0);
-    pagename = name.left(name.lastIndexOf(' '));
-    zd = NVBDimension(name.mid(name.lastIndexOf('(')+1,name.lastIndexOf(')')-name.lastIndexOf('(')-1));
-    xd = NVBDimension("m");
-    yd = NVBDimension("m");
-    td = NVBDimension(taxis.mid(taxis.lastIndexOf('(')+1,taxis.lastIndexOf(')')-taxis.lastIndexOf('(')-1));
-    setComment("X axis label",taxis.left(taxis.lastIndexOf(' ')));
-    setComment("Y axis label",pagename);
-    setColorModel(new NVBRandomDiscrColorModel());
-    }
-
-  void addNewSpecPoint(double x, double y, QwtData * pdata) {
-    if (! _datasize.isNull() && pdata->size() != _datasize.width()) {
-      NVBOutputError("NVBExpandableSpecPage","Wrong size of added data: %d when main size is %d", pdata->size(), _datasize.width() );
-      return;
-      };
-    emit dataAboutToBeChanged();
-    _positions << QPointF(x,-y);
-    _data << pdata;
-    _datasize.rheight() += 1;
-    _datasize.rwidth() = pdata->size();
-    getMinMax();
-    emit dataChanged();
-    };
-};
-
-QStringList filesFromNNS(QFile & file) {
-  QStringList format = QString(file.readLine()).split('\t');
-  if (format.count() < 2 || format.first() != "Format") {
-    NVBOutputError("NanonisFileGenerator::loadSpecAggregation","Incomplete file format");
-    return QStringList();
-    }
-
-  QStringList spec_files;
-
-  QString path = QFileInfo(file).canonicalPath() + '/';
-
-  if (format.at(1) == "List") {
-    while(!file.atEnd())
-      spec_files << path + QString(file.readLine()).trimmed();
-    }
-  else if (format.at(1) == "Range") {
-    if (format.count() < 4) {
-      NVBOutputError("NanonisFileGenerator::loadSpecAggregation","Not enough arguments to range format");
-      return QStringList();
-      }
-    QByteArray mask = file.readLine();
-    bool ok;
-    int start = format.at(2).toInt(&ok);
-    if (!ok) {
-      NVBOutputError("NanonisFileGenerator::loadSpecAggregation","Undeciferable start of range");
-      return QStringList();
-      }
-    int end = format.at(3).toInt(&ok)+1;
-    if (!ok) {
-      NVBOutputError("NanonisFileGenerator::loadSpecAggregation","Undeciferable end of range");
-      return QStringList();
-      }
-    QString fname;
-    for (int i = qMin(start,end); i < qMax(start,end); i++) {
-      spec_files << path + fname.sprintf(mask,i).trimmed();
-      }
-    }
-  else {
-    NVBOutputError("NanonisFileGenerator::loadSpecAggregation","Unknown file format");
-    return QStringList();
-    }
-
-  return spec_files;
-}
-
-NVBFileStruct * NanonisFileGenerator::loadSpecAggregation(QFile & file)
-{
-  QStringList spec_files = filesFromNNS(file);
-
-  if (spec_files.isEmpty())
-    return 0;
-
-  QList<NVBExpandableSpecPage*> pages;
-
-  QFile f(spec_files.first());
-  if (! f.open(QIODevice::ReadOnly)) {
-    NVBOutputFileError("NanonisFileGenerator::loadSpecAggregation",f.fileName());
-    return 0;
-    }
-  QTextStream first(&f);
-  while(first.readLine() != "[DATA]") {;}
-  QStringList names = first.readLine().split('\t',QString::SkipEmptyParts);
-  for(int i = 1; i < names.count(); i++)
-    pages << new NVBExpandableSpecPage(names.at(i),names.first());
-
-  foreach(QString filename, spec_files) {
-    QFile f(filename);
-    if (! f.open(QIODevice::ReadOnly)) {
-      NVBOutputFileError("NanonisFileGenerator::loadSpecAggregation",f.fileName());
-      }
-    else {
-      QTextStream specdata(&f);
-      specdata.readLine(); // Experiment \t ....
-      specdata.readLine(); // Date ...
-      specdata.readLine(); // User ...
-      QString s = specdata.readLine();
-      double xpos = s.mid(s.indexOf('\t')).toDouble();
-      s = specdata.readLine();
-      double ypos = s.mid(s.indexOf('\t')).toDouble();
-      s = specdata.readLine();
-      double zpos = s.mid(s.indexOf('\t')).toDouble();
-      while(specdata.readLine() != "[DATA]") {;}
-      specdata.readLine(); // Column names
-      QList<QVector<double> > cdata;
-  
-      for(int i = -1; i < pages.count(); i++)
-        cdata << QVector<double>();
-  
-      while(!specdata.atEnd()) {
-        QStringList vdata = specdata.readLine().split('\t',QString::SkipEmptyParts);
-        for (int j = 0; j < vdata.size(); j++)
-          cdata[j] << vdata.at(j).toDouble();
-        }
-  
-      for(int i = 0; i < pages.count(); i++)
-        pages[i]->addNewSpecPoint(xpos,ypos,new QwtArrayData(cdata.at(0),cdata.at(i+1)));
-  
-      // TODO Do something with z;
-      }
-    }
-
-    NVBFileStruct * fs = new NVBFileStruct(file.fileName());
-
-    foreach(NVBExpandableSpecPage * p, pages)
-      fs->pages << p;
-
-    return fs;
-}
-
-NVBFileInfo * NanonisFileGenerator::loadSpecAggregationInfo(QFile & file)
-{
-  QStringList spec_files = filesFromNNS(file);
-
-  if (spec_files.isEmpty())
-    return 0;
-
-  NVBFileInfo * fi = new NVBFileInfo(file.fileName());
-  if (!fi) throw nvberr_not_enough_memory;
-
-  QFile f(spec_files.first());
-  if (!(f.exists())) {
-    NVBOutputError("NanonisFileGenerator::loadSpecAggregationInfo",QString("File %1 doesn't exist").arg(f.fileName()));
-    return 0;
-    }
-  if ( !(f.open(QIODevice::ReadOnly))) {
-    NVBOutputFileError("NanonisFileGenerator::loadSpecAggregationInfo",f.fileName());
-    return 0;
-    }
-  QTextStream first(&f);
-  while(first.readLine() != "[DATA]") {;}
-  QStringList names = first.readLine().split('\t',QString::SkipEmptyParts);
-  int nxs = 0;
-  while (!first.atEnd()) {
-    first.readLine();
-    nxs += 1;
-    }
-  for(int i = 1; i < names.count(); i++)
-    fi->pages.append(NVBPageInfo(names.at(i),NVB::SpecPage,QSize(nxs,spec_files.count()),QMap<QString,NVBVariant>()));
-
-  f.close();
-
-  return fi;
-
-}
-#endif
 
 Q_EXPORT_PLUGIN2(nanonis, NanonisFileGenerator)

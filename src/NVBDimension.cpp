@@ -9,8 +9,9 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-#include "NVBDimension.h"
+
 #include <stdlib.h>
+#include "NVBDimension.h"
 
 QChar NVBDimension::charFromOrder(int order, int * neworder)
 {

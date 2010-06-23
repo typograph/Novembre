@@ -115,8 +115,8 @@ public:
   virtual ~NVB3DFilterDelegate() { if (provider) provider->disconnect(this); }
 
   virtual inline QString name() const { return provider->name(); }
-  virtual QString fileName() const { return provider->fileName();}
-  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
+	virtual inline const NVBFile * owner() const { return provider->owner();}
+//  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
   NVB_FORWARD_COMMENTS(provider);
 
@@ -174,8 +174,8 @@ public:
   NVB_FORWARD_COMMENTS(provider);
 
   virtual inline QString name() const { return provider->name(); }
-  virtual QString fileName() const { return provider->fileName();}
-  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
+	virtual inline const NVBFile * owner() const { return provider->owner();}
+//  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
 protected slots:
   void reparentBranch( NVBDataSource * , NVBDataSource *  ) {
@@ -201,8 +201,8 @@ public:
   virtual ~NVBSpecFilterDelegate() { if (provider) provider->disconnect(this); }
 
   virtual inline QString name() const { return provider->name(); }
-  virtual inline QString fileName() const { return provider->fileName();}
-  virtual inline void setFileName(QString newfile) { provider->setFileName(newfile); }
+	virtual inline const NVBFile * owner() const { return provider->owner();}
+//  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
   NVB_FORWARD_COMMENTS(provider);
 
@@ -260,8 +260,8 @@ public:
   NVB_FORWARD_COMMENTS(provider);
 
   virtual inline QString name() const { return provider->name(); }
-  virtual QString fileName() const { return provider->fileName();}
-  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
+	virtual inline const NVBFile * owner() const { return provider->owner();}
+//  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
 protected slots:
   void reparentBranch( NVBDataSource * , NVBDataSource *  ) {

@@ -152,7 +152,7 @@ void NVBGraphView::addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource 
   plot->axisWidget(QwtPlot::yLeft)->setTitle(source->getComment("Z axis label"));
   plot->setAxisScaleDraw(QwtPlot::yLeft,new NVBPhysScaleDraw(source->zDim(),plot->axisWidget(QwtPlot::yLeft)));
 
-  plot->titleLabel()->setToolTip(source->fileName());
+	plot->titleLabel()->setToolTip(source->name());
   tmp.GraphViz->setItemAttribute(QwtPlotItem::AutoScale);
 //   tmp.GraphViz->setItemAttribute(QwtPlotItem::AutoScale);
   tmp.GraphViz->attach(plot);

@@ -46,7 +46,7 @@ typedef struct {
   quint16 Data2;
   quint16 Data3;
   quint64 Data4;
-} GUID;
+} RHK_GUID;
 
 /*TRHKHEADER*/
 struct TRHKHeader{
@@ -79,7 +79,7 @@ struct TRHKHeader{
   float bias;
   float current;
   float angle;
-  GUID page_ID;
+	RHK_GUID page_ID;
   qint32 colorinfo_count;
   qint32 grid_xsize;
   qint32 grid_ysize;
@@ -128,7 +128,7 @@ private:
   static TRHKHeader getRHKHeader(QFile & file);
   static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
   static QString getPageTypeString(qint32 type);
-  static QString getGUIDString(GUID id);
+	static QString getGUIDString(RHK_GUID id);
   static QString getLineTypeString(qint32 type);
   static QString getSourceTypeString(qint32 type);
   static QString getDirectionString(qint32 type);
@@ -150,19 +150,14 @@ public:
   }
 
 //  virtual bool canLoadFile(QString filename);
-  virtual NVBFileStruct * loadFile(QFile & file) const;
-  virtual NVBFileInfo * loadFileInfo(QFile & file) const;
+	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
   virtual QStringList availableInfoFields() const;
-};
 
-/*
-class RHKFile : public NVBFile {
-public:
-  RHKFile(QString filename);
-  virtual ~RHKFile() {;}
+	//- Using super's method, since RHK only uses one file per project.
+	// virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 };
-*/
 
 class RHKTopoPage : public NVB3DPage {
 Q_OBJECT
