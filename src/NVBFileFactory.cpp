@@ -78,6 +78,7 @@ NVBFileFactory::~NVBFileFactory()
 	while (not generators.isEmpty()) delete generators.takeFirst();
 }
 
+
 NVBFile * NVBFileFactory::openFile( QString filename )
 {
 	NVBOutputPMsg("NVBFileFactory::openFile",QString("Requested file %1").arg(filename));
@@ -95,6 +96,7 @@ NVBFile * NVBFileFactory::openFile( QString filename )
 		return loadFile(filename);
 }
 
+
 NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
 {
 
@@ -109,7 +111,7 @@ NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
 		return new NVBFileInfo(f);
 	}
 	else
-		return loadFileInfo(filename,generator);
+		return loadFileInfo(filename);
 
 }
 
@@ -144,12 +146,13 @@ NVBAssociatedFilesInfo NVBFileFactory::associatedFiles(QString filename) const {
 
 	// Return the first generator that can load the info.
 
-	foreach (NVBAssociatedFilesInfo wcf, wcfs)
+	foreach (NVBAssociatedFilesInfo wcf, wcfs) {
 		NVBFileInfo* fi = wcf.loadFileInfo();
 		if (fi) {
 			delete fi;
 			return wcf;
 			}
+		}
 
 	// All failed
 	return NVBAssociatedFilesInfo(filename);
@@ -161,19 +164,19 @@ void NVBFileFactory::associatedFiles(const QDir & d, QList<NVBAssociatedFilesInf
 	// Remove already loaded files from the list
 	// We assume the list is OK, i.e. there're no two infos using the same file
 	foreach(NVBAssociatedFilesInfo loaded_info, files)
-		foreach(QString filename, loaded_info.files)
+		foreach(QString filename, loaded_info)
 			filenames.removeOne(filename);
 
 	while (filenames.count() > 0) {
 		NVBAssociatedFilesInfo info = associatedFiles(filenames.first());
-		foreach(QString filename, info.files) {
+		foreach(QString filename, info) {
 			int j = filenames.indexOf(filename);
 			if (j >= 0)
 				filenames.removeAt(j);
 			else // Somebody has it already -- cross-check with list
 				for (int i = 0; i < files.count(); i++)
-					if (files.at(i).files.contains(filename)) {
-						if (files.at(i).files.count() >= info.files.count()) // There's already one good file
+					if (files.at(i).contains(filename)) {
+						if (files.at(i).count() >= info.count()) // There's already one good file
 							goto skip_file;	
 						else {
 							files.removeAt(i);
@@ -187,40 +190,15 @@ skip_file: ;
 		}
 }
 
-NVBFile * NVBFileFactory::loadFile( const AssociatedNVBFileInfo & info ) {
+NVBFile * NVBFileFactory::loadFile( const NVBAssociatedFilesInfo & info )
+{
 
-	if (!info.generator) return 0;
+	if (!info.generator()) return 0;
 
-	try {
-		NVBFile * file = info.generator->loadFile(info);
-		}
-	catch (int err) {
-		switch (err) {
-			case (nvberr_invalid_input) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFile",QString("Loader %1 returned \"Bad Input\"").arg(info.generator->moduleName()));
-				break;
-				}
-			case (nvberr_plugin_failure) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFile","File failed to load");
-				break;
-				}
-			case (nvberr_unexpected_value) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFile",QString("Loader %1 returned \"Unexpected value\"").arg(info.generator->moduleName()));
-				break;
-				}
-			case (nvberr_not_enough_memory) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFile","Not enough memory to load file");
-				return 0;
-				}
-			default : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFile",QString("Unknown error #%1 in module %2").arg(err).arg(info.generator->moduleName()));
-				break;
-				}
-			}
-		}
+	NVBFile * file = info.generator()->loadFile(info);
 
 	if (file) {
-		files.insert(filename,file);
+		files.append(file);
 		connect(file,SIGNAL(free(NVBFile*)),SLOT(bury(NVBFile*)));
 		return file;
 	}
@@ -245,7 +223,7 @@ QString NVBFileFactory::getDialogFilter( )
 		foreach(const NVBFileGenerator * g, generators) {
 			s += ";;" + g->nameFilter();
 		}
-		filter = QString("All supported formats (%1);;All files (*.*)").arg(getDirFilters.join(" ")) + s;
+		filter = QString("All supported formats (%1);;All files (*.*)").arg(getDirFilters().join(" ")) + s;
 	}
 	return filter;
 }
@@ -285,22 +263,32 @@ NVBFile * NVBFileQueue::consult(QString filename)
 void NVBFileFactory::bury(NVBFile * f)
 {
 	if (f) {
-		files.remove(f->filename());
+		files.removeOne(f);
 		deadTree->add(f);
 	}
 }
 
 void NVBFileFactory::release(QString filename)
 {
-	if (files.contains(filename))
-		files.take(filename);
+	int i = loadedFileIndex(filename);
+	if (i >= 0)
+		files.takeAt(i);
 	else
 		deadTree->retrieve(filename);
 }
 
+int NVBFileFactory::loadedFileIndex(QString filename)
+{
+	for (int i=0;i<files.count();i++) {
+		if (files.at(i)->sources().contains(filename)) return i;
+		}
+
+	return -1;
+}
+
 NVBFile * NVBFileFactory::retrieveLoadedFile(QString filename)
 {
-	foreach (NVBFile * f, files()) {
+	foreach (NVBFile * f, files) {
 		if (f->sources().contains(filename)) return f;
 	}
 	return 0;

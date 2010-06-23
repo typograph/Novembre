@@ -17,14 +17,24 @@ NVBFile::~NVBFile()
 {
   if (refCount)
     NVBOutputError("NVBFile::~NVBFile","Non-free file deleted. Possible negative implications for NVBFileFactory");
-  emit free(filename());
+	emit free(sourceInfo.name());
 }
 
 void NVBFile::addSource(NVBDataSource * page, NVBVizUnion viz)
 {
- // NVBFile is appending pages, instead of prepending them
-  NVBPageViewModel::addSource(page,rowCount(),viz);
-  page->setFileName(filename());
+	if (page != 0) {
+	 // NVBFile is appending pages, instead of prepending them
+		NVBPageViewModel::addSource(page,rowCount(),viz);
+//		page->setOwner(this);
+	}
+	else
+		NVBOutputError("NVBFile::addSource","Can't add a NULL page");
+}
+
+void NVBFile::addSources(QList<NVBDataSource *> pages) {
+	foreach (NVBDataSource * s, pages) {
+		addSource(s);
+		}
 }
 
 QRectF NVBFile::fullarea() {
@@ -80,9 +90,11 @@ void NVBFile::setVisualizer(NVBVizUnion visualizer)
 }
 */
 
-NVBFile::NVBFile(NVBAssociatedFilesInfo source, QList< NVBDataSource * > pages):NVBPageViewModel(),refCount(0)
+NVBFile::NVBFile(NVBAssociatedFilesInfo sources, QList< NVBDataSource * > pages)
+		:	NVBPageViewModel() \
+		,	sourceInfo(sources)
+		,	refCount(0) \
 {
-	sourceInfo = source;
 	foreach(NVBDataSource * s, pages) {
 		addSource(s);
 		}

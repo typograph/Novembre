@@ -20,6 +20,7 @@
  ***************************************************************************/
 
 #include "NVBFileInfo.h"
+#include "NVBFile.h"
 #include "rhk.h"
 
 
@@ -98,24 +99,35 @@ QStringList RHKFileGenerator::availableInfoFields() const {
 }
 
 
-NVBFileStruct * RHKFileGenerator::loadFile(QFile & file) const
+NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
-  NVBDataSource * ds;
+	if (info.generator() != this) {
+		NVBOutputError("RHKFileGenerator::loadFile","Associated files provided by other generator");
+		return 0;
+		}
 
-  NVBFileStruct * s = new NVBFileStruct(file.fileName());
-  if (!s)
-    throw nvberr_not_enough_memory;
+	if (info.count() == 0) {
+		NVBOutputError("RHKFileGenerator::loadFile","No associated files");
+		return 0;
+		}
 
-  while(!file.atEnd()) {
-    ds = loadNextPage(file);
-    if (!ds) return NULL;
-    s->pages.append(ds);
-    }
+	QFile file(info.first());
 
-  return s;
+	if (!file.open(QIODevice::ReadOnly)) {
+		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		return 0;
+		}
+
+	NVBFile * f = new NVBFile(info);
+	if (!f) return 0;
+
+	while(!file.atEnd())
+		f->addSource(loadNextPage(file));
+
+	return f;
 }
 
-NVBFileInfo * RHKFileGenerator::loadFileInfo(QFile & file) const
+NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info) const throw()
 {
   const char MAGIC[] = {  0x53, 0x00,
   0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
@@ -124,8 +136,25 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(QFile & file) const
   0x30, 0x00, 0x32, 0x00, 0x20, 0x00, 0x31, 0x00,
   0x00, 0x00}; // STImage 004.002 1
 
+	if (info.generator() != this) {
+		NVBOutputError("RHKFileGenerator::loadFileInfo","Associated files provided by other generator");
+		return 0;
+		}
+
+	if (info.count() == 0) {
+		NVBOutputError("RHKFileGenerator::loadFileInfo","No associated files");
+		return 0;
+		}
+
+	QFile file(info.first());
+
+	if (!file.open(QIODevice::ReadOnly)) {
+		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %s").arg(info.first(),file.errorString()));
+		return 0;
+		}
+
   NVBFileInfo * fi = 0;
-  fi = new NVBFileInfo(file);
+	fi = new NVBFileInfo(info);
   if (!fi) throw nvberr_not_enough_memory;
 
 //  QString name;
@@ -234,8 +263,8 @@ NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file)
   TRHKHeader h;
   file.peek((char*)&h,44);
   if (memcmp(h.version, MAGIC, 28) != 0) {
-    NVBOutputError("RHKFileGenerator::loadNextPage",QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
-    return NULL;
+		NVBOutputError("RHKFileGenerator::loadNextPage",QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to the developer").arg(file.fileName()));
+		return 0;
     }
   switch (h.type) {
     case 0 : {
@@ -248,12 +277,12 @@ NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file)
       }
     case 3 : {
       NVBOutputError("RHKFileGenerator::loadNextPage",QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
-      return NULL;
+			return 0;
       }
     case 2 :
     default : {
       NVBOutputError("RHKFileGenerator::loadNextPage",QString("Non-existing (%1) page found. Your file might be corrupted. If not, please send the file %2 to the developer").arg(h.type).arg(file.fileName()));
-      return NULL;
+			return 0;
       }
     }
 }
@@ -497,8 +526,8 @@ RHKSpecPage::~ RHKSpecPage()
   if (ys) free(ys);
 }
 
-QString RHKFileGenerator::getGUIDString(GUID id) {
-  return QString("%1-%2-%3-%4").arg(id.Data1,0,16).arg(id.Data2,0,16).arg(id.Data3,0,16).arg(id.Data4,0,16);
+QString RHKFileGenerator::getGUIDString(RHK_GUID id) {
+	return QString("%1-%2-%3-%4").arg(id.Data1,0,16).arg(id.Data2,0,16).arg(id.Data3,0,16).arg(*((quint64*)(id.Data4)),0,16);
 }
 
 QString RHKFileGenerator::getLineTypeString(qint32 type) {

@@ -36,8 +36,16 @@ protected:
 
   /// The name of the source
   QString pagename;
-  /// The name of the source file
-  QString file;
+	/// The owner of the source
+	// TODO : so, what happens if a source is added to another container?
+	NVBFile * file;
+
+	/// \returns \b true if the color model was successfully set to \a colorModel .
+	/// If \a colorModel is 0, nothing is changed.
+	virtual bool setColorModel(NVBContColorModel * colorModel);
+	/// \returns \b true if data was successfully set to \a newdata .
+	/// If \a newdata is 0, nothing is changed.
+	virtual bool setData(double * newdata);
 
 public:
   NVB3DPage():NVB3DDataSource(),colors(0),data(0) { getMinMax(); }
@@ -51,10 +59,10 @@ public:
 
   /// \returns the name of the source
   virtual inline QString name() const { return pagename;}
-  /// \returns the name of the file the data originates from
-  virtual inline QString fileName() const { return file;}
-  /// Overrides filename
-  virtual inline void setFileName(QString newfile) { file = newfile; }
+///// Here, it's not possible to just return the filename
+///// since NVBAssociatedFileInfo is kind of big...
+	/// \returns the file the data originates from
+	virtual inline const NVBFile * owner() const { return file; }
 
   virtual inline NVBDimension xDim() const { return xd; }
   virtual inline NVBDimension yDim() const { return yd; }
@@ -64,18 +72,9 @@ public:
   virtual inline QRectF position() const { return _position; }
 
   virtual inline const NVBContColorModel * getColorModel() const { return colors; }
-  virtual inline bool canSetColorModel() const { return true; }
-  /// \returns \b true if the color model was successfully set to \a colorModel .
-  /// If \a colorModel is 0, nothing is changed.
-  virtual bool setColorModel(NVBContColorModel * colorModel);
 
-  virtual inline const double * getData() const { return data; }
+	virtual inline const double * getData() const { return data; }
   virtual inline double getData(int x, int y) const { return data[x+y*_resolution.width()]; }
-  virtual inline bool canSetData() const { return true; }
-  /// \returns \b true if data was successfully set to \a newdata .
-  /// If \a newdata is 0, nothing is changed.
-  virtual bool setData(double * newdata);
-
 };
 
 /**
@@ -96,8 +95,17 @@ protected:
 
   /// The name of the source
   QString pagename;
-  /// The name of the source file
-  QString file;
+	/// The owner of the source
+	// TODO : so, what happens if a source is added to another container?
+	NVBFile * file;
+
+/// \returns \b true if the color model was successfully set to \a colorModel . If \a colorModel is 0, nothing is changed.
+	virtual bool setColorModel( NVBDiscrColorModel * colorModel );
+/// \returns \b true if data was successfully set to \a data . If \a data is empty, nothing is changed.
+	virtual bool setData( QList<QwtData*> data );
+/// \returns \b true if data for curve \a y was successfully set to \a data . If \a data is 0, nothing is changed.
+	virtual bool setData( int y, QwtData * data );
+
 
 public:
   NVBSpecPage():NVBSpecDataSource(),colors(0) { getMinMax(); }
@@ -112,9 +120,7 @@ public:
   /// \returns the name of the source
   virtual inline QString name() const { return pagename;}
   /// \returns the name of the file the data originates from
-  virtual inline QString fileName() const { return file;}
-  /// Overrides filename
-  virtual inline void setFileName(QString newfile) { file = newfile; }
+	virtual inline const NVBFile * owner() const { return file; }
 
   virtual inline NVBDimension xDim() const { return xd; }
   virtual inline NVBDimension yDim() const { return yd; }
@@ -124,35 +130,10 @@ public:
   virtual inline QSize datasize() const {return _datasize;}
 
   virtual inline const NVBDiscrColorModel * getColorModel() const { return colors; }
-  virtual inline bool canSetColorModel() const { return true; }
-  /// \returns \b true if the color model was successfully set to \a colorModel . If \a colorModel is 0, nothing is changed.
-  virtual bool setColorModel( NVBDiscrColorModel * colorModel );
 
   virtual inline QList<QPointF> positions() const { return _positions; }
 
   virtual inline QList<QwtData*> getData() const {return _data;}
-  virtual inline bool canSetData() const { return true; }
-  /// \returns \b true if data was successfully set to \a data . If \a data is empty, nothing is changed.
-  virtual bool setData( QList<QwtData*> data );
-  /// \returns \b true if data for curve \a y was successfully set to \a data . If \a data is 0, nothing is changed.
-  virtual bool setData( int y, QwtData * data );
-
-};
-
-/**
-  \struct NVBFileStruct\
-  A base structure for a file. It exist in order not to encumber file plugins with NVBFile
-*/
-struct NVBFileStruct {
-  /// Constructs an empty file
-  NVBFileStruct() {;}
-  /// Constructs an empty file with name \a f
-  NVBFileStruct(QString f):filename(f) {;}
-  ~NVBFileStruct() {;}
-  /// The name of the file
-  QString filename;
-  /// The list of pages
-  QList<NVBDataSource*> pages;
 };
 
 #endif

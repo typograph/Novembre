@@ -68,6 +68,7 @@ private:
 		QList<NVBFile *> files;
 	
 	/// Find file in list by name
+		int loadedFileIndex( QString filename );
 		NVBFile * retrieveLoadedFile( QString filename );
 
 	/// Available generators
@@ -76,7 +77,7 @@ private:
 	/// Load file from \a filename. Returns NULL if file wasn't opened.
 	/// The returned file is already considered in use.
 		inline NVBFile* loadFile( QString filename ) { return loadFile(associatedFiles(filename)); }
-		inline NVBFile* loadFile( const NVBAssociatedFilesInfo & info );
+		NVBFile* loadFile( const NVBAssociatedFilesInfo & info );
 
 	/// Load only info from \a filename. 
 		inline NVBFileInfo* loadFileInfo( QString filename ) { return loadFileInfo(associatedFiles(filename)); }
@@ -97,14 +98,16 @@ public:
 
 	/// Checks all caches for file \a filename, if found, returns it, if not, uses \a loadFile
 	/// @param filename Name of the file to be open
-		inline NVBFile* openFile( QString filename ) { return openFile(associatedFiles(filename)); }
-		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
+		NVBFile* openFile( QString filename );
+//		{ return openFile(associatedFiles(filename)); }
+//		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
 
 	/// Load only info from \a filename. Reuses loaded files if any
 	/// @param filename Name of the file for the info to be read from.
 	/// @return info from file \a filename
-		inline NVBFileInfo* getFileInfo( QString filename );
-		inline NVBFileInfo* getFileInfo( const NVBAssociatedFilesInfo & info );
+		NVBFileInfo* getFileInfo( QString filename );
+//		{ return getFileInfo(associatedFiles(filename)); }
+//		NVBFileInfo* getFileInfo( const NVBAssociatedFilesInfo & info );
 
 	/// Generates a string of openable files in the format acceptable by \c QDir
 		QStringList getDirFilters() const;

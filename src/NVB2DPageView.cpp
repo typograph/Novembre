@@ -108,7 +108,7 @@ bool NVB2DPageView::hasWidthForHeight() const
 int NVB2DPageView::widthForHeight(int h) const
 {
   if (keepRatio) {
-    return (h*itemsRect.width())/itemsRect.height();
+		return (int)((h*itemsRect.width())/itemsRect.height());
     }
   else return -1;
 }

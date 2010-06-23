@@ -13,10 +13,10 @@
 #ifndef NVBDIMENSION_H
 #define NVBDIMENSION_H
 
+#include <math.h>
 #include <QMetaType>
 #include <QString>
 #include "NVBLogger.h"
-#include <math.h>
 
 #ifndef exp10
 #define exp10(x) pow(10,x)

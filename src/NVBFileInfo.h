@@ -26,23 +26,29 @@ class NVBFile;
 class NVBFileGenerator;
 class NVBFileInfo;
 
-struct NVBAssociatedFilesInfo {
-	/// The name under which the collection has to appear
-		QString name;
-	/// All files belonging to the collection
-		QStringList files;
-	/// Generator used to get this structure
-		const NVBFileGenerator * generator;
+class NVBAssociatedFilesInfo : public QStringList {
 
+private:
+	/// The name under which the collection has to appear
+		QString _name;
+	/// Generator used to get this structure
+		const NVBFileGenerator * _generator;
+
+public:
 	/// Constructs an invalid associated files info
-		NVBAssociatedFilesInfo(QString n = QString()):name(n),generator(0){;}
+		NVBAssociatedFilesInfo(QString n = QString()):QStringList(),_name(n),_generator(0){;}
 	/// Constructs an associated files info from provided parameters
-		NVBAssociatedFilesInfo(QString n, QStringList f, const NVBFileGenerator * g):name(n),files(f),generator(g) {;}
+		NVBAssociatedFilesInfo(QString n, QStringList f, const NVBFileGenerator * g):QStringList(f),_name(n),_generator(g) {;}
 	/// Wrapper for generator functions
 		NVBFileInfo * loadFileInfo() const;
+	// There's no wrapper for the loadFile, because file counting should be implemented in NVBFileFactory,
+	// and thus we whould have to make either generators or files factory-aware, and that goes a long way.
 
-	///
-	inline bool contains(QString filename) const { return files.contains(QDir::cleanPath(filename)); }
+		inline QString name() const { return _name; }
+		inline const NVBFileGenerator * generator() const { return _generator; }
+
+	/// If the file is in associated files. Will resolve symlinks.
+		inline bool contains(QString filename) const { return QStringList::contains(QDir::cleanPath(filename)); }
 
 };
 
@@ -61,7 +67,8 @@ struct NVBAssociatedFilesInfo {
 */
 
 struct NVBPageInfo {
-	NVBPageInfo(NVBDataSource * source) {
+
+	NVBPageInfo(const NVBDataSource * source) {
 		name = source->name();
 		type = source->type();
 		if (type == NVB::TopoPage)
@@ -72,12 +79,14 @@ struct NVBPageInfo {
 			datasize = QSize();
 		comments = source->getAllComments();
 		}
-	NVBPageInfo(QString _name, NVB::PageType _type, QSize size, QMap<QString,NVBVariant> _comments) {
-		name = _name;
-		type = _type;
-		datasize = size;
-		comments = _comments;
-		}
+
+	NVBPageInfo(QString _name, NVB::PageType _type, QSize size, QMap<QString,NVBVariant> _comments)
+	:	name(_name)
+	, type(_type)
+	,	datasize(size)
+	, comments( _comments)
+	{;}
+
 	QString name;
 	NVB::PageType type;
 	QSize datasize;
@@ -88,15 +97,14 @@ class NVBFileInfo /*: public QObject */{
 // Q_OBJECT
 public:
 	/// Generates an invalid NVBFileInfo
-	NVBFileInfo(QString name) { fileInfo = NVBAssociatedFilesInfo(name); }
-
+	NVBFileInfo(QString name) { files = NVBAssociatedFilesInfo(name); }
+	/// Generates an invalid NVBFileInfo
+	NVBFileInfo(NVBAssociatedFilesInfo info):files(info) {;}
 	/// Generate a NVBFileInfo from existing NVBFile \a file
-//	NVBFileInfo(NVBFile & file);
 	NVBFileInfo(const NVBFile * const file);
+	virtual ~NVBFileInfo() {;}
 
-	virtual ~NVBFileInfo();
-
-	NVBAssociatedFilesInfo fileInfo;
+	NVBAssociatedFilesInfo files;
 	QList<NVBPageInfo> pages;
 	
 	bool hasTopo();
@@ -105,8 +113,6 @@ public:
 	NVBVariant getInfo(const NVBTokens::NVBTokenList & list) const;
 	QString getInfoAsString(const NVBTokens::NVBTokenList & list) const;
 	
-/*signals:
-   void released( QString );*/
 protected :
 	NVBVariant fileParam(NVBTokens::NVBFileParamToken::NVBFileParam p) const;
 	NVBVariant pageParam(NVBPageInfo pi, NVBTokens::NVBPageParamToken::NVBPageParam p) const;

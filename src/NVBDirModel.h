@@ -15,6 +15,7 @@
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 #include <QList>
+#include <QLinkedList>
 #include <QStack>
 #include <QDir>
 #include <QSignalMapper>

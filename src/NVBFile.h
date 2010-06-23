@@ -27,14 +27,16 @@ It is a model with pages.
 class NVBFile : public NVBPageViewModel
 {
 Q_OBJECT
+friend class NVBFileGenerator;
+
 private:
   NVBAssociatedFilesInfo sourceInfo;
   int refCount;
 //  friend class NVBFileFactory;
 public:
-  /// Constructs an empty file with  \a source
-  NVBFile(NVBAssociatedFilesInfo source):NVBPageViewModel(),sourceInfo(source),refCount(0) {;}
-  NVBFile(NVBAssociatedFilesInfo source, QList<NVBDataSource*> pages);
+	/// Constructs an empty file with \a source
+	NVBFile(NVBAssociatedFilesInfo sources):NVBPageViewModel(),sourceInfo(sources),refCount(0) {;}
+	NVBFile(NVBAssociatedFilesInfo sources, QList<NVBDataSource*> pages);
   virtual ~NVBFile();
 
 	/// Returns info about the original files
@@ -43,13 +45,15 @@ public:
   /// \returns the total area occupied by all pages in the x-y plane
   QRectF fullarea();
   /// \returns the name of the file
-  QString filename() const { return sourceInfo.name; }
+	QString name() const { return sourceInfo.name(); }
 
 //  /// helper function
 //   static QVariant pageData(NVBDataSource* page, int role);
 
   /// Adds a page to the end of file.
   virtual void addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
+	/// Adds pages to the end of file.
+	virtual void addSources(QList<NVBDataSource *> pages);
 //  /// Sets an icon for the last page
 //  virtual void setVisualizer(NVBVizUnion visualizer);
 

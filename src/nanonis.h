@@ -48,31 +48,29 @@ Q_OBJECT
 Q_INTERFACES(NVBFileGenerator);
 
 private:
-  static NanonisHeader getNanonisHeader(QFile * const file);
+	static NanonisHeader getNanonisHeader(QFile & file);
 
   friend class NanonisTopoPage;
-#ifdef WITH_SPEC_AGGR
-  NVBFileStruct * loadSpecAggregation(QFile & file);
-  NVBFileInfo * loadSpecAggregationInfo(QFile & file);
-#endif
+
 public:
   NanonisFileGenerator():NVBFileGenerator() {;}
   virtual ~NanonisFileGenerator() {;}
 
-  virtual inline QString moduleName() { return QString("Nanonis SXM files");}
-  virtual inline QString moduleDesc() { return QString("Nanonis STM file format"); }
+	virtual inline QString moduleName() const { return QString("Nanonis SXM files");}
+	virtual inline QString moduleDesc() const { return QString("Nanonis STM file format"); }
 
-#ifdef WITH_SPEC_AGGR
-  virtual inline QString extFilter() { return QString("*.sxm;*.SXM;*.nns;*.NNS"); }; // single semicolon as separator
-  virtual inline QString nameFilter() { return QString("Nanonis files (*.sxm *.nns)"); } // space as separator
-#else
-  virtual inline QString extFilter() { return QString("*.sxm;*.SXM"); }; // single semicolon as separator
-  virtual inline QString nameFilter() { return QString("Nanonis files (*.sxm)"); } // space as separator
-#endif
+	virtual QStringList extFilters() const {
+			static QStringList exts \
+					= QStringList() \
+					<< "*.sxm" \
+					;
+			return exts;
+			}
 
-  virtual bool canLoadFile(QString filename);
-  virtual NVBFileStruct * loadFile(QString filename);
-  virtual NVBFileInfo * loadFileInfo(QString filename);
+	QStringList NanonisFileGenerator::availableInfoFields() const;
+
+	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
 };
 
@@ -89,7 +87,7 @@ Q_OBJECT
 private:
 //   NanonisHeader header;
 public:
-  NanonisPage(QFile * const file, const NanonisHeader & header, const QStringList & di_headers, const QStringList & di_data, bool otherDirection = false);
+	NanonisPage(QFile & file, const NanonisHeader & header, const QStringList & di_headers, const QStringList & di_data, bool otherDirection = false);
   virtual ~NanonisPage() {;}
 public slots:
   virtual void commit() {;}

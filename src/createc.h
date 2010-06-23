@@ -32,7 +32,7 @@
 #include <QString>
 #include "NVBVariant.h"
 #include "NVBFileGenerator.h"
-#include "NVBPages.h"
+#include "NVBFile.h"
 
 using namespace NVBErrorCodes;
 
@@ -68,16 +68,16 @@ public:
   virtual ~CreatecFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("Createc SPS files");}
-  virtual inline QString moduleDesc() const { return QString("Createc STM file format used by STMAFM 2.0"); }
+	virtual inline QString moduleDesc() const { return QString("Createc STM file format used by STMAFM 2.x"); }
 
   virtual QStringList extFilters() const {
-      static QStringList exts = QStringList() << "*.[dD][aA][tT]" ; // FIXME << "*.[lL][aA][tT]" << "*.[vV][eE][rR][tT]" << "*.[tT][sS][pP][eE][cC]";
+			static QStringList exts = QStringList() << "*.dat" << "*.vert"; // FIXME << "*.lat" << "*.tspec";
       return exts;
   }
 
 //  virtual bool canLoadFile(QString filename);
-  virtual NVBFileStruct * loadFile(QFile & file) const;
-  virtual NVBFileInfo * loadFileInfo(QFile & file) const;
+	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
   virtual QStringList availableInfoFields() const;
   virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
@@ -102,7 +102,7 @@ private:
 public:
 //  CreatecDatPage(QFile & file, int channel);
   virtual ~CreatecDatPage() {;}
-  static QList<NVBDataSource*> loadAllChannels(QFile & file);
+	static QList<NVBDataSource*> loadAllChannels(QString filename);
 public slots:
   virtual void commit() {;}
 };
@@ -122,14 +122,14 @@ public slots:
 class CreatecVertPage : public NVBSpecPage {
 Q_OBJECT
 protected:
-  CreatecHeader header;
+//	CreatecHeader header;
   CreatecVertPage() { throw; }
   CreatecVertPage(const CreatecVertPage & other) { throw; }
-  CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data );
+	CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data );
 public:
   virtual ~CreatecVertPage() {;}
 
-  static QList<NVBDataSource*> loadAllChannels(QFile & file);
+	static QList<NVBDataSource*> loadAllChannels(QStringList filenames);
 
 public slots:
   virtual void commit() {;}

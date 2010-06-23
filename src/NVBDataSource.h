@@ -30,6 +30,8 @@
 #include "NVBDimension.h"
 #include "NVBLogger.h"
 
+class NVBFile;
+
 /// \todo The roles defined here must be moved to models
 /// Role for the type of the page
 #define PageTypeRole (Qt::UserRole+1)
@@ -105,10 +107,8 @@ public:
   void* tag;
   /// \returns the name of the source
   virtual QString name() const = 0;
-  /// \returns the name of the file the data originates from
-  virtual QString fileName() const = 0;
-  /// Overrides filename
-  virtual void setFileName(QString) = 0;
+	/// \returns the file the data originates from
+	virtual const NVBFile * owner() const = 0;
 
   /// \returns the type of the page
   virtual inline NVB::PageType type() const {return NVB::InvalidPage;}

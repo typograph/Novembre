@@ -17,27 +17,22 @@ using namespace NVBTokens;
 
 // NVBFileInfo
 
-NVBFileInfo::~ NVBFileInfo( )
-{
-//  emit released(fullFilename);
-}
-
 NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
 
   switch (p) {
     case NVBFileParamToken::FileName : {
-      return fileInfo.files.join(" ");
+			return files.join(" ");
       }
     case NVBFileParamToken::FileSize : {
 			int size = 0;
-			foreach(QString file, fileInfo.files) {
+			foreach(QString file, files) {
 				size += QFileInfo(file).size();
 				}
       return size;
       }
     case NVBFileParamToken::FileATime : {
 			QDateTime access = QDateTime::currentDateTime().addYears(-1000);
-			foreach(QString file, fileInfo.files) {
+			foreach(QString file, files) {
 				QDateTime t = QFileInfo(file).lastRead();
 				if (access < t) access = t;
 				}
@@ -45,7 +40,7 @@ NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
       }
     case NVBFileParamToken::FileMTime : {
 			QDateTime modified = QDateTime::currentDateTime().addYears(-1000);
-			foreach(QString file, fileInfo.files) {
+			foreach(QString file, files) {
 				QDateTime t = QFileInfo(file).lastModified();
 				if (modified < t) modified = t;
 				}
@@ -53,7 +48,7 @@ NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
       }
     case NVBFileParamToken::FileCTime : {
 			QDateTime created = QDateTime::currentDateTime();
-			foreach(QString file, fileInfo.files) {
+			foreach(QString file, files) {
 				QDateTime t = QFileInfo(file).created();
 				if (created > t) created = t;
 				}
@@ -181,7 +176,7 @@ NVBFileInfo::NVBFileInfo(NVBFile & file)
 
 NVBFileInfo::NVBFileInfo(const NVBFile * const file)
 {
-	fileInfo = file->sources();
+	files = file->sources();
 	for (int j = 0; j < file->rowCount(); j++) {
 		pages.append(NVBPageInfo(file->index(j).data(PageRole).value<NVBDataSource*>()));
 	}
@@ -189,7 +184,12 @@ NVBFileInfo::NVBFileInfo(const NVBFile * const file)
 
 NVBFileInfo * NVBAssociatedFilesInfo::loadFileInfo() const
 {
-	if (!generator) return 0;
+	if (!generator()) return 0;
+	return generator()->loadFileInfo(*this);
+/*
+	 There's no real need for exceptions here, if the errors are reported from the generator
+	 and for outside it is coded in the return value.
+
 	try {
 		return generator->loadFileInfo(this);
 		}
@@ -218,4 +218,5 @@ NVBFileInfo * NVBAssociatedFilesInfo::loadFileInfo() const
 			}
 		}
 	return 0;
+*/
 }

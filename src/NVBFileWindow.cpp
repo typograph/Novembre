@@ -197,10 +197,10 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, const QModelIndex & index, 
   
   if (file) {
     file->use();
-    setWindowTitle(file->filename());
+		setWindowTitle(file->name());
     }
   else if (page)
-    setWindowTitle(page->fileName());
+		setWindowTitle(page->owner()->sources().name());
 
   if (stateMode == NVB::DefaultView) {
     stateMode = (NVB::ViewType)(index.data(PageTypeRole).value<NVB::PageType>());
@@ -222,7 +222,7 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, NVBDataSource * page, NVB::
 {
   tools = qApp->property("toolsFactory").value<NVBToolsFactory*>();
 
-  setWindowTitle(page->fileName());
+	setWindowTitle(page->owner()->sources().name());
   if (stateMode == NVB::DefaultView)
     stateMode = (NVB::ViewType)(page->type());
   createView(stateMode);
