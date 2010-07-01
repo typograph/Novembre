@@ -5,8 +5,8 @@ CONFIG += NVBLog
 # CONFIG += NVBVerboseLog
 # Select views to use
 CONFIG += NVB2DView \
-    NVBGraphView \
-    NVB3DView
+					NVBGraphView \
+					NVB3DView
 
 # Compile plugins as shared libraries
 CONFIG += NVBShared
@@ -20,7 +20,7 @@ win32:CONFIG += NVBStatic
 CONFIG -= debug
 CONFIG += release
 
-# Use qwt ans qwtplot3d from these locations
+# Use qwt from these locations
 # qwtplot3d has been changed from upstream -> do not use official version
 unix { 
     INCLUDEPATH += /usr/include/qwt5/

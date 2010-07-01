@@ -36,7 +36,7 @@ private:
 
 public:
 	/// Constructs an invalid associated files info
-		NVBAssociatedFilesInfo(QString n = QString()):QStringList(),_name(n),_generator(0){;}
+		explicit NVBAssociatedFilesInfo(QString n = QString()):QStringList(),_name(n),_generator(0){;}
 	/// Constructs an associated files info from provided parameters
 		NVBAssociatedFilesInfo(QString n, QStringList f, const NVBFileGenerator * g):QStringList(f),_name(n),_generator(g) {;}
 	/// Wrapper for generator functions
@@ -49,6 +49,11 @@ public:
 
 	/// If the file is in associated files. Will resolve symlinks.
 		inline bool contains(QString filename) const { return QStringList::contains(QDir::cleanPath(filename)); }
+
+		bool operator==(const NVBAssociatedFilesInfo & other) const;
+		bool operator!=(const NVBAssociatedFilesInfo & other) const {
+			return !(*this == other);
+		}
 
 };
 

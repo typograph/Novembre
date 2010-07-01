@@ -396,13 +396,13 @@ void NVBBrowser::showItem( const QModelIndex & item ) {
       pageRefactor->setModel(NULL);
       } 
 
-    theFile = files->openFile(fileModel->getFullPath(item));
+		theFile = files->openFile(fileModel->getAllFiles(item));
     if (theFile) {
       theFile->use();
       pageRefactor->setModel(theFile);
       }
     else {
-      NVBOutputError("NVBBrowser :: showItem",QString("Couldn't get file %1").arg(fileModel->getFullPath(item)));
+			NVBOutputError("NVBBrowser :: showItem",QString("Couldn't get file %1").arg(fileModel->getAllFiles(item).name()));
       }
     
     }
@@ -422,7 +422,7 @@ void NVBBrowser::loadPage( const QModelIndex & item )
   if (dirView->isVisible())
     emit pageRequest(item.parent().data(Qt::ToolTipRole).toString(),item.row());
   else
-    emit pageRequest(theFile->filename(),item.row());
+		emit pageRequest(theFile->name(),item.row());
 }
 
 void NVBBrowser::switchIconSize( QAction* action ) {

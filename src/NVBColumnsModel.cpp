@@ -3,6 +3,8 @@
 
 NVBDirModelColumns::NVBDirModelColumns():QAbstractTableModel()
 {
+	names << "Name";
+	keys << NVBTokens::NVBTokenList("fileName");
 }
 
 Qt::ItemFlags NVBDirModelColumns::flags(const QModelIndex & index) const

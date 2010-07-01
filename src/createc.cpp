@@ -36,14 +36,17 @@ QStringList CreatecFileGenerator::availableInfoFields() const {
 }
 
 NVBAssociatedFilesInfo CreatecFileGenerator::associatedFiles(QString filename) const {
-    static QRegExp multispec = QRegExp("(A[0-9]*\\.[0-9]*)\\.[XMR][0-9].*\\.vert",Qt::CaseInsensitive,QRegExp::RegExp);
-    if (!multispec.exactMatch(filename))
-        return NVBFileGenerator::associatedFiles(filename);
-    else
-        return NVBAssociatedFilesInfo( \
-                   multispec.cap(1)+".vert", \
-                   QDir(filename,QString("%1*[vV][eE][rR][tT]").arg(multispec.cap(1)),QDir::Name,QDir::Files).entryList(), \
-                   this);
+		static QRegExp multispec = QRegExp("[/\\\\](A[0-9]*\\.[0-9]*)\\.[XMLR][0-9].*\\.VERT$",Qt::CaseInsensitive,QRegExp::RegExp);
+		if (!filename.contains(multispec))
+//		if (multispec.indexIn(filename) == -1)
+				return NVBFileGenerator::associatedFiles(filename);
+		else {
+			QString path = QFileInfo(filename).absolutePath();
+			QStringList files = QDir(path,QString("%1*VERT").arg(multispec.cap(1)),QDir::Name,QDir::Files).entryList();
+			for(QStringList::iterator it = files.begin(); it != files.end(); it++)
+				*it = path + "/" + *it;
+			return NVBAssociatedFilesInfo( multispec.cap(1)+".VERT", files, this);
+			}
 }
 
 CreatecHeader CreatecFileGenerator::getCreatecHeader( QFile & file )
@@ -140,11 +143,11 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 
 	QString ffname = info.first();
 	QString ext = ffname.right(ffname.size()-ffname.lastIndexOf('.')-1).toLower();
-	if (ext == "dat")
+	if (ext == "dat") {
 		f->addSources( CreatecDatPage::loadAllChannels(ffname) );
-		if (info.count() > 1) {
+		if (info.count() > 1)
 			NVBOutputPMsg("CreatecFileGenerator::loadFile","Associated files include more that one *.dat file");
-			}
+		}
 //	else if (ext == "lat")
 //		f->addSource( new CreatecLatPage(file) );
 	else if (ext == "vert")
@@ -178,7 +181,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %s").arg(info.first(),file.errorString()));
+		NVBOutputError("CreatecFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
 		return 0;
 		}
 

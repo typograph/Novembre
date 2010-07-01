@@ -13,7 +13,6 @@
 #define NVBDIRMODEL_H
 
 #include <QAbstractItemModel>
-#include <QSortFilterProxyModel>
 #include <QList>
 #include <QLinkedList>
 #include <QStack>
@@ -44,6 +43,33 @@ template <class T>
 	class QFutureWatcher;
 #endif
 
+class NVBDirModelFileInfoLessThan {
+	// I like this crazy idea from the Trolls
+private:
+	NVBTokens::NVBTokenList sortKey;
+	Qt::SortOrder sortOrder;
+
+public:
+	inline NVBDirModelFileInfoLessThan(NVBTokens::NVBTokenList key = NVBTokens::NVBTokenList(), Qt::SortOrder order = Qt::AscendingOrder)
+		: sortKey(key), sortOrder(order) {;}
+
+	bool operator()(const NVBFileInfo * fi1, const NVBFileInfo * fi2) {
+		if (!fi1) {
+			NVBOutputError("NVBDirModelFileInfoLessThan::operator()","Got NULL NVBFileInfo");
+			return false;
+			}
+		if (!fi2) {
+			NVBOutputError("NVBDirModelFileInfoLessThan::operator()","Got NULL NVBFileInfo");
+			return true;
+			}
+		switch(sortOrder) {
+			case Qt::AscendingOrder : return fi1->getInfo(sortKey) < fi2->getInfo(sortKey);
+			case Qt::DescendingOrder : return fi1->getInfo(sortKey) > fi2->getInfo(sortKey);
+			default : return false;
+			}
+		}
+};
+
 class NVBDirEntry : public QObject {
 Q_OBJECT
 public:
@@ -53,12 +79,25 @@ public:
 	QString label;
 	QDir dir;
 	QList<NVBDirEntry*> folders;
-	QLinkedList<NVBFileInfo*> files; // due to sorting, we need fast insertion.
-	QList<int> filtered;
+
+	/* due to sorting, we need fast insertion.
+		 However, QLinkedList doesn't allow sorting anymore
+		 and it will not be effective anyway.
+		 According to my tests, below 30000 elements sorting QVector is faster
+		 than sorting QList, and this stands even for sorting by insertion.
+		 But the gain is rather small, and above 30000 QList is faster.
+		 Also, prepending in QList is faster, and we don't seem to need
+		 our pointers to occupy the same place in memory.
+		 */
+	QList<NVBFileInfo*> files;
+//	QList<int> filtered;
 
 private:
 	bool populated;
 	bool loaded;
+
+	NVBDirModelFileInfoLessThan	sorter;
+
 #if QT_VERSION >= 0x040400
 	QFutureWatcher<NVBFileInfo*> * fileLoader;
 #endif
@@ -105,6 +144,7 @@ private slots:
 public slots:
 	bool refresh(NVBFileFactory * fileFactory);
 	void refreshSubfolders(NVBFileFactory * fileFactory);
+	void sort(const NVBDirModelFileInfoLessThan & lessThan);
 };
 
 class NVBDirModelColumns;
@@ -139,11 +179,12 @@ public:
 	virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
 	virtual QModelIndex parent ( const QModelIndex & index ) const;
 	
-	NVBDirFileEntry indexToFileEntry( const QModelIndex & index ) const;
-	const NVBFileInfo * indexToInfo( const QModelIndex & index ) const { return indexToFileEntry(index).info; }
+//	NVBDirFileEntry indexToFileEntry( const QModelIndex & index ) const;
+	const NVBFileInfo * indexToInfo( const QModelIndex & index ) const;
 	
 	QString getFullPath(const QModelIndex & index);
-	
+	NVBAssociatedFilesInfo getAllFiles(const QModelIndex & index);
+
 	inline void addColumn(QString name, QString key) { return addColumn(name, NVBTokens::NVBTokenList(key)); }
 	void addColumn(QString name, NVBTokens::NVBTokenList key);
 	void addColumn(NVBColumnDescriptor column);
@@ -151,6 +192,11 @@ public:
 	void removeColumn(int index);
 	
 	int visibleRows(NVBDirEntry * entry = 0 ) const;
+
+	static inline bool variantGreaterOrEqualTo(const NVBVariant & l, const NVBVariant & r) { return l >= r; }
+	static inline bool variantLessThan(const NVBVariant & l, const NVBVariant & r) { return l < r;}
+
+	virtual void sort ( int column, Qt::SortOrder order = Qt::AscendingOrder );
 	
 public slots:
 	void refresh();
@@ -182,6 +228,7 @@ private:
 	NVBFileFactory * fileFactory;
 	QFileSystemWatcher * watcher;
 	NVBDirModelColumns * columns;
+
 	NVBDirEntry* head;
 	NVBDirEntry * indexToEntry( const QModelIndex & index ) const;
 	QModelIndex entryToIndex( const NVBDirEntry * entry ) const;
@@ -198,9 +245,6 @@ private:
 
 	bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 	bool lessThan(const QModelIndex & left, const QModelIndex & right) const;
-	static inline bool variantGreaterOrEqualTo(const NVBVariant & l, const NVBVariant & r) { return l >= r; }
-	static inline bool variantLessThan(const NVBVariant & l, const NVBVariant & r) { return l < r;}
-	static bool NVBFileInfoLessThan(const NVBFileInfo * fi1, const NVBFileInfo * fi2 );
 
 private slots:
 	void watchedDirChanged(const QString & path);

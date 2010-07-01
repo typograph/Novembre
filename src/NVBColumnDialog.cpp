@@ -74,8 +74,8 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   topoChoice = new QComboBox(this);
   topoChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::Name),NVBPageParamToken::Name);
   topoChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::DataSize),NVBPageParamToken::DataSize);
-  topoChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsTopo),NVBPageParamToken::IsTopo);
-  topoChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsSpec),NVBPageParamToken::IsSpec);
+//  topoChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsTopo),NVBPageParamToken::IsTopo);
+//  topoChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsSpec),NVBPageParamToken::IsSpec);
   topoChoice->addItem("Points in X",NVBPageParamToken::XSize);
   topoChoice->addItem("Points in Y",NVBPageParamToken::YSize);
 //  NVBPageParamToken:: topoChoice->addItem(NVBTokenList::namePageParam(),QVariant());
@@ -88,8 +88,8 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   specChoice = new QComboBox(this);
   specChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::Name),NVBPageParamToken::Name);
   specChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::DataSize),NVBPageParamToken::DataSize);
-  specChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsTopo),NVBPageParamToken::IsTopo);
-  specChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsSpec),NVBPageParamToken::IsSpec);
+//  specChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsTopo),NVBPageParamToken::IsTopo);
+//  specChoice->addItem(NVBTokenList::namePageParam(NVBPageParamToken::IsSpec),NVBPageParamToken::IsSpec);
   specChoice->addItem("Points per curve",NVBPageParamToken::XSize);
   specChoice->addItem("Number of curves",NVBPageParamToken::YSize);
 //  NVBPageParamToken:: specChoice->addItem(NVBTokenList::namePageParam(),QVariant());
@@ -114,7 +114,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   gridLayout->addLayout(horizontalLayout, 4, 0, 1, 1);
 
   customChoice = new QComboBox(this);
-//  customChoice->setEditable(true);
+//	customChoice->setEditable(true);
   customChoice->addItems(qApp->property("filesFactory").value<NVBFileFactory*>()->availableInfoFields());
   gridLayout->addWidget(customChoice, 4, 1, 1, 1);
 
@@ -529,7 +529,13 @@ void NVBColumnInputWidget::tokenListToLayout( NVBTokenList l )
         customOption->setChecked(true);
         topoCustomCheck->setChecked(true);
         specCustomCheck->setChecked(true);
-        customChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.first())->sparam);  
+				int ci = customChoice->findText(static_cast<NVBPCommentToken*>(l.first())->sparam);
+				if (ci > -1)
+					customChoice->setCurrentIndex(ci);
+				else {
+					customChoice->setEditable(true);
+					customChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.first())->sparam);
+					}
         break;
         }
       case NVBToken::FileParam : {

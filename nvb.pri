@@ -41,7 +41,11 @@ contains(CONFIG,NVB3DView) {
 #
 contains(CONFIG,NVBLib) {
 } else {
- win32:  LIBS += -Lrelease/lib -lnvb
+ contains(CONFIG,debug) {
+	win32:  LIBS += -Ldebug/lib -lnvb
+ } else {
+	win32:  LIBS += -Lrelease/lib -lnvb
+ }
  unix:   LIBS += -Llib -lnvb
 }
 

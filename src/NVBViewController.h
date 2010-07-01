@@ -24,7 +24,7 @@ public:
   virtual ~NVBWorkingArea() {;}
   virtual void addPersistentWindow(QWidget * window) = 0;
   virtual void addWindow(QWidget * window) = 0;
-  virtual QWidget * newWindowParentWidget() = 0;
+	virtual QWidget * newWindowParentWidget() const = 0;
 };
 
 class NVBViewController {

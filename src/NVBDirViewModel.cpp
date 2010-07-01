@@ -53,7 +53,7 @@ bool NVBDirViewModel::loadFile(int index) const
   if (files.at(index)) return true;
   if (unloadables.contains(index)) return false;
 
-  NVBFile * f = fileFactory->openFile(dirModel->getFullPath(dirindex.child(dirModel->folderCount(dirindex)+index,0)));
+	NVBFile * f = fileFactory->openFile(dirModel->getAllFiles(dirindex.child(dirModel->folderCount(dirindex)+index,0)));
   if (f) {
     f->use();
     files[index] = f;
@@ -219,9 +219,9 @@ void NVBDirViewModel::parentChangingLayout( )
 {
   emit layoutAboutToBeChanged();
   // Cache filenames
-  fnamecache = new QVector<QString>(rowCount());
+	fnamecache = new QVector<QString>(rowCount());
   for(int i = rowCount()-1;i>=0;i--) {
-    fnamecache->operator[](i) = dirModel->indexToFileEntry(dirModel->index(i,0,dirindex)).fileName;
+		fnamecache->operator[](i) = dirModel->indexToInfo(dirModel->index(i,0,dirindex))->files.name();
     }
 }
 
@@ -232,7 +232,7 @@ void NVBDirViewModel::parentChangedLayout( )
     QVector<int> recounts(rowcounts.size());
     recache.fill(0);
     for(int i = rowCount()-1;i>=0;i--) {
-      int x = fnamecache->indexOf(dirModel->indexToFileEntry(dirModel->index(i,0,dirindex)).fileName);
+			int x = fnamecache->indexOf(dirModel->indexToInfo(dirModel->index(i,0,dirindex))->files.name());
       changePersistentIndex(index(x,0),index(i,0));
       recache[i] = files.at(x);
       recounts[i] = rowcounts.at(x);
