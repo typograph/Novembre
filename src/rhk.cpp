@@ -149,7 +149,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %s").arg(info.first(),file.errorString()));
+		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
 		return 0;
 		}
 
@@ -527,7 +527,7 @@ RHKSpecPage::~ RHKSpecPage()
 }
 
 QString RHKFileGenerator::getGUIDString(RHK_GUID id) {
-	return QString("%1-%2-%3-%4").arg(id.Data1,0,16).arg(id.Data2,0,16).arg(id.Data3,0,16).arg(*((quint64*)(id.Data4)),0,16);
+	return QString("%1-%2-%3-%4").arg(id.Data1,0,16).arg(id.Data2,0,16).arg(id.Data3,0,16).arg(id.Data4,0,16);
 }
 
 QString RHKFileGenerator::getLineTypeString(qint32 type) {
