@@ -28,7 +28,8 @@ void SurfacePlot::createDataC()
   GLStateBewarer sb(GL_POLYGON_OFFSET_FILL,true);
 #ifdef WITH_GL2PS
   setDevicePolygonOffset(polygonOffset(),1.0);
-#endif  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#endif
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   int idx = 0;
   if (plotStyle() != WIREFRAME)
   {
