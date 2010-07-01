@@ -16,9 +16,9 @@
 #ifdef NVB_STATIC
 Q_IMPORT_PLUGIN(rhk);
 Q_IMPORT_PLUGIN(createc);
-//Q_IMPORT_PLUGIN(winspm);
-//Q_IMPORT_PLUGIN(textSTM);
-//Q_IMPORT_PLUGIN(nanonis);
+// Q_IMPORT_PLUGIN(winspm);
+// Q_IMPORT_PLUGIN(textSTM);
+// Q_IMPORT_PLUGIN(nanonis);
 #endif
 
 NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
@@ -57,7 +57,8 @@ NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 			commentNames << g->availableInfoFields();
 			QStringList exts = g->extFilters();
 			foreach (QString e, exts)
-				wildcards.insert(QRegExp(e,Qt::CaseInsensitive,QRegExp::Wildcard),g);
+				wildcards.insertMulti(e,g);
+//			wildcards.insertMulti(QRegExp(e,Qt::CaseInsensitive,QRegExp::Wildcard),g);
 			}
 	commentNames.sort();
 	QString cache = commentNames.first();
@@ -96,6 +97,11 @@ NVBFile * NVBFileFactory::openFile( QString filename )
 		return loadFile(filename);
 }
 
+NVBFile* NVBFileFactory::openFile( const NVBAssociatedFilesInfo & info )
+{
+	return openFile(info.first());
+}
+
 
 NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
 {
@@ -119,11 +125,11 @@ QList<const NVBFileGenerator*> NVBFileFactory::getGeneratorsFromFilename(QString
 
 	// First find a wildcard that matches (we assume there's only one)
 
-	QList<QRegExp> wcks = wildcards.keys();
-	QListIterator<QRegExp> wcki(wcks);
+	QList<QString> wcks = wildcards.keys();
+	QListIterator<QString> wcki(wcks);
 	QList<const NVBFileGenerator*> matches;
 	while ( wcki.hasNext() ) {
-		if (wcki.next().exactMatch(filename))
+		if (QRegExp(wcki.next(),Qt::CaseInsensitive,QRegExp::Wildcard).exactMatch(filename))
 			matches.append(wildcards.values(wcki.peekPrevious()));
 		}
 
@@ -158,29 +164,45 @@ NVBAssociatedFilesInfo NVBFileFactory::associatedFiles(QString filename) const {
 	return NVBAssociatedFilesInfo(filename);
 }
 
-void NVBFileFactory::associatedFiles(const QDir & d, QList<NVBAssociatedFilesInfo> & files) const {
+QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromDir(const QDir & d, QList<NVBAssociatedFilesInfo> * old_files, QList<int> * deleted) const {
 	QStringList filenames = d.entryList(getDirFilters(),QDir::Files,QDir::Name);
+	for(QStringList::iterator it = filenames.begin();it != filenames.end();it++)
+		*it = d.absolutePath() + "/" + *it;
 
 	// Remove already loaded files from the list
 	// We assume the list is OK, i.e. there're no two infos using the same file
-	foreach(NVBAssociatedFilesInfo loaded_info, files)
-		foreach(QString filename, loaded_info)
-			filenames.removeOne(filename);
+	if (old_files)
+		for (QList<NVBAssociatedFilesInfo>::const_iterator it = old_files->begin(); it != old_files->end(); it++)
+			for (int ni = 0; ni < it->count(); ni += 1)
+				if (!filenames.removeOne(it->at(ni))) { // backtrace
+					for (ni -= 1; ni >= 0; ni -= 1) {
+						filenames.append(it->at(ni));
+						}
+					if (deleted) deleted->append(it - old_files->begin());
+					break;
+					}
+
+	QList<NVBAssociatedFilesInfo>	files;
 
 	while (filenames.count() > 0) {
 		NVBAssociatedFilesInfo info = associatedFiles(filenames.first());
 		foreach(QString filename, info) {
+//			QStringList::const_iterator j = qBinaryFind(filenames,filename);
+//			if (j != filenames.end())
+//				filenames.removeAt(j - filenames.begin());
 			int j = filenames.indexOf(filename);
-			if (j >= 0)
+			if (j != -1)
 				filenames.removeAt(j);
-			else // Somebody has it already -- cross-check with list
-				for (int i = 0; i < files.count(); i++)
-					if (files.at(i).contains(filename)) {
-						if (files.at(i).count() >= info.count()) // There's already one good file
+			else if (old_files) // Somebody has it already -- cross-check with list
+				for (int i = 0; i < old_files->count(); i++)
+					if (old_files->at(i).contains(filename) && (!deleted || deleted->contains(i))) {
+						if (old_files->at(i).count() >= info.count()) // There's already one good file
 							goto skip_file;	
 						else {
-							files.removeAt(i);
-							i -= 1;
+							foreach(QString fname, old_files->at(i))
+								filenames << fname;
+							filenames.removeOne(filename);
+							if (deleted) deleted->append(i);
 							}
 						}
 			}
@@ -188,6 +210,8 @@ void NVBFileFactory::associatedFiles(const QDir & d, QList<NVBAssociatedFilesInf
 // Yeah, I know goto's are evil, but how else can I solve this thing with breaking 2 loops?
 skip_file: ;
 		}
+
+	return files;
 }
 
 NVBFile * NVBFileFactory::loadFile( const NVBAssociatedFilesInfo & info )

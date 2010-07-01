@@ -62,7 +62,7 @@ public:
 	virtual QStringList availableInfoFields() const = 0;
   /// Files that will be open on loading this file (including the file itself)
   virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const {
-      return NVBAssociatedFilesInfo(filename, QStringList(filename), this);
+			return NVBAssociatedFilesInfo(QFileInfo(filename).fileName(), QStringList(filename), this);
   }
 
 };

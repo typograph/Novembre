@@ -16,7 +16,8 @@ QMap<NVBFileParamToken::NVBFileParam,NVBDescrPair > NVBTokenList::initFileParamN
   pnames.insert(NVBFileParamToken::FileMTime,NVBDescrPair("fileMTime","File modification time"));
   pnames.insert(NVBFileParamToken::FileCTime,NVBDescrPair("fileCTime","File creation time"));
   pnames.insert(NVBFileParamToken::FileName,NVBDescrPair("fileName","File name"));
-  pnames.insert(NVBFileParamToken::FileSize,NVBDescrPair("fileSize","File size"));
+	pnames.insert(NVBFileParamToken::FileNames,NVBDescrPair("fileNames","Files on disk"));
+	pnames.insert(NVBFileParamToken::FileSize,NVBDescrPair("fileSize","File size"));
   pnames.insert(NVBFileParamToken::NPages,NVBDescrPair("nPages","Number of pages"));
    
 //   pnames.insert(NVBFileParamToken::,NVBDescrPair("",""));

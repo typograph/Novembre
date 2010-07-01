@@ -35,7 +35,7 @@ struct NVBGotoToken : NVBToken {
 };
 
 struct NVBFileParamToken : NVBToken {
-  enum NVBFileParam {Invalid = 0, FileName, FileSize, FileATime, FileMTime, FileCTime, NPages} fparam;
+	enum NVBFileParam {Invalid = 0, FileName, FileNames, FileSize, FileATime, FileMTime, FileCTime, NPages} fparam;
   NVBFileParamToken(NVBFileParam f):NVBToken(FileParam),fparam(f) {;}
 };  
 

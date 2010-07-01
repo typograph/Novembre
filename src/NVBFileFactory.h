@@ -87,7 +87,7 @@ private:
 		QStringList commentNames;
 
 	/// Allowed filename wildcards provided by generators
-		QMultiMap<QRegExp, const NVBFileGenerator*> wildcards;
+		QMultiMap<QString, const NVBFileGenerator*> wildcards;
 
 	/// \returns a list of all generators with wildcards matching \a filename
 		QList<const NVBFileGenerator*> getGeneratorsFromFilename(QString filename) const;
@@ -100,7 +100,7 @@ public:
 	/// @param filename Name of the file to be open
 		NVBFile* openFile( QString filename );
 //		{ return openFile(associatedFiles(filename)); }
-//		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
+		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
 
 	/// Load only info from \a filename. Reuses loaded files if any
 	/// @param filename Name of the file for the info to be read from.
@@ -120,9 +120,9 @@ public:
 	/// Returns info about files associated with name \a filename
 		NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 
-	/// Return the smallest possible list of all file associations in folder.
+	/// Return the smallest possible list of all new file associations in folder.
 	/// Files in \a files will be taken into account and won't be reloaded
-		void associatedFiles(const QDir & d, QList<NVBAssociatedFilesInfo> & files) const;
+		QList<NVBAssociatedFilesInfo> associatedFilesFromDir(const QDir & d, QList<NVBAssociatedFilesInfo> * old_files = 0, QList<int> * deleted = 0 ) const;
 
 private slots:
 	/// Put file in the dead tree

@@ -43,11 +43,22 @@ HEADERS += \
 SOURCES += \
            src/NVBToolsFactory.cpp
 
+contains(CONFIG,debug) {
+win32 : LIBS += -Ldebug/lib/tools -lnvbdviz
+} else {
 win32 : LIBS += -Lrelease/lib/tools -lnvbdviz
+}
 unix : LIBS += -Llib/tools -lnvbdviz
 
 contains(CONFIG,NVBStatic) {
- LIBS += -lnvbexport -lnvbspec -lnvbtopo -lnvbcolor -Lrelease/lib/files -lrhk -lcreatec
+ LIBS += -lnvbexport -lnvbspec -lnvbtopo -lnvbcolor
+ contains(CONFIG,debug) {
+	win32 : LIBS += -Ldebug/lib/files
+ } else {
+	win32 : LIBS += -Lrelease/lib/files
+ }
+ unix : LIBS += -Llib/files
+ LIBS += -lrhk -lcreatec
 # libnvb should be included after everything, since everything depends on it
  LIBS -= -lnvb
  LIBS += -lnvb

@@ -21,9 +21,12 @@ NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
 
   switch (p) {
     case NVBFileParamToken::FileName : {
-			return files.join(" ");
+			return files.name();
       }
-    case NVBFileParamToken::FileSize : {
+		case NVBFileParamToken::FileNames : {
+			return files.join(" ");
+			}
+		case NVBFileParamToken::FileSize : {
 			int size = 0;
 			foreach(QString file, files) {
 				size += QFileInfo(file).size();
@@ -180,6 +183,12 @@ NVBFileInfo::NVBFileInfo(const NVBFile * const file)
 	for (int j = 0; j < file->rowCount(); j++) {
 		pages.append(NVBPageInfo(file->index(j).data(PageRole).value<NVBDataSource*>()));
 	}
+}
+
+bool NVBAssociatedFilesInfo::operator==(const NVBAssociatedFilesInfo & other) const {
+	if (_generator != other._generator) return false;
+	if (_name != other._name) return false;
+	return QStringList::operator ==(other);
 }
 
 NVBFileInfo * NVBAssociatedFilesInfo::loadFileInfo() const

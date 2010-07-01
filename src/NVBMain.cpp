@@ -110,7 +110,7 @@ NVBMain::NVBMain():QMainWindow()
     conf->setValue("ShowBrowserOnStart",QVariant(false));
     }
 
-	fileOpenDir.setDirectory(QDir::HomePath());
+	fileOpenDir.setPath(QDir::homePath());
 	fileOpenDir.setFilter(QDir::Readable & QDir::AllDirs & QDir::Files & QDir::Dirs & QDir::Drives);
 
   createMenus();
