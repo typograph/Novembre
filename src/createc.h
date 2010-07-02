@@ -34,7 +34,7 @@
 #include "NVBFileGenerator.h"
 #include "NVBFile.h"
 
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 // struct CreatecHeaderEntry {
 //   QString altName;

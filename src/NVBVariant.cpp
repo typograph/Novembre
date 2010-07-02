@@ -29,7 +29,7 @@ QString NVBVariant::toString(const QString & separator) const
 #endif
     case QVariant::Bool : { return toBool() ? QString("+") : QString(); }
     case QVariant::List : { // should never ever happen
-      NVBOutputError("NVBVariant::toString","A QVariantList seems to be contained inside this NVBVariant object. Please use NVBVariantList instead.");
+      NVBOutputError("A QVariantList seems to be contained inside this NVBVariant object. Please use NVBVariantList instead.");
 //       return QString();
       QStringList l;
       foreach (NVBVariant subv, toList()) {

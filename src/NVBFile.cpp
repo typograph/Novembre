@@ -16,7 +16,7 @@
 NVBFile::~NVBFile()
 {
   if (refCount)
-    NVBOutputError("NVBFile::~NVBFile","Non-free file deleted. Possible negative implications for NVBFileFactory");
+		NVBOutputError("Non-free file deleted. Possible negative implications for NVBFileFactory");
 	emit free(sourceInfo.name());
 }
 
@@ -25,10 +25,10 @@ void NVBFile::addSource(NVBDataSource * page, NVBVizUnion viz)
 	if (page != 0) {
 	 // NVBFile is appending pages, instead of prepending them
 		NVBPageViewModel::addSource(page,rowCount(),viz);
-//		page->setOwner(this);
+		page->owner = this;
 	}
 	else
-		NVBOutputError("NVBFile::addSource","Can't add a NULL page");
+		NVBOutputError("Can't add a NULL page");
 }
 
 void NVBFile::addSources(QList<NVBDataSource *> pages) {

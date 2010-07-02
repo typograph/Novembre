@@ -39,14 +39,14 @@ void NVBExportToolsProvider::activateDelegate(quint16 delegateID, NVBDataSource 
 
   switch(delegateID) {
     case 0x5078 : { // 'Px'
-			QString filename = source->owner()->sources().name() + "." + source->name() + ".dat";
+			QString filename = source->owner->sources().name() + "." + source->name() + ".dat";
 			filename = QFileDialog::getSaveFileName ( 0, "Export to ASCII file", exportPath +filename, "Data files (*.dat);;Text files (*.txt);;All files (*)");
       if (filename.isEmpty()) return;
       exportPath = filename.left(filename.lastIndexOf('/')+1);
       QFile f(filename);
       if (f.open(QIODevice::WriteOnly) ) {
         QTextStream t(&f);
-				t << "# Page " << source->name() << " from " << source->owner()->sources().first() << "\n";
+				t << "# Page " << source->name() << " from " << source->owner->sources().first() << "\n";
         t << "# First column in units of " << source->xDim().toStr() << ", other columns in units of " << source->zDim().toStr() << "\n";
         if (source->type() == NVB::SpecPage) {
           NVBSpecDataSource * page = (NVBSpecDataSource*)source;
@@ -77,7 +77,7 @@ void NVBExportToolsProvider::activateDelegate(quint16 delegateID, NVBDataSource 
       }
     case 0x5171 : { // 'Qp'
       if (!qtiwnd) {     
-				QString filename = source->owner()->sources().name() + ".qti";
+				QString filename = source->owner->sources().name() + ".qti";
         filename = QFileDialog::getSaveFileName ( 0, "QtiPlot Project", exportPath +filename, "Qtiplot files (*.qti);;All files (*)");
         if (filename.isEmpty()) return;
         exportPath = filename.left(filename.lastIndexOf('/')+1);

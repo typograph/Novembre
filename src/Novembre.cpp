@@ -89,7 +89,7 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
 
   // TODO system dependent config file
 
-  bool firstrun = !QFile::exists(confile);
+	bool firstrun = !QFile::exists(confile);
 
   QSettings * conf = new QSettings(confile,QSettings::IniFormat,this);
   setProperty("NVBSettings",QVariant::fromValue(conf));
@@ -104,14 +104,8 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
         break;
         }
       catch (int err) {
-        if (err == nvberr_file_error) {
-          QMessageBox::critical(0,"Log error","Cannot write the logfile. Please check the settings");
-          if (NVBSettings::showGeneralSettings() == QDialog::Rejected)
-            throw nvberr_no_sense;
-          }
-        else
-          NVBOutputError("NVBApplication::NVBApplication","Uncaught error #%d",err);
-    //     throw;
+				QMessageBox::critical(0,"Log error","Cannot access the logfile. Please check the settings");
+				if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
         }
       }
 #endif
@@ -131,14 +125,14 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
 
   if (!msgSocket.bind(QHostAddress::LocalHost,conf->value("UDPPort").toInt(),QUdpSocket::DontShareAddress)) {
     // We are not the only instance
-    NVBOutputPMsg("NVBApplication::NVBApplication","UDP Port busy. Novembre must be running");
+		NVBOutputPMsg("UDP Port busy. Novembre must be running");
     foreach (QString filename, filesSupplied)
       msgSocket.writeDatagram(filename.toLatin1(),QHostAddress::LocalHost,conf->value("UDPPort").toInt());
     quit();
     return;
   }
 
-  NVBOutputPMsg("NVBApplication::NVBApplication","UDP Port free. Novembre instance starting...");
+	NVBOutputPMsg("UDP Port free. Novembre instance starting...");
 
   connect(&msgSocket,SIGNAL(readyRead()),this,SLOT(openFileFrocketData()));
 
@@ -163,14 +157,8 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
       break;
       }
     catch (int err) {
-      if (err == nvberr_no_sense) {
-        QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
-        if (NVBSettings::showGeneralSettings() == QDialog::Rejected)
-          throw nvberr_no_sense;
-        }
-      else
-        NVBOutputError("NVBApplication::NVBApplication","Uncaught error #%d",err);
-  //     throw;
+			QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
+			if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
       }
     }
 
@@ -182,14 +170,11 @@ bool NVBApplication::notify( QObject * receiver, QEvent * event )
     return QApplication::notify(receiver,event);
     }
   catch (int err) {
-    if (err == nvberr_no_sense)
-      NVBOutputError("NVBApplication::notify","Fatal error");
-    else
-      NVBOutputError("NVBApplication::notify","Uncaught error #%d",err);
+		NVBOutputError(QString("Uncaught error #%1").arg(err));
     return false;
     }
   catch (...) {
-    NVBOutputError("NVBApplication::notify","Unknown error");
+		NVBOutputError("Fatal error");
     return false;
     }
 /*  catch (...) {

@@ -204,7 +204,7 @@ QList< NVBToken * > NVBTokenList::tokenizeSubString( QString s, int & pos)
             break;
             }
           default : {
-            NVBOutputError("NVBTokens::tokenizeSubString",QString("Error in string %1 : invalid conditional %2 at %3").arg(s).arg(s[pos+1]).arg(pos+1));
+						NVBOutputError(QString("Error in string %1 : invalid conditional %2 at %3").arg(s).arg(s[pos+1]).arg(pos+1));
             return QList< NVBToken * >();
             }
           }
@@ -214,7 +214,7 @@ QList< NVBToken * > NVBTokenList::tokenizeSubString( QString s, int & pos)
         }
       case ':' : {
         if (inelse) {
-          NVBOutputError("NVBTokens::tokenizeSubString",QString("Error in string %1 : double else at %2").arg(s).arg(pos));
+					NVBOutputError(QString("Error in string %1 : double else at %2").arg(s).arg(pos));
           return QList< NVBToken * >();
           }
         else if (inif) {
@@ -274,7 +274,7 @@ QList< NVBToken * > NVBTokenList::tokenizeSubString( QString s, int & pos)
           pos += param.matchedLength();
           }
         else {
-          NVBOutputError("NVBTokens::tokenizeSubString",QString("Unrecognized token in string %1 at %2").arg(s).arg(pos));
+					NVBOutputError(QString("Unrecognized token in string %1 at %2").arg(s).arg(pos));
           return result;
           }
         break;

@@ -244,13 +244,13 @@ void NVBPageViewModel::updateSource(NVBDataSource * newobj, NVBDataSource * oldo
     releaseDataSource(oldobj);
     }
   else
-    NVBOutputError( "NVBPageViewModel::updateSource", "Page not in model" );
+		NVBOutputError( "Page not in model" );
 }
 
 QMimeData * NVBPageViewModel::mimeData(const QModelIndexList & indexes) const
 {
   if (indexes.count() > 1) {
-    NVBOutputError("NVBPageViewModel::mimeData","Dragging more than one object");
+    NVBOutputError("Dragging more than one object");
     return 0;
     }
 

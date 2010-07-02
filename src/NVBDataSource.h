@@ -73,7 +73,7 @@ enum PageType {
 Q_DECLARE_METATYPE(NVB::PageType);
 
 using namespace NVBColoring;
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 /**
   \class NVBDataSource
@@ -95,12 +95,12 @@ protected:
   QMap<QString,NVBVariant> comments;
 public:
   /// Creates a used source
-  NVBDataSource():QObject(),refCount(1) {;}
-  NVBDataSource( const NVBDataSource& ):QObject() { NVBOutputError("NVBDataSource::NVBDataSource <copy>","Copying not allowed"); throw; }
+	NVBDataSource():QObject(),refCount(1),owner(0) {;}
+	NVBDataSource( const NVBDataSource& ):QObject() { NVBOutputError("Copying not allowed"); throw; }
   /// Destructor checks for stale references and prints a warning. Such a warning means something might be really wrong in the plugins used
   virtual ~NVBDataSource() {
     if (refCount)
-      NVBOutputError("NVBDataSource::~NVBDataSource","refCount !=0 -- data source not properly disposed of");
+			NVBOutputError("refCount !=0 -- data source not properly disposed of");
     }
 
   /// Use it for whatever you want
@@ -108,7 +108,12 @@ public:
   /// \returns the name of the source
   virtual QString name() const = 0;
 	/// \returns the file the data originates from
-	virtual const NVBFile * owner() const = 0;
+//	virtual const NVBFile * owner() const { return file; }
+	///// Here, it's not possible to just return the filename
+	///// since NVBAssociatedFileInfo is kind of big...
+	NVBFile * owner;
+
+
 
   /// \returns the type of the page
   virtual inline NVB::PageType type() const {return NVB::InvalidPage;}

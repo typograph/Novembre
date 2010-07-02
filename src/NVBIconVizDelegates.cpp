@@ -70,7 +70,10 @@ void NVBSpecIconDelegate::redrawCache(const QSize & size)
     return;
     }
   cache = new QImage(size,QImage::Format_ARGB32);
-  if (!cache) throw nvberr_not_enough_memory;
+	if (!cache) {
+		NVBOutputError("Not enough memory to recereate cache");
+		return;
+		}
   cache->fill(0x00FFFFFF);
 
 //  scaler<double,int> h(page->getZMax(),page->getZMin(),0,npoints-1);

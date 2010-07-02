@@ -73,19 +73,19 @@ bool WinSPMFileGenerator::canLoadFile(QString filename)
 NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
 	if (info.generator() != this) {
-		NVBOutputError("WinSPMFileGenerator::loadFile","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("WinSPMFileGenerator::loadFile","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("WinSPMFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		NVBOutputFileError(&file);
 		return 0;
 		}
 
@@ -104,7 +104,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
 	file.read((char*)&tiff_header,10); // Byte alignment issue
 
 	if (file.size() < tiff_header.dir_start + tiff_header.dir_size) {
-    NVBOutputError("WinSPMFileGenerator::loadFile","File is too small");
+    NVBOutputError("File is too small");
 		return 0;
     }
 
@@ -112,11 +112,12 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
 
   TWinSPM::Header header;
 
-  getWinSPMHeader(header,file);
+	if (!getWinSPMHeader(header,file)) {
+		delete f;
+		return 0;
+		}
 
-  NVBOutputVPMsg("WinSPMFileGenerator::loadFile","File version %d",header.winspm_version);
-
-
+	NVBOutputVPMsg(QString("File version %1").arg(header.winspm_version));
 
 // --------- read first directory
 
@@ -133,7 +134,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
       case TT_IMAGE_WIDTH : {
         if ( tag.data_type != TIFF_DATA_TYPE::FOUR_BYTES ||
              tag.data_length != 1 || tag.data != header.xres ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Image width tag inconsistent with format %ld %ld",tag.data,header.xres);
+					NVBOutputError(QString("Image width tag inconsistent with format %1 %2").arg(tag.data).arg(header.xres));
 					return 0;
           }
         break;
@@ -141,7 +142,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
       case TT_IMAGE_HEIGHT : {
         if ( tag.data_type != TIFF_DATA_TYPE::FOUR_BYTES ||
              tag.data_length != 1 || tag.data != header.yres ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Image height tag inconsistent with format %ld %ld",tag.data,header.yres);
+					NVBOutputError(QString("Image height tag inconsistent with format %1 %2").arg(tag.data).arg(header.yres));
 					return 0;
 					}
         break;
@@ -150,7 +151,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
         if ( tag.data_type != TIFF_DATA_TYPE::TWO_BYTES ||
              tag.data_length != 1 ) {
           // || (tag.data != 8 && header.compressed != 0) || (tag.data == 8 && header.compressed == 0)
-          NVBOutputError("WinSPMFileGenerator::loadFile","Bits per sample tag inconsistent with format");
+          NVBOutputError("Bits per sample tag inconsistent with format");
 					return 0;
 					}
         break;
@@ -159,7 +160,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
         if ( tag.data_type != TIFF_DATA_TYPE::TWO_BYTES ||
              tag.data_length != 1) {
 //         || (tag.data != 8 && header.compressed != 0) || (tag.data == 8 && header.compressed == 0)) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Compression tag inconsistent with format");
+          NVBOutputError("Compression tag inconsistent with format");
 					return 0;
 					}
         break;
@@ -167,21 +168,21 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
       case TT_PHOTOMETRIC_INTERPRETATION : {
         if ( tag.data_type != TIFF_DATA_TYPE::TWO_BYTES ||
              tag.data_length != 1 || tag.data != 1) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Photometric interpretation tag inconsistent with format");
+          NVBOutputError("Photometric interpretation tag inconsistent with format");
 					return 0;
 					}
         break;
         }
       case TT_IMAGE_DESCRIPTION : {
         if ( tag.data_type != TIFF_DATA_TYPE::ASCII ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Image description tag inconsistent with format");
+          NVBOutputError("Image description tag inconsistent with format");
 					return 0;
 					}
         break;
         }
       case TT_MAKE : {
         if ( tag.data_type != TIFF_DATA_TYPE::ASCII ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Make tag inconsistent with format");
+          NVBOutputError("Make tag inconsistent with format");
 					return 0;
 					}
         make_tag = tag;
@@ -189,7 +190,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
         }
       case TT_MODEL : {
         if ( tag.data_type != TIFF_DATA_TYPE::ASCII ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Model tag inconsistent with format");
+          NVBOutputError("Model tag inconsistent with format");
 					return 0;
 					}
         model_tag = tag;
@@ -197,7 +198,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
         }
       case TT_STRIP_OFFSET : {
         if ( tag.data_type != TIFF_DATA_TYPE::TWO_BYTES || tag.data_length != 1 ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Strip offset tag inconsistent with format");
+          NVBOutputError("Strip offset tag inconsistent with format");
 					return 0;
 					}
 				strip_offset = (quint16)(tag.data);
@@ -206,7 +207,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
       case TT_SAMPLES_PER_PIXEL : {
         if ( tag.data_type != TIFF_DATA_TYPE::TWO_BYTES ||
              tag.data_length != 1 || tag.data != 1 ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Samples per pixel tag inconsistent with format");
+          NVBOutputError("Samples per pixel tag inconsistent with format");
 					return 0;
 					}
 //        strip_offset = tag.data;
@@ -214,7 +215,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
         }
       case TT_ROWS_PER_STRIP : {
         if ( tag.data_type != TIFF_DATA_TYPE::FOUR_BYTES || tag.data_length != 1 ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Strip offset tag inconsistent with format");
+          NVBOutputError("Strip offset tag inconsistent with format");
 					return 0;
 					}
         strip_rows = tag.data;
@@ -222,7 +223,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
         }
       case TT_STRIP_BYTE_COUNT : {
         if ( tag.data_type != TIFF_DATA_TYPE::FOUR_BYTES || tag.data_length != 1 ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Strip offset tag inconsistent with format");
+          NVBOutputError("Strip offset tag inconsistent with format");
 					return 0;
 					}
         strip_bytes = tag.data;
@@ -231,21 +232,21 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
       case TT_X_RESOLUTION : 
       case TT_Y_RESOLUTION : {
         if ( tag.data_type != TIFF_DATA_TYPE::RATIONAL || tag.data_length != 1 ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Resolution tag inconsistent with format");
+          NVBOutputError("Resolution tag inconsistent with format");
 					return 0;
 					}
         break;
       }
       case TT_RESOLUTION_UNIT : {
         if ( tag.data_type != TIFF_DATA_TYPE::TWO_BYTES || tag.data_length != 1 ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Resolution unit tag inconsistent with format");
+          NVBOutputError("Resolution unit tag inconsistent with format");
 					return 0;
 					}
         break;
       }
       case TT_HOST_COMPUTER : {
         if ( tag.data_type != TIFF_DATA_TYPE::ASCII ) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Host computer tag inconsistent with format");
+          NVBOutputError("Host computer tag inconsistent with format");
 					return 0;
 					}
         hostpc_tag = tag;
@@ -254,7 +255,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
       case TT_COLOR_MAP : {
         if ( tag.data_type != TIFF_DATA_TYPE::TWO_BYTES ||
              tag.data_length != 0x300 || tag.data != 0x41BD4) {
-          NVBOutputError("WinSPMFileGenerator::loadFile","Color map tag inconsistent with format");
+          NVBOutputError("Color map tag inconsistent with format");
 					return 0;
 					}
         color_map_tag = tag;
@@ -300,7 +301,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
 			quint32 next_sps_offset = file.pos() + 0x17CA;
       TWinSPM::Header specheader;
       getWinSPMHeader(header,file); 
-      NVBOutputVPMsg("WinSPMFileGenerator::loadFile","Spectroscopy file version %d",specheader.winspm_version);
+			NVBOutputVPMsg(QString("Spectroscopy file version %1").arg(specheader.winspm_version));
 			f->addSource(new WinSPMSpecPage(file,header,specheader,next_sps_offset));
       }
     }
@@ -317,8 +318,8 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
         
         TWinSPM::Header specheader;
 				getWinSPMHeader(specheader,specfile);
-        NVBOutputVPMsg("WinSPMFileGenerator::loadFile","Spectroscopy file version %d",specheader.winspm_version);
-        
+				NVBOutputVPMsg(QString("Spectroscopy file version %1").arg(specheader.winspm_version));
+
 				specpage->addCurve(specfile,specheader,(quint32)0x17CA);
         
         specfile.close();
@@ -336,25 +337,25 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
 NVBFileInfo * WinSPMFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info) const throw()
 {
 	if (info.generator() != this) {
-		NVBOutputError("WinSPMFileGenerator::loadFileInfo","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("WinSPMFileGenerator::loadFileInfo","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("WinSPMFileGenerator::loadFileInfo",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		NVBOutputFileError(&file);
 		return 0;
 		}
 
 	NVBFileInfo * fi = new NVBFileInfo(info);
 	if (!fi) {
-		NVBOutputError("WinSPMFileGenerator::loadFileInfo","Out of memory");
+		NVBOutputError("Out of memory");
 		return 0;
 		}
 
@@ -375,12 +376,12 @@ NVBFileInfo * WinSPMFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & i
 	file.read((char*)&tiff_header,sizeof(tiff_header));
 
 	if (memcmp(&tiff_header,TIFF_HEADER,sizeof(TIFF_HEADER)) != 0)	{
-		NVBOutputError("WinSPMFileGenerator::loadFileInfo","File format magic mismatch.");
+		NVBOutputError("File format magic mismatch.");
 		return 0;
 		}
 
 	if (file.size() < tiff_header.dir_start + tiff_header.dir_size){
-		NVBOutputError("WinSPMFileGenerator::loadFileInfo","File is too small");
+		NVBOutputError("File is too small");
 		return 0;
 		}
 
@@ -565,7 +566,7 @@ QString WinSPMFileGenerator::getLineTypeString(qint32 type) {
     case 21: return "Electro chemistry";
     case 22: return "Discrete spectroscopy";
     default : {
-      NVBOutputError("WinSPMFileGenerator::getLineTypeString","Unknown line type %ld", type);
+      NVBOutputError("Unknown line type %ld", type);
       return QString();
       }
     }
@@ -578,7 +579,7 @@ QString WinSPMFileGenerator::getSourceTypeString(qint32 type) {
     case 2 : return "Calculated page";
     case 3 : return "Imported page";
     default : {
-      NVBOutputError("WinSPMFileGenerator::getSourceTypeString","Unknown source type %ld", type);
+      NVBOutputError("Unknown source type %ld", type);
       return QString();
       }
     }
@@ -591,7 +592,7 @@ QString WinSPMFileGenerator::getDirectionString(qint32 type) {
     case 2 : return "Up";
     case 3 : return "Down";
     default : {
-      NVBOutputError("WinSPMFileGenerator::getDirectionString","Unknown scan direction %ld", type);
+      NVBOutputError("Unknown scan direction %ld", type);
       return QString();
       }
     }
@@ -602,7 +603,7 @@ QString WinSPMFileGenerator::getImageTypeString(qint32 type) {
     case 0 : return "Normal image";
     case 1 : return "Autocorrelation image";
     default : {
-      NVBOutputError("WinSPMFileGenerator::getImageTypeString","Unknown image type %ld", type);
+      NVBOutputError("Unknown image type %ld", type);
       return QString();
       }
     }
@@ -651,7 +652,7 @@ QString WinSPMFileGenerator::getPageTypeString(qint32 type) {
     case 38 : return "Ramp spectroscopy at relative points";
     case 39 : return "Discrete spectroscopy at relative points";
     default : {
-      NVBOutputError("WinSPMFileGenerator::getPageTypeString","Invalid page type %ld found",type);
+      NVBOutputError("Invalid page type %ld found",type);
       return QString();
       }
     }
@@ -659,7 +660,7 @@ QString WinSPMFileGenerator::getPageTypeString(qint32 type) {
 
 */
 
-void WinSPMFileGenerator::getWinSPMHeader( TWinSPM::Header & header, QFile & file )
+bool WinSPMFileGenerator::getWinSPMHeader( TWinSPM::Header & header, QFile & file )
 {
 	file.read((char*)&(header.winspm_version),2);
 	file.read((char*)header.internal_filename_b4,80);
@@ -733,9 +734,10 @@ void WinSPMFileGenerator::getWinSPMHeader( TWinSPM::Header & header, QFile & fil
 	file.read((char*)&(header.special_measurement_param),62);
 
 	if (file.atEnd()) {
-    NVBOutputError("WinSPMFileGenerator::loadFile","File is too small to contain a header");
-    throw nvberr_invalid_format;
+    NVBOutputError("File is too small to contain a header");
+		return false;
     }
+	return true;
 }
 
 

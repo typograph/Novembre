@@ -139,7 +139,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
     fileModel = new NVBDirModel(files,this);
     }
   catch (int err) {
-    NVBCriticalError("NVBBrowser::NVBBrowser","DirModel creation failed : error #%d",err);
+		NVBCriticalError(QString("DirModel creation failed : error #%1").arg(err));
     }
 
   connect(showFiltersAction,SIGNAL(triggered()),fileModel,SLOT(showFilterDialog()));
@@ -184,7 +184,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
     fileList->header()->viewport()->installEventFilter(this);
     }
   catch (int err) {
-    NVBCriticalError("NVBBrowser::NVBBrowser","DirView creation failed : Model logic failed : error #%d",err);
+		NVBCriticalError(QString("DirView creation failed : Model logic failed : error #%1").arg(err));
     }
 
   llayout->addWidget(fileList);  
@@ -333,7 +333,7 @@ void NVBBrowser::populateListLevel(int count, QString index, const QModelIndex &
     QString path = confile->value(QString("%1%2_path").arg(index).arg(i)).toString();
 
     if ( label.isEmpty()  && path.isEmpty() ) {
-      NVBOutputError("NVBBrowser::populateList",QString("Confile error: no entry for #%1%2").arg(index).arg(i));
+			NVBOutputError(QString("Confile error: no entry for #%1%2").arg(index).arg(i));
       break;
       }
 
@@ -402,7 +402,7 @@ void NVBBrowser::showItem( const QModelIndex & item ) {
       pageRefactor->setModel(theFile);
       }
     else {
-			NVBOutputError("NVBBrowser :: showItem",QString("Couldn't get file %1").arg(fileModel->getAllFiles(item).name()));
+			NVBOutputError(QString("Couldn't get file %1").arg(fileModel->getAllFiles(item).name()));
       }
     
     }
@@ -422,7 +422,7 @@ void NVBBrowser::loadPage( const QModelIndex & item )
   if (dirView->isVisible())
     emit pageRequest(item.parent().data(Qt::ToolTipRole).toString(),item.row());
   else
-		emit pageRequest(theFile->name(),item.row());
+		emit pageRequest(theFile->sources(),item.row());
 }
 
 void NVBBrowser::switchIconSize( QAction* action ) {
@@ -457,7 +457,7 @@ void NVBBrowser::switchIconSize( QAction* action ) {
   pageList->setIconSize(QSize(iconSize, iconSize));
   dirView->setGridSize(QSize(iconSize + 20, iconSize + 40));
   dirView->setIconSize(QSize(iconSize, iconSize));
-  NVBOutputPMsg("NVBBrowser::switchIconSize","Switched to %3d",iconSize);
+	NVBOutputPMsg(QString("Switched to %1").arg(iconSize,3));
 /*  
   if (fileList->selectionModel()->selectedIndexes().size()) {
 //    selection->loadIcons(iconSize);

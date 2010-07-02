@@ -249,7 +249,7 @@ void NVB2DPtsVizDelegate::setSource(NVBDataSource * source)
       radius = (page->occupiedArea().width() + page->occupiedArea().height())/sqrt(positions.size())/3;
 //       if (radius == 0) radius = (pw == 0) ? ph : pw;
       if (radius == 0) radius = 1;
-//       NVBOutputError("radius","w: %f, h: %f, r: %f",pw,ph,radius);
+//       NVBOutputError(QString("w: %1, h: %2, r: %3").arg(pw).arg(ph).arg(radius));
       }
     }
 }

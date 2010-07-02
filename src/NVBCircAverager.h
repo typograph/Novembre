@@ -74,7 +74,6 @@ public:
   static QAction * action();
 
   virtual QString name() const { return QString("Circular average"); }
-	virtual const NVBFile * owner() const { return provider->owner();}
 
   virtual NVBDimension xDim() const { return ld; }
   virtual NVBDimension yDim() const { return ld; }

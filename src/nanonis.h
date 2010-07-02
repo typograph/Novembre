@@ -34,7 +34,7 @@
 #include "NVBFileGenerator.h"
 #include "NVBPages.h"
 
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 // struct NanonisHeaderEntry {
 //   QString altName;
