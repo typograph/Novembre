@@ -200,7 +200,7 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, const QModelIndex & index, 
 		setWindowTitle(file->name());
     }
   else if (page)
-		setWindowTitle(page->owner()->sources().name());
+		setWindowTitle(page->owner->sources().name());
 
   if (stateMode == NVB::DefaultView) {
     stateMode = (NVB::ViewType)(index.data(PageTypeRole).value<NVB::PageType>());
@@ -222,7 +222,10 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, NVBDataSource * page, NVB::
 {
   tools = qApp->property("toolsFactory").value<NVBToolsFactory*>();
 
-	setWindowTitle(page->owner()->sources().name());
+	if (page->owner)
+		setWindowTitle(page->owner->sources().name());
+	else
+		NVBOutputError("NVBDataSource has no owner");
   if (stateMode == NVB::DefaultView)
     stateMode = (NVB::ViewType)(page->type());
   createView(stateMode);
@@ -392,7 +395,7 @@ void NVBFileWindow::set2DView()
 {
   NVB2DPageView * tview = new NVB2DPageView(vizmodel,this);
   if (!tview) {
-    NVBOutputError("NVBFileWindow::set2DView","Creating 2DView failed.");
+		NVBOutputError("Creating 2DView failed.");
     return;
     }
 
@@ -408,7 +411,7 @@ void NVBFileWindow::set3DView()
 {
   NVB3DPageView * tview = new NVB3DPageView(vizmodel,this);
   if (!tview) {
-    NVBOutputError("NVBFileWindow::set3DView","Creating 3DView failed.");
+		NVBOutputError("Creating 3DView failed.");
     return;
     }
   connect(this,SIGNAL(selectionChanged( const QModelIndex & , const QModelIndex & )), tview,SLOT(select( const QModelIndex &)));
@@ -423,7 +426,7 @@ void NVBFileWindow::setGraphView()
 {
   NVBGraphView * gview = new NVBGraphView(vizmodel,this);
   if (!gview) {
-    NVBOutputError("NVBFileWindow::setGraphView","Creating GraphView failed.");
+		NVBOutputError("Creating GraphView failed.");
     return;
     }
 
@@ -519,7 +522,7 @@ void NVBFileWindow::setActiveVisualizer(NVBVizUnion visualizer)
 void NVBFileWindow::selectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
 {
   if (selected.indexes().size() != 1) {
-    NVBOutputError("NVBFileWindow::selectionChanged", "Non-single selection detected for dock");
+		NVBOutputError( "Non-single selection detected for dock");
     emit pageSelected(NVB::InvalidPage);
     }
   else {
@@ -797,7 +800,7 @@ void NVBFileWindow::print( )
   QPoint rndoffset;
 
   if (pict.width() > page.width() || pict.height() > page.height()) {
-    NVBOutputPMsg("NVBFileWindow::print","The view is larger than the paper");
+		NVBOutputPMsg("The view is larger than the paper");
     
     QPixmap pxmap(pict);
     

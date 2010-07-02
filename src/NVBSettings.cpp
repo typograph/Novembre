@@ -25,7 +25,7 @@ NVBSettings::NVBSettings():QDialog()
 {
   conf = qApp->property("NVBSettings").value<QSettings*>();
   if (!conf)
-    NVBCriticalError("NVBSettings::NVBSettings","Configuration missing");
+    NVBCriticalError("Configuration missing");
 
   QGridLayout * l = new QGridLayout(this);
 

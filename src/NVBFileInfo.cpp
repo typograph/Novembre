@@ -205,23 +205,23 @@ NVBFileInfo * NVBAssociatedFilesInfo::loadFileInfo() const
 	catch (int err) {
 		switch (err) {
 			case (nvberr_invalid_input) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFileInfo",QString("Loader %1 returned \"Bad Input\"").arg(generator->moduleName()));
+				NVBOutputError(QString("Loader %1 returned \"Bad Input\"").arg(generator->moduleName()));
 				break;
 				}
 			case (nvberr_plugin_failure) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFileInfo","File failed to load");
+				NVBOutputError("File failed to load");
 				break;
 				}
 			case (nvberr_unexpected_value) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFileInfo",QString("Loader %1 returned \"Unexpected value\"").arg(generator->moduleName()));
+				NVBOutputError(QString("Loader %1 returned \"Unexpected value\"").arg(generator->moduleName()));
 				break;
 				}
 			case (nvberr_not_enough_memory) : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFileInfo","Not enough memory to load file");
+				NVBOutputError("Not enough memory to load file");
 				return NULL;
 				}
 			default : {
-				NVBOutputError("NVBAssociatedFilesInfo::loadFileInfo",QString("Unknown error #%1 in module %2").arg(err).arg(generator->moduleName()));
+				NVBOutputError(QString("Unknown error #%1 in module %2").arg(err).arg(generator->moduleName()));
 				break;
 				}
 			}

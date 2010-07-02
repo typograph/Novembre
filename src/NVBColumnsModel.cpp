@@ -118,7 +118,7 @@ void NVBDirModelColumns::removeColumn(int row)
 QList< NVBColumnDescriptor > NVBDirModelColumns::clmnDataList()
 {
   QList< NVBColumnDescriptor > list;
-  for (int i = 0; i<rowCount();i++) {
+	for (int i = 0; i<rowCount();i++) {
     list << NVBColumnDescriptor(name(i),key(i));
     }
   return list;

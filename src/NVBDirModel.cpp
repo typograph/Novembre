@@ -173,7 +173,7 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
     QApplication::restoreOverrideCursor();*/
     }
 	else {
-		NVBOutputError("NVBDirEntry::populate",QString("Directory %1 does not exist").arg(dir.absolutePath()));
+		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
 		}
 }
 
@@ -275,7 +275,7 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
     }
 
   else {
-    NVBOutputError("NVBDirEntry::populate",QString("Directory %1 ceased to exist").arg(dir.absolutePath()));
+		NVBOutputError(QString("Directory %1 ceased to exist").arg(dir.absolutePath()));
     // TODO be more user-friendly. Display an error message
     return false;
     }
@@ -306,9 +306,13 @@ NVBDirModel::NVBDirModel(NVBFileFactory * _fileFactory, QObject * parent)
  : QAbstractItemModel( parent ), fileFactory(_fileFactory)
 {
 	columns = new NVBDirModelColumns();
+	sortOrder = Qt::AscendingOrder;
+	sortColumn = 0;
+
 	head = new NVBDirEntry(0,QString());
 	head->sort(NVBDirModelFileInfoLessThan(columns->key(0),Qt::AscendingOrder));
   connectEntry(head);
+
   watcher = new QFileSystemWatcher(this);
   connect(watcher,SIGNAL(directoryChanged(const QString &)),this,SLOT(watchedDirChanged(const QString &)));
   connect(&timerToEntryMap,SIGNAL(mapped(QObject*)),this,SLOT(refreshWatchedDir(QObject*)));
@@ -347,14 +351,10 @@ int NVBDirModel::rowCount( const QModelIndex & parent ) const
   NVBDirEntry * entry;
   entry = indexToEntry(parent);
     
-  if (!entry->isPopulated())
-    try {
+	if (!entry->isPopulated()) {
       entry->populate(fileFactory);
       connectEntry(entry);
       watcher->addPath(entry->dir.path());
-      }
-    catch (int err) {
-      NVBOutputError("NVBDirModel::rowCount","DirEntry population failed : Error #%d",err);
       }
 
   return entry->folders.size()+entry->files.size();
@@ -391,7 +391,7 @@ QVariant NVBDirModel::data( const QModelIndex & index, int role ) const
   if (isAFile(index)) {
 		const NVBFileInfo * fInfo = indexToInfo(index);
 		if (!fInfo) {
-			NVBOutputError("NVBDirModel::data","File info not found at %d",index.row());
+			NVBOutputError(QString("File info not found at %1").arg(index.row()));
       return QVariant();
 			}
 		else if (index.column() < columns->rowCount()) {
@@ -454,7 +454,7 @@ bool NVBDirModel::isAFile( const QModelIndex & index ) const
     return false; // it's root
 /*   
    {
-    NVBOutputError("NVBDirModel::isAFile","Invalid index : can lead to all sorts of behavior");
+		NVBOutputError("Invalid index : can lead to all sorts of behavior");
     throw nvberr_invalid_input;
     }
 */
@@ -506,16 +506,11 @@ const NVBFileInfo * NVBDirModel::indexToInfo( const QModelIndex & index ) const
 
   NVBDirEntry* entry = indexToParentEntry(index);
 
-  if (!entry->isPopulated())
-    try {
-      entry->populate(fileFactory);
-      connectEntry(entry);
-      watcher->addPath(entry->dir.path());
-      }
-    catch (int err) {
-      NVBOutputError("NVBDirModel::rowCount","DirEntry population failed : Error #%d",err);
-			return 0;
-      }
+	if (!entry->isPopulated()) {
+		entry->populate(fileFactory);
+		connectEntry(entry);
+		watcher->addPath(entry->dir.path());
+		}
 
   return entry->files.at(index.row()-entry->folders.size());
 }
@@ -535,14 +530,14 @@ bool NVBDirModel::removeRows( int row, int count, const QModelIndex & parent )
       return true;
       }
     }
-  NVBOutputError("NVBDirMode::removeRows","Trying to remove files from list");
+	NVBOutputError("Trying to remove files from list");
   return false;
 }
 
 bool NVBDirModel::removeItem( const QModelIndex & index )
 {
   if (!index.isValid()) {
-    NVBOutputError("NVBDirModel::removeItem","Trying to remove root. Never!");
+		NVBOutputError("Trying to remove root. Never!");
     // TODO Implement undo to allow removing root
     return false;
     }
@@ -580,15 +575,11 @@ int NVBDirModel::fileCount( const QModelIndex & parent ) const
 {
   if (isAFile(parent)) return 0;
   NVBDirEntry * entry = indexToEntry(parent);
-  if (!entry->isPopulated())
-    try {
-      entry->populate(fileFactory);
-      connectEntry(entry);
-      watcher->addPath(entry->dir.path());
-      }
-    catch (int err) {
-      NVBOutputError("NVBDirModel::rowCount","DirEntry population failed : Error #%d",err);
-      }
+	if (!entry->isPopulated()) {
+		entry->populate(fileFactory);
+		connectEntry(entry);
+		watcher->addPath(entry->dir.path());
+		}
   return entry->files.size();
 }
 
@@ -596,6 +587,7 @@ void NVBDirModel::addColumn(QString name, NVBTokens::NVBTokenList key)
 {
   int i = 1;
   int nclmn = columns->rowCount();
+
   beginInsertColumns(QModelIndex(),nclmn,nclmn);
   
   foreach(QModelIndex ix, folderIndexes(head)) {
@@ -702,7 +694,7 @@ bool NVBDirModel::lessThan(const QModelIndex & left, const QModelIndex & right) 
       }
     else {
       if (lsortdata.userType() != QMetaType::QString)
-			NVBOutputError("NVBDirModel::lessThan",QString("Data for sorting role is not of type NVBVariant, but %1").arg(QMetaType::typeName(lsortdata.userType())));
+			NVBOutputError(QString("Data for sorting role is not of type NVBVariant, but %1").arg(QMetaType::typeName(lsortdata.userType())));
       return lsortdata.toString() < right.data(DataSortRole).toString();
       return false;
       }
@@ -748,7 +740,7 @@ bool NVBDirModel::lessThan(const QModelIndex & left, const QModelIndex & right) 
 void NVBDirModel::removeColumn(int index)
 {
   if (index == 0) {
-    NVBOutputError("NVBDirModel::removeColumn","Trying to remove the filename column");
+		NVBOutputError("Trying to remove the filename column");
     return;
     }
 
@@ -763,6 +755,13 @@ void NVBDirModel::removeColumn(int index)
     }
 	columns->removeColumn(index);
   while (i--) endRemoveColumns();
+
+	/* if (index == sortColumn) {
+		sort(0,Qt::AscendingOrder);
+		}
+	else */ if (index < sortColumn)
+		sortColumn -= 1;
+
 }
 
 bool NVBDirModel::filterAcceptsRow(int source_row, const QModelIndex & source_parent) const
@@ -867,6 +866,7 @@ void NVBDirModel::showFilterDialog()
 void NVBDirModel::showColumnDialog()
 {
 	NVBColumnDialog * dialog = new NVBColumnDialog( columns->clmnDataList() );
+	dialog->disableEntry(0);
   if ( dialog->exec() == QDialog::Accepted ) {
     QList<NVBColumnAction> actions = dialog->getActions();
 		QList<NVBColumnDescriptor> dlg_columns = dialog->getColumns();
@@ -877,7 +877,7 @@ void NVBDirModel::showColumnDialog()
           break;
           }
         case NVBColumnAction::Deleted : {
-					removeColumn(a.index + 1);
+					removeColumn(a.index);
           break;
           }
         }
@@ -909,8 +909,11 @@ void NVBDirModel::addColumn(NVBColumnDescriptor column)
 
 void NVBDirModel::updateColumn(int index, NVBColumnDescriptor column)
 {
+
 	columns->updateColumn(index,column);
-  emit headerDataChanged(Qt::Horizontal,index,index);
+	emit headerDataChanged(Qt::Horizontal,index,index);
+	if (index == sortColumn)
+		sort(index,sortOrder);
 }
 
 void NVBDirModel::refresh()
@@ -1052,7 +1055,10 @@ void NVBDirModel::exportData( const QModelIndex & index, NVBDirExportOptions opt
 {
   if (!options.valid) return;
   QFile f(options.fileName);
-  if (!f.open(QIODevice::WriteOnly)) return;
+	if (!f.open(QIODevice::WriteOnly)) {
+		NVBOutputFileError(&f);
+		return;
+		}
   QTextStream t(&f);
   
   int c;
@@ -1118,6 +1124,8 @@ void NVBDirModel::notifyFilesLoaded(const NVBDirEntry * entry, int fstart, int f
 
 void NVBDirModel::sort ( int column, Qt::SortOrder order ) {
 	emit layoutAboutToBeChanged();
+	sortColumn = column;
+	sortOrder = order;
 	head->sort(NVBDirModelFileInfoLessThan(columns->key(column),order));
 	emit layoutChanged();
 }

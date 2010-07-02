@@ -21,7 +21,7 @@ NVBWidgetStackModel::NVBWidgetStackModel(NVBPageViewModel * model):pagemodel(mod
 //  connect(pagemodel,SIGNAL(dataChanged(const QModelIndex& , const QModelIndex& )),SLOT(pagesChanged(const QModelIndex&, const QModelIndex& )));
 
   if (pagemodel->rowCount())
-    NVBOutputError("NVBWidgetStackModel::NVBWidgetStackModel","Parent page model not empty!");
+    NVBOutputError("Parent page model not empty!");
 //    pagesInserted(QModelIndex(),0,pagemodel->rowCount()-1);
 }
 

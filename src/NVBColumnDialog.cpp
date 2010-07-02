@@ -403,6 +403,12 @@ QList< NVBColumnAction > NVBColumnDialog::getActions()
   return actions;
 }
 
+void NVBColumnDialog::disableEntry(int entry)
+{
+	QWidget * w = verticalLayout->itemAt(entry)->widget();
+	if (w) w->setEnabled(false);
+}
+
 void NVBCCCBox::paintEvent( QPaintEvent * e)
 {
 #if QT_VERSION >= 0x040300

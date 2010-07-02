@@ -115,7 +115,7 @@ typedef struct  {
   TRHKColorTransform transform;
 } TRHKColorInfo;
 
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 class NVBDataSource;
 

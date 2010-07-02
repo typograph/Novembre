@@ -239,7 +239,7 @@ void NVBDiscrColorPainter::activatePainter(NVBDiscrPainterViz * viz)
   a->setChecked(true);
 
   if (painter) {
-    NVBOutputError("NVBDiscrColorPainter::activatePainter","Visualizer deactivation failed");
+    NVBOutputError("Visualizer deactivation failed");
     delete painter;
     }
   painter = viz;

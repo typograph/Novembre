@@ -31,7 +31,7 @@
 #include "NVBFileGenerator.h"
 #include "NVBPages.h"
 
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 const char TIFF_HEADER[] = {
   0x49, 0x49, 0x2A, 0x00, 0xD4, 0x17, 0x00, 0x00
@@ -651,7 +651,7 @@ Q_INTERFACES(NVBFileGenerator);
 
 private:
 //   static NVBDataSource * loadNextPage(QFile * const file);
-	static void getWinSPMHeader(TWinSPM::Header &header, QFile & file);
+	static bool getWinSPMHeader(TWinSPM::Header &header, QFile & file);
 //   static QStringList loadWinSPMStrings(QFile * const file, qint16 nstrings);
 //   static QString getPageTypeString(qint32 type);
 //   static QString getGUIDString(GUID id);

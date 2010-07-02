@@ -108,8 +108,8 @@ QRgb NVBHSVWheelContColorModel::colorize( double z ) const
         return 0xFF000000 + (v << 16) + (p << 8) + q; 
       default: {
         // throw nvberr_unexpected_value;
-        NVBOutputError( "NVBHSVWheelContColorModel::colorize", "Color conversion error");
-        NVBOutputError( "NVBHSVWheelContColorModel::colorize", "%6g (%d,%d)\nwas converted to\n(%3g->%hhu) -- your computer is crazy!",z,cInfo.z_min,cInfo.z_max,hf,i);
+				NVBOutputError("Color conversion error");
+				NVBOutputError(QString("%1 (%2,%3)\nwas converted to\n(%4->%5) -- your computer is crazy!").arg(z,6).arg(cInfo.z_min).arg(cInfo.z_max).arg(hf,3).arg(i));
         return 0xFF000000;
         }
       }

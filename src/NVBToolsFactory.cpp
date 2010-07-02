@@ -35,9 +35,9 @@
 Q_IMPORT_PLUGIN(nvbdviz);
 // Q_IMPORT_PLUGIN(nvbimport);
 #ifdef NVB_STATIC
-Q_IMPORT_PLUGIN(nvbtopo);
-Q_IMPORT_PLUGIN(nvbspec);
-Q_IMPORT_PLUGIN(nvbexport);
+//Q_IMPORT_PLUGIN(nvbtopo);
+//Q_IMPORT_PLUGIN(nvbspec);
+//Q_IMPORT_PLUGIN(nvbexport);
 Q_IMPORT_PLUGIN(nvbcolor);
 #endif
 
@@ -48,7 +48,7 @@ NVBToolsFactory::NVBToolsFactory()
   foreach (QObject *plugin, QPluginLoader::staticInstances()) {
     NVBDelegateProvider *dprovider = qobject_cast<NVBDelegateProvider*>(plugin);
     if (dprovider) {
-      NVBOutputPMsg("NVBToolsFactory::NVBToolsFactory","Static plugin loaded");
+			NVBOutputPMsg("Static plugin loaded");
       plugins.insert(dprovider->id(),dprovider);
       }
     }
@@ -62,18 +62,18 @@ NVBToolsFactory::NVBToolsFactory()
   QDir dir = QDir( qApp->libraryPaths().at(0), "*.so" );
 #endif
   if (!dir.cd ("tools"))
-    NVBOutputError("NVBToolsFactory::NVBToolsFactory",QString("Tool plugins directory %1/tools does not exist").arg(dir.absolutePath()));
+		NVBOutputError(QString("Tool plugins directory %1/tools does not exist").arg(dir.absolutePath()));
   else foreach (QString fileName, dir.entryList(QDir::Files)) {
     QPluginLoader loader(dir.absoluteFilePath(fileName));
-    NVBOutputPMsg("NVBToolsFactory::NVBToolsFactory",QString("Loading plugin %1").arg(fileName));
+		NVBOutputPMsg(QString("Loading plugin %1").arg(fileName));
     NVBDelegateProvider *plugin = qobject_cast<NVBDelegateProvider*>(loader.instance());
     if (plugin) plugins.insert(plugin->id(),plugin);
-    else NVBOutputError("NVBToolsFactory::NVBToolsFactory",loader.errorString());
+		else NVBOutputError(loader.errorString());
     }
 #endif
 
   if (!plugins.size())
-    NVBCriticalError("NVBToolsFactory::NVBToolsFactory",QString("No valid plugins found"));
+		NVBCriticalError(QString("No valid plugins found"));
 
   conf->beginGroup("Tools");
 

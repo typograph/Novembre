@@ -68,7 +68,7 @@ NVBQtiExportView::~NVBQtiExportView()
 
 void NVBQtiExportView::addSource( NVBDataSource * page, NVBVizUnion /* viz */ )
 {
-	QFileInfo finfo(page->owner()->name());
+	QFileInfo finfo(page->owner->name());
 
   QString comment = QInputDialog::getText(this,"Enter page comment",QString());
   

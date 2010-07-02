@@ -80,7 +80,7 @@ protected:
 
 public:
   NVBDataSourceLink(NVBDataSource* source):provider(source) {
-    if (provider) useDataSource(provider);
+		if (provider) useDataSource(provider);
     }
   virtual ~NVBDataSourceLink() {
     if (provider) releaseDataSource(provider);
@@ -108,14 +108,14 @@ Q_OBJECT
 public:
   NVB3DFilterDelegate(NVBDataSource* source):NVB3DDataSource(), NVBDataSourceLink(source) {
 //    connect(provider,SIGNAL(commentsChanged()),SIGNAL(commentsChanged()));
-
+		owner = source->owner;
 //    followSource(); // has to be called from subclasses
 
     }
   virtual ~NVB3DFilterDelegate() { if (provider) provider->disconnect(this); }
 
   virtual inline QString name() const { return provider->name(); }
-	virtual inline const NVBFile * owner() const { return provider->owner();}
+//	virtual inline const NVBFile * owner() const { return provider->owner();}
 //  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
   NVB_FORWARD_COMMENTS(provider);
@@ -164,6 +164,7 @@ public:
   NVB3DHardlinkDelegate(NVB3DDataSource * source):NVB3DDataSource(),NVBDataSourceLink(source),page(source) {
     NVB_FORWARD_DATASIGNALS(source);
     NVB_FORWARD_COLORSIGNALS(source);
+		owner = source->owner;
     connect(provider,SIGNAL(commentsChanged()),SIGNAL(commentsChanged()));
     connect(source,SIGNAL(objectPopped(NVBDataSource *, NVBDataSource *)),this,SLOT(reparentBranch(NVBDataSource *, NVBDataSource *)), Qt::QueuedConnection);
     }
@@ -174,7 +175,7 @@ public:
   NVB_FORWARD_COMMENTS(provider);
 
   virtual inline QString name() const { return provider->name(); }
-	virtual inline const NVBFile * owner() const { return provider->owner();}
+//	virtual inline const NVBFile * owner() const { return provider->owner();}
 //  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
 protected slots:
@@ -196,12 +197,12 @@ class NVBSpecFilterDelegate : public NVBSpecDataSource, public NVBDataSourceLink
 Q_OBJECT
 public:
   NVBSpecFilterDelegate(NVBDataSource* source):NVBSpecDataSource(),NVBDataSourceLink(source) {
-
+		owner = source->owner;
     }
   virtual ~NVBSpecFilterDelegate() { if (provider) provider->disconnect(this); }
 
   virtual inline QString name() const { return provider->name(); }
-	virtual inline const NVBFile * owner() const { return provider->owner();}
+//	virtual inline const NVBFile * owner() const { return provider->owner();}
 //  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
   NVB_FORWARD_COMMENTS(provider);
@@ -250,6 +251,7 @@ public:
   NVBSpecHardlinkDelegate(NVBSpecDataSource * source):NVBSpecDataSource(),NVBDataSourceLink(source),page(source) {
     NVB_FORWARD_DATASIGNALS(source);
     NVB_FORWARD_COLORSIGNALS(source);
+		owner = source->owner;
     connect(provider,SIGNAL(commentsChanged()),SIGNAL(commentsChanged()));
     connect(source,SIGNAL(objectPopped(NVBDataSource *, NVBDataSource *)),this,SLOT(reparentBranch(NVBDataSource *, NVBDataSource *)), Qt::QueuedConnection);
    }
@@ -260,7 +262,7 @@ public:
   NVB_FORWARD_COMMENTS(provider);
 
   virtual inline QString name() const { return provider->name(); }
-	virtual inline const NVBFile * owner() const { return provider->owner();}
+//	virtual inline const NVBFile * owner() const { return provider->owner();}
 //  virtual void setFileName(QString newfile) { provider->setFileName(newfile); }
 
 protected slots:

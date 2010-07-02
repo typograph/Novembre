@@ -137,7 +137,7 @@ void NVBCurveVizDelegate::paintCurves()
 {
   QList<QColor> colors = page->colors();
   if (colors.size() < curves.size())
-    NVBOutputError("NVBCurveVizDelegate::paintCurves","Not enough colors for repaint");
+    NVBOutputError("Not enough colors for repaint");
   else {
     for (int i = 0; i<curves.size(); i++) {
       curves[i]->setPen(QPen(colors.at(i)));

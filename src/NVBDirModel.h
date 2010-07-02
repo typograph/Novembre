@@ -55,11 +55,11 @@ public:
 
 	bool operator()(const NVBFileInfo * fi1, const NVBFileInfo * fi2) {
 		if (!fi1) {
-			NVBOutputError("NVBDirModelFileInfoLessThan::operator()","Got NULL NVBFileInfo");
+			NVBOutputError("Got NULL NVBFileInfo");
 			return false;
 			}
 		if (!fi2) {
-			NVBOutputError("NVBDirModelFileInfoLessThan::operator()","Got NULL NVBFileInfo");
+			NVBOutputError("Got NULL NVBFileInfo");
 			return true;
 			}
 		switch(sortOrder) {
@@ -228,6 +228,9 @@ private:
 	NVBFileFactory * fileFactory;
 	QFileSystemWatcher * watcher;
 	NVBDirModelColumns * columns;
+
+	int sortColumn;
+	Qt::SortOrder sortOrder;
 
 	NVBDirEntry* head;
 	NVBDirEntry * indexToEntry( const QModelIndex & index ) const;

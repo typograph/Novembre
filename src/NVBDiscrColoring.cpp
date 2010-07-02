@@ -23,11 +23,11 @@ NVBColoring::NVBRandomDiscrColorModel::NVBRandomDiscrColorModel(int ncolors):NVB
 QColor NVBColoring::NVBRandomDiscrColorModel::colorize(int index) const
 {
   if (index < 0 ) {
-    NVBOutputPMsg("NVBRandomDiscrColorModel::colorize","Negative color queried for.");
+    NVBOutputPMsg("Negative color queried for.");
     return Qt::black;
     }
   else if ( index >= nc) {
-    NVBOutputPMsg("NVBRandomDiscrColorModel::colorize","Expanding color base");
+    NVBOutputPMsg("Expanding color base");
     for( int i = nc; i <= index; i++)
       colors.append(newcolor());
     }

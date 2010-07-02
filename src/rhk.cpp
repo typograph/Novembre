@@ -102,19 +102,19 @@ QStringList RHKFileGenerator::availableInfoFields() const {
 NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
 	if (info.generator() != this) {
-		NVBOutputError("RHKFileGenerator::loadFile","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("RHKFileGenerator::loadFile","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		NVBOutputFileError(&file);
 		return 0;
 		}
 
@@ -137,25 +137,28 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   0x00, 0x00}; // STImage 004.002 1
 
 	if (info.generator() != this) {
-		NVBOutputError("RHKFileGenerator::loadFileInfo","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("RHKFileGenerator::loadFileInfo","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("RHKFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		NVBOutputFileError(&file);
 		return 0;
 		}
 
   NVBFileInfo * fi = 0;
 	fi = new NVBFileInfo(info);
-  if (!fi) throw nvberr_not_enough_memory;
+	if (!fi) {
+		NVBOutputError("NVBFileInfo creation failed");
+		return 0;
+		}
 
 //  QString name;
   NVB::PageType type;
@@ -172,7 +175,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
     header = getRHKHeader(file);
 
     if (memcmp(header.version, MAGIC, 28) != 0) {
-      NVBOutputError("RHKFileGenerator::loadFileInfo",QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
+			NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
       delete fi;
       return NULL;
     }
@@ -217,7 +220,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
         comments.insert("Page type",getPageTypeString(header.page_type));
         comments.insert("Scan direction",getDirectionString(header.scan));
         if (header.colorinfo_count > 1)
-          NVBOutputError("RHKFileGenerator::loadPageInfo",QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
+					NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
         quint16 cs;
         file.peek((char*)&cs,2);
         file.seek(file.pos() + header.colorinfo_count*(cs+2));
@@ -228,20 +231,20 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
         comments.insert("Line type",getLineTypeString(header.line_type));
 /* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
         if (header.colorinfo_count != 0) 
-          NVBOutputError("RHKFileGenerator::loadPageInfo",QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
+					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
 */
         if (header.page_type != 7 && header.page_type != 31)
           file.seek(file.pos() + 2*sizeof(float)*header.y_size);
         break;
         }
       case 3 : {
-        NVBOutputError("RHKFileGenerator::loadPageInfo",QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
+				NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
         type = NVB::SpecPage;
         file.seek(file.pos() + 2*sizeof(float)*header.y_size);
         }
       case 2 :
       default : {
-        NVBOutputError("RHKFileGenerator::loadPageInfo",QString("Non-existing (%1) page found. Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
+				NVBOutputError(QString("Non-existing (%1) page found. Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
         type = NVB::InvalidPage;
         }
       }
@@ -263,25 +266,25 @@ NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file)
   TRHKHeader h;
   file.peek((char*)&h,44);
   if (memcmp(h.version, MAGIC, 28) != 0) {
-		NVBOutputError("RHKFileGenerator::loadNextPage",QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to the developer").arg(file.fileName()));
+		NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to the developer").arg(file.fileName()));
 		return 0;
     }
   switch (h.type) {
     case 0 : {
-      NVBOutputVPMsg("RHKFileGenerator::loadNextPage","Topography page found");
+			NVBOutputVPMsg("Topography page found");
       return new RHKTopoPage(file);
       }
     case 1 : {
-      NVBOutputVPMsg("RHKFileGenerator::loadNextPage","Spectroscopy page found");
+			NVBOutputVPMsg("Spectroscopy page found");
       return new RHKSpecPage(file);
       }
     case 3 : {
-      NVBOutputError("RHKFileGenerator::loadNextPage",QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
+			NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
 			return 0;
       }
     case 2 :
     default : {
-      NVBOutputError("RHKFileGenerator::loadNextPage",QString("Non-existing (%1) page found. Your file might be corrupted. If not, please send the file %2 to the developer").arg(h.type).arg(file.fileName()));
+			NVBOutputError(QString("Non-existing (%1) page found. Your file might be corrupted. If not, please send the file %2 to the developer").arg(h.type).arg(file.fileName()));
 			return 0;
       }
     }
@@ -342,7 +345,7 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
 
   qint32 * dataRHK = (qint32*)malloc(header.page_data_size);
   if (file.read((char*)dataRHK,header.page_data_size) < header.page_data_size) {
-    NVBOutputError("RHKTopoPage::RHKTopoPage",QString("File %1 ended before the page could be fully read").arg(file.fileName()));
+		NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
     free(dataRHK);
     }
   else {
@@ -374,7 +377,7 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
       }
     }
   else {
-    NVBOutputError("RHKTopoPage::RHKTopoPage",QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
+		NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
 // FIXME    NVBSetContColorModel * m = new NVBSetContColorModel();
     for (int i = 0; i < header.colorinfo_count; i++) {
       qint16 len;
@@ -466,7 +469,7 @@ RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
       {
       float * tdata = (float*)malloc(header.page_data_size);
       if (file.read((char*)tdata,header.page_data_size) < header.page_data_size) {
-        NVBOutputError("RHKSpecPage::RHKSpecPage",QString("File %1 ended before the page could be fully read").arg(file.fileName()));
+				NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
         }
       else {
         scaler<float,double> floatscaler(0,1); //### Suppose there's no scaling
@@ -478,7 +481,7 @@ RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
     default : {
       qint32 * tdata = (qint32*)malloc(header.page_data_size);
       if (file.read((char*)tdata,header.page_data_size) < header.page_data_size) {
-        NVBOutputError("RHKSpecPage::RHKSpecPage",QString("File %1 ended before the page could be fully read").arg(file.fileName()));
+				NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
         }
       else {
         scaler<qint32,double> intscaler(header.z_offset,header.z_scale);
@@ -499,7 +502,7 @@ RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
   float * xposdata = posdata;
   float * yposdata = posdata + header.y_size;
   if ( header.page_type != 7 && header.page_type != 31  &&  file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
-    NVBOutputError("RHKSpecPage::RHKSpecPage",QString("File %1 ended before the page could be fully read").arg(file.fileName()));
+		NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
     }
   else {
     for (int i = 0; i<header.y_size; i++) {
@@ -513,7 +516,7 @@ RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
 
 /* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
   if (header.colorinfo_count != 0) 
-    NVBOutputError("RHKSpecPage::RHKSpecPage",QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
+		NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
 */
 }
 
@@ -556,7 +559,7 @@ QString RHKFileGenerator::getLineTypeString(qint32 type) {
     case 21: return "Electro chemistry";
     case 22: return "Discrete spectroscopy";
     default : {
-      NVBOutputError("RHKFileGenerator::getLineTypeString","Unknown line type %ld", type);
+			NVBOutputError(QString("Unknown line type %1").arg(type));
       return QString();
       }
     }
@@ -569,7 +572,7 @@ QString RHKFileGenerator::getSourceTypeString(qint32 type) {
     case 2 : return "Calculated page";
     case 3 : return "Imported page";
     default : {
-      NVBOutputError("RHKFileGenerator::getSourceTypeString","Unknown source type %ld", type);
+			NVBOutputError(QString("Unknown source type %1").arg(type));
       return QString();
       }
     }
@@ -582,7 +585,7 @@ QString RHKFileGenerator::getDirectionString(qint32 type) {
     case 2 : return "Up";
     case 3 : return "Down";
     default : {
-      NVBOutputError("RHKFileGenerator::getDirectionString","Unknown scan direction %ld", type);
+			NVBOutputError(QString("Unknown scan direction %1").arg(type));
       return QString();
       }
     }
@@ -593,7 +596,7 @@ QString RHKFileGenerator::getImageTypeString(qint32 type) {
     case 0 : return "Normal image";
     case 1 : return "Autocorrelation image";
     default : {
-      NVBOutputError("RHKFileGenerator::getImageTypeString","Unknown image type %ld", type);
+			NVBOutputError(QString("Unknown image type %1").arg(type));
       return QString();
       }
     }
@@ -642,7 +645,7 @@ QString RHKFileGenerator::getPageTypeString(qint32 type) {
     case 38 : return "Ramp spectroscopy at relative points";
     case 39 : return "Discrete spectroscopy at relative points";
     default : {
-      NVBOutputError("RHKFileGenerator::getPageTypeString","Invalid page type %ld found",type);
+			NVBOutputError(QString("Invalid page type %1 found").arg(type));
       return QString();
       }
     }

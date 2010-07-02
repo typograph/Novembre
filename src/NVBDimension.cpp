@@ -156,10 +156,10 @@ NVBPhysValue::NVBPhysValue(const QString & s)
     if (ok)
       value *= dim.purify();
     else
-      NVBOutputError("NVBPhysValue::NVBPhysValue",QString("Converting string \"%1\" to double failed").arg(v.left(i)));
+			NVBOutputError(QString("Converting string \"%1\" to double failed").arg(v.left(i)));
     }
   else
-    NVBOutputError("NVBPhysValue::NVBPhysValue",QString("Converting string \"%1\" to number and dimension failed").arg(s));
+		NVBOutputError(QString("Converting string \"%1\" to number and dimension failed").arg(s));
 }
 
 NVBPhysValue::NVBPhysValue(const QString & s, NVBDimension d):dim(d)
@@ -169,7 +169,7 @@ NVBPhysValue::NVBPhysValue(const QString & s, NVBDimension d):dim(d)
   if (ok)
     value *= dim.purify(); // If not OK, value will be 0;
   else
-    NVBOutputError("NVBPhysValue::NVBPhysValue",QString("Converting string \"%1\" to double failed").arg(s));
+		NVBOutputError(QString("Converting string \"%1\" to double failed").arg(s));
 }
 
 NVBPhysValue::NVBPhysValue(double f, NVBDimension d):dim(d),value(f)

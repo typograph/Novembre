@@ -77,7 +77,7 @@ NVBMain::NVBMain():QMainWindow()
 
   conf = qApp->property("NVBSettings").value<QSettings*>();
   if (!conf)
-    NVBCriticalError("NVBMain::NVBMain","Configuration missing");
+		NVBCriticalError("Configuration missing");
 
 #ifdef NVB_ENABLE_LOG
   log = new NVBLogWidgetDock(new NVBLogWidget("Novembre log",this),this);
@@ -98,7 +98,7 @@ NVBMain::NVBMain():QMainWindow()
 
   files = qApp->property("filesFactory").value<NVBFileFactory*>();
   if (!files)
-    NVBCriticalError("NVBMain::NVBMain","File factory not properly initialised");
+		NVBCriticalError("File factory not properly initialised");
 
   resize(conf->value("Size", QSize(800, 600)).toSize());
 
@@ -139,7 +139,7 @@ void NVBMain::callBrowser()
     }
   else {
     if (!(fileBrowser = new NVBBrowser(workspace)))
-      NVBCriticalError("NVBMain::callBrowser","Browser creation failed");
+			NVBCriticalError("Browser creation failed");
 #if QT_VERSION < 0x040300
     addWindow(fileBrowser);
 #endif
@@ -147,6 +147,8 @@ void NVBMain::callBrowser()
     connect(fileBrowser,SIGNAL(destroyed(QObject*)),this,SLOT(browserDestroyed()));
     connect(fileBrowser,SIGNAL(pageRequest(QString, int)),
                    this,SLOT(openPage(QString, int)));
+		connect(fileBrowser,SIGNAL(pageRequest(const NVBAssociatedFilesInfo&, int)),
+									 this,SLOT(openPage(const NVBAssociatedFilesInfo&, int)));
 //    conf->setValue("ShowBrowserOnStart",QVariant(true));
     fileBrowser->resize(conf->value("Browser/Size", QSize(400, 300)).toSize());
     }
@@ -162,7 +164,7 @@ void NVBMain::actualize( QWidget * window)
 {
   static QWidget * lastwindow = 0;
 
-  NVBOutputVPMsg("NVBMain::actualize","(%d)",window);
+	NVBOutputVPMsg(QString("Activeted window \"%2\" (%1)").arg((int)window).arg(window ? window->windowTitle() : "No window"));
   if (lastwindow == window) return;
 
   lastwindow = window;
@@ -240,7 +242,7 @@ void NVBMain::fileSave( )
 
 void NVBMain::fileExport( )
 {
-  NVBOutputPMsg("NVBMain::fileExport","Not implemented yet");
+	NVBOutputPMsg("Not implemented yet");
 }
 
 void NVBMain::editUndo( )
@@ -449,6 +451,11 @@ void NVBMain::openPage(QString filename, int pagenum)
   openFile(filename, QList<int>() << pagenum);
 }
 
+void NVBMain::openPage(const NVBAssociatedFilesInfo & info, int pagenum)
+{
+	openFile(info, QList<int>() << pagenum);
+}
+
 void NVBMain::openPage(NVBDataSource * source)
 {
   new NVBFileWindow(this, NVBToolsFactory::hardlinkDataSource(source));
@@ -457,7 +464,7 @@ void NVBMain::openPage(NVBDataSource * source)
 void NVBMain::openFile(QString filename, QList< int > pages)
 {
   if (filename.isEmpty()) {
-    NVBOutputError("NVBMain::openFile","No filename supplied");
+		NVBOutputError("No filename supplied");
     return;
     }
   
@@ -474,6 +481,20 @@ void NVBMain::openFile(QString filename, QList< int > pages)
     }
 }
 
+void NVBMain::openFile(const NVBAssociatedFilesInfo & info, QList< int > pages)
+{
+	NVBFile * nFile = files->openFile(info);
+	if (!nFile) return;
+
+	if (pages.isEmpty())
+		for(int i=0;i<nFile->rowCount();i++)
+			pages << i;
+
+	foreach(int pagenum, pages) {
+		NVBFileWindow * nWc = new NVBFileWindow(this, nFile->index(pagenum), nFile);
+		if (nWc) addWindow(nWc);
+		}
+}
 void NVBMain::redirectAction(QAction * action)
 {
 #if QT_VERSION >= 0x040300

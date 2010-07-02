@@ -25,7 +25,7 @@
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
 
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 class NVBFileQueue : protected QList<NVBFile*> {
 private:
@@ -42,8 +42,10 @@ public:
 		virtual void add(NVBFile* file);
 	/// If a file with \a filename is in the queue, it is removed from the queue and returned
 		virtual NVBFile * retrieve(QString filename);
+		virtual NVBFile * retrieve(const NVBAssociatedFilesInfo & info);
 	/// If a file with \a filename is in the queue, it is returned without removing it from the queue
 		virtual NVBFile * consult(QString filename);
+		virtual NVBFile * consult(const NVBAssociatedFilesInfo & info);
 };
 
 class NVBFileLoader : public QObject {
@@ -70,6 +72,7 @@ private:
 	/// Find file in list by name
 		int loadedFileIndex( QString filename );
 		NVBFile * retrieveLoadedFile( QString filename );
+		NVBFile * retrieveLoadedFile( const NVBAssociatedFilesInfo & info);
 
 	/// Available generators
 		QList<const NVBFileGenerator*> generators;

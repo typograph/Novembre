@@ -92,7 +92,7 @@ CreatecHeader CreatecFileGenerator::getCreatecHeader( QFile & file )
           tval = NVBPhysValue(dval,NVBDimension(dimstr));
           } 
       else {
-        if (!dimstr.isEmpty()) NVBOutputError("CreatecFileGenerator::getCreatecHeader","Dimensionised string in "+s);
+				if (!dimstr.isEmpty()) NVBOutputError("Dimensionised string in "+s);
         else
           tval = value;
         }
@@ -121,18 +121,18 @@ bool CreatecFileGenerator::canLoadFile( QString filename )
 NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
 	if (info.generator() != this) {
-		NVBOutputError("CreatecFileGenerator::loadFile","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("CreatecFileGenerator::loadFile","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	NVBFile * f = new NVBFile(info);
 	if (!f) {
-		NVBOutputError("CreatecFileGenerator::loadFile","Memory allocation failed");
+		NVBOutputError("Memory allocation failed");
 		return 0;
 		}
 
@@ -146,7 +146,7 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 	if (ext == "dat") {
 		f->addSources( CreatecDatPage::loadAllChannels(ffname) );
 		if (info.count() > 1)
-			NVBOutputPMsg("CreatecFileGenerator::loadFile","Associated files include more that one *.dat file");
+			NVBOutputPMsg("Associated files include more that one *.dat file");
 		}
 //	else if (ext == "lat")
 //		f->addSource( new CreatecLatPage(file) );
@@ -155,7 +155,7 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 //	else if (ext == "tspec")
 //	f->addSource( new CreatecTSpecPage(file) );
 	else {
-		NVBOutputError("CreatecFileGenerator::loadFile",QString("Didn't recognise file format of %1").arg(ffname));
+		NVBOutputError(QString("Didn't recognise file format of %1").arg(ffname));
 		}
 
 	if (f->rowCount() == 0) {
@@ -169,19 +169,19 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo & info ) const throw()
 {
 	if (info.generator() != this) {
-		NVBOutputError("CreatecFileGenerator::loadFile","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("CreatecFileGenerator::loadFile","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("CreatecFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		NVBOutputFileError(&file);
 		return 0;
 		}
 
@@ -231,11 +231,11 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
 	QFile file(filename);
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("CreatecDatPage::loadAllChannels",QString("Couldn't open file %1 : %2").arg(filename, file.errorString()));
+		NVBOutputFileError(&file);
 		return result;
 		}
 	if ( !QString(file.readLine(100)).contains("[param",Qt::CaseInsensitive) ) {
-		NVBOutputError("CreatecDatPage::loadAllChannels",QString("Unknown file format in %1").arg(filename));
+		NVBOutputError(QString("Unknown file format in %1").arg(filename));
 		return result;
 		}
 
@@ -248,7 +248,7 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
   int data_points = file_header.value("Num.X",0).toInt() * file_header.value("Num.Y",0).toInt();
 
 	if (data_points == 0) {
-		NVBOutputError("CreatecDatPage::loadAllChannels",QString("Zero data size in %1").arg(filename));
+		NVBOutputError(QString("Zero data size in %1").arg(filename));
 		return result;
 		}
 
@@ -258,7 +258,7 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
   format.chop(2);
 
   if (format == "[Parameter]") {
-    NVBOutputError("CreatecDatPage::loadAllChannels","No idea how to deal with [Parameter]");
+		NVBOutputError("No idea how to deal with [Parameter]");
     return result;
     }
   else if (format == "[Paramet32]") {
@@ -291,10 +291,10 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
     file.read((char*) zbuf, zsize);
     int errorcode;
     if ((errorcode = uncompress ((Bytef *) buf, &unzsize, (Bytef *) zbuf, zsize)) != Z_OK) {
-      NVBOutputError("CreatecDatPage::loadAllChannels","Uncompressing failed with error %d. Buffer size %d",errorcode, unzsize);
+			NVBOutputError(QString("Uncompressing failed with error %1. Buffer size %2").arg(errorcode).arg(unzsize));
       }
     else
-      NVBOutputPMsg("CreatecDatPage::loadAllChannels","Uncompressed buffer to %d bytes", unzsize);
+			NVBOutputPMsg(QString("Uncompressed buffer to %1 bytes").arg(unzsize));
 
     free(zbuf);
 
@@ -308,7 +308,7 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
     free(buf);
     }
   else {
-    NVBOutputError("CreatecDatPage::loadAllChannels","No idea how to deal with " + format);
+		NVBOutputError("No idea how to deal with " + format);
     }
 
   return result;
@@ -427,7 +427,7 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 						}
 					}
 			else
-				NVBOutputError("CreatecVertPage::loadAllChannels",QString("Unknown token in filename: %1").arg(token));
+				NVBOutputError(QString("Unknown token in filename: %1").arg(token));
 			}
 		}
 // Actually all that was rather unnecessary - this information is only needed for the new NVBAxedData
@@ -440,7 +440,7 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		QFile file(filename);
 
 		if (!file.open(QIODevice::ReadOnly)) {
-				NVBOutputError("CreatecVertPage::loadAllChannels",QString("Couldn't open file %1 : %2").arg(filename,file.errorString()));
+				NVBOutputFileError(&file);
 				return QList<NVBDataSource*>();
 				}
 
@@ -452,7 +452,7 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		format.chop(2);
 
 		if (format != "[Parameter]") {
-			NVBOutputError("CreatecVertPage::loadAllChannels",QString("Don't know how to deal with format %1").arg(format));
+			NVBOutputError(QString("Don't know how to deal with format %1").arg(format));
 			return QList<NVBDataSource*>();
 		}
 

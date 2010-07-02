@@ -155,7 +155,10 @@ void NVBLogFile::addMessage(NVB::LogEntryType type, QString issuer, QString mess
 
 NVBLogFile::NVBLogFile(QString filename, QObject * parent):QFile(filename, parent)
 {
-  if (!open(QIODevice::Append)) throw nvberr_file_error;
+	if (!open(QIODevice::Append)) {
+		NVBOutputFileError(this);
+		throw;
+		}
   write(QString("-----< %1 >-----\n").arg(QDateTime::currentDateTime().toString()).toUtf8());
   flush();
 

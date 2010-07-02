@@ -26,7 +26,7 @@ NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 	foreach (QObject *plugin, QPluginLoader::staticInstances()) {
 		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(plugin);
 		if (generator) {
-			NVBOutputPMsg("NVBFileFactory::NVBFileFactory","Static plugin loaded");
+			NVBOutputPMsg("Static plugin loaded");
 			generators.append(generator);
 		}
 	}
@@ -40,18 +40,18 @@ NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 	QDir dir = QDir(qApp->libraryPaths().at(0), QString("*.so"));
 #endif
 	if (!dir.cd ("files"))
-		NVBOutputError("NVBFileFactory::NVBFileFactory",QString("File plugin directory %1/files does not exist").arg(dir.absolutePath()));
+		NVBOutputError(QString("File plugin directory %1/files does not exist").arg(dir.absolutePath()));
 	else foreach (QString fileName, dir.entryList(QDir::Files)) {
 		QPluginLoader loader(dir.absoluteFilePath(fileName));
-		NVBOutputPMsg("NVBFileFactory::NVBFileFactory",QString("Loading plugin %1").arg(fileName));
+		NVBOutputPMsg(QString("Loading plugin %1").arg(fileName));
 		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(loader.instance());
 		if (generator) generators.append(generator);
-		else NVBOutputError("NVBFileFactory::NVBFileFactory",loader.errorString());
+		else NVBOutputError(loader.errorString());
 	}
 #endif
 
 	if (!generators.size())
-		NVBCriticalError("NVBFileFactory::NVBFileFactory",QString("No valid plugins found"));
+		NVBCriticalError(QString("No valid plugins found"));
 	else
 		foreach (const NVBFileGenerator * g, generators) {
 			commentNames << g->availableInfoFields();
@@ -82,14 +82,14 @@ NVBFileFactory::~NVBFileFactory()
 
 NVBFile * NVBFileFactory::openFile( QString filename )
 {
-	NVBOutputPMsg("NVBFileFactory::openFile",QString("Requested file %1").arg(filename));
+	NVBOutputPMsg(QString("Requested file %1").arg(filename));
 
 	if (NVBFile * f = retrieveLoadedFile(filename)) {
-		NVBOutputVPMsg("NVBFileFactory::openFile",QString("Found already loaded file."));
+		NVBOutputVPMsg(QString("Found already loaded file."));
 		return f;
 	}
 	else if (NVBFile * f = deadTree->retrieve(filename)) {
-		NVBOutputVPMsg("NVBFileFactory::openFile",QString("Restored released file."));
+		NVBOutputVPMsg(QString("Restored released file."));
 		files.append(f);
 		return f;
 	}
@@ -99,21 +99,33 @@ NVBFile * NVBFileFactory::openFile( QString filename )
 
 NVBFile* NVBFileFactory::openFile( const NVBAssociatedFilesInfo & info )
 {
-	return openFile(info.first());
+	NVBOutputPMsg(QString("Requested file %1").arg(info.name()));
+
+	if (NVBFile * f = retrieveLoadedFile(info)) {
+		NVBOutputVPMsg(QString("Found already loaded file."));
+		return f;
+	}
+	else if (NVBFile * f = deadTree->retrieve(info)) {
+		NVBOutputVPMsg(QString("Restored released file."));
+		files.append(f);
+		return f;
+	}
+	else
+		return loadFile(info);
 }
 
 
 NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
 {
 
-	NVBOutputVPMsg("NVBFileFactory::getFileInfo",QString("Requested file info for %1").arg(filename));
+	NVBOutputVPMsg(QString("Requested file info for %1").arg(filename));
 
 	if (NVBFile * f = retrieveLoadedFile(filename)) {
-		NVBOutputVPMsg("NVBFileFactory::getFileInfo",QString("Constructed file info from loaded file."));
+		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
 		return new NVBFileInfo(f);
 	}
 	else if (NVBFile * f = deadTree->consult(filename)) {
-		NVBOutputVPMsg("NVBFileFactory::getFileInfo",QString("Constructed file info from released file"));
+		NVBOutputVPMsg(QString("Constructed file info from released file"));
 		return new NVBFileInfo(f);
 	}
 	else
@@ -276,10 +288,26 @@ NVBFile * NVBFileQueue::retrieve(QString filename)
 	return 0;
 }
 
+NVBFile * NVBFileQueue::retrieve(const NVBAssociatedFilesInfo & info)
+{
+	for (int i=0; i<size(); i++) {
+		if (at(i)->sources() == info) return takeAt(i);
+	}
+	return 0;
+}
+
 NVBFile * NVBFileQueue::consult(QString filename)
 {
 	for (int i=0; i<size(); i++) {
 		if (at(i)->sources().contains(filename)) return operator[](i);
+	}
+	return NULL;
+}
+
+NVBFile * NVBFileQueue::consult(const NVBAssociatedFilesInfo & info)
+{
+	for (int i=0; i<size(); i++) {
+		if (at(i)->sources() == info) return operator[](i);
 	}
 	return NULL;
 }
@@ -314,6 +342,14 @@ NVBFile * NVBFileFactory::retrieveLoadedFile(QString filename)
 {
 	foreach (NVBFile * f, files) {
 		if (f->sources().contains(filename)) return f;
+	}
+	return 0;
+}
+
+NVBFile * NVBFileFactory::retrieveLoadedFile(const NVBAssociatedFilesInfo & info)
+{
+	foreach (NVBFile * f, files) {
+		if (f->sources() == info) return f;
 	}
 	return 0;
 }

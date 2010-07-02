@@ -53,7 +53,7 @@
 
 //#include "NVBGlobal.h"
 
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 #if QT_VERSION >= 0x040300
 class NVBPersistentMdiSubWindow : public QMdiSubWindow {
@@ -150,8 +150,10 @@ public slots:
 
     void openPage(NVBDataSource*);
     void openPage(QString , int);
-    void openFile(QString , QList<int> = QList<int>());
-    void callFileOpenDialog();
+		void openPage(const NVBAssociatedFilesInfo &, int);
+		void openFile(QString , QList<int> = QList<int>());
+		void openFile(const NVBAssociatedFilesInfo &, QList<int> = QList<int>());
+		void callFileOpenDialog();
     void callBrowser();
     void closeBrowser();
     void browserDestroyed();

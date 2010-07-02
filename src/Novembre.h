@@ -31,7 +31,7 @@
 #include <QUdpSocket>
 #include <QStringList>
 
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 class NVBApplication : public QApplication {
 Q_OBJECT

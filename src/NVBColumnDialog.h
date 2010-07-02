@@ -166,6 +166,8 @@ public:
   QList<NVBColumnAction> getActions();
   QList<NVBColumnDescriptor> getColumns();
 
+	void disableEntry(int entry);
+
 public slots:
   NVBColumnDialogWidget * addColumn(NVBColumnDescriptor d = NVBColumnDescriptor());
   void removeColumn(int);

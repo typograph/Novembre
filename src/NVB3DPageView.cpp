@@ -68,7 +68,7 @@ void NVB3DPageView::rowsInserted(const QModelIndex & parent, int start, int end)
     if (tmp.valid && tmp.vtype == NVB::ThreeDView)
       insertWidget(i,tmp.ThreeDViz);
     else {
-      NVBOutputError("NVB3DPageView::rowsInserted","Unsuitable viz type");
+			NVBOutputError("Unsuitable viz type");
       insertWidget(i,new QWidget(this));
       }
     }

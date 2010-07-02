@@ -67,19 +67,19 @@ NanonisHeader NanonisFileGenerator::getNanonisHeader( QFile & file )
 NVBFile * NanonisFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
 	if (info.generator() != this) {
-		NVBOutputError("NanonisFileGenerator::loadFile","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("NanonisFileGenerator::loadFile","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("NanonisFileGenerator::loadFile",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		NVBOutputFileError(&file);
 		return 0;
 		}
 
@@ -116,19 +116,19 @@ NVBFile * NanonisFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info) const throw()
 {
 	if (info.generator() != this) {
-		NVBOutputError("NanonisFileGenerator::loadFileInfo","Associated files provided by other generator");
+		NVBOutputError("Associated files provided by other generator");
 		return 0;
 		}
 
 	if (info.count() == 0) {
-		NVBOutputError("NanonisFileGenerator::loadFileInfo","No associated files");
+		NVBOutputError("No associated files");
 		return 0;
 		}
 
 	QFile file(info.first());
 
 	if (!file.open(QIODevice::ReadOnly)) {
-		NVBOutputError("NanonisFileGenerator::loadFileInfo",QString("Couldn't open file %1 : %2").arg(info.first(),file.errorString()));
+		NVBOutputFileError(&file);
 		return 0;
 		}
 
@@ -142,14 +142,14 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
   file.close();
 
 	if (!h.contains("DATA_INFO")) {
-		NVBOutputError("NanonisFileGenerator::loadFileInfo","File format error: no DATA_INFO field");
+		NVBOutputError("File format error: no DATA_INFO field");
 		return 0;
 		}
 
   QStringList l = h.value("DATA_INFO");
 
 	if (l.isEmpty()) {
-		NVBOutputError("NanonisFileGenerator::loadFileInfo","File format error: DATA_INFO field empty");
+		NVBOutputError("File format error: DATA_INFO field empty");
 		return 0;
 		}
 
@@ -162,7 +162,7 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 
 	NVBFileInfo * fi = new NVBFileInfo(info.first());
 	if (!fi) {
-		NVBOutputError("NanonisFileGenerator::loadFileInfo","NVBFileInfo allocation failure");
+		NVBOutputError("NVBFileInfo allocation failure");
 		return 0;
 		}
 
@@ -200,18 +200,18 @@ NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStri
   // size
 
   if (!header.contains("SCAN_PIXELS") && header.value("SCAN_PIXELS").isEmpty())
-    throw nvberr_invalid_format;
+		throw;
 
   QStringList s_size = header.value("SCAN_PIXELS").first().split(' ',QString::SkipEmptyParts);
   _resolution = QSize(s_size.at(0).toInt(), s_size.at(1).toInt());
 
   if (!header.contains("SCAN_RANGE") && header.value("SCAN_RANGE").isEmpty())
-    throw nvberr_invalid_format;
+		throw;
 
   QStringList s_range = header.value("SCAN_RANGE").first().split(' ',QString::SkipEmptyParts);
 
   if (!header.contains("SCAN_OFFSET") && header.value("SCAN_OFFSET").isEmpty())
-    throw nvberr_invalid_format;
+		throw;
 
   QStringList s_offset = header.value("SCAN_OFFSET").first().split(' ',QString::SkipEmptyParts);
 

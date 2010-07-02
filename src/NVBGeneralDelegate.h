@@ -168,7 +168,7 @@ struct NVBVizUnion {
           }
         default : {
   //        delete u.p;
-          NVBOutputError("NVBVizUnion::clear","Unknown viz type %d",vtype);
+					NVBOutputError(QString("Unknown viz type %1").arg(vtype));
           break;
           }
         }

@@ -27,7 +27,7 @@ NVBVizModel::NVBVizModel(QAbstractListModel * model, NVB::ViewType vtype):QAbstr
 //   vizs.append(NVBVizUnion()); // Invalid union
 
   if (pagemodel->rowCount())
-    NVBOutputError("NVBVizModel::NVBVizModel","Parent page model not empty!");
+    NVBOutputError("Parent page model not empty!");
 //    pagesInserted(QModelIndex(),0,pagemodel->rowCount()-1);
 
 }

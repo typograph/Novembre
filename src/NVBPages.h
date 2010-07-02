@@ -16,7 +16,7 @@
 #include "NVBDataSource.h"
 
 using namespace NVBColoring;
-using namespace NVBErrorCodes;
+// using namespace NVBErrorCodes;
 
 /**
 \class NVB3DPage
@@ -36,9 +36,6 @@ protected:
 
   /// The name of the source
   QString pagename;
-	/// The owner of the source
-	// TODO : so, what happens if a source is added to another container?
-	NVBFile * file;
 
 	/// \returns \b true if the color model was successfully set to \a colorModel .
 	/// If \a colorModel is 0, nothing is changed.
@@ -59,10 +56,6 @@ public:
 
   /// \returns the name of the source
   virtual inline QString name() const { return pagename;}
-///// Here, it's not possible to just return the filename
-///// since NVBAssociatedFileInfo is kind of big...
-	/// \returns the file the data originates from
-	virtual inline const NVBFile * owner() const { return file; }
 
   virtual inline NVBDimension xDim() const { return xd; }
   virtual inline NVBDimension yDim() const { return yd; }
@@ -95,9 +88,6 @@ protected:
 
   /// The name of the source
   QString pagename;
-	/// The owner of the source
-	// TODO : so, what happens if a source is added to another container?
-	NVBFile * file;
 
 /// \returns \b true if the color model was successfully set to \a colorModel . If \a colorModel is 0, nothing is changed.
 	virtual bool setColorModel( NVBDiscrColorModel * colorModel );
@@ -119,8 +109,6 @@ public:
 
   /// \returns the name of the source
   virtual inline QString name() const { return pagename;}
-  /// \returns the name of the file the data originates from
-	virtual inline const NVBFile * owner() const { return file; }
 
   virtual inline NVBDimension xDim() const { return xd; }
   virtual inline NVBDimension yDim() const { return yd; }

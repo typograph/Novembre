@@ -107,6 +107,7 @@ NVBCircAverager::NVBCircAverager(NVB3DDataSource * topo, NVBViewController * wnd
 
   // Set a parent. Thus, if user interrupts the selection process, this delegate can be deleted as a child
   setParent(qApp);
+	owner = topo->owner;
 
   // As of that moment bullseye is not yet created, so we can't do much
 
