@@ -12,15 +12,15 @@
 #ifndef NVBSOURCE_H
 #define NVBSOURCE_H
 
-#include <QMap>
-#include <QList>
-#include <QPointF>
-#include <QSize>
-#include <QString>
-#include <QColor>
-#include <QString>
-#include <QDateTime>
-#include <QMetaType>
+#include <QtCore/QMap>
+#include <QtCore/QList>
+#include <QtCore/QPointF>
+#include <QtCore/QSize>
+#include <QtCore/QString>
+#include <QtGui/QColor>
+#include <QtCore/QString>
+#include <QtCore/QDateTime>
+#include <QtCore/QMetaType>
 #include <qwt_data.h>
 
 #include "dimension.h"

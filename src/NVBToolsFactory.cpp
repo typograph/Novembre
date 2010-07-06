@@ -35,9 +35,9 @@
 Q_IMPORT_PLUGIN(nvbdviz);
 // Q_IMPORT_PLUGIN(nvbimport);
 #ifdef NVB_STATIC
-//Q_IMPORT_PLUGIN(nvbtopo);
-//Q_IMPORT_PLUGIN(nvbspec);
-//Q_IMPORT_PLUGIN(nvbexport);
+Q_IMPORT_PLUGIN(nvbtopo);
+Q_IMPORT_PLUGIN(nvbspec);
+Q_IMPORT_PLUGIN(nvbexport);
 Q_IMPORT_PLUGIN(nvbcolor);
 #endif
 

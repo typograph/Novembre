@@ -12,8 +12,8 @@
 #ifndef NVBFILE_H
 #define NVBFILE_H
 
-#include <QString>
-#include <QRectF>
+#include <QtCore/QString>
+#include <QtCore/QRectF>
 
 #include "NVBFileInfo.h"
 #include "NVBPages.h"
