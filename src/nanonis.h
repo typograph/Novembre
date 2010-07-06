@@ -26,10 +26,10 @@
 
 //#include "mychar.h"
 
-#include <QtPlugin>
-#include <QFile>
-#include <QHash>
-#include <QString>
+#include <QtCore/QtPlugin>
+#include <QtCore/QFile>
+#include <QtCore/QHash>
+#include <QtCore/QString>
 #include "NVBVariant.h"
 #include "NVBFileGenerator.h"
 #include "NVBPages.h"
@@ -67,7 +67,7 @@ public:
 			return exts;
 			}
 
-	QStringList NanonisFileGenerator::availableInfoFields() const;
+	QStringList availableInfoFields() const;
 
 	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
 	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();

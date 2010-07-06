@@ -144,7 +144,7 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
     conf->setValue("PluginPath",NVB_PLUGINS);
   if (!QFile::exists(conf->value("PluginPath").toString()))
     if (NVBSettings::showGeneralSettings() == QDialog::Rejected)
-      throw nvberr_no_sense;
+      throw;
 #endif
 
   while (true) {

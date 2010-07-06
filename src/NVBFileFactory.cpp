@@ -10,8 +10,10 @@
 //
 //
 #include "NVBFileFactory.h"
-#include <QStringList>
-#include <QRegExp>
+#include "NVBFileBundle.h"
+#include <QtCore/QStringList>
+#include <QtCore/QRegExp>
+#include <QtGui/QApplication>
 
 #ifdef NVB_STATIC
 Q_IMPORT_PLUGIN(rhk);
@@ -23,6 +25,8 @@ Q_IMPORT_PLUGIN(createc);
 
 NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 {
+	generators.append(new NVBFileBundle(this));
+  
 	foreach (QObject *plugin, QPluginLoader::staticInstances()) {
 		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(plugin);
 		if (generator) {
@@ -133,6 +137,24 @@ NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
 
 }
 
+NVBFileInfo * NVBFileFactory::getFileInfo( const NVBAssociatedFilesInfo & info)
+{
+
+	NVBOutputVPMsg(QString("Requested file info %1").arg(info.name()));
+
+	if (NVBFile * f = retrieveLoadedFile(info)) {
+		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
+		return new NVBFileInfo(f);
+	}
+	else if (NVBFile * f = deadTree->consult(info)) {
+		NVBOutputVPMsg(QString("Constructed file info from released file"));
+		return new NVBFileInfo(f);
+	}
+	else
+		return loadFileInfo(info);
+
+}
+
 QList<const NVBFileGenerator*> NVBFileFactory::getGeneratorsFromFilename(QString filename) const {
 
 	// First find a wildcard that matches (we assume there's only one)
@@ -180,7 +202,10 @@ QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromDir(const QDir 
 	QStringList filenames = d.entryList(getDirFilters(),QDir::Files,QDir::Name);
 	for(QStringList::iterator it = filenames.begin();it != filenames.end();it++)
 		*it = d.absolutePath() + "/" + *it;
+	return associatedFilesFromList(filenames,old_files,deleted);
+}
 
+QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromList(QStringList filenames, QList<NVBAssociatedFilesInfo> * old_files, QList<int> * deleted ) const {
 	// Remove already loaded files from the list
 	// We assume the list is OK, i.e. there're no two infos using the same file
 	if (old_files)
@@ -218,7 +243,10 @@ QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromDir(const QDir 
 							}
 						}
 			}
-		files.append(info);
+		if (info.count() == 0)
+		  NVBOutputError(QString("Couldn't load file %1").arg(filenames.takeFirst()));
+		else
+		  files.append(info);
 // Yeah, I know goto's are evil, but how else can I solve this thing with breaking 2 loops?
 skip_file: ;
 		}

@@ -12,12 +12,12 @@
 #ifndef NVBFACTORY_H
 #define NVBFACTORY_H
 
-#include <QApplication>
-#include <QList>
-#include <QString>
-#include <QStringList>
-#include <QDir>
-#include <QLibrary>
+#include <QtGui/QApplication>
+#include <QtCore/QList>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QDir>
+#include <QtCore/QLibrary>
 //#include <dlfcn.h>
 
 #include "NVBLogger.h"
@@ -83,8 +83,8 @@ private:
 		NVBFile* loadFile( const NVBAssociatedFilesInfo & info );
 
 	/// Load only info from \a filename. 
-		inline NVBFileInfo* loadFileInfo( QString filename ) { return loadFileInfo(associatedFiles(filename)); }
-		inline NVBFileInfo* loadFileInfo( const NVBAssociatedFilesInfo & info )  { return info.loadFileInfo(); }
+		inline NVBFileInfo* loadFileInfo( QString filename ) const { return loadFileInfo(associatedFiles(filename)); }
+		inline NVBFileInfo* loadFileInfo( const NVBAssociatedFilesInfo & info ) const { return info.loadFileInfo(); }
 
 	/// Cache of parameters available from generators
 		QStringList commentNames;
@@ -102,15 +102,13 @@ public:
 	/// Checks all caches for file \a filename, if found, returns it, if not, uses \a loadFile
 	/// @param filename Name of the file to be open
 		NVBFile* openFile( QString filename );
-//		{ return openFile(associatedFiles(filename)); }
 		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
 
 	/// Load only info from \a filename. Reuses loaded files if any
 	/// @param filename Name of the file for the info to be read from.
 	/// @return info from file \a filename
 		NVBFileInfo* getFileInfo( QString filename );
-//		{ return getFileInfo(associatedFiles(filename)); }
-//		NVBFileInfo* getFileInfo( const NVBAssociatedFilesInfo & info );
+		NVBFileInfo* getFileInfo( const NVBAssociatedFilesInfo & info );
 
 	/// Generates a string of openable files in the format acceptable by \c QDir
 		QStringList getDirFilters() const;
@@ -120,12 +118,15 @@ public:
 
 	/// Returns possible comment fields
 		QStringList availableInfoFields() const { return commentNames; }
+		
 	/// Returns info about files associated with name \a filename
 		NVBAssociatedFilesInfo associatedFiles(QString filename) const;
-
 	/// Return the smallest possible list of all new file associations in folder.
 	/// Files in \a files will be taken into account and won't be reloaded
 		QList<NVBAssociatedFilesInfo> associatedFilesFromDir(const QDir & d, QList<NVBAssociatedFilesInfo> * old_files = 0, QList<int> * deleted = 0 ) const;
+	/// Return the smallest possible set of files loaded from the supplied list.
+	/// Files in \a files will be taken into account and won't be reloaded
+		QList<NVBAssociatedFilesInfo> associatedFilesFromList(QStringList names, QList<NVBAssociatedFilesInfo> * old_files = 0, QList<int> * deleted = 0 ) const;
 
 private slots:
 	/// Put file in the dead tree
