@@ -12,12 +12,12 @@
 #ifndef NVBFILEINFO_H
 #define NVBFILEINFO_H
 
-#include <QString>
-#include <QStringList>
-#include <QFileInfo>
-#include <QDir>
-#include <QList>
-#include <QVariant>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QFileInfo>
+#include <QtCore/QDir>
+#include <QtCore/QList>
+#include <QtCore/QVariant>
 
 #include "NVBDataSource.h"
 #include "NVBTokens.h"

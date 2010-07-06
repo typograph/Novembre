@@ -14,8 +14,8 @@
 #define NVBDIMENSION_H
 
 #include <math.h>
-#include <QMetaType>
-#include <QString>
+#include <QtCore/QMetaType>
+#include <QtCore/QString>
 #include "NVBLogger.h"
 
 #ifndef exp10

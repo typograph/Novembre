@@ -12,9 +12,9 @@
 #ifndef NVBCONTCOLORMODEL_H
 #define NVBCONTCOLORMODEL_H
 
-#include <QObject>
-#include <QColor>
-#include <QImage>
+#include <QtCore/QObject>
+#include <QtGui/QColor>
+#include <QtGui/QImage>
 #include "dimension.h"
 
 namespace NVBColoring {
