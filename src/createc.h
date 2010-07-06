@@ -123,7 +123,7 @@ class CreatecVertPage : public NVBSpecPage {
 Q_OBJECT
 protected:
 //	CreatecHeader header;
-  CreatecVertPage() { throw; }
+	CreatecVertPage();
   CreatecVertPage(const CreatecVertPage & other) { throw; }
 	CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data );
 public:

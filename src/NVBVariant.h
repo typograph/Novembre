@@ -12,7 +12,7 @@
 #ifndef NVBVARIANT_H
 #define NVBVARIANT_H
 
-#include <QVariant>
+#include <QtCore/QVariant>
 #include "NVBDimension.h"
 
 class NVBVariant;

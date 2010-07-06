@@ -16,9 +16,12 @@
 #include <QtGui/QApplication>
 #include <QtCore/QVariant>
 #include <QtCore/QFile>
+#include <QtCore/QRegExp>
 
 void NVBLogger::outputMessage(NVB::LogEntryType type, QString issuer, QString text) {
-  emit message(type,issuer,text,QTime::currentTime());
+	static QRegExp fnct = QRegExp(" ([^ ]*::[^ ]*)\\(");
+	fnct.indexIn(issuer);
+	emit message(type,fnct.cap(1),text,QTime::currentTime());
   }
 
 void NVBOutputMessage(NVB::LogEntryType type,QString issuer, QString text){

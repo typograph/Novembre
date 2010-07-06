@@ -1,15 +1,20 @@
 #ifndef NVBJOINTFILE_H
 #define NVBJOINTFILE_H
 
-#include <NVBFile.h>
+#include "NVBFile.h"
+#include <QtCore/QList>
+
+class QVariant;
+class QModelIndex;
+class NVBAssociatedFilesInfo;
 
 class NVBJointFile : public NVBFile {
 private:
 	QList<NVBFile*> files;
-	void NVBJointFile::calculateIndexes(const QModelIndex & original, int & file, QModelIndex & page);
+	void calculateIndexes(const QModelIndex & original, int & file, QModelIndex & page) const;
 
 public:
-	NVBJointFile(NVBAssociatedFilesInfo & sources, QList<NVBFile*> components = QList<NVBFile*>);
+	NVBJointFile(const NVBAssociatedFilesInfo & sources, QList<NVBFile*> components = QList<NVBFile*>());
 
 	void addFile(NVBFile * other);
 	void addFiles(QList<NVBFile*> others);

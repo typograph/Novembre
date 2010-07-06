@@ -323,19 +323,24 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
 
   // size
   
+	// I don't know why, but not only
+	// Dacto[A]xy is in nanometers, but also
+	// the coordinates don't correspond to the middle top of the picture, but to the left corner
+
   _resolution = QSize(header.value("Num.X",0).toInt(), header.value("Num.Y",0).toInt());
-  _position = QRectF( // FIXME I saw Scanoffx somewhere
-                -header.value("Scanrotoffx",0).toInt()*header.value("Dacto[A]xy",0).toDouble()*0.1,
-                -header.value("Scanrotoffy",0).toInt()*header.value("Dacto[A]xy",0).toDouble()*0.1,
-                header.value("Length x",0).toPhysValue().getValue()*0.1,
-                header.value("Length y",0).toPhysValue().getValue()*0.1
+	_position = QRectF( // FIXME I saw Scanoffx somewhere
+								-header.value("Scanrotoffx",0).toInt()*header.value("Dacto[A]xy",0).toDouble()*1e-9,
+	//								-0.5*header.value("Length x",0).toPhysValue().getValue()*1e-10,
+								-header.value("Scanrotoffy",0).toInt()*header.value("Dacto[A]xy",0).toDouble()*1e-9,
+								header.value("Length x",0).toPhysValue().getValue()*1e-10,
+								header.value("Length y",0).toPhysValue().getValue()*1e-10
                 );
   _position.translate(-_position.width()/2,0);
 
   int data_points = _resolution.width()*_resolution.height();
 
-  xd = NVBDimension("nm");
-  yd = NVBDimension("nm");
+	xd = NVBDimension("m");
+	yd = NVBDimension("m");
   switch (channel%magic) {
     case 0: { // Topography. Scale by Dacto[A]z, taking into account that they are nanometers.
       zd = NVBDimension("nm");
@@ -357,7 +362,7 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
       free(bulk_data);
       break;
     }
-    default: {// ADC1 & ADC2 -> STM dependent, relay on NVBScript.
+		default: {// ADC1 & ADC2 -> STM dependent, rely on NVBScript.
       zd = NVBDimension("DAC",false);
       data = bulk_data;
       break;
@@ -371,7 +376,11 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
   setColorModel(new NVBGrayRampContColorModel(0,1,zMin,zMax));
 }
 
-CreatecVertPage::CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data ) // :header(file_header)
+CreatecVertPage::CreatecVertPage():NVBSpecPage()
+{
+}
+
+CreatecVertPage::CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data ):NVBSpecPage() // :header(file_header)
 {
 }
 
@@ -403,7 +412,8 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 	int nx=0, ny=0, nr=0;
 
 	if (reffname.length() > 19) {
-		QStringList tokens = reffname.mid(15,reffname.length()-20).split('.');
+		int nameX = reffname.lastIndexOf("/");
+		QStringList tokens = reffname.mid(nameX+16,reffname.length()-nameX-21).split('.');
 		foreach (QString token, tokens) {
 			bool ok = false;
 			int value = token.mid(1).toInt(&ok,10)+1;
@@ -421,6 +431,7 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 						ny = value;
 						break;
 						}
+					case 'M' :
 					case 'L' : {
 						nx = value;
 						break;
@@ -432,9 +443,48 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		}
 // Actually all that was rather unnecessary - this information is only needed for the new NVBAxedData
 	QList<CreatecVertPage*> result;
+	QVector<QColor> pcolors(12); // Colors are taken from the STMAFM program by Createc
 
-	for (int i = 0; i<13; i++)
+	for (int i = 0; i<12; i++)
 		result << new CreatecVertPage();
+
+	result[0]->pagename = "I";
+	result[0]->zd = NVBDimension("A");
+	pcolors[0] = Qt::green;
+	result[1]->pagename = "dI";
+	result[1]->zd = NVBDimension("A/V");
+	pcolors[1] = Qt::blue;
+	result[2]->pagename = "U";
+	result[2]->zd = NVBDimension("mV");
+	pcolors[2] = Qt::green;
+	result[3]->pagename = "z";
+	result[3]->zd = NVBDimension("nm");
+	pcolors[3] = Qt::blue;
+	result[4]->pagename = "dI2";
+	result[4]->zd = NVBDimension("A/V^2");
+	pcolors[4] = Qt::red;
+	result[5]->pagename = "dI_q";
+	result[5]->zd = NVBDimension("DAC",false);
+	pcolors[5] = Qt::green;
+	result[6]->pagename = "dI2_q";
+	result[6]->zd = NVBDimension("DAC",false);
+	pcolors[6] = Qt::green;
+	result[7]->pagename = "AD0";
+	result[7]->zd = NVBDimension("A");
+	pcolors[7] = Qt::gray;
+	result[8]->pagename = "AD1";
+	result[8]->zd = NVBDimension("A/V");
+	pcolors[8] = Qt::darkRed;
+	result[9]->pagename = "AD2";
+	result[9]->zd = NVBDimension("A/V^2");
+	pcolors[9] = Qt::green;
+	result[10]->pagename = "AD3";
+	result[10]->zd = NVBDimension("DAC",false);
+	pcolors[10] = Qt::green;
+	result[11]->pagename = "Dac0";
+	result[11]->zd = NVBDimension("DAC",false);
+	pcolors[11] = Qt::green;
+
 
 	foreach (QString filename, filenames) {
 		QFile file(filename);
@@ -462,30 +512,58 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		QStringList sizes(QString(file.readLine(200)).split(' ',QString::SkipEmptyParts));
 
 		int npts = sizes.at(0).toInt();
-		int Xdac = sizes.at(1).toInt();
-		int Ydac = sizes.at(2).toInt();
+		double Xdac = sizes.at(1).toInt() - file_header.value("Scanrotoffx").toDouble();
+		double Ydac = sizes.at(2).toInt() - file_header.value("Scanrotoffy").toDouble();
+		double dacFactor = file_header.value("Dacto[A]xy").toDouble()*1e-9;
+		QPointF pos = QPointF(Xdac*dacFactor,Ydac*dacFactor);
+
+		NVBOutputDMsg(QString("X: %1, Y: %2 : DAC %3 -> Point %4 x %5").arg(Xdac).arg(Ydac).arg(dacFactor,8).arg(pos.x(),8).arg(pos.y(),8));
 
 //	int nchannels = file_header.value("Channels").toInt();
 //  int data_points = file_header.value("Num.X",0).toInt() * file_header.value("Num.Y",0).toInt();
 //  if (data_points == 0) return result;
 
-		QVector<double> xs(npts);
+		QVector<double> factor(12,1);
 
-		QVector< QVector<double> > ys(13);
-		for (int i = 0; i<13; i++)
+		//-// DAC factors
+		// Current
+		factor[0] = file_header.value("Dacto[A]z").toDouble()*
+								pow(10,-file_header.value("Gainpreamp").toInt())/
+								file_header.value("ZPiezoconst").toDouble();
+		factor[7] = factor[0];
+
+		// Z
+		factor[3] = file_header.value("Dacto[A]z").toDouble();
+
+		QVector<double> xs(0);
+		xs.reserve(npts);
+
+		QVector< QVector<double> > ys(12);
+		for (int i = 0; i<12; i++)
 			ys[i].reserve(npts);
 
 		while (!file.atEnd()) {
 			QList<QByteArray> pt_data = file.readLine(800).split('\t');
 			xs << pt_data.first().toDouble();
-			for (int i = 0; i<13; i++)
-				ys[i] << pt_data.at(i+1).toDouble();
+			for (int i = 0; i<12; i++)
+				ys[i] << pt_data.at(i+1).toDouble()*factor.at(i);
 			}
 
-		for (int i = 0; i<13; i++)
+		for (int i = 0; i<12; i++) {
 			result[i]->_data << new QwtArrayData(xs,ys.at(i));
+			result[i]->_positions << pos;
+			}
 
 		}
+
+	for (int i = 0; i<12; i++) {
+		result[i]->setColorModel(new NVBConstDiscrColorModel(pcolors.at(i)));
+		result[i]->_datasize = QSize(result.first()->_data.first()->size(),filenames.count());
+		result[i]->xd = NVBDimension("m");
+		result[i]->yd = NVBDimension("m");
+		result[i]->td = NVBDimension("p");
+		}
+
 	QList<NVBDataSource*> rconv;
 	foreach(NVBDataSource * s, result)
 		rconv << s;
