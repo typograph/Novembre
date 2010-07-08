@@ -9,298 +9,19 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
+
 #include "NVBDirModel.h"
 #include "NVBFileInfo.h"
 #include "NVBProgress.h"
 #include "NVBColumnDialog.h"
 #include "NVBFileFactory.h"
-#include <QtAlgorithms>
-#include <QFileSystemWatcher>
-#include <QFile>
-#include <QTextStream>
-#include <QTimer>
+#include <QtCore/QtAlgorithms>
+#include <QtCore/QFileSystemWatcher>
+#include <QtCore/QFile>
+#include <QtCore/QTextStream>
+#include <QtCore/QTimer>
+
 #define DataSortRole Qt::UserRole
-
-#if QT_VERSION < 0x040400
-#include <QThread>
-class NVBDirPopulationThread : public QThread {
-  Q_OBJECT
-  private:
-  public:
-    NVBDirPopulationThread(NVBDirEntry e);
-  protected:
-    void run();
-};
-#else
-#include <QFuture>
-#include <QFutureWatcher>
-#include <QtConcurrentMap>
-#endif
-
-NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),populated(true),loaded(true),type(NoContent) {;}
-
-NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label) :
-	/*QObject(),*/ parent(_parent),label(_label),populated(true),loaded(true),type(NoContent) {;}
-
-NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label, QDir _dir, bool recursive) :
-	/*QObject(),*/ parent(_parent),label(_label),dir(_dir),populated(false),loaded(false),type(recursive ? AllContent : FileContent)
-{
-
-//   if (recursive) recurseFolders();
-}
-
-NVBDirEntry::~ NVBDirEntry( )
-{
-	while (!files.isEmpty()) delete files.takeFirst();
-  while (!folders.isEmpty()) delete folders.takeFirst();
-}
-
-int NVBDirEntry::folderCount( ) const
-{
-	if (isRecursive() && !isPopulated())
-		return estimatedFolderCount();
-	return folders.count();
-}
-
-int NVBDirEntry::estimatedFolderCount( ) const
-{
-	if (isRecursive() && !isPopulated())
-		return dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name).count();
-	return folders.count();
-}
-
-void NVBDirEntry::recurseFolders()
-{
-  if (!isRecursive()) return;
-  
-  QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
-
-//   emit beginOperation(this,0,subfolders.size(),FolderInsert);
-
-  foreach(QFileInfo folder, subfolders) {
-    QDir rdir(dir);
-    rdir.setPath(folder.absoluteFilePath());
-		folders << new NVBDirEntry(this,folder.fileName(),rdir,true);
-		folders.last()->sort(sorter);
-    }
-
-//   emit endOperation();
-}
-
-void NVBDirEntry::invalidateFiltered() {
-//	filtered.clear();
-/*
-	for (int i = 0; i < files.count(); i++)
-		if (!files.at(i).filtered_out)
-			filtered << i;
-*/
-}
-
-int NVBDirEntry::estimatedFileCount() const
-{
-  if (type == NoContent)
-    return 0;
-  if ( dir.exists() )
-    return dir.count();
-  else
-    return 0;
-}
-
-void NVBDirEntry::notifyLoading(int start, int end)
-{
-	for (int i=start; i<end; i++) {
-		QList<NVBFileInfo*>::iterator newpos = qLowerBound(files.begin(),files.end(),fileLoader->future().resultAt(i),sorter);
-		emit beginOperation(this,newpos - files.begin(),1,FileInsert);
-		files.insert(newpos,fileLoader->future().resultAt(i));
-		emit endOperation();
-		}
-}
-
-void NVBDirEntry::populate(NVBFileFactory * fileFactory)
-{
-	if (type == NoContent)
-		return;
-
-	if (isPopulated()) {
-		refresh(fileFactory);
-		return;
-		}
-	
-	populated = true;
-
-	if ( dir.exists() ) {
-		if (isRecursive()) {   
-			QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
-			
-			emit beginOperation(this,0,subfolders.size(),FolderInsert);
-			
-			foreach(QFileInfo folder, subfolders) {
-				QDir rdir(dir);
-				rdir.setPath(folder.absoluteFilePath());
-				folders << new NVBDirEntry(this,folder.fileName(),rdir,true);
-				folders.last()->sort(sorter);
-				}
-				
-			emit endOperation();
-			}
-    
-//     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-//     QApplication::sendEvent(
-//       qApp->property("progressBar").value<QObject*>(),
-//       new NVBProgressStartEvent(
-//         QString("Processing %1").arg(dir.absolutePath()),
-//         infos.size()
-//         )
-//       );
-
-		QList<NVBAssociatedFilesInfo> associations = fileFactory->associatedFilesFromDir(dir);
-
-#if QT_VERSION < 0x040400
-		#error "You can't compile Novembre > 0.0.4 on Qt < 4.4, sorry"
-#else
-		fileLoader = new QFutureWatcher<NVBFileInfo*>(this);
-		fileLoader->setFuture(QtConcurrent::mapped(associations,&NVBAssociatedFilesInfo::loadFileInfo));
-		connect(fileLoader,SIGNAL(resultsReadyAt(int,int)),this,SLOT(notifyLoading(int,int)));
-		connect(fileLoader,SIGNAL(finished()),this,SLOT(setLoaded()));
-#endif
-
-
-/*    QApplication::sendEvent(
-      qApp->property("progressBar").value<QObject*>(),
-      new NVBProgressStopEvent()
-      );
-
-    QApplication::restoreOverrideCursor();*/
-    }
-	else {
-		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
-		}
-}
-
-bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
-{
-  if ( dir.exists() ) {
-
-    QFileInfoList infos = dir.entryInfoList();
-
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-
-    if (isRecursive()) {
-      QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
-
-//      QApplication::sendEvent(
-//        qApp->property("progressBar").value<QObject*>(),
-//        new NVBProgressStartEvent(
-//          QString("Refreshing %1").arg(dir.absolutePath()),
-//          infos.size() + subfolders.size()
-//          )
-//        );
-
-      QVector<bool> confirmed(folders.size());
-      confirmed.fill(false);
-
-
-      foreach(QFileInfo folder, subfolders) {
-        int index = indexOf(folder.fileName()); // The labels in recursive are created this way
-        if (index >= 0) {
-          confirmed[index] = true;
-          }
-        else {
-          QDir rdir(dir);
-          rdir.setPath(folder.absoluteFilePath());
-          emit beginOperation(this,folders.size(),1,FolderInsert);
-					folders << new NVBDirEntry(this,folder.fileName(),rdir,true);
-					folders.last()->sort(sorter);
-          emit endOperation();
-          }
-//        QApplication::sendEvent(
-//          qApp->property("progressBar").value<QObject*>(),
-//          new NVBProgressContinueEvent()
-//          );
-        }
-
-      for (int i=confirmed.size()-1;i>=0;i--) {
-        if (!confirmed.at(i)) {
-          emit beginOperation(this,i,1,FolderRemove);
-          delete folders.takeAt(i);
-          emit endOperation();
-          }
-        }
-
-      }
-    else {
-//      QApplication::sendEvent(
-//        qApp->property("progressBar").value<QObject*>(),
-//        new NVBProgressStartEvent(
-//          QString("Refreshing %1").arg(dir.absolutePath()),
-//          infos.size()
-//          )
-//        );
-      }
-
-		QList<int> ixrm;
-
-		QList<NVBAssociatedFilesInfo> * old_associations = new QList<NVBAssociatedFilesInfo>();
-		foreach(NVBFileInfo * fi, files)
-			old_associations->append(fi->files);
-
-		QList<NVBAssociatedFilesInfo> associations = fileFactory->associatedFilesFromDir(dir,old_associations,&ixrm);
-
-		delete old_associations;
-
-		qSort(ixrm.begin(),ixrm.end(),qGreater<int>());
-
-		foreach(int k, ixrm) {
-			emit beginOperation(this,k,1,FileRemove);
-			delete files.takeAt(k);
-			emit endOperation();
-			}
-
-#if QT_VERSION < 0x040400
-		#error "You can't compile Novembre > 0.0.4 on Qt < 4.4, sorry"
-#else
-		fileLoader = new QFutureWatcher<NVBFileInfo*>(this);
-		fileLoader->setFuture(QtConcurrent::mapped(associations,&NVBAssociatedFilesInfo::loadFileInfo));
-		connect(fileLoader,SIGNAL(resultsReadyAt(int,int)),this,SLOT(notifyLoading(int,int)));
-		connect(fileLoader,SIGNAL(finished()),this,SLOT(setLoaded()));
-#endif
-
-//    QApplication::sendEvent(
-//      qApp->property("progressBar").value<QObject*>(),
-//      new NVBProgressStopEvent()
-//      );
-//    QApplication::restoreOverrideCursor();
-
-    return true;
-    }
-
-  else {
-		NVBOutputError(QString("Directory %1 ceased to exist").arg(dir.absolutePath()));
-    // TODO be more user-friendly. Display an error message
-    return false;
-    }
-}
-
-void NVBDirEntry::sort(const NVBDirModelFileInfoLessThan & lessThan) {
-	sorter = lessThan;
-	if (isPopulated()) {
-		foreach(NVBDirEntry * e, folders)
-			e->sort(lessThan);
-		qSort(files.begin(),files.end(),lessThan);
-		}
-}
-
-int NVBDirEntry::indexOf( QString name )
-{
-  for (int i=0;i<folders.count();i++)
-    if (folders[i]->label == name)
-      return i;
-  name = QDir::cleanPath(name);
-  for (int i=0;i<files.count();i++)
-		if (files[i]->files.name() == name || files[i]->files.contains(name) )
-      return i;
-  return -1;
-}
 
 NVBDirModel::NVBDirModel(NVBFileFactory * _fileFactory, QObject * parent)
  : QAbstractItemModel( parent ), fileFactory(_fileFactory)
@@ -357,7 +78,7 @@ int NVBDirModel::rowCount( const QModelIndex & parent ) const
       watcher->addPath(entry->dir.path());
       }
 
-  return entry->folders.size()+entry->files.size();
+  return entry->folders.size()+entry->fileCount();
 
 }
 
@@ -512,7 +233,7 @@ const NVBFileInfo * NVBDirModel::indexToInfo( const QModelIndex & index ) const
 		watcher->addPath(entry->dir.path());
 		}
 
-  return entry->files.at(index.row()-entry->folders.size());
+  return entry->fileAt(index.row()-entry->folders.size());
 }
 
 bool NVBDirModel::removeRows( int row, int count, const QModelIndex & parent )
@@ -580,7 +301,7 @@ int NVBDirModel::fileCount( const QModelIndex & parent ) const
 		connectEntry(entry);
 		watcher->addPath(entry->dir.path());
 		}
-  return entry->files.size();
+  return entry->fileCount();
 }
 
 void NVBDirModel::addColumn(QString name, NVBTokens::NVBTokenList key)
@@ -599,6 +320,9 @@ void NVBDirModel::addColumn(QString name, NVBTokens::NVBTokenList key)
     }
   columns->addColumn(name,key);
   while (i--) endInsertColumns();
+
+	// Reminder : since the column is added at the end of list,
+	// it's not necessary to change sorting or filters -- they are unaffected.
 }
 
 template <typename T, typename NonEqual>
@@ -630,7 +354,7 @@ inline void myUniquify(QList<int> & mults, QList<T> & list, NonEqual nonEqual)
 
 // bool variantLessThan(const NVBVariant & l, const NVBVariant & r) { return l < r; }
 
-
+#if 0
 bool NVBDirModel::lessThan(const QModelIndex & left, const QModelIndex & right) const
 {
 //   NVBOutputDMsg("Comparison underway");
@@ -736,6 +460,7 @@ bool NVBDirModel::lessThan(const QModelIndex & left, const QModelIndex & right) 
     }
   return false;
 }
+#endif
 
 void NVBDirModel::removeColumn(int index)
 {
@@ -756,44 +481,31 @@ void NVBDirModel::removeColumn(int index)
 	columns->removeColumn(index);
   while (i--) endRemoveColumns();
 
-	/* if (index == sortColumn) {
-		sort(0,Qt::AscendingOrder);
+	if (index == sortColumn) {
+		sortColumn = 0;
+		sortOrder = Qt::AscendingOrder;
 		}
-	else */ if (index < sortColumn)
+	else if (index < sortColumn)
 		sortColumn -= 1;
 
-}
+	// Deleting columns might invalidate the filter
+	// Of course, just deleting invalid filters will change the global meaning.
+	// but it is impossible not to do that.
 
-bool NVBDirModel::filterAcceptsRow(int source_row, const QModelIndex & source_parent) const
-{
-	if (isAFile(index(source_row,0,source_parent))) {
-    if (filters.isEmpty()) return true;
-    bool accept = true;
-    foreach (NVBFileFilter f, filters) {
-			bool filter_pass = index(source_row,f.column+1,source_parent).data(Qt::DisplayRole).toString().contains(f.match);
-      switch (f.binding) {
-        case NVBFileFilter::And : {
-          accept &= filter_pass;
-          break;
-          }
-        case NVBFileFilter::AndNot : {
-          accept &= !filter_pass;
-          break;
-          }
-        case NVBFileFilter::Or : {
-          accept |= filter_pass;
-          break;
-          }
-        case NVBFileFilter::OrNot : {
-          accept |= !filter_pass;
-          break;
-          }
-        }
-      }
-    return accept;
-    }
-  else
-    return true;
+	bool filtersChanged = false;
+
+	for (int i = 0; i < filters.count(); ) {
+		if (filters.at(i).column == index) {
+			filters.removeAt(i);
+			filtersChanged = true;
+			}
+		else
+			i += 1;
+		}
+
+	if (filtersChanged)
+		head->filter(NVBDirModelFileInfoFilter(filters,columns));
+
 }
 
 QList< QModelIndex > NVBDirModel::folderIndexes( NVBDirEntry * entry )
@@ -815,7 +527,7 @@ int NVBDirModel::visibleRows(NVBDirEntry * entry) const
 		if (sub->isPopulated())
 			n += visibleRows(sub);
 		}
-	return n + entry->files.size();
+	return n + entry->fileCount();
 }
 
 void NVBDirModel::sortingStarted(int estimated) const
@@ -858,7 +570,7 @@ void NVBDirModel::showFilterDialog()
 	NVBFileFilterDialog * dialog = new NVBFileFilterDialog( columns, filters );
   if ( dialog->exec() == QDialog::Accepted ) {
     filters = dialog->getFilterList();
-    updateFilters();
+    head->filter(NVBDirModelFileInfoFilter(filters,columns));
     }
   delete dialog;
 }
@@ -895,13 +607,6 @@ void NVBDirModel::showColumnDialog()
   delete dialog;
 }
 
-void NVBDirModel::updateFilters( )
-{
-  sortingStarted();
-// FIXME update filters, really
-  sortingFinished();
-}
-
 void NVBDirModel::addColumn(NVBColumnDescriptor column)
 {
   addColumn(column.name,column.contents);
@@ -909,7 +614,6 @@ void NVBDirModel::addColumn(NVBColumnDescriptor column)
 
 void NVBDirModel::updateColumn(int index, NVBColumnDescriptor column)
 {
-
 	columns->updateColumn(index,column);
 	emit headerDataChanged(Qt::Horizontal,index,index);
 	if (index == sortColumn)
@@ -989,7 +693,7 @@ void NVBDirModel::connectEntry(NVBDirEntry * entry) const
 void NVBDirModel::beginEntryOperation(const NVBDirEntry * entry, int row, int count, NVBDirEntry::ContentChangeType type)
 {
   entryOperationStack.push(NVBDirEntryOperation(entry,row,count,type));
-  if (entry && entry->isPopulated())
+	if (entry && entry->isPopulated() && count > 0)
     switch (type) {
       case NVBDirEntry::FolderInsert : {
         beginInsertRows(entryToIndex(entry),row,row+count-1);
@@ -1013,7 +717,7 @@ void NVBDirModel::beginEntryOperation(const NVBDirEntry * entry, int row, int co
 void NVBDirModel::endEntryOperation()
 {
   const NVBDirEntryOperation o = entryOperationStack.pop();
-  if (o.e && o.e->isPopulated())
+	if (o.e && o.e->isPopulated() && o.c > 0)
     switch (o.t) {
       case NVBDirEntry::FolderInsert :
 /*        for (int i = o.r; i < o.r + o.c; i++)
@@ -1030,26 +734,6 @@ void NVBDirModel::endEntryOperation()
         }
       }
 }
-
-void NVBDirEntry::addFolder(NVBDirEntry * folder)
-{
-  if (folders.indexOf(folder) == -1 ) {
-    emit beginOperation(this,folders.size(),1,FolderInsert);
-    folders.append(folder);
-		folder->sort(sorter);
-    emit endOperation();
-    }
-}
-
-void NVBDirEntry::refreshSubfolders(NVBFileFactory * fileFactory)
-{
-  foreach (NVBDirEntry * e, folders)
-    if (e->isPopulated()) {
-      e->refresh(fileFactory);
-      e->refreshSubfolders(fileFactory);
-      }
-}
-
 
 void NVBDirModel::exportData( const QModelIndex & index, NVBDirExportOptions options ) const
 {
@@ -1129,4 +813,3 @@ void NVBDirModel::sort ( int column, Qt::SortOrder order ) {
 	head->sort(NVBDirModelFileInfoLessThan(columns->key(column),order));
 	emit layoutChanged();
 }
-

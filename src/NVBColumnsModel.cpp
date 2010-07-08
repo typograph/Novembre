@@ -76,7 +76,7 @@ bool NVBDirModelColumns::setData(const QModelIndex & index, const QVariant & val
 
 }
 
-QString NVBDirModelColumns::name(int row)
+QString NVBDirModelColumns::name(int row) const
 {
   if (row > rowCount())
     return QString();
@@ -84,7 +84,7 @@ QString NVBDirModelColumns::name(int row)
     return names.at(row);
 }
 
-NVBTokens::NVBTokenList NVBDirModelColumns::key(int row)
+NVBTokens::NVBTokenList NVBDirModelColumns::key(int row) const
 {
   if (row > rowCount())
     return NVBTokens::NVBTokenList();
@@ -130,12 +130,12 @@ void NVBDirModelColumns::updateColumn(int index, NVBColumnDescriptor column)
   keys.replace(index,column.contents);
 }
 
-QString NVBDirModelColumns::sourceKey( int row )
+QString NVBDirModelColumns::sourceKey( int row ) const
 {
   return key(row).sourceString();
 }
 
-QString NVBDirModelColumns::verboseKey( int row )
+QString NVBDirModelColumns::verboseKey( int row ) const
 {
   return key(row).verboseString();
 }
