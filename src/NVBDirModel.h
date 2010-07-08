@@ -12,18 +12,19 @@
 #ifndef NVBDIRMODEL_H
 #define NVBDIRMODEL_H
 
-#include <QAbstractItemModel>
-#include <QList>
-#include <QLinkedList>
-#include <QStack>
-#include <QDir>
-#include <QSignalMapper>
-#include <QApplication>
+#include <QtCore/QAbstractItemModel>
+#include <QtCore/QList>
+#include <QtCore/QLinkedList>
+#include <QtCore/QStack>
+#include <QtCore/QDir>
+#include <QtCore/QSignalMapper>
+#include <QtGui/QApplication>
 
 #include "NVBFile.h"
 #include "NVBFileFactory.h"
 #include "NVBFileFilterDialog.h"
 #include "NVBColumnsModel.h"
+#include "NVBDirModelHelpers.h"
 
 #define NVBColKeyRole (Qt::UserRole+1)
 #define NVBColStrKeyRole (Qt::UserRole+2)
@@ -38,117 +39,9 @@ struct NVBDirExportOptions {
 	bool fullFileNames;
 };
 
-#if QT_VERSION >= 0x040400
-template <class T>
-	class QFutureWatcher;
-#endif
-
-class NVBDirModelFileInfoLessThan {
-	// I like this crazy idea from the Trolls
-private:
-	NVBTokens::NVBTokenList sortKey;
-	Qt::SortOrder sortOrder;
-
-public:
-	inline NVBDirModelFileInfoLessThan(NVBTokens::NVBTokenList key = NVBTokens::NVBTokenList(), Qt::SortOrder order = Qt::AscendingOrder)
-		: sortKey(key), sortOrder(order) {;}
-
-	bool operator()(const NVBFileInfo * fi1, const NVBFileInfo * fi2) {
-		if (!fi1) {
-			NVBOutputError("Got NULL NVBFileInfo");
-			return false;
-			}
-		if (!fi2) {
-			NVBOutputError("Got NULL NVBFileInfo");
-			return true;
-			}
-		switch(sortOrder) {
-			case Qt::AscendingOrder : return fi1->getInfo(sortKey) < fi2->getInfo(sortKey);
-			case Qt::DescendingOrder : return fi1->getInfo(sortKey) > fi2->getInfo(sortKey);
-			default : return false;
-			}
-		}
-};
-
-class NVBDirEntry : public QObject {
-Q_OBJECT
-public:
-	enum ContentChangeType { FolderInsert, FolderRemove, FileInsert, FileRemove };
-	enum WatchedContentType { NoContent, FileContent, AllContent };
-	NVBDirEntry * parent;
-	QString label;
-	QDir dir;
-	QList<NVBDirEntry*> folders;
-
-	/* due to sorting, we need fast insertion.
-		 However, QLinkedList doesn't allow sorting anymore
-		 and it will not be effective anyway.
-		 According to my tests, below 30000 elements sorting QVector is faster
-		 than sorting QList, and this stands even for sorting by insertion.
-		 But the gain is rather small, and above 30000 QList is faster.
-		 Also, prepending in QList is faster, and we don't seem to need
-		 our pointers to occupy the same place in memory.
-		 */
-	QList<NVBFileInfo*> files;
-//	QList<int> filtered;
-
-private:
-	bool populated;
-	bool loaded;
-
-	NVBDirModelFileInfoLessThan	sorter;
-
-#if QT_VERSION >= 0x040400
-	QFutureWatcher<NVBFileInfo*> * fileLoader;
-#endif
-	WatchedContentType type;
-	NVBDirEntry(); // private constructor... Checking
-	NVBDirEntry(const NVBDirEntry & ):QObject() {;} // private copy constructor... Checking
-	NVBDirEntry(const NVBDirEntry * ):QObject() {;} // private copy constructor... Checking
-public:
-	NVBDirEntry(NVBDirEntry * _parent, QString _label);
-	NVBDirEntry(NVBDirEntry * _parent, QString _label, QDir _dir, bool recursive = false);
-	~NVBDirEntry();
-	
-	int indexOf( QString name );
-	
-	void populate(NVBFileFactory * fileFactory);
-	
-	bool isContainer() const { return (type == NoContent); }
-	bool isRecursive() const { return (type == AllContent); }
-	bool isPopulated() const { return populated; }
-	bool isLoaded() const { return loaded; }
-	void setDirWatch(bool b) {
-		if (!b) {
-			type = FileContent;
-			if (parent) parent->setDirWatch(false);
-			}
-		}
-	void addFolder( NVBDirEntry * folder );
-	
-	int estimatedFileCount() const;
-	int estimatedFolderCount() const;
-	int folderCount() const;
-
-	void invalidateFiltered();
-
-private:
-	void recurseFolders();
-signals:
-	void beginOperation(const NVBDirEntry * entry, int row, int count, NVBDirEntry::ContentChangeType type);
-	void endOperation();
-	void filesLoaded(const NVBDirEntry * entry, int fstart, int fend);
-private slots:
-	void notifyLoading(int start, int end);
-	void setLoaded() { loaded = true; }
-public slots:
-	bool refresh(NVBFileFactory * fileFactory);
-	void refreshSubfolders(NVBFileFactory * fileFactory);
-	void sort(const NVBDirModelFileInfoLessThan & lessThan);
-};
-
 class NVBDirModelColumns;
 class QFileSystemWatcher;
+class NVBDirEntry;
 /**
 This class provides a tree of folders with STM files in them.
 */
@@ -203,8 +96,7 @@ public slots:
 	
 	void showFilterDialog();
 	void removeFilters() {
-		filters.clear();
-		updateFilters();
+		head->filter(NVBDirModelFileInfoFilter());
 		}
 	void showColumnDialog();
 	void exportData(const QModelIndex & index, NVBDirExportOptions options) const;
@@ -246,7 +138,6 @@ private:
 	void exportItemFiles(QTextStream * file, const QModelIndex & index, NVBDirExportOptions options) const;
 	void exportItemData(QTextStream * file, const QModelIndex & index, int row, bool fullName) const;
 
-	bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 	bool lessThan(const QModelIndex & left, const QModelIndex & right) const;
 
 private slots:
@@ -260,7 +151,6 @@ private slots:
 protected slots:
 	void sortingStarted(int estimated = -1) const;
 	void sortingFinished() const;
-	void updateFilters();
 	
 };
 

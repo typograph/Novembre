@@ -33,10 +33,10 @@ public:
 
   QList<NVBColumnDescriptor> clmnDataList();
 
-  QString name(int row);
-  NVBTokens::NVBTokenList key(int row);
-  QString sourceKey(int row);
-  QString verboseKey(int row);
+  QString name(int row) const;
+  NVBTokens::NVBTokenList key(int row) const;
+  QString sourceKey(int row) const;
+  QString verboseKey(int row) const;
 //   void addColumn(QString name, QString key);
   void addColumn(QString name, NVBTokens::NVBTokenList key);
   void updateColumn(int index, NVBColumnDescriptor column);
