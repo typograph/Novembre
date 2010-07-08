@@ -163,7 +163,7 @@ QList<const NVBFileGenerator*> NVBFileFactory::getGeneratorsFromFilename(QString
 	QListIterator<QString> wcki(wcks);
 	QList<const NVBFileGenerator*> matches;
 	while ( wcki.hasNext() ) {
-		if (QRegExp(wcki.next(),Qt::CaseInsensitive,QRegExp::Wildcard).exactMatch(filename))
+		if (QRegExp( QString("*/") + wcki.next(),Qt::CaseInsensitive,QRegExp::Wildcard).exactMatch(filename))
 			matches.append(wildcards.values(wcki.peekPrevious()));
 		}
 
