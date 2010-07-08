@@ -21,6 +21,8 @@ class QCheckBox;
 
 class NVBColumnInputWidget : public QWidget
 {
+	Q_OBJECT
+
   QRadioButton *fileOption;
   QComboBox *fileChoice;
   QRadioButton *pageOption;
@@ -44,7 +46,13 @@ public:
 
 private:
   void tokenListToLayout(NVBTokens::NVBTokenList l);
-
+private slots:
+	void switchToFile();
+	void switchToPage();
+	void switchToTopo();
+	void switchToSpec();
+	void switchToCustom();
+	void switchToExpert();
 };
 
 class NVBColumnInputDialog : public QDialog
@@ -103,6 +111,8 @@ public:
   virtual void showPopup ();
 public slots:
   virtual void hidePopup ();  
+signals:
+	void contentChanged();
 private slots:
   void setValue();
 };
@@ -131,6 +141,7 @@ private slots:
   void removeColumn() {
     emit removeColumn(index);
     }
+	void autoName();
 signals:
   void removeColumn(int);
 

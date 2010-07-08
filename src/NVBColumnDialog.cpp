@@ -53,6 +53,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   
   fileChoice->setCurrentIndex(0); 
   gridLayout->addWidget(fileChoice, 0, 1, 1, 1);
+	connect(fileChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToFile()));
 
   pageOption = new QRadioButton("Page parameter",this);
   gridLayout->addWidget(pageOption, 1, 0, 1, 1);
@@ -67,6 +68,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 //  NVBPageParamToken:: pageChoice->addItem(NVBTokenList::namePageParam(),QVariant());
   pageChoice->setCurrentIndex(0);
   gridLayout->addWidget(pageChoice, 1, 1, 1, 1);  
+	connect(pageChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToPage()));
 
   topoOption = new QRadioButton("Topography parameter",this);
   gridLayout->addWidget(topoOption, 2, 0, 1, 1);
@@ -81,7 +83,8 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 //  NVBPageParamToken:: topoChoice->addItem(NVBTokenList::namePageParam(),QVariant());
   topoChoice->setCurrentIndex(0);
   gridLayout->addWidget(topoChoice, 2, 1, 1, 1);
-  
+	connect(topoChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToTopo()));
+
   specOption = new QRadioButton("Spectroscopy parameter",this);
   gridLayout->addWidget(specOption, 3, 0, 1, 1);
 
@@ -95,7 +98,8 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 //  NVBPageParamToken:: specChoice->addItem(NVBTokenList::namePageParam(),QVariant());
   specChoice->setCurrentIndex(0);
   gridLayout->addWidget(specChoice, 3, 1, 1, 1);
-  
+	connect(specChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToSpec()));
+
   QHBoxLayout *horizontalLayout = new QHBoxLayout();
 
   customOption = new QRadioButton("Custom",this);
@@ -117,15 +121,41 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 //	customChoice->setEditable(true);
   customChoice->addItems(qApp->property("filesFactory").value<NVBFileFactory*>()->availableInfoFields());
   gridLayout->addWidget(customChoice, 4, 1, 1, 1);
+	connect(customChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToCustom()));
 
   expertOption = new QRadioButton("Expert",this);
   gridLayout->addWidget(expertOption, 5, 0, 1, 1);
 
   expertEdit = new QLineEdit(this);
   gridLayout->addWidget(expertEdit, 5, 1, 1, 1);
+	connect(expertEdit,SIGNAL(textEdited(QString)),SLOT(switchToExpert()));
 
   tokenListToLayout(l);
 
+}
+
+void NVBColumnInputWidget::switchToFile() {
+	fileOption->setChecked(true);
+}
+
+void NVBColumnInputWidget::switchToPage() {
+	pageOption->setChecked(true);
+}
+
+void NVBColumnInputWidget::switchToTopo() {
+	topoOption->setChecked(true);
+}
+
+void NVBColumnInputWidget::switchToSpec() {
+	specOption->setChecked(true);
+}
+
+void NVBColumnInputWidget::switchToCustom() {
+	customOption->setChecked(true);
+}
+
+void NVBColumnInputWidget::switchToExpert() {
+	expertOption->setChecked(true);
 }
 
 NVBTokenList NVBColumnInputWidget::getState()
@@ -246,6 +276,7 @@ NVBColumnDialogWidget::NVBColumnDialogWidget(int ix, NVBColumnDescriptor clmn, Q
   horizontalLayout->addWidget(clmnName,2);
 
   clmnCnt = new NVBCCCBox(clmn.contents,this);
+	connect(clmnCnt,SIGNAL(contentChanged()),SLOT(autoName()));
   horizontalLayout->addWidget(clmnCnt,3);
 
 
@@ -261,6 +292,11 @@ NVBColumnDialogWidget::NVBColumnDialogWidget(int ix, NVBColumnDescriptor clmn, Q
 //   pushButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   horizontalLayout->addWidget(pushButton);
   connect(pushButton,SIGNAL(clicked()),this,SLOT(removeColumn()));
+}
+
+void NVBColumnDialogWidget::autoName() {
+	if (clmnName->text().isEmpty())
+		clmnName->setText(clmnCnt->getState().verboseString());
 }
 
 void NVBColumnDialogWidget::renumber(int xindex)
@@ -434,7 +470,7 @@ void NVBCCCBox::showPopup( )
 //   if (!dropdown) {
     dropdown = new NVBCCDropDown(tokens,this);
 //     dropdown->layout()->activate();
-    connect(dropdown,SIGNAL(rejected()),this,SLOT(hidePopup()));
+		connect(dropdown,SIGNAL(rejected()),this,SLOT(hidePopup()));
     connect(dropdown,SIGNAL(accepted()),this,SLOT(setValue()));
 //     }
   
@@ -450,6 +486,7 @@ void NVBCCCBox::hidePopup( )
     dropdown->hide();
     delete dropdown;
     dropdown = 0;
+
     }
 }
 
@@ -461,6 +498,7 @@ void NVBCCCBox::setValue( )
 #endif
   update();
   hidePopup();
+	emit contentChanged();
 }
 
 void NVBColumnInputWidget::tokenListToLayout( NVBTokenList l )
