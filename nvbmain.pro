@@ -25,12 +25,17 @@ HEADERS += \
            src/NVBMimeData.h \
            src/NVBPageViewModel.h \
            src/NVBFile.h \
+           src/NVBJointFile.h \
            src/NVBPages.h \
            src/NVBTokens.h \
            src/NVBFileInfo.h \
            src/NVBFileGenerator.h \
+           src/NVBFileBundle.h \
            src/NVBFileFactory.h
+
 SOURCES += \
+           src/NVBJointFile.cpp \
+           src/NVBFileBundle.cpp \
            src/NVBFileFactory.cpp
 
 # Delegates
@@ -51,7 +56,11 @@ win32 : LIBS += -Lrelease/lib/tools -lnvbdviz
 unix : LIBS += -Llib/tools -lnvbdviz
 
 contains(CONFIG,NVBStatic) {
- LIBS += -lnvbexport -lnvbspec -lnvbtopo -lnvbcolor
+	LIBS += \
+          -lnvbexport \
+          -lnvbspec \
+          -lnvbtopo \
+          -lnvbcolor
  contains(CONFIG,debug) {
 	win32 : LIBS += -Ldebug/lib/files
  } else {
@@ -62,6 +71,9 @@ contains(CONFIG,NVBStatic) {
 # libnvb should be included after everything, since everything depends on it
  LIBS -= -lnvb
  LIBS += -lnvb
+
+ LIBS -= -lqwt
+ LIBS += -lqwt
 # libopengl32 has to be included after libnvb
  contains(CONFIG, NVB3DView) : LIBS += -lopengl32 -lglu32 -lqwt
 }
@@ -121,6 +133,7 @@ HEADERS += \
            src/NVBColumnsModel.h \
            src/NVBColumnDialog.h \
            src/NVBFileFilterDialog.h \
+           src/NVBDirModelHelpers.h \
            src/NVBDirModel.h \
            src/NVBDirView.h \
            src/NVBDirViewModel.h \
@@ -133,6 +146,7 @@ SOURCES += \
            src/NVBColumnsModel.cpp \
            src/NVBColumnDialog.cpp \
            src/NVBFileFilterDialog.cpp \
+           src/NVBDirModelHelpers.cpp \
            src/NVBDirModel.cpp \
            src/NVBDirView.cpp \
            src/NVBDirViewModel.cpp \
