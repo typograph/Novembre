@@ -14,6 +14,7 @@ private:
 	void calculateIndexes(const QModelIndex & original, int & file, QModelIndex & page) const;
 
 public:
+	NVBJointFile();
 	NVBJointFile(const NVBAssociatedFilesInfo & sources, QList<NVBFile*> components = QList<NVBFile*>());
 
 	void addFile(NVBFile * other);
