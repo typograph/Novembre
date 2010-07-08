@@ -71,7 +71,7 @@ public:
 	virtual inline QString moduleDesc() const { return QString("Createc STM file format used by STMAFM 2.x"); }
 
   virtual QStringList extFilters() const {
-			static QStringList exts = QStringList() << "*.dat" << "*.vert"; // FIXME << "*.lat" << "*.tspec";
+			static QStringList exts = QStringList() << "A??????.??????.dat" << "A??????.*.vert"; // FIXME << "A*.lat" << "A*.tspec";
       return exts;
   }
 
