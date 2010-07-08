@@ -452,16 +452,16 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 	result[0]->zd = NVBDimension("A");
 	pcolors[0] = Qt::green;
 	result[1]->pagename = "dI";
-	result[1]->zd = NVBDimension("A/V");
+	result[1]->zd = NVBDimension("V");
 	pcolors[1] = Qt::blue;
 	result[2]->pagename = "U";
-	result[2]->zd = NVBDimension("mV");
+	result[2]->zd = NVBDimension("V");
 	pcolors[2] = Qt::green;
 	result[3]->pagename = "z";
 	result[3]->zd = NVBDimension("nm");
 	pcolors[3] = Qt::blue;
 	result[4]->pagename = "dI2";
-	result[4]->zd = NVBDimension("A/V^2");
+	result[4]->zd = NVBDimension("V");
 	pcolors[4] = Qt::red;
 	result[5]->pagename = "dI_q";
 	result[5]->zd = NVBDimension("DAC",false);
@@ -473,10 +473,10 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 	result[7]->zd = NVBDimension("A");
 	pcolors[7] = Qt::gray;
 	result[8]->pagename = "AD1";
-	result[8]->zd = NVBDimension("A/V");
+	result[8]->zd = NVBDimension("V");
 	pcolors[8] = Qt::darkRed;
 	result[9]->pagename = "AD2";
-	result[9]->zd = NVBDimension("A/V^2");
+	result[9]->zd = NVBDimension("V");
 	pcolors[9] = Qt::green;
 	result[10]->pagename = "AD3";
 	result[10]->zd = NVBDimension("DAC",false);
@@ -534,6 +534,14 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 
 		// Z
 		factor[3] = file_header.value("Dacto[A]z").toDouble();
+
+		// V
+		factor[1] = file_header.value("Dacto[A]z").toDouble()*0.1/
+								file_header.value("ZPiezoconst").toDouble();
+		factor[2] = factor[1];
+		factor[4] = factor[1];
+		factor[8] = factor[1];
+		factor[9] = factor[1];
 
 		QVector<double> xs(0);
 		xs.reserve(npts);
