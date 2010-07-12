@@ -208,6 +208,9 @@ QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromDir(const QDir 
 }
 
 QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromList(QStringList filenames, QList<NVBAssociatedFilesInfo> * old_files, QList<int> * deleted ) const {
+
+	qApp->setOverrideCursor(Qt::BusyCursor);
+
 	// Remove already loaded files from the list
 	// We assume the list is OK, i.e. there're no two infos using the same file
 	if (old_files)
@@ -252,6 +255,8 @@ QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromList(QStringLis
 // Yeah, I know goto's are evil, but how else can I solve this thing with breaking 2 loops?
 skip_file: ;
 		}
+
+	qApp->restoreOverrideCursor();
 
 	return files;
 }

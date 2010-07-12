@@ -224,6 +224,8 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 		return;
 		}
 
+	qApp->setOverrideCursor(Qt::BusyCursor);
+
 	populated = true;
 
 	if ( dir.exists() ) {
@@ -258,8 +260,8 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 #else
 		fileLoader = new QFutureWatcher<NVBFileInfo*>(this);
 		fileLoader->setFuture(QtConcurrent::mapped(associations,&NVBAssociatedFilesInfo::loadFileInfo));
-		connect(fileLoader,SIGNAL(resultsReadyAt(int,int)),this,SLOT(notifyLoading(int,int)));
-		connect(fileLoader,SIGNAL(finished()),this,SLOT(setLoaded()));
+		connect(fileLoader,SIGNAL(resultsReadyAt(int,int)),SLOT(notifyLoading(int,int)),Qt::QueuedConnection);
+		connect(fileLoader,SIGNAL(finished()),SLOT(setLoaded()),Qt::QueuedConnection);
 #endif
 
 

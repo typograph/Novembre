@@ -126,7 +126,7 @@ signals:
 	void filesLoaded(const NVBDirEntry * entry, int fstart, int fend);
 private slots:
 	void notifyLoading(int start, int end);
-	void setLoaded() { loaded = true; }
+	void setLoaded() { loaded = true; qApp->restoreOverrideCursor();}
 public slots:
 	bool refresh(NVBFileFactory * fileFactory);
 	void refreshSubfolders(NVBFileFactory * fileFactory);
