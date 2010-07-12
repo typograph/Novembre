@@ -170,9 +170,9 @@ public slots:
 
 //    virtual void level3Pts();
 #if QT_VERSION >= 0x040300
-    virtual void actualize(QMdiSubWindow*);
+    virtual void actualize(QMdiSubWindow* = 0);
 #else
-    virtual void actualize(QWidget*);
+    virtual void actualize(QWidget* = 0);
 #endif
     
 //    NVB_wincontrol* newWindow(QString filename, unsigned int page);

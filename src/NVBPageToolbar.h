@@ -31,10 +31,15 @@ class NVBPageToolbar : public QToolBar {
 Q_OBJECT
 private:
   QList<ActionLimits> types;
+	NVB::PageType currentPageType;
+	NVB::ViewType currentViewType;
   void fillList();
+	void adapt();
 public:
-  inline NVBPageToolbar ( const QString & title, QWidget * parent = 0 ):QToolBar(title,parent) {;}
-  inline NVBPageToolbar ( QWidget * parent = 0 ):QToolBar(parent) {;}
+	inline NVBPageToolbar ( const QString & title, QWidget * parent = 0 )
+		: QToolBar(title,parent), currentPageType(NVB::InvalidPage), currentViewType(NVB::NoView) {;}
+	inline NVBPageToolbar ( QWidget * parent = 0 )
+		: QToolBar(parent), currentPageType(NVB::InvalidPage), currentViewType(NVB::NoView) {;}
   virtual inline ~NVBPageToolbar() {;}
   inline QAction * addTopoPageAction(QAction * action) {
     return addActionWithType(action, NVB::TopoPage); }
@@ -43,8 +48,8 @@ public:
   QAction * addActionWithType(QAction * action, NVB::PageType ptype = NVB::UndefinedPage, NVB::ViewType vtype = NVB::AnyView );
 
 public slots:
-  void switchPageType(NVB::PageType);
-  void switchViewType(NVB::ViewType);
+	void switchPageType(NVB::PageType t) { currentPageType = t; adapt();	}
+	void switchViewType(NVB::ViewType t) { currentViewType = t; adapt();	}
   void switchControlledWindow();
 
 };
