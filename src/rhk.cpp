@@ -22,7 +22,7 @@
 #include "NVBFileInfo.h"
 #include "NVBFile.h"
 #include "rhk.h"
-
+#include "NVBLogger.h"
 
 /*
 

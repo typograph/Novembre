@@ -15,6 +15,7 @@
 #include "NVBProgress.h"
 #include "NVBColumnDialog.h"
 #include "NVBFileFactory.h"
+#include "NVBLogger.h"
 #include <QtCore/QtAlgorithms>
 #include <QtCore/QFileSystemWatcher>
 #include <QtCore/QFile>

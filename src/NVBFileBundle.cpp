@@ -2,6 +2,7 @@
 #include "NVBFileFactory.h"
 #include "NVBFileInfo.h"
 #include "NVBJointFile.h"
+#include "NVBLogger.h"
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
