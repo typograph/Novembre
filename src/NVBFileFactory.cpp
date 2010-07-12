@@ -18,9 +18,9 @@
 #ifdef NVB_STATIC
 Q_IMPORT_PLUGIN(rhk);
 Q_IMPORT_PLUGIN(createc);
-// Q_IMPORT_PLUGIN(winspm);
+Q_IMPORT_PLUGIN(winspm);
 // Q_IMPORT_PLUGIN(textSTM);
-// Q_IMPORT_PLUGIN(nanonis);
+Q_IMPORT_PLUGIN(nanonis);
 #endif
 
 NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
