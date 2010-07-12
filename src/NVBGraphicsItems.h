@@ -26,12 +26,15 @@ private :
 public :
   NVBFullGraphicsItem();
   virtual ~NVBFullGraphicsItem() {;}
-  virtual inline QRectF boundingRect () const {
-    if (scene()) {
-      return scene()->sceneRect();
-      }
-    return QRect();
-    }
+	virtual inline QRectF boundingRect () const {
+		static bool protect = false;
+		if (  protect ) return QRectF();
+		if ( !scene() ) return QRectF();
+		protect = true;
+		QRectF rect = scene()->sceneRect();
+		protect = false;
+		return rect;
+		}
   virtual void paint ( QPainter * , const QStyleOptionGraphicsItem * , QWidget *  = 0 );
 protected :
   virtual bool sceneEvent ( QEvent * event );
