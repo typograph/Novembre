@@ -115,6 +115,7 @@ NVBMain::NVBMain():QMainWindow()
 
   createMenus();
   show();
+	actualize();
 
 /*
 
