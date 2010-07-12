@@ -52,6 +52,9 @@ private:
 
   friend class NanonisTopoPage;
 
+  NVBFile * loadSpecAggregation(const NVBAssociatedFilesInfo & info) const;
+  NVBFileInfo * loadSpecAggregationInfo(const NVBAssociatedFilesInfo & info) const;
+
 public:
   NanonisFileGenerator():NVBFileGenerator() {;}
   virtual ~NanonisFileGenerator() {;}
@@ -63,6 +66,7 @@ public:
 			static QStringList exts \
 					= QStringList() \
 					<< "*.sxm" \
+					<< "*.dat" \
 					;
 			return exts;
 			}
@@ -71,6 +75,8 @@ public:
 
 	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
 	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
+
+	virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 
 };
 

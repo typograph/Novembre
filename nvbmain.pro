@@ -69,7 +69,12 @@ contains(CONFIG,NVBStatic) {
 	win32 : LIBS += -Lrelease/lib/files
  }
  unix : LIBS += -Llib/files
- LIBS += -lrhk -lcreatec
+ LIBS += \
+				-lrhk \
+				-lcreatec \
+				-lnanonis \
+				-lwinspm
+
 # libnvb should be included after everything, since everything depends on it
  LIBS -= -lnvb
  LIBS += -lnvb

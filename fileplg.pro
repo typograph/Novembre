@@ -7,7 +7,7 @@ SUBDIRS += rhk.pro
 # SUBDIRS += scala.pro
 
 # WinSPM ver. 4 files
- SUBDIRS += winspm.pro
+SUBDIRS += winspm.pro
 
 # Createc SPS files
 SUBDIRS += createc.pro
