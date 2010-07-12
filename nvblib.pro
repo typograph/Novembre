@@ -15,6 +15,12 @@ SOURCES += \
            src/NVBGraphicsItems.cpp
 }
 
+#HEADERS += src/NVBLogger.h
+
+#contains(CONFIG,NVBLog) {
+#SOURCES += src/NVBLogger.cpp
+#}
+
 HEADERS += \
            src/dimension.h \
            src/NVBDimension.h \
@@ -30,6 +36,8 @@ HEADERS += \
            src/NVBContColorModel.h \
            src/NVBDiscrColorModel.h \
            src/NVBPages.h \
+           src/NVBPageViewModel.h \
+           src/NVBFile.h \
            src/NVBFileInfo.h \
            src/NVBPhysSpinBox.h \
            src/NVBPhysStepSpinBox.h

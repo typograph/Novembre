@@ -20,8 +20,9 @@ HEADERS += \
     src/NVBDataSource.h \
     src/NVBPages.h \
     src/NVBFileInfo.h \
-		src/NVBFile.h \
-		src/NVBFileGenerator.h
+    src/NVBPageViewModel.h \
+    src/NVBFile.h \
+    src/NVBFileGenerator.h
 
 TEMPLATE = lib
 MOC_DIR = moc

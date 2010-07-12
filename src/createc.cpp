@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "NVBLogger.h"
 #include "createc.h"
 #include "dimension.h"
 #include "NVBContColoring.h"
@@ -585,7 +586,5 @@ CreatecLatPage::CreatecLatPage( QFile & file ):header(CreatecFileGenerator::getC
 CreatecTSpecPage::CreatecTSpecPage( QFile & file ):header(CreatecFileGenerator::getCreatecHeader(file))
 {
 }
-
-
 
 Q_EXPORT_PLUGIN2(createc, CreatecFileGenerator)

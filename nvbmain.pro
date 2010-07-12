@@ -1,13 +1,15 @@
 include(nvb.pri)
 
 # Log
+
+HEADERS += src/NVBLogger.h
+
 contains(CONFIG,NVBLog){
     DEFINES += NVB_ENABLE_LOG
     contains(CONFIG,NVBVerboseLog){
         DEFINES += NVB_VERBOSE_LOG
     }
     HEADERS += \
-            src/NVBLogger.h \
             src/NVBLogUtils.h
     SOURCES += \
             src/NVBLogger.cpp \
