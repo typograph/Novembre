@@ -63,7 +63,7 @@ void NVBTopoToolsProvider::populateToolbar(NVB::ViewType vtype, NVBPageToolbar *
 #ifdef WITH_2DVIEW
   a = NVBCircAverager::action();
   a->setData(((int)id() << 16) + 0x4161);
-  toolbar->addTopoPageAction(a);
+	toolbar->addActionWithType(a,NVB::TopoPage,NVB::TwoDView);
 #endif
 }
 

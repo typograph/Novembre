@@ -164,7 +164,7 @@ void NVBMain::actualize( QWidget * window)
 {
   static QWidget * lastwindow = 0;
 
-	NVBOutputVPMsg(QString("Activeted window \"%2\" (%1)").arg((int)window).arg(window ? window->windowTitle() : "No window"));
+	NVBOutputVPMsg(QString("Activated window \"%2\" (%1)").arg((int)window).arg(window ? window->windowTitle() : "No window"));
   if (lastwindow == window) return;
 
   lastwindow = window;
@@ -407,6 +407,7 @@ void NVBMain::addWindow(QWidget * window)
 #else
   workspace->addWindow(window)->raise();
 #endif*/
+
   window->show();
   window->raise();
 //   window->focus();
@@ -498,16 +499,22 @@ void NVBMain::openFile(const NVBAssociatedFilesInfo & info, QList< int > pages)
 void NVBMain::redirectAction(QAction * action)
 {
 #if QT_VERSION >= 0x040300
-  NVBFileWindow * w = qobject_cast<NVBFileWindow*>(workspace->currentSubWindow());
+	NVBFileWindow * w = qobject_cast<NVBFileWindow*>(workspace->currentSubWindow());
 #else
-  NVBFileWindow * w = qobject_cast<NVBFileWindow*>(workspace->activeWindow());
+	NVBFileWindow * w = qobject_cast<NVBFileWindow*>(workspace->activeWindow());
 #endif
-  if (w)
-    w->installDelegate( action );
-  else {
+	if (w)
+		w->installDelegate( action );
+	else {
+	// We will suppose no plugin can work without a window.
+	// One notable exception from before was NVBImport, but it was replaced with NVBAssosciatedFilesInfo
+	// Mind you, NVBToolBar disables all actions for NVB::NoView
+	/*
     NVBDummyViewController d(this);
     qApp->property("toolsFactory").value<NVBToolsFactory*>()->activateDelegate(action->data().toInt(),0,&d);
-    }
+	*/
+	actualize(0);
+		}
 }
 
 void NVBMain::actualizeCurrentPage(NVBDataSource * source)
