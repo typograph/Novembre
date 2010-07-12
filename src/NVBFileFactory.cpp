@@ -54,7 +54,7 @@ NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 	}
 #endif
 
-	if (!generators.size())
+	if (generators.size() < 2)
 		NVBCriticalError(QString("No valid plugins found"));
 	else
 		foreach (const NVBFileGenerator * g, generators) {
@@ -64,16 +64,18 @@ NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 				wildcards.insertMulti(e,g);
 //			wildcards.insertMulti(QRegExp(e,Qt::CaseInsensitive,QRegExp::Wildcard),g);
 			}
-	commentNames.sort();
-	QString cache = commentNames.first();
-	for (int i = 1; i < commentNames.count();) {
-		if (commentNames.at(i) == cache)
-			commentNames.removeAt(i);
-		else {
-			cache = commentNames.at(i);
-			i += 1;
+	if (!commentNames.isEmpty()) {
+		commentNames.sort();
+		QString cache = commentNames.first();
+		for (int i = 1; i < commentNames.count();) {
+			if (commentNames.at(i) == cache)
+				commentNames.removeAt(i);
+			else {
+				cache = commentNames.at(i);
+				i += 1;
+				}
+			}
 		}
-	}
 }
 
 NVBFileFactory::~NVBFileFactory()
