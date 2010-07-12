@@ -154,6 +154,7 @@ void NVBDelegateStackView::refresh()
 
   emit contentsChanged();
   if ( widget()->layout()->count() <= 1 ) emit empty();
+	emit fillStatus(widget()->layout()->count() > 1);
 }
 
 QSize NVBDelegateStackView::minimumSizeHint() const

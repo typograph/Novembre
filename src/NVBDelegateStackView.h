@@ -62,6 +62,7 @@ public slots:
 signals:
   void empty();
   void contentsChanged();
+	void fillStatus(bool);
 };
 
 #endif

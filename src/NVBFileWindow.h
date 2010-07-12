@@ -208,8 +208,8 @@ protected slots:
   void showPageOperationsMenu( const QModelIndex&, const QPoint & pos );
 
 #ifndef NVB_NO_FW_DOCKS
-  inline void setLeftVisible(bool visible) { setWidgetVisible(pageListView,visible,true); }
-  inline void setRightVisible(bool visible)  { setWidgetVisible(stackView,visible,false); }
+	inline void setLeftVisible(bool visible = true) { setWidgetVisible(pageListView,visible,true); }
+	inline void setRightVisible(bool visible = true)  { setWidgetVisible(stackView,visible,false); }
  /// Make child widget visible/unvisible with an option to compensate for widget position
   void setWidgetVisible(QWidget* widget, bool visible, bool shift);
 #endif

@@ -361,6 +361,7 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
       }
 
 #ifndef NVB_NO_FWDOCKS
+		connect(stackView,SIGNAL(fillStatus(bool)),SLOT(setRightVisible(bool)));
     myLayout->setRightDock(stackView);
 #endif
 
