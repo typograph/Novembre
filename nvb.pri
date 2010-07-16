@@ -3,6 +3,7 @@ include(Novembre.pri)
 #
 # No need to expose that to end users
 #
+# qwtplot3d has been changed from upstream -> do not use official version
 INCLUDEPATH += src/qwtplot3d
 
 contains(CONFIG,NVBStatic) {
@@ -21,6 +22,14 @@ contains(CONFIG,NVBStatic) {
 contains(CONFIG,debug) {
   CONFIG += NVBLog NVBVerboseLog
   DEFINES += NVB_DEBUG
+}
+
+# Log
+contains(CONFIG,NVBLog){
+    DEFINES += NVB_ENABLE_LOG
+    contains(CONFIG,NVBVerboseLog){
+        DEFINES += NVB_VERBOSE_LOG
+    }
 }
 
 contains(CONFIG,NVB2DView) {

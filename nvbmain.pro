@@ -1,14 +1,9 @@
 include(nvb.pri)
 
 # Log
-
 HEADERS += src/NVBLogger.h
 
 contains(CONFIG,NVBLog){
-    DEFINES += NVB_ENABLE_LOG
-    contains(CONFIG,NVBVerboseLog){
-        DEFINES += NVB_VERBOSE_LOG
-    }
     HEADERS += \
             src/NVBLogUtils.h
     SOURCES += \
@@ -18,23 +13,9 @@ contains(CONFIG,NVBLog){
 
 # STMFile tools
 HEADERS += \
-           src/dimension.h \
-           src/NVBContColorModel.h \
-           src/NVBDiscrColorModel.h \
-           src/NVBDimension.h \
-           src/NVBVariant.h \
-           src/NVBDataSource.h \
-           src/NVBMimeData.h \
-           src/NVBPageViewModel.h \
-           src/NVBFile.h \
            src/NVBJointFile.h \
-           src/NVBPages.h \
-           src/NVBTokens.h \
-           src/NVBFileInfo.h \
-           src/NVBFileGenerator.h \
            src/NVBFileBundle.h \
            src/NVBFileFactory.h
-
 SOURCES += \
            src/NVBJointFile.cpp \
            src/NVBFileBundle.cpp \
@@ -42,10 +23,6 @@ SOURCES += \
 
 # Delegates
 HEADERS += \
-           src/NVBGeneralDelegate.h \
-           src/NVBViewController.h \
-           src/NVBFilterDelegate.h \
-           src/NVBDelegateProvider.h \
            src/NVBToolsFactory.h
 SOURCES += \
            src/NVBToolsFactory.cpp
@@ -69,12 +46,7 @@ contains(CONFIG,NVBStatic) {
 	win32 : LIBS += -Lrelease/lib/files
  }
  unix : LIBS += -Llib/files
- LIBS += \
-				-lrhk \
-				-lcreatec \
-				-lnanonis \
-				-lwinspm
-
+ LIBS += -lrhk -lcreatec
 # libnvb should be included after everything, since everything depends on it
  LIBS -= -lnvb
  LIBS += -lnvb
@@ -82,7 +54,10 @@ contains(CONFIG,NVBStatic) {
  LIBS -= -lqwt
  LIBS += -lqwt
 # libopengl32 has to be included after libnvb
- contains(CONFIG, NVB3DView) : LIBS += -lopengl32 -lglu32 -lqwt
+ contains(CONFIG, NVB3DView) {
+   win32 : LIBS += -lopengl32 -lglu32 -lqwt
+   unix : LIBS += -lGL -lGLU -lqwt
+}
 }
 
 # FileWindow
@@ -92,7 +67,6 @@ HEADERS += \
            src/QCollapsibleBox.h \
            src/NVBDelegateStackView.h \
            src/NVBWidgetStackModel.h \
-           src/NVBPageToolbar.h \
            src/NVBDataView.h \
            src/NVBFileWindowLayout.h \
            src/NVBFileWindow.h
@@ -106,9 +80,7 @@ SOURCES += \
 
 contains(CONFIG,NVB2DView){
     HEADERS += \
-           src/NVBGraphicsItems.h \
            src/NVB2DPageView.h
-
     SOURCES += \
            src/NVB2DPageView.cpp
 }
@@ -116,7 +88,6 @@ contains(CONFIG,NVB2DView){
 contains(CONFIG,NVBGraphView){
     HEADERS += \
            src/NVBGraphView.h
-
     SOURCES += \
            src/NVBGraphView.cpp
 }
@@ -124,7 +95,6 @@ contains(CONFIG,NVBGraphView){
 contains(CONFIG,NVB3DView){
     HEADERS += \
            src/NVB3DPageView.h
-
     SOURCES += \
            src/NVB3DPageView.cpp
     QT += opengl
@@ -192,10 +162,7 @@ QT += core gui network
 
 win32: RC_FILE = icons/novembre.rc
 
-macx {
-    #    QMAKE_LFLAGS += -L/usr/local/qwt-5.0.2/lib
-    ICON = icons/nvb.icns
-}
+macx : ICON = icons/nvb.icns
 
 contains(CONFIG,NVBStatic) {
 } else {

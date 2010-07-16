@@ -3,10 +3,11 @@ CONFIG += NVBLog
 
 # Show verbose messages in log
 # CONFIG += NVBVerboseLog
+
 # Select views to use
 CONFIG += NVB2DView \
-					NVBGraphView \
-					NVB3DView
+          NVBGraphView
+          NVB3DView
 
 # Compile plugins as shared libraries
 CONFIG += NVBShared
@@ -16,14 +17,14 @@ win32:CONFIG += NVBStatic
 
 # Put docks on main window
 # CONFIG += NVBGlobalDocks
+
 # Don't compile debugging information in
 CONFIG -= debug
 CONFIG += release
 
 # Use qwt from these locations
-# qwtplot3d has been changed from upstream -> do not use official version
 unix { 
-    INCLUDEPATH += /usr/include/qwt5/
+    INCLUDEPATH += /usr/include/qwt5
     LIBS += -lqwt
 }
 win32 { 
