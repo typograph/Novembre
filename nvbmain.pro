@@ -46,17 +46,19 @@ contains(CONFIG,NVBStatic) {
 	win32 : LIBS += -Lrelease/lib/files
  }
  unix : LIBS += -Llib/files
- LIBS += -lrhk -lcreatec
+ LIBS += \
+	-lrhk \
+	-lcreatec \
+	-lwinspm \
+	-lnanonis
 # libnvb should be included after everything, since everything depends on it
  LIBS -= -lnvb
  LIBS += -lnvb
 
- LIBS -= -lqwt
- LIBS += -lqwt
 # libopengl32 has to be included after libnvb
  contains(CONFIG, NVB3DView) {
-   win32 : LIBS += -lopengl32 -lglu32 -lqwt
-   unix : LIBS += -lGL -lGLU -lqwt
+   win32 : LIBS += -lopengl32 -lglu32
+   unix : LIBS += -lGL -lGLU
 }
 }
 
@@ -106,7 +108,6 @@ HEADERS += \
            src/NVBListItemDelegate.h \
            src/NVBPageInfoWidget.h \
            src/NVBPageInfoView.h \
-           src/NVBProgress.h \
            src/NVBColumnsModel.h \
            src/NVBColumnDialog.h \
            src/NVBFileFilterDialog.h \

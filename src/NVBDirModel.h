@@ -148,10 +148,6 @@ private slots:
 	void refreshWatchedDir( QObject * o_entry );
 	void notifyFilesLoaded(const NVBDirEntry * entry, int fstart, int fend);
 
-protected slots:
-	void sortingStarted(int estimated = -1) const;
-	void sortingFinished() const;
-	
 };
 
 #endif

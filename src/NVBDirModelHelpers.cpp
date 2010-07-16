@@ -1,6 +1,5 @@
 #include "NVBDirModelHelpers.h"
 #include "NVBFileInfo.h"
-#include "NVBProgress.h"
 #include "NVBFileFactory.h"
 #include <QtCore/QtAlgorithms>
 #include <QtCore/QFileSystemWatcher>
@@ -244,15 +243,6 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 			emit endOperation();
 			}
 
-//     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-//     QApplication::sendEvent(
-//       qApp->property("progressBar").value<QObject*>(),
-//       new NVBProgressStartEvent(
-//         QString("Processing %1").arg(dir.absolutePath()),
-//         infos.size()
-//         )
-//       );
-
 		QList<NVBAssociatedFilesInfo> associations = fileFactory->associatedFilesFromDir(dir);
 
 #if QT_VERSION < 0x040400
@@ -264,14 +254,7 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 		connect(fileLoader,SIGNAL(finished()),SLOT(setLoaded()),Qt::QueuedConnection);
 #endif
 
-
-/*    QApplication::sendEvent(
-      qApp->property("progressBar").value<QObject*>(),
-      new NVBProgressStopEvent()
-      );
-
-    QApplication::restoreOverrideCursor();*/
-    }
+	}
 	else {
 		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
 		}
@@ -287,14 +270,6 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 
     if (isRecursive()) {
       QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
-
-//      QApplication::sendEvent(
-//        qApp->property("progressBar").value<QObject*>(),
-//        new NVBProgressStartEvent(
-//          QString("Refreshing %1").arg(dir.absolutePath()),
-//          infos.size() + subfolders.size()
-//          )
-//        );
 
       QVector<bool> confirmed(folders.size());
       confirmed.fill(false);
@@ -313,10 +288,6 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 					folders.last()->sort(sorter);
           emit endOperation();
           }
-//        QApplication::sendEvent(
-//          qApp->property("progressBar").value<QObject*>(),
-//          new NVBProgressContinueEvent()
-//          );
         }
 
       for (int i=confirmed.size()-1;i>=0;i--) {
@@ -327,15 +298,6 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
           }
         }
 
-      }
-    else {
-//      QApplication::sendEvent(
-//        qApp->property("progressBar").value<QObject*>(),
-//        new NVBProgressStartEvent(
-//          QString("Refreshing %1").arg(dir.absolutePath()),
-//          infos.size()
-//          )
-//        );
       }
 
 		QList<int> ixrm;
@@ -364,12 +326,6 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 		connect(fileLoader,SIGNAL(resultsReadyAt(int,int)),this,SLOT(notifyLoading(int,int)));
 		connect(fileLoader,SIGNAL(finished()),this,SLOT(setLoaded()));
 #endif
-
-//    QApplication::sendEvent(
-//      qApp->property("progressBar").value<QObject*>(),
-//      new NVBProgressStopEvent()
-//      );
-//    QApplication::restoreOverrideCursor();
 
     return true;
     }

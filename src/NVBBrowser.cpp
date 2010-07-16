@@ -28,7 +28,6 @@
 #ifdef Q_WS_WIN
 #include <QMessageBox>
 #endif
-#include "NVBProgress.h"
 #include "NVBColumnDialog.h"
 #include "NVBPageRefactorModel.h"
 
@@ -117,21 +116,6 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   showPageInfoAction->setCheckable(true);
   showPageInfoAction->setChecked(true);
 
-// Bottom option  
-  
-  progressBar = new NVBProgressBar(this);
-  progressBar->hide();
-  connect(progressBar,SIGNAL(wannaBeVisible(bool)),progressBar,SLOT(setVisible(bool)));
-  qApp->setProperty("progressBar",QVariant::fromValue((QObject*)progressBar));  
-
-// Toolbar option
-
-//   progressBar = new NVBProgressBar(this);
-//   qApp->setProperty("progressBar",QVariant::fromValue((QObject*)progressBar));
-//   progressBarAction = foldersToolBar->addWidget(progressBar);
-//   progressBarAction->setVisible(false);
-//   connect(progressBar,SIGNAL(wannaBeVisible(bool)),progressBarAction,SLOT(setVisible(bool)));
-
   foldersToolBar->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 
   llayout->addWidget(foldersToolBar);
@@ -189,15 +173,9 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
     }
 
   llayout->addWidget(fileList);  
-  llayout->addWidget(progressBar);
 
   connect(fileList,SIGNAL(activated(const QModelIndex&)), this,SLOT(showItem(const QModelIndex&)));
-//   connect(fileList,SIGNAL(expanded(const QModelIndex&)), this,SLOT(resizeColumns()));
   connect(fileList->header(),SIGNAL(sectionMoved(int,int,int)),SLOT(moveColumn(int,int,int)));
-//   resizeColumns();
-//  connect(fileList,SIGNAL(currentChanged(QModelIndex&,QModelIndex&)),this,SLOT(showItem(QModelIndex&)));
-//  connect(fileList,SIGNAL(expanded(QTreeWidgetItem*)),this,SLOT(expandItem(QTreeWidgetItem*)));
-//  connect(fileList,SIGNAL(collapsed(QTreeWidgetItem*)),this,SLOT(collapseItem(QTreeWidgetItem*)));
 
   hSplitter->setStretchFactor(0,0);
 

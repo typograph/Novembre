@@ -61,8 +61,6 @@
 
 //#define NVB_BROWSER_ICONSIZE 64
 
-class NVBProgressBar;
-
 class NVBFolderInputDialog : public QDialog {
 Q_OBJECT
 private:
@@ -139,9 +137,6 @@ private:
   QAction * refreshFoldersContentsAction;
 //     QToolButton * plusButton;
   QActionGroup * iconSizeActionGroup;
-
-  QAction * progressBarAction;
-  NVBProgressBar * progressBar;
 
   NVBFileFactory * files;
 
