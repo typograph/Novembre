@@ -22,7 +22,7 @@
 #ifndef NVB_H
 #define NVB_H
 
-#define NVB_VERSION "0.0.5-"
+#define NVB_VERSION "0.0.5a"
 
 #include "NVBMain.h"
 #include "NVBLogger.h"
