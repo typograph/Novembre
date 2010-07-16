@@ -8,18 +8,21 @@ contains(CONFIG,NVB3DView) {
   QT += opengl
 }
 
+# Log
+
+HEADERS += NVBLogger.h
+
+contains(CONFIG,NVBLog){
+    SOURCES += src/NVBLogger.cpp
+}
+
+
 contains(CONFIG,NVB2DView) {
 HEADERS += \
            src/NVBGraphicsItems.h
 SOURCES += \
            src/NVBGraphicsItems.cpp
 }
-
-#HEADERS += src/NVBLogger.h
-
-#contains(CONFIG,NVBLog) {
-#SOURCES += src/NVBLogger.cpp
-#}
 
 HEADERS += \
            src/dimension.h \
@@ -36,9 +39,11 @@ HEADERS += \
            src/NVBContColorModel.h \
            src/NVBDiscrColorModel.h \
            src/NVBPages.h \
+           src/NVBTokens.h \
+           src/NVBFileInfo.h \
+           src/NVBMimeData.h \
            src/NVBPageViewModel.h \
            src/NVBFile.h \
-           src/NVBFileInfo.h \
            src/NVBPhysSpinBox.h \
            src/NVBPhysStepSpinBox.h
 
@@ -77,9 +82,11 @@ VERSION = 0.0.5
 
 QT += core gui
 
-#target.path = $$NVB_PLUGIN_INSTALL_PATH
-
 contains(CONFIG,NVBShared) {
-  target.path = /usr/lib
+  unix {
+    target.path = /usr/lib
+  } else {
+    target.path = $$NVB_PLUGIN_INSTALL_PATH
+  }
   INSTALLS += target
 }
