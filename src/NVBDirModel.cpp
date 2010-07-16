@@ -12,7 +12,6 @@
 
 #include "NVBDirModel.h"
 #include "NVBFileInfo.h"
-#include "NVBProgress.h"
 #include "NVBColumnDialog.h"
 #include "NVBFileFactory.h"
 #include "NVBLogger.h"
@@ -353,116 +352,6 @@ inline void myUniquify(QList<int> & mults, QList<T> & list, NonEqual nonEqual)
 
 }
 
-// bool variantLessThan(const NVBVariant & l, const NVBVariant & r) { return l < r; }
-
-#if 0
-bool NVBDirModel::lessThan(const QModelIndex & left, const QModelIndex & right) const
-{
-//   NVBOutputDMsg("Comparison underway");
-
-  QApplication::sendEvent(
-    qApp->property("progressBar").value<QObject*>(),
-    new NVBProgressContinueEvent()
-    );
-
-// We cannot process events at this point. Unfortunately, this function
-// is called from the QSoftFilterProxyModel after the columnRemoved signal
-// Processing events at this point pauses the process before index mappings
-// are updated, and proceeds to update the header view of QTreeView, that
-// takes weird columns with no data and crashes the program
-//
-//   QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-
-  if (left.column() != right.column()) return false;
-  if (left.parent() != right.parent()) return false;
-	if (isAFile(left) && isAFile(right)) {
-		if (!indexToParentEntry(left)->isLoaded())
-      return left.row() < right.row();
-    if (right.data(DataSortRole).userType() == QMetaType::Void)
-      return true;
-    QVariant lsortdata = left.data(DataSortRole);
-    if (lsortdata.userType() == QMetaType::Void)
-      return false;
-    if (lsortdata.userType() == QMetaType::type("NVBVariant")) {
-      if (!lsortdata.value<NVBVariant>().isAList())
-        return lsortdata.value<NVBVariant>() < right.data(DataSortRole).value<NVBVariant>();
-      NVBVariantList lv = lsortdata.value<NVBVariant>().toList();
-      int i = 0;
-      while(i < lv.size())
-        if (!lv.at(i).isValid())
-          lv.removeAt(i);
-        else
-          i += 1;
-      if (lv.isEmpty()) return true;
-      NVBVariantList rv = right.data(DataSortRole).value<NVBVariant>().toList();
-      i = 0;
-      while(i < rv.size())
-        if (!rv.at(i).isValid())
-          rv.removeAt(i);
-        else
-          i += 1;
-      if (rv.isEmpty()) return false;
-  
-			qSort(lv.begin(),lv.end(),NVBDirModel::variantGreaterOrEqualTo);
-			qSort(rv.begin(),rv.end(),NVBDirModel::variantGreaterOrEqualTo);
-      QList<int> lvm,rvm;
-			myUniquify(lvm,lv,NVBDirModel::variantLessThan);
-			myUniquify(rvm,rv,NVBDirModel::variantLessThan);
-  
-      int imax = qMin(lv.size(),rv.size());
-      for (int i = 0; i<imax; i++) {
-        if (lv.at(i) != rv.at(i)) return lv.at(i) < rv.at(i);
-        else if (lvm.at(i) != rvm.at(i)) return lvm.at(i) < rvm.at(i);
-        }
-
-      return lv.size() < rv.size();
-      }
-    else {
-      if (lsortdata.userType() != QMetaType::QString)
-			NVBOutputError(QString("Data for sorting role is not of type NVBVariant, but %1").arg(QMetaType::typeName(lsortdata.userType())));
-      return lsortdata.toString() < right.data(DataSortRole).toString();
-      return false;
-      }
-/*
-    if (left.data(DataSortRole).type() != QVariant::List)
-      return variantLessThan(left.data(DataSortRole),right.data(DataSortRole));
-    QVariantList lv = left.data(DataSortRole).toList();
-    int i = 0;
-    while(i < lv.size())
-      if (!lv.at(i).isValid())
-        lv.removeAt(i);
-      else
-        i += 1;
-    if (lv.isEmpty()) return true;
-    QVariantList rv = right.data(DataSortRole).toList();
-    i = 0;
-    while(i < rv.size())
-      if (!rv.at(i).isValid())
-        rv.removeAt(i);
-      else
-        i += 1;
-    if (rv.isEmpty()) return false;
-
-		qSort(lv.begin(),lv.end(),NVBDirModel::variantGreaterOrEqualTo);
-		qSort(rv.begin(),rv.end(),NVBDirModel::variantGreaterOrEqualTo);
-    QList<int> lvm,rvm;
-		myUniquify(lvm,lv,NVBDirModel::variantLessThan);
-		myUniquify(rvm,rv,NVBDirModel::variantLessThan);
-
-    int imax = qMin(lv.size(),rv.size());
-    for (int i = 0; i<imax; i++) {
-      bool b = variantLessThan(lv.at(i),rv.at(i));
-      if (b || variantLessThan(rv.at(i),lv.at(i))) return b;
-      else if (lvm.at(i) != rvm.at(i)) return lvm.at(i) < rvm.at(i);
-        }
-      return lv.size() < rv.size();
-    return variantLessThan(lv,rv);
-    */
-    }
-  return false;
-}
-#endif
-
 void NVBDirModel::removeColumn(int index)
 {
   if (index == 0) {
@@ -529,30 +418,6 @@ int NVBDirModel::visibleRows(NVBDirEntry * entry) const
 			n += visibleRows(sub);
 		}
 	return n + entry->fileCount();
-}
-
-void NVBDirModel::sortingStarted(int estimated) const
-{
-//   NVBOutputDMsg("Layout about to be changed");
-	if (estimated < 0)
-		estimated = visibleRows()*(int)(log(visibleRows()));
-
-  QApplication::sendEvent(
-    qApp->property("progressBar").value<QObject*>(),
-    new NVBProgressStartEvent(
-      "Sorting",
-      estimated
-      )
-    );
-}
-
-void NVBDirModel::sortingFinished() const
-{
-//   NVBOutputDMsg("Layout changed");
-  QApplication::sendEvent(
-    qApp->property("progressBar").value<QObject*>(),
-    new NVBProgressStopEvent()
-    );
 }
 
 int NVBDirModel::estimatedRowCount(const QModelIndex & parent) const

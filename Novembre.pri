@@ -6,7 +6,7 @@ CONFIG += NVBLog
 
 # Select views to use
 CONFIG += NVB2DView \
-          NVBGraphView
+          NVBGraphView \
           NVB3DView
 
 # Compile plugins as shared libraries
@@ -24,7 +24,7 @@ CONFIG += release
 
 # Use qwt from these locations
 unix { 
-    INCLUDEPATH += /usr/include/qwt5
+    INCLUDEPATH += /usr/include/qwt
     LIBS += -lqwt
 }
 win32 { 
