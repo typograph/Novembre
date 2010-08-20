@@ -257,6 +257,7 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 	}
 	else {
 		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
+		qApp->restoreOverrideCursor();
 		}
 }
 
@@ -332,7 +333,8 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 
   else {
 		NVBOutputError(QString("Directory %1 ceased to exist").arg(dir.absolutePath()));
-    // TODO be more user-friendly. Display an error message
+		qApp->restoreOverrideCursor();
+		// TODO be more user-friendly. Display an error message
     return false;
     }
 }
