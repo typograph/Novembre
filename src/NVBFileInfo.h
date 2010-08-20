@@ -100,27 +100,26 @@ struct NVBPageInfo {
 
 class NVBFileInfo /*: public QObject */{
 // Q_OBJECT
-public:
-	/// Generates an invalid NVBFileInfo
-	NVBFileInfo(QString name) { files = NVBAssociatedFilesInfo(name); }
-	/// Generates an invalid NVBFileInfo
-	NVBFileInfo(NVBAssociatedFilesInfo info):files(info) {;}
-	/// Generate a NVBFileInfo from existing NVBFile \a file
-	NVBFileInfo(const NVBFile * const file);
-	virtual ~NVBFileInfo() {;}
+	private:
+		QMap<QString,NVBVariant> comments;
+	public:
+		/// Generates an invalid NVBFileInfo
+		NVBFileInfo(QString name) { files = NVBAssociatedFilesInfo(name); }
+		/// Generates an invalid NVBFileInfo
+		NVBFileInfo(NVBAssociatedFilesInfo info):files(info) {;}
+		/// Generate a NVBFileInfo from existing NVBFile \a file
+		NVBFileInfo(const NVBFile * const file);
+		virtual ~NVBFileInfo() {;}
 
-	NVBAssociatedFilesInfo files;
-	QList<NVBPageInfo> pages;
-	
-	bool hasTopo();
-	bool hasSpec();
-	
-	NVBVariant getInfo(const NVBTokens::NVBTokenList & list) const;
-	QString getInfoAsString(const NVBTokens::NVBTokenList & list) const;
-	
-protected :
-	NVBVariant fileParam(NVBTokens::NVBFileParamToken::NVBFileParam p) const;
-	NVBVariant pageParam(NVBPageInfo pi, NVBTokens::NVBPageParamToken::NVBPageParam p) const;
+		NVBAssociatedFilesInfo files;
+		QList<NVBPageInfo> pages;
+
+		NVBVariant getInfo(const NVBTokens::NVBTokenList & list) const;
+		QString getInfoAsString(const NVBTokens::NVBTokenList & list) const;
+
+	protected :
+		NVBVariant fileParam(NVBTokens::NVBFileParamToken::NVBFileParam p) const;
+		NVBVariant pageParam(NVBPageInfo pi, NVBTokens::NVBPageParamToken::NVBPageParam p) const;
 };
 
 #endif

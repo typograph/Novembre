@@ -15,13 +15,13 @@
 
 #include "NVBDataSource.h"
 #include "NVBGeneralDelegate.h"
-#include <QGraphicsItem>
-#include <QStyleOptionGraphicsItem>
-#include <QGraphicsItemGroup>
-#include <QPen>
-#include <QBrush>
-#include <QPainter>
-#include <QGraphicsSceneWheelEvent>
+#include <QtGui/QGraphicsItem>
+#include <QtGui/QStyleOptionGraphicsItem>
+#include <QtGui/QGraphicsItemGroup>
+#include <QtGui/QPen>
+#include <QtGui/QBrush>
+#include <QtGui/QPainter>
+#include <QtGui/QGraphicsSceneWheelEvent>
 
 #include "NVBGraphicsItems.h"
 
@@ -42,7 +42,7 @@ public:
 
 #else
 
-#include <QGraphicsPixmapItem>
+#include <QtGui/QGraphicsPixmapItem>
 
 class NVB2DMapVizDelegate : public QObject, public QGraphicsPixmapItem {
 Q_OBJECT

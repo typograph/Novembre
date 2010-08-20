@@ -47,32 +47,6 @@ void TRHKFile::load( FILE * rf) {
 }
 */
 
-// ----------- New code
-
-/*
-bool RHKFileGenerator::canLoadFile(QString filename)
-{
-  if (filename.right(3).toLower() != "sm3") return false;
-  QFile file(filename);
-  if (!file.open(QIODevice::ReadOnly))
-    return false;
-  if (!file.seek(2))
-    return false;
-
-  const char MAGIC[] = {
-  0x53, 0x00, 0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
-  0x67, 0x00, 0x65, 0x00, 0x20, 0x00};
-
-  const char MAGIC_SIZE = sizeof(MAGIC);
-
-  char test[MAGIC_SIZE];
-
-  if (file.read(test,MAGIC_SIZE) != MAGIC_SIZE)
-    return false;
-  file.close();
-  return (memcmp(test,MAGIC,MAGIC_SIZE) == 0);  
-}
-*/
 
 QStringList RHKFileGenerator::availableInfoFields() const {
     return QStringList() \
@@ -118,11 +92,20 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 		return 0;
 		}
 
-	NVBFile * f = new NVBFile(info);
-	if (!f) return 0;
+	try {
+		NVBFile * f = new NVBFile(info);
+		}
+	catch (...) { // New threw something
+		return 0;
+		}
 
+/*
 	while(!file.atEnd())
 		f->addSource(loadNextPage(file));
+	*/
+
+// how to do it?
+// 
 
 	return f;
 }

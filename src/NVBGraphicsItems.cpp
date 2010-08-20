@@ -10,9 +10,9 @@
 //
 //
 #include "NVBGraphicsItems.h"
-#include <QGraphicsSceneWheelEvent>
-#include <QGraphicsSceneHoverEvent>
-#include <QGraphicsSceneMouseEvent>
+#include <QtGui/QGraphicsSceneWheelEvent>
+#include <QtGui/QGraphicsSceneHoverEvent>
+#include <QtGui/QGraphicsSceneMouseEvent>
 
 // #include <QDebug>
 
@@ -152,3 +152,13 @@ NVBFullGraphicsItem::NVBFullGraphicsItem():QGraphicsItem()
 
   setZValue(100000000);
 }
+
+QRectF NVBFullGraphicsItem::boundingRect() const {
+	static bool protect = false;
+	if (  protect ) return QRectF();
+	if ( !scene() ) return QRectF();
+	protect = true;
+	QRectF rect = scene()->sceneRect();
+	protect = false;
+	return rect;
+	}
