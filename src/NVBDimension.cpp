@@ -253,3 +253,4 @@ double NVBPhysValue::getValue( NVBDimension dim ) const
 {
   return value / dim.purify();
 }
+

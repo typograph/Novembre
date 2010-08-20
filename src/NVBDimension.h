@@ -23,6 +23,7 @@
 #endif
 
 class NVBDimension {
+friend class NVBPhysValue;
 private:
   QString base;
   double mult;
@@ -136,7 +137,12 @@ public:
   bool operator>( const NVBPhysValue & v ) const { return !operator <=(v); }
   bool operator>=( const NVBPhysValue & v ) const { return !operator <(v);}
   
-//  NVBPhysValue operator+(const NVBPhysValue &value_1, const NVBPhysValue &value_2);
+  NVBPhysValue operator+(const NVBPhysValue &value_1, const NVBPhysValue &value_2) {
+    if (value_1.dim.isComparableWith(value_2.dim))
+      return NVBPhysValue(value_1.value*value_1.dim.mult + value_2.value*value_2.dim.mult,value_1.dim.base);
+    NVBOutputError("Attempting to add values with different dimensions");
+    return NVBPhysValue();
+    }
 
   NVBPhysValue &  operator*=( double mult ) { value *= mult; return *this; }
   NVBPhysValue &  operator/=( double div )  {  value /= div; return *this; }
@@ -144,5 +150,34 @@ public:
 };
 
 Q_DECLARE_METATYPE(NVBPhysValue);
+
+class NVBPhysPoint {
+  private:
+    QPointF p;
+    NVBDimension d;
+  public:
+    NVBPhysPoint(double x, double y, NVBDimension dimension);
+    NVBPhysPoint(NVBPhysValue,NVBPhysValue);
+    NVBPhysPoint(QPointF point, NVBDimension dimension):p(point),d(dimension) {;}
+
+    NVBPhysPoint(const NVBPhysPoint & other):p(other.p),d(other.d) {;}
+
+    ~NVBPhysPoint() {;}
+    
+    inline NVBPhysValue x() const { return NVBPhysValue(p.x(),d); }
+    inline NVBPhysValue y() const { return NVBPhysValue(p.y(),d); }
+    QPointF point(NVBDimension targetDimension) const;
+
+    NVBDimension dimension() const { return d; }
+    operator QPointF () { return p; }
+    NVBPhysPoint operator+(const QPointF & other) {
+			return NVBPhysPoint(p + other, d);
+			}
+    void operator+=(const QPointF & other) {
+			p += other;
+			}
+};
+
+Q_DECLARE_METATYPE(NVBPhysPoint);
 
 #endif

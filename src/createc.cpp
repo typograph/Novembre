@@ -21,19 +21,196 @@
 
 #include "NVBLogger.h"
 #include "createc.h"
-#include "dimension.h"
-#include "NVBContColoring.h"
-#include "NVBDiscrColoring.h"
-#include <QDir>
+#include "NVBDimension.h"
+#include "NVBColorMaps.h"
+#include <QtCore/QDir>
 #include "NVBFileInfo.h"
-#include <QDebug>
 #include <zlib.h>
 
 QStringList CreatecFileGenerator::availableInfoFields() const {
     return QStringList() \
             << "Bias" \
             << "Setpoint" \
-            ;
+						<< "Z piezo constant" \ // ZPiezoconst=  7.33
+						<< "X piezo constant" \ // Xpiezoconst= 30.92
+						<< "Y piezo constant" \ // YPiezoconst= 30.92
+// DAC-Type=20bit
+						<< "STM preset" // Titel / Titel=LTSTM_5K_XYZmain
+// Delta X / Delta X [Dac]=256
+// Delta Y / Delta Y [Dac]=256
+// Num.X / Num.X=256
+// Num.Y / Num.Y=256
+// Delay X+ / Delay X+=1
+// Delay X- / Delay X-=1
+// Delay Y / Delay Y=1
+// D-DeltaX / D-DeltaX=4
+// GainX / GainX=10
+// GainY / GainY=10
+// GainZ / GainZ=10
+// Rotation / Rotation=0
+// BiasVoltage / BiasVolt.[mV]=-200
+// Gainpreamp / GainPre 10^=9
+// Chan(1,2,4) / Chan(1,2,4)=1
+// PlanDx / PlanDx=-0.0040
+// PlanDy / PlanDy=-0.1050
+// Scanrotoffx / OffsetX=-408932.2
+// Scanrotoffy / OffsetY=435145.8
+// MVolt_1 / MVolt_1=0
+// MVolt_2 / MVolt_2=0
+// MVolt_3 / MVolt_3=0
+// MVolt_4 / MVolt_4=0
+// MVolt_5 / MVolt_5=0
+// MVolt_6 / MVolt_6=0
+// RepeatRotinc / RepeatRotinc=0
+// RptBVoltinc / RptBVoltinc=0
+// Repeatinterval / Repeatinterval=0
+// Repeatcounter / Repeatcounter=0
+// RepeatXoffset / RepeatXoffset=0
+// RepeatYoffset / RepeatYoffset=0
+// Scantype / Scantype=1
+// Scanmode / Scanmode=2
+// Scancoarse / Scancoarse=0
+// CHMode / CHMode=0
+// Channels / Channels=2
+// Preamptype / Preamptype=1
+// VFBMode / VFBMode=0
+// RotCMode / RotCMode=1
+// CHModeZoff / CHModeZoff=0
+// CHModeGainpreamp / CHModeGainpreamp=8
+// Latmanmode=1
+// LatmResist=2.000E+05
+// LatmanVolt=-50
+// Latmanlgi=2500
+// Latmangain=7
+// Latmanddx=256
+// Latmandelay=1537
+// Latm0Delay=2
+// Latmanccdz=0
+// Latmanextension=1.000
+// TipForm_Volt=-3000
+// TipForm_Z=300
+// Tip_Delay=49
+// Tip_Latddx=256
+// Tip_LatDelay=192
+// Tip_Gain=6
+// Vertmangain=9
+// Vertmandelay=366
+// Vpoint0.t=0
+// Vpoint1.t=4096
+// Vpoint2.t=0
+// Vpoint3.t=0
+// Vpoint0.V=-200
+// Vpoint1.V=1000
+// Vpoint2.V=0
+// Vpoint3.V=0
+// Zpoint0.t=0
+// Zpoint1.t=0
+// Zpoint2.t=0
+// Zpoint3.t=0
+// Zpoint0.z=0
+// Zpoint1.z=0
+// Zpoint2.z=0
+// Zpoint3.z=0
+// Zoffset=0
+// Zdrift=20
+// VertSpecBack=1
+// VertSpecAvrgnr=1
+// VertRepeatCounter=1
+// VertLineCount=2
+// SpecXGrid=256
+// SpecYGrid=100000
+// SpecXYGridDelay=10
+// SpecGridChan=2
+// VerttreshImax=20000
+// VerttreshImin=-20000
+// VertAvrgdelay=100
+// VertFBMode=4
+// VertFBLogiset= 500.000
+// Imageframe=0
+// Imagegrayfactor=16.979
+// Zoom=2.00
+// OrgPlanX=0.12115
+// OrgPlanY=0.10018
+// OrgPlanOff=-463925.31250
+// Dacto[A]xy=0.00059
+// Dacto[A]z=0.00014
+// Planoff=0
+// Planx=0
+// Plany=0
+// Plany2=0
+// Planavrgnr=17
+// Planoffset2=0
+// Plano2start=0
+// Imagebackoffset=0
+// Frameimageoffset=1000
+// DigZoomX=1.00000
+// DigZoomZ=1.00000
+// FBLogIset=  30.000
+// FBIntegral=-27.900000
+// FBProp=  0.000000
+// FBVoltRC=  0.000100
+// FBVoltGain=10000.000
+// CurrentRC=0.9000
+// FBLog=1
+// Imaxcurrent=1000000.0
+// Imaxdelay=      1
+// ImaxZret=  0.000
+// SpecAvrgnr=32
+// SpecFreq=5000.000
+// FFTPoints=4096
+// LockinFreq=1000
+// LockinAmpl=20
+// LockinPhase=-11
+// LockinPhase2=71
+// LockinRC= 0.00063
+// LockinMode=0
+// SBC_Clk[MHz]=150
+// DSP_Clock=50000
+// SRS_Frequency=1000.000
+// SRS_ModVoltage=  1.0000
+// SRS_InpGain[V]=1.0E+00
+// SRS_InpTimeC[s]=1.0E+00
+// LockinRefAmpl=0
+// LockinRefPhase=0
+// DAC5[V]=0.00000
+// UserPreampCode=6:011000/8:101000/10:110000/12:111000/
+// HPIB_Address=hpib7,9
+// Upinc=60493
+// Upcount=13
+// Rotinc=60493
+// Rotincquad=0
+// Rotcount=13
+// XYBurst=500
+// RotBurst=2000
+//  =10
+// AproBurst=5
+// AproPeriod=300
+//  =0
+// X-Puls-Count=694799
+// Y-Puls-Count=-24143
+// Z-Puls-Count=-3830973
+// Autolevel=0
+// Scandvinc[DAC]=0
+// =
+// Z-Res. [A]: +/- =3.039
+// Length x[A]=386.5118
+// Length y[A]=386.5118
+// Biasvolt[mV]=-200
+// Current[A]=3.0E-11
+// Sec/line:=0.328
+// Sec/Image:=167.772
+// ActGainXYZ=10 10 10
+// Channels=2
+// T-STM:=0.00000
+// =
+// HP_Ch1=0.00000
+// HP_Ch2=0.00000
+// HP_Ch3=0.00000
+// HP_Ch4=0.00000
+// =// =
+// T_ADC2[K]=396.242
+// T_ADC3[K]=  0.000
+	;
 }
 
 NVBAssociatedFilesInfo CreatecFileGenerator::associatedFiles(QString filename) const {
@@ -107,18 +284,6 @@ CreatecHeader CreatecFileGenerator::getCreatecHeader( QFile & file )
   return h;
 }
 
-/*
-bool CreatecFileGenerator::canLoadFile( QString filename )
-{
-  QFile file(filename);
-  if (!file.open(QIODevice::ReadOnly))
-    return false;
-  if (!QString(file.readLine(100)).contains("[param",Qt::CaseInsensitive))
-    return false;
-  return true;
-}
-*/
-
 NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
 	if (info.generator() != this) {
@@ -131,8 +296,10 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 		return 0;
 		}
 
-	NVBFile * f = new NVBFile(info);
-	if (!f) {
+	try {
+		NVBFile * f = new NVBFile(info);
+		}
+	catch (...) {
 		NVBOutputError("Memory allocation failed");
 		return 0;
 		}
@@ -142,24 +309,26 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 	//     - we might have a bunch of (vert) files
 	//     - we might have a (tspec) or a (lat) file [that we don't know how to read]
 
+// TODO Here to fill in fileInfo.
+
 	QString ffname = info.first();
 	QString ext = ffname.right(ffname.size()-ffname.lastIndexOf('.')-1).toLower();
 	if (ext == "dat") {
-		f->addSources( CreatecDatPage::loadAllChannels(ffname) );
+		f->addSource( loadAllChannelsFromDAT(ffname) );
 		if (info.count() > 1)
 			NVBOutputPMsg("Associated files include more that one *.dat file");
 		}
-//	else if (ext == "lat")
-//		f->addSource( new CreatecLatPage(file) );
+	else if (ext == "lat")
+		f->addSource( loadAllChannelsFromLAT(ffname) );
 	else if (ext == "vert")
-		f->addSources( CreatecVertPage::loadAllChannels(info) );
-//	else if (ext == "tspec")
-//	f->addSource( new CreatecTSpecPage(file) );
+		f->addSource( loadAllChannelsFromVERT(info) );
+	else if (ext == "tspec")
+		f->addSource( loadAllChannelsFromTSPEC(info) );
 	else {
 		NVBOutputError(QString("Didn't recognise file format of %1").arg(ffname));
 		}
 
-	if (f->rowCount() == 0) {
+	if (f->fileInfo.dataCount() == 0) {
 		delete f;
 		return 0;
 		}
@@ -224,11 +393,11 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	return fi;
 }
 
-QStringList CreatecDatPage::channelNames = QStringList( QStringList("Topography") + QStringList("Current") + QStringList("ADC1") + QStringList("ADC2") );
+QStringList CreatecFileGenerator::DATchannelNames = QStringList( QStringList("Topography") + QStringList("Current") + QStringList("ADC1") + QStringList("ADC2") );
 
-QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
+NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) {
 
-	QList<NVBDataSource*> result;
+	NVBDataSource* result = 0;
 	QFile file(filename);
 
 	if (!file.open(QIODevice::ReadOnly)) {
@@ -240,7 +409,7 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
 		return result;
 		}
 
-  CreatecHeader file_header = CreatecFileGenerator::getCreatecHeader(file);
+  CreatecHeader file_header = getCreatecHeader(file);
 
     // initialise data
 
@@ -252,6 +421,14 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
 		NVBOutputError(QString("Zero data size in %1").arg(filename));
 		return result;
 		}
+
+// There are always only 2 axes : X & Y
+
+	result = new NVBDataSource();
+
+	result->addAxis("X",file_header.value("Num.X",0).toInt());
+	result->addAxisMap(new NVBAxisPhysMap(NVBPhysValue(0,"m"),NVBPhysValue(,"m")),0);
+	result->addAxis("Y",file_header.value("Num.Y",0).toInt());
 
   file.seek(0);
 

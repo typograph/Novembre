@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov   *
+ *   Copyright (C) 2006-2010 by Timofey Balashov   *
  *   Timofey.Balashov@pi.uka.de   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -158,32 +158,5 @@ public:
 	//- Using super's method, since RHK only uses one file per project.
 	// virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 };
-
-class RHKTopoPage : public NVB3DPage {
-Q_OBJECT
-private:
-  TRHKHeader header;
-  QStringList strings;
-public:
-  RHKTopoPage(QFile & file);
-  virtual ~RHKTopoPage() {;}
-public slots:
-  virtual void commit() {;}
-};
-
-class RHKSpecPage : public NVBSpecPage {
-Q_OBJECT
-protected:
-  TRHKHeader header;
-  QStringList strings;
-  double * ys;
-  double * xs;
-public:
-  RHKSpecPage(QFile & file);
-  virtual ~RHKSpecPage();
-public slots:
-  virtual void commit() {;}
-};
-
 
 #endif

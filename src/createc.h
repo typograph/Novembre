@@ -26,20 +26,13 @@
 
 //#include "mychar.h"
 
-#include <QtPlugin>
-#include <QFile>
-#include <QHash>
-#include <QString>
+#include <QtCore/QtPlugin>
+#include <QtCore/QFile>
+#include <QtCore/QHash>
+#include <QtCore/QString>
 #include "NVBVariant.h"
 #include "NVBFileGenerator.h"
 #include "NVBFile.h"
-
-// using namespace NVBErrorCodes;
-
-// struct CreatecHeaderEntry {
-//   QString altName;
-//   NVBVariant v;
-// };
 
 typedef QHash<QString,NVBVariant> CreatecHeader;
 
@@ -48,20 +41,14 @@ Q_OBJECT
 Q_INTERFACES(NVBFileGenerator);
 
 private:
-//   static NVBDataSource * loadNextPage(QFile & file);
-  static CreatecHeader getCreatecHeader(QFile & file);
-//   static QStringList loadCreatecStrings(QFile & file, qint16 nstrings);
-//   static QString getPageTypeString(qint32 type);
-//   static QString getGUIDString(GUID id);
-//   static QString getLineTypeString(qint32 type);
-//   static QString getSourceTypeString(qint32 type);
-//   static QString getDirectionString(qint32 type);
-//   static QString getImageTypeString(qint32 type);
 
-  friend class CreatecDatPage;
-  friend class CreatecLatPage;
-  friend class CreatecVertPage;
-  friend class CreatecTSpecPage;
+	QStringList DATchannelNames;
+
+	static CreatecHeader getCreatecHeader(QFile & file);
+	NVBDataSource* loadAllChannelsFromDAT(QString filename);
+	NVBDataSource* loadAllChannelsFromVERT(QString filename);
+	NVBDataSource* loadAllChannelsFromLAT(QString filename);
+	NVBDataSource* loadAllChannelsFromTSPEC(QString filename);
 
 public:
   CreatecFileGenerator():NVBFileGenerator() {;}
@@ -90,60 +77,5 @@ public:
   virtual ~CreatecFile() {;}
 };
 */
-
-class CreatecDatPage : public NVB3DPage {
-Q_OBJECT
-private:
-  CreatecHeader header;
-  CreatecDatPage() { throw; }
-  CreatecDatPage(const CreatecDatPage & other) { throw; }
-  CreatecDatPage( CreatecHeader file_header, int channel, double * bulk_data);
-  static QStringList channelNames;
-public:
-//  CreatecDatPage(QFile & file, int channel);
-  virtual ~CreatecDatPage() {;}
-	static QList<NVBDataSource*> loadAllChannels(QString filename);
-public slots:
-  virtual void commit() {;}
-};
-
-class CreatecLatPage : public NVBSpecPage {
-Q_OBJECT
-protected:
-  CreatecHeader header;
-public:
-  CreatecLatPage(QFile & file);
-  virtual ~CreatecLatPage() {;}
-
-public slots:
-  virtual void commit() {;}
-};
-
-class CreatecVertPage : public NVBSpecPage {
-Q_OBJECT
-protected:
-//	CreatecHeader header;
-	CreatecVertPage();
-  CreatecVertPage(const CreatecVertPage & other) { throw; }
-	CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data );
-public:
-  virtual ~CreatecVertPage() {;}
-
-	static QList<NVBDataSource*> loadAllChannels(QStringList filenames);
-
-public slots:
-  virtual void commit() {;}
-};
-
-class CreatecTSpecPage : public NVBSpecPage {
-Q_OBJECT
-protected:
-  CreatecHeader header;
-public:
-  CreatecTSpecPage(QFile & file);
-  virtual ~CreatecTSpecPage() {;}
-public slots:
-  virtual void commit() {;}
-};
 
 #endif
