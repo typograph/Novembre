@@ -40,8 +40,8 @@ public :
     painter->setPen(QPen(Qt::blue));
     painter->setBrush(Qt::blue);
 
-    scaler<double,int> w(stopo->position().left(),stopo->position().right(),rect.left(),rect.right());
-    scaler<double,int> h(stopo->position().top(),stopo->position().bottom(),rect.top(),rect.bottom());
+    NVBValueScaler<double,int> w(stopo->position().left(),stopo->position().right(),rect.left(),rect.right());
+    NVBValueScaler<double,int> h(stopo->position().top(),stopo->position().bottom(),rect.top(),rect.bottom());
     
     foreach( QPointF p,sspec->positions()) {
       painter->drawEllipse(w.scale(p.x())-1,h.scale(p.y())-1,2,2);

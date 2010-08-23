@@ -71,37 +71,30 @@ public:
   Thus, there is currently no need for signals.
 */
 
-struct NVBPageInfo {
+struct NVBDataInfo {
 
-	NVBPageInfo(const NVBDataSource * source) {
+	NVBDataInfo(const NVBDataSet * source) {
 		name = source->name();
-		type = source->type();
-		if (type == NVB::TopoPage)
-			datasize = ((NVB3DDataSource*)source)->resolution();
-		else if (type == NVB::SpecPage)
-			datasize = ((NVBSpecDataSource*)source)->datasize();
-		else
-			datasize = QSize();
-		comments = source->getAllComments();
+		dimension = source->dimension();
+		sizes = source->sizes();
+		comments = source->comments();
 		}
 
-	NVBPageInfo(QString _name, NVB::PageType _type, QSize size, QMap<QString,NVBVariant> _comments)
-	:	name(_name)
-	, type(_type)
-	,	datasize(size)
-	, comments( _comments)
+	NVBDataInfo(QString dataName, NVBDimension dataDimension, QVector<quint64> dataSizes, NVBDataComments dataComments)
+	:	name(dataName)
+	, dimension(dataDimension)
+	,	sizes(dataSizes)
+	, comments( dataComments)
 	{;}
 
 	QString name;
-	NVB::PageType type;
-	QSize datasize;
-	QMap<QString,NVBVariant> comments;
+	NVBDimension dimension;
+	QVector<quint64> sizes;
+	NVBDataComments comments;
 };
 
-class NVBFileInfo /*: public QObject */{
-// Q_OBJECT
+class NVBFileInfo {
 	private:
-		QMap<QString,NVBVariant> comments;
 	public:
 		/// Generates an invalid NVBFileInfo
 		NVBFileInfo(QString name) { files = NVBAssociatedFilesInfo(name); }
@@ -112,14 +105,15 @@ class NVBFileInfo /*: public QObject */{
 		virtual ~NVBFileInfo() {;}
 
 		NVBAssociatedFilesInfo files;
-		QList<NVBPageInfo> pages;
+		QList<NVBDataInfo> dataInfos;
+		NVBDataComments comments;
 
 		NVBVariant getInfo(const NVBTokens::NVBTokenList & list) const;
 		QString getInfoAsString(const NVBTokens::NVBTokenList & list) const;
 
 	protected :
 		NVBVariant fileParam(NVBTokens::NVBFileParamToken::NVBFileParam p) const;
-		NVBVariant pageParam(NVBPageInfo pi, NVBTokens::NVBPageParamToken::NVBPageParam p) const;
+		NVBVariant pageParam(NVBDataInfo pi, NVBTokens::NVBPageParamToken::NVBPageParam p) const;
 };
 
 #endif

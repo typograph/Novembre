@@ -33,23 +33,37 @@ class NVBAxisTMap<T> : public NVBAxisMap {
 
 class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
   private:
-    NVBPhysValue o, d;
+		double o, d;
+		NVBDimension dim;
     NVBAxisMap::MapType t;
   public:
     NVBAxisPhysMap(QList<NVBPhysValue> values):NVBAxisTMap<NVBPhysValue>(values),t(NVBAxisMap::General) {;}
-    NVBAxisPhysMap(NVBPhysValue origin, NVBPhysValue interval):NVBAxisTMap<NVBPhysValue>(),o(origin),d(interval),t(NVBAxisMap::Linear) {;}
+		NVBAxisPhysMap(NVBPhysValue origin, NVBPhysValue interval)
+			: NVBAxisTMap<NVBPhysValue>()
+			, o(origin.getValue())
+			, d(interval.getValue())
+			, dim(origin.getDimension())
+			,	t(NVBAxisMap::Linear)
+			{;}
+		NVBAxisPhysMap(double origin, double interval, NVBDimension dimension)
+			: NVBAxisTMap<NVBPhysValue>()
+			, o(origin)
+			, d(interval)
+			, dim(dimension)
+			,	t(NVBAxisMap::Linear)
+			{;}
 
     inline NVBAxisMap::MapType mapType() const { return t; }
     inline NVBAxisMap::Type mappingType() const { return NVBAxisMap::Physical; }
 
     NVBPhysValue value(int i) const {
       if (t == NVBAxisMap::Linear)
-				return o + d*i;
+				return NVBPhysValue(o + d*i,dim);
       return NVBAxisTMap<NVBPhysValue>::value(i);
       }
 
-    inline NVBPhysValue origin() const { return o; }
-    inline NVBPhysValue interval() const { return d; }
+		inline NVBPhysValue origin() const { return NVBPhysValue(o,dim); }
+		inline NVBPhysValue interval() const { return NVBPhysValue(d,dim); }
 //    NVBPhysValue end() const;
 };
 

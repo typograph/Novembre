@@ -66,27 +66,31 @@ NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
 
 }
 
-NVBVariant NVBFileInfo::pageParam(NVBPageInfo pi, NVBPageParamToken::NVBPageParam p) const {
+NVBVariant NVBFileInfo::pageParam(NVBDataInfo pi, NVBPageParamToken::NVBPageParam p) const {
 
   switch (p) {
     case NVBPageParamToken::Name : {
       return pi.name;
       }
-    case NVBPageParamToken::IsTopo : {
+/*
+		case NVBPageParamToken::IsTopo : {
       return pi.type == NVB::TopoPage;
       }
     case NVBPageParamToken::IsSpec : {
       return pi.type == NVB::SpecPage;;
       }
-    case NVBPageParamToken::DataSize : {
-      return NVBVariantList() << pi.datasize.width() << QString("x") << pi.datasize.height();
+*/
+		case NVBPageParamToken::DataSize : {
+			return NVBVariantList() << pi.sizes;
       }
-    case NVBPageParamToken::XSize : {
+/*
+		case NVBPageParamToken::XSize : {
       return pi.datasize.width();
       }
     case NVBPageParamToken::YSize : {
       return pi.datasize.height();
       }
+*/
     default :
       return NVBVariant();
     }
@@ -101,7 +105,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 		else {   
 			NVBVariantList ans, pans;
 			
-			foreach(NVBPageInfo pi, pages) {
+			foreach(NVBDataInfo pi, pages) {
 				
 				pans.clear();
 				
@@ -129,6 +133,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 									i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
 									break;
 									}
+/*
 								case NVBGotoToken::IsSpec : {
 									if (pi.type == NVB::SpecPage)
 										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
@@ -143,6 +148,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
 									break;
 									}
+*/
 								case NVBGotoToken::Stop : {
 									continue;
 									}
@@ -167,22 +173,13 @@ QString NVBFileInfo::getInfoAsString(const NVBTokenList & list) const
   return getInfo(list).toString(" : ");
 }
 
-/*
-NVBFileInfo::NVBFileInfo(NVBFile & file)
-{
-	fileInfo = file.info;
-	for (int j = 0; j< file.rowCount(); j++) {
-		pages.append(NVBPageInfo(file.index(j).data(PageRole).value<NVBDataSource*>()));
-	}
-}
-*/
-
 NVBFileInfo::NVBFileInfo(const NVBFile * const file)
 {
 	files = file->sources();
-	for (int j = 0; j < file->rowCount(); j++) {
-		pages.append(NVBPageInfo(file->index(j).data(PageRole).value<NVBDataSource*>()));
-	}
+	comments = files->getAllComments();
+	foreach(NVBDataSource * source, file)
+		foreach(NVBDataSet set, &source)
+			dataInfos.append(NVBPageInfo(set));
 }
 
 bool NVBAssociatedFilesInfo::operator==(const NVBAssociatedFilesInfo & other) const {
@@ -195,37 +192,4 @@ NVBFileInfo * NVBAssociatedFilesInfo::loadFileInfo() const
 {
 	if (!generator()) return 0;
 	return generator()->loadFileInfo(*this);
-/*
-	 There's no real need for exceptions here, if the errors are reported from the generator
-	 and for outside it is coded in the return value.
-
-	try {
-		return generator->loadFileInfo(this);
-		}
-	catch (int err) {
-		switch (err) {
-			case (nvberr_invalid_input) : {
-				NVBOutputError(QString("Loader %1 returned \"Bad Input\"").arg(generator->moduleName()));
-				break;
-				}
-			case (nvberr_plugin_failure) : {
-				NVBOutputError("File failed to load");
-				break;
-				}
-			case (nvberr_unexpected_value) : {
-				NVBOutputError(QString("Loader %1 returned \"Unexpected value\"").arg(generator->moduleName()));
-				break;
-				}
-			case (nvberr_not_enough_memory) : {
-				NVBOutputError("Not enough memory to load file");
-				return NULL;
-				}
-			default : {
-				NVBOutputError(QString("Unknown error #%1 in module %2").arg(err).arg(generator->moduleName()));
-				break;
-				}
-			}
-		}
-	return 0;
-*/
 }

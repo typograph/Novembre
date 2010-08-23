@@ -4,16 +4,16 @@ TEMPLATE = subdirs
 SUBDIRS += nvbdviz.pro
 
 # Novembre color adjustment
-SUBDIRS += nvbcolor.pro
+# SUBDIRS += nvbcolor.pro
 
 # Novembre spectroscopy tools
-SUBDIRS += nvbspec.pro
+# SUBDIRS += nvbspec.pro
 
 # Novembre topography tools
-SUBDIRS += nvbtopo.pro
+# SUBDIRS += nvbtopo.pro
 
 # Exports # to QtiPlot
-SUBDIRS += nvbexport.pro
+# SUBDIRS += nvbexport.pro
 
 # Imports anything as NVBFile
 # Currently has only MultiSpecImportView,

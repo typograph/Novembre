@@ -24,44 +24,56 @@ SOURCES += \
            src/NVBGraphicsItems.cpp
 }
 
+# Basic data structures
+
 HEADERS += \
-           src/dimension.h \
+					 src/NVBScaler.h \
            src/NVBDimension.h \
            src/NVBVariant.h \
+					 src/NVBMap.h \
+					 src/NVBDataCore.h \
+					 src/NVBDataTransform.h \
            src/NVBDataSource.h \
+					 src/NVBAxisSelector.h \
            src/NVBGeneralDelegate.h \
            src/NVBViewController.h \
            src/NVBFilterDelegate.h \
            src/NVBDelegateProvider.h \
            src/NVBPageToolbar.h \
-           src/NVBContColoring.h \
-           src/NVBDiscrColoring.h \
-           src/NVBContColorModel.h \
-           src/NVBDiscrColorModel.h \
-           src/NVBPages.h \
            src/NVBTokens.h \
            src/NVBFileInfo.h \
            src/NVBMimeData.h \
            src/NVBPageViewModel.h \
            src/NVBFile.h \
-           src/NVBPhysSpinBox.h \
-           src/NVBPhysStepSpinBox.h
 
 SOURCES += \
            src/NVBDimension.cpp \
            src/NVBVariant.cpp \
-           src/NVBDataSource.cpp \
-           src/NVBPageToolbar.cpp \
-           src/NVBContColoring.cpp \
-           src/NVBDiscrColoring.cpp \
+					 src/NVBMap.cpp \
+					 src/NVBDataCore.cpp \
+					 src/NVBDataTransform.cpp \
+					 src/NVBDataSource.cpp \
+					 src/NVBAxisSelector.cpp \
+					 src/NVBPageToolbar.cpp \
            src/NVBPages.cpp \
            src/NVBTokens.cpp \
            src/NVBFileInfo.cpp \
            src/NVBMimeData.cpp \
            src/NVBPageViewModel.cpp \
-           src/NVBFile.cpp \
-           src/NVBPhysSpinBox.cpp \
-           src/NVBPhysStepSpinBox.cpp
+					 src/NVBFile.cpp
+
+# Helpful objects for plugins
+
+HEADERS += \
+					 src/NVBAxisMaps.h \
+					 src/NVBColorMaps.h \
+					 src/NVBPhysSpinBox.h \
+					 src/NVBPhysStepSpinBox.h
+
+SOURCES += \
+					 src/NVBColorMaps.cpp \
+					 src/NVBPhysSpinBox.cpp \
+					 src/NVBPhysStepSpinBox.cpp
 
 CONFIG += qt
 

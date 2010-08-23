@@ -153,7 +153,7 @@ void NVB2DPageView::rowsInserted( const QModelIndex & parent, int start, int end
       item->setZValue(item->zValue()-end+start-1);
     }
 
-//  scaler<int,qreal> z(start-1,end+1,);
+//  NVBValueScaler<int,qreal> z(start-1,end+1,);
 
   for (int i = start; i <= end; i++) {
     NVBVizUnion tmp = vizmodel->index(i).data(PageVizItemRole).value<NVBVizUnion>();

@@ -20,7 +20,7 @@ NVBPhysStepSpinBox::NVBPhysStepSpinBox( NVBDimension dimension, double start, do
 
 void NVBPhysStepSpinBox::setLimits(double start, double end, int steps)
 {
-  dataScaler = scaler<int,double>(0,steps-1,start,end);
+  dataScaler = NVBValueScaler<int,double>(0,steps-1,start,end);
   setMinimum(0);
   setMaximum(steps-1); // == 99.99999(9)
 }

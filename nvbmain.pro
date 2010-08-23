@@ -64,7 +64,7 @@ contains(CONFIG,NVBStatic) {
 
 HEADERS += \
            src/NVBVizModel.h \
-           src/QCollapsibleBox.h \
+					 src/NVBCollapsibleBox.h \
            src/NVBDelegateStackView.h \
            src/NVBWidgetStackModel.h \
            src/NVBDataView.h \
@@ -72,7 +72,7 @@ HEADERS += \
            src/NVBFileWindow.h
 SOURCES += \
            src/NVBVizModel.cpp \
-           src/QCollapsibleBox.cpp \
+					 src/NVBCollapsibleBox.cpp \
            src/NVBDelegateStackView.cpp \
            src/NVBWidgetStackModel.cpp \
            src/NVBFileWindowLayout.cpp \

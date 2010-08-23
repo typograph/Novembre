@@ -43,15 +43,26 @@ Q_INTERFACES(NVBFileGenerator);
 private:
 
 	QStringList DATchannelNames;
+	QList<NVBDimension> DATchannelDims;
 
 	static CreatecHeader getCreatecHeader(QFile & file);
-	NVBDataSource* loadAllChannelsFromDAT(QString filename);
-	NVBDataSource* loadAllChannelsFromVERT(QString filename);
-	NVBDataSource* loadAllChannelsFromLAT(QString filename);
-	NVBDataSource* loadAllChannelsFromTSPEC(QString filename);
+
+	NVBDataComments commentsFromHeader(const CreatecHeader & header) const;
+
+	NVBDataSource* loadAllChannelsFromDAT(QString filename) const;
+	NVBDataSource* loadAllChannelsFromVERT(QStringList filenames) const;
+	NVBDataSource* loadAllChannelsFromLAT(QString filename) const;
+	NVBDataSource* loadAllChannelsFromTSPEC(QString filename) const;
 
 public:
-  CreatecFileGenerator():NVBFileGenerator() {;}
+	CreatecFileGenerator():NVBFileGenerator() {
+		DATchannelNames << "Topography" << "Current" << "ADC1" << "ADC2";
+		DATchannelDims << NVBDimension("nm")
+									 << NVBDimension("A")
+									 << NVBDimension("DAC",false)
+									 << NVBDimension("DAC",false)
+									 ;
+		}
   virtual ~CreatecFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("Createc SPS files");}
