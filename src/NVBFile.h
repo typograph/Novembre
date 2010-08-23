@@ -22,14 +22,14 @@
 	An NVBFile is created by NVBFileFactory after a file load request.
 	It contains a number of NVBDataSources and global comments.
 	*/
-class NVBFile {
+class NVBFile : public QList<NVBDataSource*>{
 	Q_OBJECT
 	friend class NVBFileGenerator;
 
 	private:
-		NVBFileInfo info;
+		NVBAssociatedFilesInfo files;
 		int refCount;
-
+		NVBDataComments comments;
 	public:
 		/// Constructs an empty file with \a source
 		NVBFile(NVBAssociatedFilesInfo sources):sourceInfo(sources),refCount(0) {;}
@@ -37,10 +37,11 @@ class NVBFile {
 		virtual ~NVBFile();
 
 		/// Returns info about the original files
-		NVBAssociatedFilesInfo sources() const { return info.files; }
-		const NVBFileInfo & fileInfo() const { return info; }
+		NVBAssociatedFilesInfo sources() const { return files; }
 
-		inline QString name() const { return info.files.name(); }
+		inline NVBDataComments getAllComments() { return comments; }
+
+		inline QString name() const { return files.name(); }
 
 		/// Adds a datasource to the end of file.
 		virtual void addSource(NVBDataSource * data);

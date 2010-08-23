@@ -12,7 +12,9 @@ void useDataSource(NVBDataSource* source);
 /// Decreases the reference count for the source \a source
 void releaseDataSource(NVBDataSource* source);
 
-class NVBDataSource : public QObject {
+typedef QMap<QString,NVBVariant> NVBDataComments;
+
+class NVBDataSource : public QObject, public QList< NVBDataSet > {
 	Q_OBJECT
 	private:
 		/// Number of references to this source. Note, that creating an object uses it automatically
@@ -21,16 +23,17 @@ class NVBDataSource : public QObject {
 		friend void releaseDataSource(NVBDataSource* source);
 	protected:
 		/// Comments for the source
-		QMap<QString,NVBVariant> comments;
+		NVBDataComments comments;
 		/// Axis sizes
 		QVector< NVBAxis > axes;
-		/// Datasets
-		QList< NVBDataSet > sets;
+//		/// Datasets
+//		 sets;
 		/// Axis maps
 		QList< NVBAxisMap * > amaps;
 		/// Color maps
 		QList< NVBColorMap * > cmaps;
-
+		/// Comments
+		NVBDataComments comments;
   public:
 
 		NVBDataSource();
@@ -44,15 +47,24 @@ class NVBDataSource : public QObject {
 				}
 			axes.append(NVBAxis(this,name,length));
 			}
-    virtual void addAxisMap(NVBAxisMap * map, int axis) { // Try the same with NVBAxisSelector
+		virtual void addAxisMap(NVBAxisMap * map, int axis = -1) { // Try the same with NVBAxisSelector
+			if (axis == -1)
+				axis = amaps.count();
 			amaps.append(map);
 			axes[axis].addMap(map);
+			}
+		virtual void addDataSet(QString name, double * data, NVBDimension dimension, QVector<quint8> axes = QVector<quint8>)  {
+			if (axes.count() == 0)
+				for(int i=0; i<axes.count(); i++)
+					axes << i;
+			append(NVBDataSet(this,name,data,dimension,axes));
 			}
 
 		/// \returns the comment for the given \a key
 		virtual inline NVBVariant getComment(const QString& key) const { return comments.value(key); }
 		/// \returns all the available comments in a QMap
-		virtual inline const QMap<QString,NVBVariant>& getAllComments() const { return comments; }
+		virtual inline const NVBDataComments& getAllComments() const { return comments; }
+		inline void setComments(NVBDataComments _cms) { comments = _cms; }
 
 	public slots:
 		/// To be used by "on-top" data sources. Emits \a objectPushed()
@@ -125,8 +137,10 @@ class NVBDataSet : public QObject {
 		NVBDimension dim;
 		/// Axis indexes
 		QVector<quint8> as;
-    /// Relevant mappings
-    QVector<NVBDataMap*> ms;
+		/// Colors
+		NVBColorMap * clr;
+//    /// Relevant mappings
+//    QVector<NVBDataMap*> ms;
   public:
 		NVBDataSet(NVBDataSource * parent, QString name, double * data, NVBDimension dimension, QVector<quint8> axes)
 			:	QObject()
@@ -143,7 +157,9 @@ class NVBDataSet : public QObject {
       }
      
     inline QString name() const { return n; }
-    inline const double * data() const { return d; }
+		inline NVBDimension dimension() const { return dim; }
+		inline dimension() const { return dim; }
+		inline const double * data() const { return d; }
     QVector<quint64> sizes() const {
       QVector<quint64> r;
       foreach (quint16 i, as)
@@ -151,10 +167,10 @@ class NVBDataSet : public QObject {
       return r;
       }
     inline quint64 sizeAt(int i) const { return p->axis(as.at(i)).length(); }
+		inline NVBDataComments comments() { return p->getAllComments(); }
 
-    inline QVector<NVBDataMap*> maps() const { return ms; }
-    
-    void addMapping(NVBDataMap* map) { ms.append(map); }
+//    inline QVector<NVBDataMap*> maps() const { return ms; }
+//    void addMapping(NVBDataMap* map) { ms.append(map); }
 
 	signals:
 		void dataAboutToBeReallocated();

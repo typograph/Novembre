@@ -122,11 +122,11 @@ QRgb NVBHSVWheelContColorModel::colorize( double z ) const
 void NVBHSVWheelContColorModel::updatescalers( )
 {
   if (h) { delete h; }
-  h = new scaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.h_min,cInfo.h_max);
+  h = new NVBValueScaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.h_min,cInfo.h_max);
   if (s) { delete s; }
-  s = new scaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.s_min,cInfo.s_max);
+  s = new NVBValueScaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.s_min,cInfo.s_max);
   if (v) { delete v; }
-  v = new scaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.v_min,cInfo.v_max);
+  v = new NVBValueScaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.v_min,cInfo.v_max);
 }
 
 void NVBGrayRampContColorModel::init()
@@ -169,7 +169,7 @@ NVBGrayRampContColorModel::~NVBGrayRampContColorModel()
 void NVBGrayRampContColorModel::updatescalers( )
 {
   if (g) { delete g; }
-  g = new scaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.gray_min,cInfo.gray_max);
+  g = new NVBValueScaler<double,double>(cInfo.z_min,cInfo.z_max,cInfo.gray_min,cInfo.gray_max);
 }
 
 QRgb NVBGrayRampContColorModel::colorize( double z ) const
@@ -239,7 +239,7 @@ NVBRGBRampContColorModel::~NVBRGBRampContColorModel()
 void NVBRGBRampContColorModel::updatescalers( )
 {
   if (rgb) { delete rgb; }
-  rgb = new scaler<double,quint32>(cInfo.z_min,cInfo.z_max,cInfo.rgb_min,cInfo.rgb_max);
+  rgb = new NVBValueScaler<double,quint32>(cInfo.z_min,cInfo.z_max,cInfo.rgb_min,cInfo.rgb_max);
 }
 
 QRgb NVBRGBRampContColorModel::colorize( double z ) const
@@ -319,7 +319,7 @@ QRgb NVBRescaleColorModel::colorize(double z) const
 
 void NVBRescaleColorModel::parentAdjusted()
 {
-  zscaler = scaler<double,double>(zmin,zmax,source->zMin(),source->zMax());
+  zscaler = NVBValueScaler<double,double>(zmin,zmax,source->zMin(),source->zMax());
   emit adjusted();
 }
 

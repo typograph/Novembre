@@ -76,7 +76,7 @@ void NVBSpecIconDelegate::redrawCache(const QSize & size)
 		}
   cache->fill(0x00FFFFFF);
 
-//  scaler<double,int> h(page->getZMax(),page->getZMin(),0,npoints-1);
+//  NVBValueScaler<double,int> h(page->getZMax(),page->getZMin(),0,npoints-1);
 
   QPainter painter;
   painter.begin(cache);
@@ -88,8 +88,8 @@ void NVBSpecIconDelegate::redrawCache(const QSize & size)
 
     painter.setPen(QPen(colorlist.at(i)));
   
-    scaler<double,int> h(zRect.bottom(),zRect.top(),0,size.height()-1);
-    scaler<double,int> w(zRect.left(),zRect.right(),0,size.width()-1);
+    NVBValueScaler<double,int> h(zRect.bottom(),zRect.top(),0,size.height()-1);
+    NVBValueScaler<double,int> w(zRect.left(),zRect.right(),0,size.width()-1);
     
     for ( int j=1; j<page->datasize().width(); j++) {
       painter.drawLine(w.scale(data->x(j-1)),h.scale(data->y(j-1)),w.scale(data->x(j)),h.scale(data->y(j)));

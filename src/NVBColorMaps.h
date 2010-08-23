@@ -13,7 +13,7 @@
 #define NVBCONTCOLORING_H
 
 #include <float.h>
-#include "dimension.h"
+#include "NVBScaler.h"
 #include "NVBContColorModel.h"
 
 namespace NVBColoring {
@@ -192,7 +192,7 @@ public:
 class NVBHSVWheelContColorModel : public NVBContColorModel{
 Q_OBJECT
 private:
-    scaler<double,double> *h,*s,*v;
+    NVBValueScaler<double,double> *h,*s,*v;
     
     TSTMHSVWheelColorInfo cInfo;
     void init();
@@ -267,7 +267,7 @@ This class makes a simple gray gradient from start to end
 class NVBGrayRampContColorModel : public NVBContColorModel{
 Q_OBJECT
 private:
-    scaler<double,double> *g;
+    NVBValueScaler<double,double> *g;
     void init();
     TSTMGrayRampColorInfo cInfo;
 protected:
@@ -292,7 +292,7 @@ This class makes a simple gradient from ARGB_start to ARGB_end
 class NVBRGBRampContColorModel : public NVBContColorModel{
 Q_OBJECT
 private:
-    scaler<double,quint32> *rgb;
+    NVBValueScaler<double,quint32> *rgb;
     void init();
     TSTMRGBRampColorInfo cInfo;
 protected:
@@ -317,7 +317,7 @@ Q_OBJECT
 protected:
   const NVBContColorModel * source;
   double zmin,zmax;
-  scaler<double,double> zscaler;
+  NVBValueScaler<double,double> zscaler;
 protected slots:
   virtual void parentAdjusted();
 public:

@@ -4,13 +4,13 @@
 #include <QSpinBox>
 #include <QValidator>
 #include "NVBDimension.h"
-#include "dimension.h"
+#include "NVBScaler.h"
 
 class NVBPhysStepSpinBox : public QSpinBox {
 Q_OBJECT
 private:
   mutable NVBDimension dim;
-  scaler<int,double> dataScaler;
+  NVBValueScaler<int,double> dataScaler;
 
 private slots:
   void emitPhysValue(int v) { emit valueChanged(NVBPhysValue(dataScaler.scale(v),dim)); }

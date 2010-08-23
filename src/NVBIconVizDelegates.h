@@ -13,7 +13,7 @@
 #ifndef NVBICONVIZ_H
 #define NVBICONVIZ_H
 
-#include "dimension.h"
+#include "NVBScaler.h"
 #include <QColor>
 #include <qwt_data.h>
 #include <QIconEngine>

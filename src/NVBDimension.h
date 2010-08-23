@@ -156,7 +156,8 @@ class NVBPhysPoint {
     QPointF p;
     NVBDimension d;
   public:
-    NVBPhysPoint(double x, double y, NVBDimension dimension);
+		NVBPhysPoint() {;}
+		NVBPhysPoint(double x, double y, NVBDimension dimension);
     NVBPhysPoint(NVBPhysValue,NVBPhysValue);
     NVBPhysPoint(QPointF point, NVBDimension dimension):p(point),d(dimension) {;}
 
