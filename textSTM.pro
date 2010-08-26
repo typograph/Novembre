@@ -1,13 +1,9 @@
 include(nvbfile.pri)
 # Library headers
 HEADERS += \
-	  src/confile.h \
-	  src/lispInt.h \
-          src/textCfSTM.h
+		src/textSTM.h
 SOURCES += \
-	  src/confile.cpp \
-	  src/lispInt.cpp \
-          src/textCfSTM.cpp
+		src/textSTM.cpp
 
 TARGET = lib/files/textSTM
 
