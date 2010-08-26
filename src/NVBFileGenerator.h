@@ -18,7 +18,6 @@
 #include <QStringList>
 #include "NVBFileInfo.h"
 
-class NVBFileStruct;
 class NVBFileInfo;
 
 /**

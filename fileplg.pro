@@ -16,4 +16,4 @@ SUBDIRS += createc.pro
 # SUBDIRS += nanonis.pro
 
 # Simple expr-based text files
-# SUBDIRS += textSTM.pro
+SUBDIRS += textSTM.pro
