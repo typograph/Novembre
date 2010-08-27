@@ -119,7 +119,11 @@ class NVBPageRefactorModel;
  * The class shall use the isSTMFile and loadSTMFile for file lists
  */
 #if QT_VERSION >= 0x040300
+#ifndef NVB_BROWSER_ONLY
 class NVBBrowser: public QMdiSubWindow {
+#else
+class NVBBrowser: public QFrame {
+#endif
 #else
 class NVBBrowser: public QFrame {
 #endif

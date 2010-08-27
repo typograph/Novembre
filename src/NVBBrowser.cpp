@@ -28,7 +28,7 @@
 #ifdef Q_WS_WIN
 #include <QMessageBox>
 #endif
-#include "NVBProgress.h"
+
 #include "NVBColumnDialog.h"
 #include "NVBPageRefactorModel.h"
 
@@ -38,7 +38,11 @@
 
 NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 #if QT_VERSION >= 0x040300
+#ifndef NVB_BROWSER_ONLY
     : QMdiSubWindow(parent,flags)
+#else
+		: QFrame(parent,flags)
+#endif
 #else
     : QFrame(parent,flags)
 #endif
@@ -48,8 +52,11 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
   confile = qApp->property("NVBSettings").value<QSettings*>();
 
-  setWindowTitle("Browser");
-//  move(confile->value("pos", QPoint(200, 200)).toPoint());
+#ifndef NVB_BROWSER_ONLY
+	setWindowTitle("Browser");
+#else
+	setWindowTitle("Novembre File Browser");
+#endif
 
   if (!(confile->contains("Browser/IconSize")))
     confile->setValue("Browser/IconSize",QVariant(64));
@@ -117,14 +124,14 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   showPageInfoAction->setCheckable(true);
   showPageInfoAction->setChecked(true);
 
-// Bottom option  
+//// Bottom option
   
-  progressBar = new NVBProgressBar(this);
-  progressBar->hide();
-  connect(progressBar,SIGNAL(wannaBeVisible(bool)),progressBar,SLOT(setVisible(bool)));
-  qApp->setProperty("progressBar",QVariant::fromValue((QObject*)progressBar));  
+//  progressBar = new NVBProgressBar(this);
+//  progressBar->hide();
+//  connect(progressBar,SIGNAL(wannaBeVisible(bool)),progressBar,SLOT(setVisible(bool)));
+//  qApp->setProperty("progressBar",QVariant::fromValue((QObject*)progressBar));
 
-// Toolbar option
+//// Toolbar option
 
 //   progressBar = new NVBProgressBar(this);
 //   qApp->setProperty("progressBar",QVariant::fromValue((QObject*)progressBar));
@@ -205,65 +212,10 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
   theFile = NULL;
 
-  pageList = new QListView(vSplitter);
-  pageList->setMinimumSize(200,1);
-  pageList->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-  pageList->setViewMode(QListView::IconMode);
-  pageList->setMovement(QListView::Snap);
-//   pageList->setAcceptDrops(false);
-  pageList->setResizeMode(QListView::Adjust);
-  pageList->setFlow(QListView::LeftToRight);
-  pageList->setUniformItemSizes(true);
-  pageList->setWordWrap(true);
-//  pageList->setSpacing(20);
-  pageList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  pageList->setGridSize(QSize(iconSize + 20, iconSize + 40));
-  pageList->setIconSize(QSize(iconSize, iconSize));
-  pageList->setWrapping(true);
-  pageList->setSelectionMode(QAbstractItemView::SingleSelection);
-  pageList->setSelectionBehavior(QAbstractItemView::SelectItems);
-  pageList->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-  pageList->setDragDropMode(QAbstractItemView::DragOnly);
-  pageList->setModel(pageRefactor = new NVBPageRefactorModel());
+//	pageRefactor = new NVBPageRefactorModel();
 
 //  QMenu * iconSizeMenu = new QMenu(this);
-  iconSizeActionGroup = new QActionGroup(this);
-  pageList->insertAction(0,iconSizeActionGroup->addAction("512x512"));
-  pageList->insertAction(0,iconSizeActionGroup->addAction("256x256"));
-  pageList->insertAction(0,iconSizeActionGroup->addAction("128x128"));
-  pageList->insertAction(0,iconSizeActionGroup->addAction("64x64"));
-  pageList->insertAction(0,iconSizeActionGroup->addAction("32x32"));
-  pageList->insertAction(0,iconSizeActionGroup->addAction("16x16"));
-  pageList->insertAction(0,iconSizeActionGroup->addAction("Custom..."));
-
-  foreach (QAction * a, iconSizeActionGroup->actions())
-    a->setCheckable(true);
-
-  switch (iconSize) {
-    case 512 :
-    case 256 :
-    case 128 :
-    case 64 :
-    case 32 :
-    case 16 : {
-      iconSizeActionGroup->actions()[9-(int)log2(iconSize)]->setChecked(true);
-      break;
-      }
-    default : {
-      iconSizeActionGroup->actions().last()->setText(QString("Custom (%1)").arg(iconSize));
-      iconSizeActionGroup->actions().last()->setChecked(true);
-      }
-    }
-
-  connect(iconSizeActionGroup,SIGNAL(triggered(QAction*)),this,SLOT(switchIconSize(QAction*)));
-
-  connect(pageList,SIGNAL(activated(const QModelIndex&)), this,SLOT(loadPage(const QModelIndex&)));
-//  connect(pageList, SIGNAL(customContextMenuRequested (const QPoint &)), iconSizeMenu, SLOT(popup(const QPoint &)));
-
-  QAction * tempAction = new QAction(this);
-  tempAction->setSeparator(true);
-  pageList->insertAction(0,tempAction);
 
   dirView = new NVBDirView(vSplitter);
   dirView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -276,19 +228,47 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   dirView->hide();
   dirViewModel = 0;
 
-  foreach(QAction * a, iconSizeActionGroup->actions()) {
-    dirView->insertAction(0,a);
-    }
-  dirView->insertAction(0,tempAction);
+	iconSizeActionGroup = new QActionGroup(this);
+	dirView->insertAction(0,iconSizeActionGroup->addAction("512x512"));
+	dirView->insertAction(0,iconSizeActionGroup->addAction("256x256"));
+	dirView->insertAction(0,iconSizeActionGroup->addAction("128x128"));
+	dirView->insertAction(0,iconSizeActionGroup->addAction("64x64"));
+	dirView->insertAction(0,iconSizeActionGroup->addAction("32x32"));
+	dirView->insertAction(0,iconSizeActionGroup->addAction("16x16"));
+	dirView->insertAction(0,iconSizeActionGroup->addAction("Custom..."));
+
+	QAction * tempAction = new QAction(this);
+	tempAction->setSeparator(true);
+
+	dirView->insertAction(0,tempAction);
+
+	foreach (QAction * a, iconSizeActionGroup->actions())
+		a->setCheckable(true);
+
+	switch (iconSize) {
+		case 512 :
+		case 256 :
+		case 128 :
+		case 64 :
+		case 32 :
+		case 16 : {
+			iconSizeActionGroup->actions()[9-(int)log2(iconSize)]->setChecked(true);
+			break;
+			}
+		default : {
+			iconSizeActionGroup->actions().last()->setText(QString("Custom (%1)").arg(iconSize));
+			iconSizeActionGroup->actions().last()->setChecked(true);
+			}
+		}
+
+	connect(iconSizeActionGroup,SIGNAL(triggered(QAction*)),this,SLOT(switchIconSize(QAction*)));
 
   connect(dirView,SIGNAL(activated(const QModelIndex&)), this,SLOT(loadPage(const QModelIndex&)));
 
   piview = new NVBPageInfoView(vSplitter);
   connect(fileList,SIGNAL(activated(const QModelIndex&)), piview, SLOT(clearView()));
-  connect(pageList,SIGNAL(clicked(const QModelIndex &)),piview,SLOT(showPage(const QModelIndex &)));
   connect(dirView,SIGNAL(clicked(const QModelIndex &)),piview,SLOT(showPage(const QModelIndex &)));
 
-  pageList->insertAction(0,showPageInfoAction);
   dirView->insertAction(0,showPageInfoAction);
   connect(showPageInfoAction,SIGNAL(toggled(bool)),piview,SLOT(setVisible(bool)));
 
@@ -299,8 +279,10 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
 //  fileListMenu = new QPopupMenu(this,"fileListMenu");
   
+#ifndef NVB_BROWSER_ONLY
   resize(confile->value("Browser/Size", QSize(400, 300)).toSize());
   move(confile->value("Browser/Pos", QPoint(0, 0)).toPoint());
+#endif
    
 }
 
@@ -359,34 +341,22 @@ NVBBrowser::~ NVBBrowser( )
 {
   updateColumnsVisibility();
   updateColumns();
-  confile->setValue("Browser/Size", size());
+#ifndef NVB_BROWSER_ONLY
+	confile->setValue("Browser/Size", size());
   confile->setValue("Browser/Pos", pos());
+#endif
   confile->setValue("Browser/FileListSize", fileList->size());
   confile->setValue("Browser/ShowPageInfo", piview->isVisible());
   if (fileModel) delete fileModel;
   if (theFile) theFile->release();
-/* there's no selection!
-  if (selection) {
-    delete selection;
-    selection = NULL;
-    }
-*/
-/*
-  if (theFile) {
-    theFile->release();
-    theFile = NULL;
-    pageList->setModel(NULL);
-    }
-*/
 }
 
 void NVBBrowser::showItem( const QModelIndex & item ) {
 
   if (fileModel->isAFile(item)) {
-    pageList->show();
-    dirView->hide();
-    dirView->setModel(0);
-    if (dirViewModel) {
+		dirView->setModel(0);
+
+		if (dirViewModel) {
       delete dirViewModel;
       dirViewModel = 0;
       }
@@ -398,23 +368,22 @@ void NVBBrowser::showItem( const QModelIndex & item ) {
       } 
 
 		theFile = files->openFile(fileModel->getAllFiles(item));
+
     if (theFile) {
       theFile->use();
-      pageRefactor->setModel(theFile);
       }
     else {
 			NVBOutputError(QString("Couldn't get file %1").arg(fileModel->getAllFiles(item).name()));
       }
-    
+
+		dirView->setModel(theFile);
+
     }
   else {
     if (dirViewModel) delete dirViewModel;
-//     dirViewModel = new NVBDirViewModel(files, QPersistentModelIndex(fileModel->mapToSource(item.sibling(item.row(),0))), fileModel, this);
     dirViewModel = new NVBDirViewModel(files, QPersistentModelIndex(item.sibling(item.row(),0)), fileModel, this);
     dirView->setModel(dirViewModel);
     connect(dirView,SIGNAL(dataWindow(int,int)),dirViewModel,SLOT(defineWindow(int,int)));
-    dirView->show();
-    pageList->hide();
     }
 }
 
@@ -454,8 +423,6 @@ void NVBBrowser::switchIconSize( QAction* action ) {
     }
 
   confile->setValue("Browser/IconSize",iconSize);
-  pageList->setGridSize(QSize(iconSize + 20, iconSize + 40));
-  pageList->setIconSize(QSize(iconSize, iconSize));
   dirView->setGridSize(QSize(iconSize + 20, iconSize + 40));
   dirView->setIconSize(QSize(iconSize, iconSize));
 	NVBOutputPMsg(QString("Switched to %1").arg(iconSize,3));
