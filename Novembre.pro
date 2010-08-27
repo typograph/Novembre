@@ -5,4 +5,5 @@ SUBDIRS = \
           nvblib.pro \
           fileplg.pro \
           tools.pro \
-          nvbmain.pro
+					nvbmain.pro \
+					nvbrws.pro
