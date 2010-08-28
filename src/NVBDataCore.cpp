@@ -3,7 +3,7 @@
 #include "NVBDataCore.h"
 
 // More laconic version would be this:
-// void sliceNArray(const double * const data, int n, double * target, int m, const int * sizes, const int * slice, const int * newaxes = 0);
+// void sliceNArray(const double * const data, axisindex_t n, double * target, axisindex_t m, const axissize_t * sizes, const axissize_t * slice, const axisindex_t * newaxes = 0);
 
 /**
  * @fn sliceNArray
@@ -24,44 +24,44 @@
  * sliceNArray(d,4,t,2,[2,3,4,5],[0,3],[0,1],[2,1]) == d[0,:,:,1].T
  * @endcode
  */
-void sliceNArray(const double * const data, int n, double * target, int m, const int * sizes, const int * sliceaxes, const int * slice, const int * newaxes) {
+void sliceNArray(const double * const data, axisindex_t n, double * target, axisindex_t m, const axissize_t * sizes, const axisindex_t * sliceaxes, const axissize_t * slice, const axisindex_t * newaxes) {
 	// The collect-map of sizes
-	int * mn;
+	axissize_t * mn;
 
-	mn = (int*) calloc(n,sizeof(int));
+	mn = (axissize_t*) calloc(n,sizeof(axissize_t));
 	mn[0] = 1;
-	for (int i = 1; i < n; i++)
+	for (axisindex_t i = 1; i < n; i++)
 		mn[i] = mn[i-1]*sizes[i-1];
 
 	// The coefficients in front of indexes for data and target
-	int * ad, * at;
+	axissize_t * ad, * at;
 
-	ad = (int*) calloc(m,sizeof(int));
-	for(int i = 0; i < m; i++)
+	ad = (axissize_t*) calloc(m,sizeof(axissize_t));
+	for(axisindex_t i = 0; i < m; i++)
 		ad[i] = mn[newaxes[i]];
 
-	at = (int*) calloc(m,sizeof(int));
+	at = (axissize_t*) calloc(m,sizeof(axissize_t));
 	at[0] = 1;
-	for(int i = 1; i < m; i++)
+	for(axisindex_t i = 1; i < m; i++)
 		at[i] = at[i-1]*sizes[newaxes[i-1]];
 
 	// The indexes
-	int * ixs;
+	axissize_t * ixs;
 
-	ixs = (int*) calloc(m,sizeof(int));
+	ixs = (axissize_t*) calloc(m,sizeof(axissize_t));
 
 	// The index for sliced axes
 
 	// The shift due to slicing
-	int dshift = 0;
+	axissize_t dshift = 0;
 
-	for(int i = 0; i < n-m; i++)
+	for(axisindex_t i = 0; i < n-m; i++)
 		dshift += slice[i]*mn[sliceaxes[i]];
 
 	///// Preparations finished
 
 	// helper indexes
-	int indD = 0, indT = 0;
+	axissize_t indD = 0, indT = 0;
 
 /*
 
@@ -80,7 +80,7 @@ void sliceNArray(const double * const data, int n, double * target, int m, const
 sliceNArray_cycle:
 	target[indT] = data[indD + dshift];
 
-	for(int i = 0; i < m; i++)
+	for(axisindex_t i = 0; i < m; i++)
 		if (ixs[i] == sizes[newaxes[i]] - 1) {
 			ixs[i] = 0;
 			indD -= ad[i]*(sizes[newaxes[i]]-1);
@@ -110,9 +110,9 @@ sliceNArray_cycle:
  *
  */
 
-int prod(int n, const int * numbers) {
-	register int r = 1;
-	for(int i=0; i<n; i++)
+axissize_t prod(axisindex_t n, const axissize_t * numbers) {
+	register axissize_t r = 1;
+	for(axisindex_t i=0; i<n; i++)
 		r *= numbers[i];
 	return r;
 }
@@ -125,9 +125,9 @@ int prod(int n, const int * numbers) {
  *
  */
 
-int subprod(const int * numbers, int m, const int * ixs) {
-	register int r = 1;
-	for(int i=0; i < m; i++)
+axissize_t subprod(const axissize_t * numbers, axisindex_t m, const axisindex_t * ixs) {
+	register axissize_t r = 1;
+	for(axisindex_t i=0; i < m; i++)
 		r *= numbers[ixs[i]];
 	return r;
 }
@@ -157,7 +157,7 @@ int subprod(const int * numbers, int m, const int * ixs) {
  *
  * The transformation function should move and transform the data between two arrays.
  * Definition: \code
- * void transform(const double * data, int n, const int * sizes, int nc, const int * coords, double * target)
+ * void transform(const double * data, axisindex_t n, const axissize_t * sizes, axisindex_t nc, const axissize_t * coords, double * target)
  * \endcode
  *
  * \param data The chunk to work on
@@ -168,14 +168,14 @@ int subprod(const int * numbers, int m, const int * ixs) {
  * \param target The array to kepp results in
  */
 
-double * transformNArray(const double * data, int n, const int * sizes,
-																							int m, const int * sliceaxes, const int * targetaxes,
-																							int p, const int * newsizes,
-						void (*transform)(const double *, int, const int *, int, const int *, double * ) ) {
+double * transformNArray(const double * data, axisindex_t n, const axissize_t * sizes,
+																							axisindex_t m, const axisindex_t * sliceaxes, const axisindex_t * targetaxes,
+																							axisindex_t p, const axissize_t * newsizes,
+						void (*transform)(const double *, axisindex_t, const axissize_t *, axisindex_t, const axissize_t *, double * ) ) {
 
-	int szd = prod(n,sizes);
-	int szt = subprod(sizes,n-m,targetaxes);
-	int szp = prod(p,newsizes);
+	axissize_t szd = prod(n,sizes);
+	axissize_t szt = subprod(sizes,n-m,targetaxes);
+	axissize_t szp = prod(p,newsizes);
 	
 	double * result;
 
@@ -192,7 +192,7 @@ double * transformNArray(const double * data, int n, const int * sizes,
 		return 0;
 		}
 
-	int * targetsizes = (int*)malloc((n-m)*sizeof(int));
+	axissize_t * targetsizes = (axissize_t*)malloc((n-m)*sizeof(axissize_t));
 
 	if (targetsizes == 0) {
 		free(result);
@@ -200,11 +200,11 @@ double * transformNArray(const double * data, int n, const int * sizes,
 		return 0;
 		}
 
-	for(int i = 0; i < n - m; i++)
+	for(axisindex_t i = 0; i < n - m; i++)
 		targetsizes[i] = sizes[targetaxes[i]];
 
-	int indR = 0;
-	int * slice = (int*)calloc(m,sizeof(int));
+	axissize_t indR = 0;
+	axissize_t * slice = (axissize_t*)calloc(m,sizeof(axissize_t));
 
 	if (slice == 0) {
 		free(result);
@@ -218,71 +218,7 @@ transformNArray_cycle:
 	transform(target,n-m,targetsizes,m,slice,result + indR);
 	indR += szp;
 
-	for(int i = 0; i < m; i++)
-		if (slice[i] == sizes[sliceaxes[i]] - 1)
-			slice[i] = 0;
-		else {
-			slice[i] += 1;
-			goto transformNArray_cycle;
-			}
-
-	free(slice);
-	free(targetsizes);
-	free(target);
-
-	return result;
-}
-
-double * transformNArray(const double * data, int n, const int * sizes,
-																							int m, const int * sliceaxes, const int * targetaxes,
-																							int p, const int * newsizes,
-																							const NVBDataTransform & transform ) {
-	int szd = prod(n,sizes);
-	int szt = subprod(sizes,n-m,targetaxes);
-	int szp = prod(p,newsizes);
-
-	double * result;
-
-	result = (double *) malloc (szd*szp/szt*sizeof(double));
-
-	if (result == 0) return 0;
-
-	double * target;
-
-	target = (double *) malloc (szt*sizeof(double));
-
-	if (target == 0) {
-		free(result);
-		return 0;
-		}
-
-	int * targetsizes = (int*)malloc((n-m)*sizeof(int));
-
-	if (targetsizes == 0) {
-		free(result);
-		free(target);
-		return 0;
-		}
-
-	for(int i = 0; i < n - m; i++)
-		targetsizes[i] = sizes[targetaxes[i]];
-
-	int indR = 0;
-	int * slice = (int*)calloc(m,sizeof(int));
-
-	if (slice == 0) {
-		free(result);
-		free(target);
-		free(targetsizes);
-		return 0;
-		}
-
-transformNArray_cycle:
-	sliceNArray(data, n, target, n-m, sizes, sliceaxes, slice, targetaxes);
-	transform(target,n-m,targetsizes,m,slice,result + indR);
-	indR += szp;
-
-	for(int i = 0; i < m; i++)
+	for(axisindex_t i = 0; i < m; i++)
 		if (slice[i] == sizes[sliceaxes[i]] - 1)
 			slice[i] = 0;
 		else {
@@ -306,10 +242,10 @@ transformNArray_cycle:
  * \sa transfromNArray
  */
 
-void average(const double * data, int n, const int * sizes, int nc, const int * coords, double * target) {
+void average(const double * data, axisindex_t n, const axissize_t * sizes, axisindex_t nc, const axissize_t * coords, double * target) {
 	double r = 0;
-	int sz = prod(n,sizes);
-	for (int i = 0; i < sz; i++)
+	axissize_t sz = prod(n,sizes);
+	for (axisindex_t i = 0; i < sz; i++)
 		r += data[i];
 
 	*target = r/sz;
@@ -319,7 +255,32 @@ void average(const double * data, int n, const int * sizes, int nc, const int * 
 	* \fn averageDataSet
 	*/
 
-double * averageDataSet(const NVBDataSet & data, QVector<quint16> axes) {
+double * averageDataSet(const NVBDataSet & data, QVector<axisindex_t> axes) {
+//	axissize_t szd = prod(n,sizes);
+// 	axissize_t szt = subprod(sizes,n-m,targetaxes);
+	QVector<axissize_t> dsizes = data->sizes();
+
+	QVector<axisindex_t> tgaxes = targetaxes(dsizes.count(),sliceaxes);
+
+ 	axissize_t szp = subprod(dsizes.constData(),tgaxes.count(),tgaxes.constData());
+
+	double * tdata = (double *) malloc (szp*sizeof(double));
+
+	sliceNArray(
+		data->data(),dsizes.count(),
+		tdata,dsizes.count()-sliceaxes.count(),
+		dsizes().constData(),
+		sliceaxes.constData(),
+		sliceixs.constData(),
+		tgaxes.constData()
+		);
+
+	return tdata;
+
+	transformNArray(const double * data, axisindex_t n, const axissize_t * sizes,
+									axisindex_t m, const axisindex_t * sliceaxes, const axisindex_t * targetaxes,
+									axisindex_t p, const axissize_t * newsizes,	average);
+return 0;
 }
 
 /**
@@ -333,27 +294,49 @@ double * averageDataSet(const NVBDataSet & data, QVector<quint16> axes) {
  * \param neworder The new indexes of old axes
  * \return The transformed array
  */
-double* reorderNArray(const double * data, int n, const int * sizes, const int * neworder) {
+double* reorderNArray(const double * data, axisindex_t n, const axissize_t * sizes, const axisindex_t * neworder) {
 	double * r = (double*) malloc(prod(n,sizes)*sizeof(double));
 	sliceNArray(data,n,r,n,sizes,0,0,neworder);
 	return r;
 }
 
-NVBDataSet * NVBDataTransform::transformDataSet(NVBDataSource * source, const NVBDataSet * data, QVector<quint16> sliceaxes, QVector<quint16> targetaxes = QVector<quint16>()) {
-	double * tdata = transformNArray(data->data(),data->numberOfAxes(),data->sizes().data(),sliceaxes.count(),sliceaxes.data(),targetaxes.data(),as.count(),resultSize.data(),*this);
-	NVBDataSet target = new NVBDataSet(source,data->name(),tdata,0);
+QVector<axisindex_t> targetaxes(axisindex_t n, QVector<axisindex_t> sliceaxes) {
+	QVector<axisindex_t> tgaxes;
+	for (axisindex_t j = 0, axisindex_t i = 0; i<n; i++) {
+		if (j >= sliceaxes.count() || sliceaxes.at(j) > i)
+			tgaxes << i;
+		else
+			j+=1;
+		}
+	return tgaxes;
 }
 
-/** \fn NVBDataTransform::operator()
-	*
-	* The function that is passed to \a transformNArray.
-	* \sa transform
-	*
-	* Redefine in subclasses to provide custom behaviour.
-	* The default implementation applies \a singleValueTransform to every element.
-	*/
-void NVBDataTransform::operator() (const double * data, int n, const int * sizes, int m, const int * slice, double * target) const {
-	int sza = prod(n,sizes);
-	for (int i = 0; i<sza; i++)
-		target[i] = singleValueTransform(data[i]);
+QVector<axissize_t> subvector(QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes) {
+	QVector<axissize_t> tgsizes;
+	foreach(axisindex_t j, sliceaxes)
+		tgsizes << sizes.at(j);
+	return tgsizes;
+}
+
+double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> sliceixs, QVector<axisindex_t> targetaxes = QVector<axisindex_t>()) {
+//	axissize_t szd = prod(n,sizes);
+// 	axissize_t szt = subprod(sizes,n-m,targetaxes);
+	QVector<axissize_t> dsizes = data->sizes();
+
+	QVector<axisindex_t> tgaxes = targetaxes(dsizes.count(),sliceaxes);
+
+ 	axissize_t szp = subprod(dsizes.constData(),tgaxes.count(),tgaxes.constData());
+
+	double * tdata = (double *) malloc (szp*sizeof(double));
+
+	sliceNArray(
+		data->data(),dsizes.count(),
+		tdata,dsizes.count()-sliceaxes.count(),
+		dsizes().constData(),
+		sliceaxes.constData(),
+		sliceixs.constData(),
+		tgaxes.constData()
+		);
+		
+	return tdata;
 }
