@@ -80,7 +80,7 @@ struct NVBDataInfo {
 		comments = source->comments();
 		}
 
-	NVBDataInfo(QString dataName, NVBDimension dataDimension, QVector<quint64> dataSizes, NVBDataComments dataComments)
+	NVBDataInfo(QString dataName, NVBDimension dataDimension, QVector<axissize_t> dataSizes, NVBDataComments dataComments)
 	:	name(dataName)
 	, dimension(dataDimension)
 	,	sizes(dataSizes)
@@ -89,7 +89,7 @@ struct NVBDataInfo {
 
 	QString name;
 	NVBDimension dimension;
-	QVector<quint64> sizes;
+	QVector<axissize_t> sizes;
 	NVBDataComments comments;
 };
 

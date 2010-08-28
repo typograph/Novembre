@@ -6,6 +6,7 @@
 
 class NVBAxisMap;
 class NVBColorMap;
+class NVBDataSource;
 
 /// Increases the reference count for the source \a source
 void useDataSource(NVBDataSource* source);
@@ -40,20 +41,22 @@ class NVBDataSource : public QObject, public QList< NVBDataSet > {
 		virtual ~NVBDataSource();
 
 		virtual NVBAxis axis(int i) const { return axes.at(i); }
-    virtual void addAxis(QString name, quint64 length) {
-			if (sets.count() != 0) {
+    virtual void addAxis(QString name, axissize_t length) {
+			if (count() != 0) {
 				NVBOutputError("Trying to add axes to a non-empty datasource");
 				return;
 				}
 			axes.append(NVBAxis(this,name,length));
 			}
+			
 		virtual void addAxisMap(NVBAxisMap * map, int axis = -1) { // Try the same with NVBAxisSelector
 			if (axis == -1)
 				axis = amaps.count();
 			amaps.append(map);
-			axes[axis].addMap(map);
+			axes[axis].addMapping(map);
 			}
-		virtual void addDataSet(QString name, double * data, NVBDimension dimension, QVector<quint8> axes = QVector<quint8>)  {
+			
+		virtual void addDataSet(QString name, double * data, NVBDimension dimension, QVector<axisindex_t> axes = QVector<axisindex_t>())  {
 			if (axes.count() == 0)
 				for(int i=0; i<axes.count(); i++)
 					axes << i;
@@ -102,6 +105,9 @@ class NVBDataSource : public QObject, public QList< NVBDataSet > {
 
 };
 
+typedef quint8 axisindex_t;
+typedef quint64 axissize_t;
+
 class NVBAxis {
   private:
     /// Parent data source (to be able to implement functions)
@@ -109,16 +115,16 @@ class NVBAxis {
     /// Axis name
     QString n;
     /// Axis length
-    quint64 l;
+    axissize_t l;
     /// Relevant mappings
     QVector<NVBAxisMap*> ms;
   public:
-    NVBAxis(NVBDataSource * parent, QString name, quint64 length):p(parent),n(name),l(length) {;}
+    NVBAxis(NVBDataSource * parent, QString name, axissize_t length):p(parent),n(name),l(length) {;}
     // NVBAxis doesn't own anything, neither the parent, nor the maps.
     ~NVBAxis() {;}
     
     inline QString name() const { return n; }
-    inline quint64 length() const { return l; }
+    inline axissize_t length() const { return l; }
     inline QVector<NVBAxisMap*> maps() const { return ms; }
     
     void addMapping(NVBAxisMap* map) { ms.append(map); }
@@ -136,13 +142,13 @@ class NVBDataSet : public QObject {
 		/// Value dimension
 		NVBDimension dim;
 		/// Axis indexes
-		QVector<quint8> as;
+		QVector<axisindex_t> as;
 		/// Colors
 		NVBColorMap * clr;
 //    /// Relevant mappings
 //    QVector<NVBDataMap*> ms;
   public:
-		NVBDataSet(NVBDataSource * parent, QString name, double * data, NVBDimension dimension, QVector<quint8> axes)
+		NVBDataSet(NVBDataSource * parent, QString name, double * data, NVBDimension dimension, QVector<axissize_t> axes)
 			:	QObject()
 			,	p(parent)
 			,	n(name)
@@ -160,14 +166,19 @@ class NVBDataSet : public QObject {
 		inline NVBDimension dimension() const { return dim; }
 		inline dimension() const { return dim; }
 		inline const double * data() const { return d; }
-    QVector<quint64> sizes() const {
-      QVector<quint64> r;
-      foreach (quint16 i, as)
+    QVector<axissize_t> sizes() const {
+      QVector<axissize_t> r;
+      foreach (axisindex_t i, as)
 				r << p->axis(i).length();
       return r;
       }
-    inline quint64 sizeAt(int i) const { return p->axis(as.at(i)).length(); }
-		inline NVBDataComments comments() { return p->getAllComments(); }
+    inline axissize_t sizeAt(int i) const { return p->axis(as.at(i)).length(); }
+    inline axissize_t nAxes() const { return as.count(); }
+
+		double min();
+		double max();
+
+    inline NVBDataComments comments() { return p->getAllComments(); }
 
 //    inline QVector<NVBDataMap*> maps() const { return ms; }
 //    void addMapping(NVBDataMap* map) { ms.append(map); }

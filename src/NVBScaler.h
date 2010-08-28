@@ -51,12 +51,12 @@ private:
 
 public:
 /**
-	\fn NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
+	\fn NVBScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
 	Constructs a scaler that will map \a from_min to \a to_min and \a from_max to \a to_max linearly.
 	*/
-	NVBValueScaler(fromT,fromT,toT,toT);
+  NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max);
 /**
-	\fn NVBValueScaler( double offset, double multiplier)
+	\fn NVBScaler( double offset, double multiplier)
 	Constructs a scaler with given \a offset and \a multiplier.
 	*/
 	NVBValueScaler( double offset, double multiplier)
@@ -65,15 +65,15 @@ public:
 		{;}
 		
 /**
-	\fn 	NVBValueScaler()
+	\fn 	NVBScaler()
 	Constructs an identity scaler (INPUT == OUTPUT).
 	*/
-	NVBValueScaler()
+  NVBValueScaler()
 		: scale_offset(0)
 		, scale_multiplier(1)
 		{;}
 	
-	~NVBValueScaler() {;}
+  ~NVBValueScaler() {;}
 
   // Input _was_ multiplied and shifted;
   void shift_input(double offset) { scale_offset += offset*scale_multiplier; }
@@ -123,20 +123,9 @@ public:
 		shift_output(eo);
 		}
 
-	void override(double offset, double multiplier) {
-		scale_offset = offset;
-		scale_multiplier = multiplier;
-		}
-
   toT scale(fromT value) const { return (toT)(value*scale_multiplier + scale_offset); }
   toT scaleInt(fromT value) const { return (toT)round(value*scale_multiplier + scale_offset); }
   toT scaleLength(fromT value) const { return (toT)(value*scale_multiplier); }
-
-	void scaleMem(toT * dest, const fromT* src, unsigned long size) {
-		for (unsigned long i = 0; i<size; i++)
-			dest[i] = _scaler.scale(src[i]);
-		}
-
 };
 
 template <class fromT, class toT>
