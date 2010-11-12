@@ -134,6 +134,9 @@ class NVBFileWindow : public QFrame, public NVBViewController
 
   NVBVizUnion nextViz;
 
+	QAction * pageDockAction;
+	QAction * toolsDockAction;
+	
 protected :
 
 public :
@@ -208,8 +211,16 @@ protected slots:
   void showPageOperationsMenu( const QModelIndex&, const QPoint & pos );
 
 #ifndef NVB_NO_FW_DOCKS
-	inline void setLeftVisible(bool visible = true) { setWidgetVisible(pageListView,visible,true); }
-	inline void setRightVisible(bool visible = true)  { setWidgetVisible(stackView,visible,false); }
+	inline void setLeftVisible(bool visible = true) {
+		if (pageDockAction->isChecked() != visible)
+			pageDockAction->setChecked(visible);
+		setWidgetVisible(pageListView,visible,true);
+		}
+	inline void setRightVisible(bool visible = true) {
+		if (toolsDockAction->isChecked() != visible)
+			toolsDockAction->setChecked(visible);
+		setWidgetVisible(stackView,visible,false);
+		}
  /// Make child widget visible/unvisible with an option to compensate for widget position
   void setWidgetVisible(QWidget* widget, bool visible, bool shift);
 #endif
