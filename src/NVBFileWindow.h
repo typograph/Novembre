@@ -169,6 +169,10 @@ public slots :
 
   virtual void selectionChanged( const QItemSelection & , const QItemSelection & );
 
+#if QT_VERSION >= 0x040300
+	void copyView();
+#endif
+	
 signals :
   void selectionChanged( const QModelIndex & selected , const QModelIndex & deselected);
   void activateVisualizer(NVBVizUnion viz, const QModelIndex &);
