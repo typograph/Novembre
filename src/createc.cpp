@@ -29,6 +29,8 @@
 #include <QDebug>
 #include <zlib.h>
 
+#define TMP_VOLTAGE_MAP 1
+
 QStringList CreatecFileGenerator::availableInfoFields() const {
     return QStringList() \
             << "Bias" \
@@ -486,6 +488,9 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 	result[11]->zd = NVBDimension("DAC",false);
 	pcolors[11] = Qt::green;
 
+#ifdef TMP_VOLTAGE_MAP
+	CreatecHeader file_headerX;
+#endif
 
 	foreach (QString filename, filenames) {
 		QFile file(filename);
@@ -496,6 +501,9 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 				}
 
 		CreatecHeader file_header = CreatecFileGenerator::getCreatecHeader(file);
+#ifdef TMP_VOLTAGE_MAP
+		file_headerX = file_header;
+#endif
 
 		file.seek(0);
 
@@ -539,7 +547,7 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		// V
 		factor[1] = file_header.value("Dacto[A]z").toDouble()*0.1/
 								file_header.value("ZPiezoconst").toDouble();
-		factor[2] = factor[1];
+		factor[2] = 1e-3;
 		factor[4] = factor[1];
 		factor[8] = factor[1];
 		factor[9] = factor[1];
@@ -572,6 +580,39 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		result[i]->yd = NVBDimension("m");
 		result[i]->td = NVBDimension("p");
 		}
+
+#ifdef  TMP_VOLTAGE_MAP
+/* Problems with this approach :
+ * No forward/backward curves
+ * No multi-step voltage curves
+ * 
+ */
+
+		if (file_headerX.value("Vpoint0.t").toInt() == 0) {
+			result << new CreatecVertPage();
+			result.last()->setColorModel(new NVBConstDiscrColorModel(Qt::black));
+			result.last()->pagename = "dI/dV";
+			result.last()->zd = NVBDimension("V");
+			result.last()->xd = NVBDimension("m");
+			result.last()->yd = NVBDimension("m");
+			result.last()->td = NVBDimension("V");
+			result.last()->_positions = result.first()->positions();
+
+			int npts = file_headerX.value("Vpoint1.t").toInt();
+			result.last()->_datasize = QSize(npts,filenames.count());
+
+			for(int c = 0; c < filenames.count(); c++) {
+				QVector<double> xs(npts), ys(npts);
+
+				for(int i = 0; i<npts; i++) {
+					xs[i] = result[2]->_data[c]->y(i);
+					ys[i] = result[1]->_data[c]->y(i);
+					}
+				result.last()->_data << new QwtArrayData(xs,ys);
+				}
+			}
+		
+#endif
 
 	QList<NVBDataSource*> rconv;
 	foreach(NVBDataSource * s, result)
