@@ -110,7 +110,7 @@ void NVBFileWindowLayout::setGeometry(const QRect & r)
     minleft += w + spacing();
     //  qDebug() << minleft;
   }
-  int newCWidth = centralView ? centralView->widthForHeight(gen_height) : 0;
+	int newCWidth = centralView && centralView->hasWidthForHeight() ? centralView->widthForHeight(gen_height) : 0;
   int extra_dock_width = width_leftover - newCWidth;
 #ifndef NVB_NO_FW_DOCKS
   int ndocks = 0;
