@@ -414,8 +414,8 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 	QString reffname = filenames.last();
 	int nx=0, ny=0, nr=0;
 
-	if (reffname.length() > 19) {
-		int nameX = reffname.lastIndexOf("/");
+	int nameX = reffname.lastIndexOf("/");
+	if (reffname.length()-nameX > 20) {
 		QStringList tokens = reffname.mid(nameX+16,reffname.length()-nameX-21).split('.');
 		foreach (QString token, tokens) {
 			bool ok = false;
