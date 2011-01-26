@@ -25,17 +25,16 @@ void releaseDataSource(NVBDataSource* source) {
 
 QRectF NVBSpecDataSource::occupiedArea() const
 {
-  QRectF rect;
-  QPointF shift(1,1);
+	qreal top, bottom, left, right;
+	top = bottom = positions().first().y();
+	left = right = positions().first().x();
   foreach(QPointF point,positions()) {
-#if QT_VERSION >= 0x040300  
-    rect |= QRectF(point,point+shift);
-#else
-    rect |= QRectF(point,QSizeF(shift.x(),shift.y()));
-#endif
-    }
-  rect.setBottomRight(rect.bottomRight()-shift);
-  return rect;
+		top    = qMin(top,point.y());
+		bottom = qMax(bottom,point.y());
+		left   = qMin(left,point.x());
+		right  = qMax(right,point.x());
+		}
+	return QRectF(left,top,right-left,bottom-top);
 }
 
 QRectF NVBSpecDataSource::boundingRect() const 
