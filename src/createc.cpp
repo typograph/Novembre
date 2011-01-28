@@ -520,6 +520,11 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		file.seek(0x4006);
 		QStringList sizes(QString(file.readLine(200)).split(' ',QString::SkipEmptyParts));
 
+		if (sizes.count() < 3) {
+			NVBOutputError("Wrong file format - no datasize section after DATA");
+			return QList<NVBDataSource*>();
+		}
+
 		int npts = sizes.at(0).toInt();
 		double Xdac = sizes.at(1).toInt() - file_header.value("Scanrotoffx").toDouble();
 		double Ydac = sizes.at(2).toInt() - file_header.value("Scanrotoffy").toDouble();
