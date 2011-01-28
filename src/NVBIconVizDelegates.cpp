@@ -11,6 +11,44 @@
 //
 
 #include "NVBIconVizDelegates.h"
+#include "NVBContColoring.h"
+
+QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page) {
+	const double * pdata = page->getData();
+
+	double xnorm = 0, ynorm = 0;
+
+	int iw = page->resolution().width();
+	int ih = page->resolution().height();
+	int sz = iw*ih;
+
+	for(int i=0; i < sz; i += iw)
+		xnorm += pdata[i] - pdata[i+iw-1];
+	for(int i=0; i < iw; i += 1)
+		ynorm += pdata[i] - pdata[i+sz-ih];
+
+	xnorm /= (iw-1)*ih;
+	ynorm /= iw*iw*(ih-1);
+
+	double * ndata = (double *) malloc(sz*sizeof(double));
+
+	double zmin = pdata[0], zmax = pdata[0];
+
+	for(int i=0; i < iw; i += 1)
+		for(int j=0; j < sz; j += iw) {
+			ndata[i+j] = pdata[i+j] + xnorm*i + ynorm*j;
+			zmin = qMin(zmin,ndata[i+j]);
+			zmax = qMax(zmax,ndata[i+j]);
+			}
+
+	NVBRescaleColorModel * rm = new NVBRescaleColorModel(page->getColorModel());
+	rm->setLimits(zmin,zmax);
+
+	QImage * i = dynamic_cast<NVBContColorModel*>(rm)->colorize( ndata , page->resolution() );
+	delete rm;
+	free(ndata);
+	return i;
+}
 
 NVBTopoIconDelegate::NVBTopoIconDelegate(NVBDataSource * source):NVBIconVizDelegate(source)
 {
@@ -23,7 +61,7 @@ NVBTopoIconDelegate::NVBTopoIconDelegate(NVBDataSource * source):NVBIconVizDeleg
 void NVBTopoIconDelegate::redrawCache()
 {
   if (cache) delete cache;
-  cache = page->getColorModel()->colorize( page->getData(), page->resolution() );
+	cache = colorizeWithPlaneSubtraction(page);
 }
 
 void NVBTopoIconDelegate::setSource(NVBDataSource * source)
