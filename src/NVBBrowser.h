@@ -159,9 +159,9 @@ private:
 
   bool eventFilter(QObject *obj, QEvent *event);
   QTreeView * fileList;
-  QListView * pageList;
+//  QListView * pageList;
   NVBPageInfoView * piview;
-  NVBFile * theFile;
+//  NVBFile * theFile;
   NVBPageRefactorModel * pageRefactor;
   NVBDirModel * fileModel;
   NVBDirViewModel * dirViewModel;
@@ -177,7 +177,7 @@ public:
   virtual QSize sizeHint () const { return confile->value("Browser/Size", QSize(400, 300)).toSize(); }
 
 public slots:
-  void showItem(const QModelIndex & item);
+	void showItems();
   void loadPage(const QModelIndex & item);
 
   void addFolder(const QModelIndex & index);

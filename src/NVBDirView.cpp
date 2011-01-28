@@ -285,6 +285,8 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 {
   if (!model())
     return;
+	if (top_row < 0)
+		return;
 
   QPainter painter(viewport());
 
@@ -315,6 +317,8 @@ void NVBDirView::drawHeader(int index, QPainter * painter) const
 {
   int t = fileDistance(index,top_row) + topMargin();
 
+	NVBOutputDMsg("<>");
+
   painter->setBrush(QBrush(Qt::black));
   painter->setPen(QPen(painter->brush(),style()->pixelMetric(QStyle::PM_DefaultFrameWidth),Qt::SolidLine,Qt::RoundCap,Qt::RoundJoin));
 
@@ -336,6 +340,8 @@ void NVBDirView::drawHeader(int index, QPainter * painter) const
 
 void NVBDirView::drawItems(int index, QPainter * painter) const 
 {
+	NVBOutputDMsg(QString::number(index));
+
   int nitems = model()->rowCount(model()->index(index,0));
 //   QStyleOptionViewItem option = ;
 #if QT_VERSION < 0x040300
@@ -452,7 +458,8 @@ void NVBDirView::setModel(QAbstractItemModel * m)
     top_row = 0;
 //     offsets.resize(heights.size()+1);
     connect(m,SIGNAL(layoutChanged()),this,SLOT(updateScrollBars()));
-    connect(m,SIGNAL(rowsInserted(QModelIndex,int,int)),this,SLOT(updateScrollBars()));
+		connect(m,SIGNAL(modelReset()),this,SLOT(updateScrollBars()));
+		connect(m,SIGNAL(rowsInserted(QModelIndex,int,int)),this,SLOT(updateScrollBars()));
     connect(m,SIGNAL(rowsRemoved(QModelIndex,int,int)),this,SLOT(updateScrollBars()));
     updateScrollBars();
     }
@@ -540,7 +547,7 @@ void NVBDirView::updateScrollBars()
 //   heights.fill(-1);
 //   offsets.fill(-1);
   if (model()) {
-    if (top_row >= model()->rowCount())
+		if (top_row < 0 || top_row >= model()->rowCount())
       top_row = model()->rowCount() - 1;
     verticalScrollBar()->setRange(0, model()->rowCount()-1);
     }
