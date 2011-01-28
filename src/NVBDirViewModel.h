@@ -29,7 +29,7 @@ class NVBDirViewModel : public QAbstractItemModel
 Q_OBJECT
 public:
 
-  NVBDirViewModel(NVBFileFactory * factory, QPersistentModelIndex findex, NVBDirModel * model, QObject * parent = 0);
+	NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent = 0);
   virtual ~NVBDirViewModel();
 
   virtual bool hasChildren ( const QModelIndex & parent = QModelIndex() ) const;
@@ -42,9 +42,12 @@ public:
   virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
   virtual QModelIndex parent ( const QModelIndex & index ) const;
 
+	void setDisplayItems(QModelIndexList items);
+
 private:
   NVBFileFactory * fileFactory;
-  QPersistentModelIndex dirindex;
+	QList<QPersistentModelIndex> indexes;
+	QPersistentModelIndex dirindex;
   NVBDirModel * dirModel;
   mutable QVector<NVBFile*> files;
   mutable QList<int> unloadables;
@@ -59,8 +62,8 @@ private slots:
   void parentInsertedRows( const QModelIndex & parent, int first, int last );
   void parentRemovingRows( const QModelIndex & parent, int first, int last );
   void parentRemovedRows( const QModelIndex & parent, int first, int last );
-  void parentChangingLayout();
-  void parentChangedLayout();
+//  void parentChangingLayout();
+//  void parentChangedLayout();
   bool loadFile(int index) const;
 
 public slots:
