@@ -2,22 +2,33 @@
 #define NVBDATATRANSFORMS_H
 
 #include <QtCore/QVector>
-#include "NVBDataCore.h"
+#include "NVBDataGlobals.h"
 
 class NVBDataSet;
-
-class NVBMaxMinTranform : public NVBDataTransform {
+/*
+class NVBMaxMinTransform : public NVBDataTransform {
 	private:
-		virtual double singleValueTransform(double a) const { return 0; }
+		virtual double singleValueTransform(double) const { return 0; }
 		static double min (const double * data, axisindex_t n, const axissize_t * sizes);
-		static double min (const double * data, axisindex_t n, const axissize_t * sizes);
+		static double max (const double * data, axisindex_t n, const axissize_t * sizes);
 	public:
-		static double  findMinimum(NVBDataSet * data, QVector<axisindex_t> sliceaxes = QVector<axisindex_t>(), QVector<axisindex_t> targetaxes = QVector<axisindex_t>());
-		static double * findMinima(NVBDataSet * data, QVector<axisindex_t> sliceaxes);
-		static double  findMaximum(NVBDataSet * data, QVector<axisindex_t> sliceaxes = QVector<axisindex_t>(), QVector<axisindex_t> targetaxes = QVector<axisindex_t>());
-		static double * findMaxima(NVBDataSet * data, QVector<axisindex_t> sliceaxes);
+		NVBMaxMinTransform();
+		
+		static double findMinimum(const NVBDataSet * data);
+		static double findMinimum(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> targetaxes);
+		static double * findMinima(const NVBDataSet * data, QVector<axisindex_t> sliceaxes);
+		static double findMaximum(const NVBDataSet * data);
+		static double findMaximum(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> targetaxes);
+		static double * findMaxima(const NVBDataSet * data, QVector<axisindex_t> sliceaxes);
 
 		virtual void operator() (const double * data, axisindex_t n, const axissize_t * sizes, axisindex_t m, const axisindex_t * slice, double * target) const;
-}
+};
+*/
 
+namespace NVBMaxMinTransform {
+double min (const double * data, axisindex_t n, const axissize_t * sizes);
+double max (const double * data, axisindex_t n, const axissize_t * sizes);
+double findMinimum(const NVBDataSet * data);
+double findMaximum(const NVBDataSet * data);
+}
 #endif // NVBDATATRANSFORMS_H
