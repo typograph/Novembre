@@ -66,5 +66,20 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 
 double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes);
 
+#define forAllSlices(dataset,sliceaxes,targetaxes) \
+	QVector<axissize_t> _slice_ixs((dataset)->nAxes(),0); \
+	cycle __LINE_NUMBER__: \
+	for(axisindex_t _aix = 0; _aix < _slice_ixs.count(); _aix++) \
+		if (_slice_ixs[i] == (dataset)->sizeAt(i) - 1) { \
+			_slice_ixs[i] = 0; \
+			} \
+		else { \
+			_slice_ixs[i] += 1; \
+			double * d = sliceDataSet(dataset,sliceaxes,_slice_ixs,targetaxes); \
+			\
+			free(d); \
+			goto cycle__LINE_NUMBER_; \
+			}
+		
 
 #endif
