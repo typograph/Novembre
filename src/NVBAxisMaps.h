@@ -8,7 +8,7 @@
 
 
 template <class T>
-class NVBAxisTMap<T> : public NVBAxisMap {
+class NVBAxisTMap : public NVBAxisMap {
   protected:
     QList<T> vs;
   public:
