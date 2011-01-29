@@ -69,7 +69,7 @@ QRgb NVBHSVWheelColorMap::colorize( double z ) const
 
 QRgb NVBGrayRampColorMap::colorize( double z ) const
 {
-  quint32 u = 0xFF & (uchar)(0xFF*g.scale(z));
+  quint32 u = 0xFF & (uchar)(0xFF*z);
   return (quint32)(0xFF000000 | (u << 16) | (u << 8) | u);
 }
 

@@ -37,12 +37,8 @@ class NVBHSVWheelColorMap : public NVBColorMap{
 This class makes a simple gray gradient from start to end
 */
 class NVBGrayRampColorMap : public NVBColorMap{
-	private:
-    NVBValueScaler<double,double> g;
 	public:
-    NVBGrayRampColorMap(double g_min, double g_max)
-			:	 g(NVBValueScaler<double,double>(0,1,g_min,g_max))
-			{;}
+    NVBGrayRampColorMap()	{;}
 			
     virtual ~NVBGrayRampColorMap() {;}
     
