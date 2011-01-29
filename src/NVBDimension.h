@@ -16,6 +16,7 @@
 #include <math.h>
 #include <QtCore/QMetaType>
 #include <QtCore/QString>
+#include <QtCore/QPointF>
 #include "NVBLogger.h"
 
 #ifndef exp10
@@ -137,9 +138,10 @@ public:
   bool operator>( const NVBPhysValue & v ) const { return !operator <=(v); }
   bool operator>=( const NVBPhysValue & v ) const { return !operator <(v);}
   
-  NVBPhysValue operator+(const NVBPhysValue &value_1, const NVBPhysValue &value_2) {
-    if (value_1.dim.isComparableWith(value_2.dim))
-      return NVBPhysValue(value_1.value*value_1.dim.mult + value_2.value*value_2.dim.mult,value_1.dim.base);
+  NVBPhysValue operator+(const NVBPhysValue &other) const {
+    if (dim.isComparableWith(other.dim)) {
+      return NVBPhysValue(value*dim.mult + other.value*other.dim.mult,dim.base);
+			}
     NVBOutputError("Attempting to add values with different dimensions");
     return NVBPhysValue();
     }
@@ -171,7 +173,7 @@ class NVBPhysPoint {
 
     NVBDimension dimension() const { return d; }
     operator QPointF () { return p; }
-    NVBPhysPoint operator+(const QPointF & other) {
+    NVBPhysPoint operator+(const QPointF & other) const {
 			return NVBPhysPoint(p + other, d);
 			}
     void operator+=(const QPointF & other) {
