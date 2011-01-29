@@ -31,7 +31,7 @@ void calcOM(T & offset, T & mult, T imin, T imax, T omin, T omax) {
 }
 
 /*!
-	\class NVBScaler
+	\class NVBValueScaler
   \brief Provides scaling for different data
 
   A scaler is an object that provides linear scaling for data.
@@ -51,12 +51,12 @@ private:
 
 public:
 /**
-	\fn NVBScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
+	\fn NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
 	Constructs a scaler that will map \a from_min to \a to_min and \a from_max to \a to_max linearly.
 	*/
   NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max);
 /**
-	\fn NVBScaler( double offset, double multiplier)
+	\fn NVBValueScaler( double offset, double multiplier)
 	Constructs a scaler with given \a offset and \a multiplier.
 	*/
 	NVBValueScaler( double offset, double multiplier)
@@ -65,7 +65,7 @@ public:
 		{;}
 		
 /**
-	\fn 	NVBScaler()
+	\fn 	NVBValueScaler()
 	Constructs an identity scaler (INPUT == OUTPUT).
 	*/
   NVBValueScaler()
@@ -129,7 +129,7 @@ public:
 };
 
 template <class fromT, class toT>
-NVBValueScaler<fromT,toT>::NVBScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
+NVBValueScaler<fromT,toT>::NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
 {
   if (from_max != from_min) {
     calcOM<double>(scale_offset,scale_multiplier,from_min, from_max, to_min, to_max);
