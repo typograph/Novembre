@@ -11,7 +11,10 @@
 //
 #include "NVBMimeData.h"
 
-NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSource * source):QMimeData(),internal(source)
+NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSource * source, NVBDataSet * dataset)
+ : QMimeData()
+ , internal(source)
+ , dset(dataset)
 {
   // Think about setHtml and stuff
 }
@@ -22,12 +25,16 @@ NVBDataSourceMimeData::~ NVBDataSourceMimeData()
 
 QStringList NVBDataSourceMimeData::formats() const
 {
-  return QMimeData::formats() << dataSourceMimeType();
+	QStringList result = QMimeData::formats();
+	if (dset) {
+		result << dataSetMimeType() << "application/x-qt-image" << "text/plain";
+		}
+	result << dataSourceMimeType();
+  return result;
 }
 
 bool NVBDataSourceMimeData::hasFormat(const QString & mimeType) const
 {
-  if (mimeType == dataSourceMimeType()) return true;
   return QMimeData::hasFormat(mimeType);
 }
 
@@ -35,6 +42,14 @@ QVariant NVBDataSourceMimeData::retrieveData(const QString & mimeType, QVariant:
 {
   if (mimeType == dataSourceMimeType())
     return QVariant::fromValue(internal);
+	if (dset) {
+		if (mimeType == dataSetMimeType())
+			return QVariant::fromValue(dset);
+		if (mimeType == "text/plain")
+			return dset->name();
+//		if (mimeType == "application/x-qt-image")
+//			return 
+		}
   return QMimeData::retrieveData(mimeType,type);
 }
 
