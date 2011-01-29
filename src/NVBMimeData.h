@@ -12,22 +12,25 @@
 #ifndef NVBMIMEDATA_H
 #define NVBMIMEDATA_H
 
-#include <QMimeData>
+#include <QtCore/QMimeData>
 #include "NVBDataSource.h"
 
 class NVBDataSourceMimeData : public QMimeData {
 private:
   NVBDataSource * internal;
+	NVBDataSet * dset;
 public :
-  NVBDataSourceMimeData(NVBDataSource * source);
+  NVBDataSourceMimeData(NVBDataSource * source, NVBDataSet * dataset = 0);
   ~NVBDataSourceMimeData();
 
   virtual QStringList formats () const;
   virtual bool hasFormat ( const QString & mimeType ) const;
 
-  NVBDataSource * getPageData() { return internal; }
+  NVBDataSource * getDataSource() { return internal; }
+  NVBDataSource * getDataSet() { return dset; }
 
-  static QString dataSourceMimeType() { return "novembre/datasource"; }
+  static QString dataSourceMimeType() { return QString("novembre/datasource"); }
+  static QString dataSetMimeType() { return QString("novembre/dataset"); }
 protected :
   virtual QVariant retrieveData ( const QString & mimeType, QVariant::Type type ) const;
 };
