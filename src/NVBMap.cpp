@@ -1,10 +1,11 @@
 #include "NVBMap.h"
 #include "NVBDataCore.h"
 #include <QtGui/QImage>
+#include <QtGui/QPixmap>
 
 NVBColorInstance::NVBColorInstance ( const NVBDataSet* _data, const NVBColorMap* _map )
-	:	data(_data)
-	,	source(_map)
+	: source(_map)
+	, data(_data)
 	, zmin(_data->min())
 	, zmax(_data->max())
 	, zscaler(NVBValueScaler<double,double>(zmin,zmax,0,1))
@@ -16,14 +17,38 @@ NVBColorInstance::NVBColorInstance ( const NVBDataSet* _data, const NVBColorMap*
 	calculateSliceAxes();
 }
 
-QImage * NVBColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh = QSize()) const {
+void NVBColorInstance::setImageAxes(axisindex_t x, axisindex_t y) {
+	axisH = x;
+	axisV = y;
+	calculateSliceAxes();
+	}
+
+QVector<axisindex_t> NVBColorInstance::getSliceAxes() {
+	return sliceAxes;
+	}
+
+void NVBColorInstance::setXAxis(axisindex_t x) {
+	axisH = x;
+	calculateSliceAxes();
+	}
+
+void NVBColorInstance::setYAxis(axisindex_t y) {
+	axisV = y;
+	calculateSliceAxes();
+	}
+
+QPixmap * NVBColorInstance::colorize(QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize()) const {
+	if (slice.isEmpty())
+		slice.fill(0,data->nAxes()-2);
+	if (i_wxh.isEmpty())
+		i_wxh = QSize(data->sizeAt(axisH),data->sizeAt(axisV));
 	double * tdata = sliceDataSet(data,sliceAxes,slice);
-	QImage * timg = colorize(tdata,QSize(data->sizeAt(axisH),data->sizeAt(axisV)),i_wxh);
+	QPixmap * timg = colorize(tdata,QSize(data->sizeAt(axisH),data->sizeAt(axisV)),i_wxh);
 	free(tdata);
 	return timg;
 }
 
-QImage * NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const {
+QPixmap * NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) const {
 	if (!zs) return 0;
 
 	if (!i_wxh.isValid()) i_wxh = d_wxh;
@@ -47,7 +72,9 @@ QImage * NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh 
 				}
 		}
 
-	return result;
+	QPixmap * p = new QPixmap(result);
+	delete result;
+	return p;
 }
 
 void NVBColorInstance::calculateSliceAxes() {
@@ -59,7 +86,6 @@ void NVBColorInstance::calculateSliceAxes() {
 
 void NVBColorInstance::setLimits ( double vmin, double vmax ) {
   zscaler.change_input(zmin,zmax,vmin,vmax);
-
   zmin = vmin;
   zmax = vmax;
 }
