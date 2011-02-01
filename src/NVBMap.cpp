@@ -37,44 +37,41 @@ void NVBColorInstance::setYAxis(axisindex_t y) {
 	calculateSliceAxes();
 	}
 
-QPixmap * NVBColorInstance::colorize(QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize()) const {
+QPixmap NVBColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh) const {
 	if (slice.isEmpty())
 		slice.fill(0,data->nAxes()-2);
 	if (i_wxh.isEmpty())
 		i_wxh = QSize(data->sizeAt(axisH),data->sizeAt(axisV));
 	double * tdata = sliceDataSet(data,sliceAxes,slice);
-	QPixmap * timg = colorize(tdata,QSize(data->sizeAt(axisH),data->sizeAt(axisV)),i_wxh);
+	QPixmap timg = colorize(tdata,QSize(data->sizeAt(axisH),data->sizeAt(axisV)),i_wxh);
 	free(tdata);
 	return timg;
 }
 
-QPixmap * NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) const {
-	if (!zs) return 0;
+QPixmap NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) const {
+	if (!zs) return QPixmap();
 
 	if (!i_wxh.isValid()) i_wxh = d_wxh;
 
-	QImage * result = new QImage(i_wxh,QImage::Format_ARGB32);
-	if (!result) return 0;
-	result->fill(0x00FFFFFF);
+	QImage result(i_wxh,QImage::Format_ARGB32);
+	result.fill(0x00FFFFFF);
 
 	if (i_wxh != d_wxh) {
 		NVBValueScaler<int,int> w(0,i_wxh.width(),0,d_wxh.width());
 		NVBValueScaler<int,int> h(0,i_wxh.height(),0,d_wxh.height());
 		for (int i = 0; i<i_wxh.width(); i++)
 			for (int j = 0; j<i_wxh.height(); j++) {
-					result->setPixel(i,j,colorize(zs[w.scaleInt(i)+ d_wxh.width()*h.scaleInt(j)]));
+					result.setPixel(i,j,colorize(zs[w.scaleInt(i)+ d_wxh.width()*h.scaleInt(j)]));
 				}
 		}
 	else {
 		for (int i = 0; i<i_wxh.width(); i++)
 			for (int j = 0; j<i_wxh.height(); j++) {
-					result->setPixel(i,j,colorize(zs[i+i_wxh.width()*j]));
+					result.setPixel(i,j,colorize(zs[i+i_wxh.width()*j]));
 				}
 		}
 
-	QPixmap * p = new QPixmap(result);
-	delete result;
-	return p;
+	return QPixmap::fromImage(result);
 }
 
 void NVBColorInstance::calculateSliceAxes() {
