@@ -378,3 +378,39 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 		
 	return tdata;
 }
+
+NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes) : dset(dataset)
+		, is_running(true)
+		, slice(0)
+		, indexes(0,sliceaxes.count())
+		, sliceAxes(sliceaxes)
+		, targetAxes(dataset ? (tgaxes.isEmpty() ? targetaxes(dataset->nAxes(), sliceAxes) : tgaxes) : QVector<axisindex_t>()) {
+	if (!dataset) {
+		NVBOutputError("NULL dataset");
+		throw;
+		}
+	axisSizes = subvector(dataset->sizes(),sliceaxes);
+	slice = sliceDataSet(dset, sliceAxes, indexes, targetAxes);
+	}
+
+NVBSliceCounter::~NVBSliceCounter() {
+	if (slice) free(slice);
+	}
+
+bool NVBSliceCounter::stepIndexVector(QVector< axissize_t >& ixs, const QVector< axissize_t >& sizes) {
+	for (axisindex_t i = 0; i < ixs.count(); i++)
+		if (ixs.at(i) == sizes.at(i) - 1)
+			ixs[i] = 0;
+		else {
+			ixs[i] += 1;
+			return true;
+			}
+	return false;
+	}
+
+void  NVBSliceCounter::stepIndexVector() {
+	if ( (is_running = stepIndexVector(indexes, axisSizes)) ) {
+		if (slice) free(slice);
+		slice = sliceDataSet(dset, sliceAxes, indexes, targetAxes);
+		}
+	}
