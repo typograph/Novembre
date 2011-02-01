@@ -41,6 +41,8 @@ class NVBAxis {
     inline axissize_t length() const { return l; }
     inline QVector<NVBAxisMap*> maps() const { return ms; }
 
+    inline NVBDataSource * dataSource() { return p; }
+
 };
 
 // Q_DECLARE_METATYPE(NVBAxis)
