@@ -14,6 +14,7 @@
 
 #include "NVBScaler.h"
 #include "NVBMap.h"
+#include "QtCore/qglobal.h"
 
 /**
   A color map, where the colors are on a spiral on the HSV wheel
@@ -49,18 +50,17 @@ class NVBGrayRampColorMap : public NVBColorMap{
 This class makes a simple gradient from ARGB_start to ARGB_end
 */
 class NVBRGBRampColorMap : public NVBColorMap {
-private:
+	private:
     NVBValueScaler<double,quint32> rgb;
-public:
-    NVBRGBRampColorMap(double r_min, double r_max, double g_min, double g_max, double b_min, double b_max);
-    NVBRGBRampColorMap(quint32 rgb_min, quint32 rgb_max)
+	public:
+		NVBRGBRampColorMap(double r_min, double r_max, double g_min, double g_max, double b_min, double b_max);
+		NVBRGBRampColorMap(quint32 rgb_min, quint32 rgb_max)
 			: NVBColorMap()
-			, rgb(NVBValueScaler<double,quint32>(0,1,rgb_min,rgb_max));
+			, rgb(NVBValueScaler<double,quint32>(0,1,rgb_min,rgb_max))
 			{;}
-			
-    virtual ~NVBRGBRampColorMap() {;}
-    
-    virtual QRgb colorize(double z) const { return rgb.scale(z); }
+		virtual ~NVBRGBRampColorMap() {;}
+
+		virtual QRgb colorize(double z) const { return rgb.scale(z); }
 };
 
 /**

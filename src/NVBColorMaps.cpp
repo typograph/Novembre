@@ -78,5 +78,5 @@ NVBRGBRampColorMap::NVBRGBRampColorMap(double r_min, double r_max, double g_min,
 {
   quint32 rgb_min = 0xFF000000 + (((uchar)(r_min*0xFF)) << 16) + (((uchar)(g_min*0xFF)) << 8) + (uchar)(b_min*0xFF);
   quint32 rgb_max = 0xFF000000 + (((uchar)(r_max*0xFF)) << 16) + (((uchar)(g_max*0xFF)) << 8) + (uchar)(b_max*0xFF);
-	rgb = rgb(NVBValueScaler<double,quint32>(0,1,rgb_min,rgb_max));
+	rgb = NVBValueScaler<double,quint32>(0,1,rgb_min,rgb_max);
 }
