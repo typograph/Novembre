@@ -17,17 +17,21 @@ class NVBAxisMap {
 		NVBAxisMap() {;}
 		virtual ~NVBAxisMap() {;}
 
-    enum MapType {
-      General = 0,
-      Linear = 1,
-      Linear2D = 2
-      };
-    enum Type { // RTTI
-      Template = 0,
-      Physical = 1,
-      Point = 2,
-      Grid = 3
-      };
+	/// Defines the way indexes are mapped into values.
+	enum MapType {
+		General = 0, /// Arbitrary mapping, any distribution.
+		Linear = 1,  /// Linear mapping, the resulting points are linearly distributed
+		Linear2D = 2 /// Bilinear mapping, the resulting points are on a regular grid (not necessarily rectangular).
+		             /// A map of this type can be cast into QTransform.
+		};
+
+	/// Defines the type of output values.
+	enum ValueType {
+		Template = 0, /// Underfined
+		Physical = 1, /// NVBPhysValue
+		Point = 2,    /// NVBPhysColor
+		Color = 3     /// QColor
+		};
 
     virtual int dimension() const = 0;
 
