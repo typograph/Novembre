@@ -46,7 +46,18 @@ class NVBAxis {
 class NVBDataSet : public QObject {
 	Q_OBJECT
 	friend class NVBConstructableDataSource;
-  private:
+	public:
+		/// Initial type of the data
+		/*!
+			* This influences the way this dataset is displayed by default
+			*/
+		enum Type {
+			Undefined = 0 ,
+			Topography ,
+			Spectroscopy
+			};
+
+	private:
     /// Parent data source (to be able to implement functions)
     NVBDataSource * p;
     /// Data name
@@ -61,13 +72,18 @@ class NVBDataSet : public QObject {
 		NVBColorMap * clr;
 //    /// Relevant mappings
 //    QVector<NVBDataMap*> ms;
+		Type t;
 
+	protected:
+		mutable QVector<axissize_t> asizes;
+		
 	public:
 		NVBDataSet(NVBDataSource * parent,
 							 QString name,
 							 double * data,
 							 NVBDimension dimension,
 							 QVector<axisindex_t> axes,
+							 Type type = Undefined,
 							 NVBColorMap * colormap = 0);
 							 
     // Dataset owns its data, and will free the memory
@@ -82,6 +98,10 @@ class NVBDataSet : public QObject {
 
 		NVBColorMap * colorMap() const ;
 
+		inline NVBDataSource * dataSource() const { return p; }
+
+		inline Type type() const { return t; }
+			
 		double min() const;
 		double max() const;
 
