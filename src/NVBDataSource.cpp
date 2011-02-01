@@ -7,6 +7,7 @@ NVBDataSet::NVBDataSet(NVBDataSource * parent,
 						double * data,
 						NVBDimension dimension,
 						QVector<axisindex_t> axes,
+						Type tp,
 						NVBColorMap * colormap)
 	:	QObject()
 	,	p(parent)
