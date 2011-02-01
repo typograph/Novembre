@@ -37,9 +37,9 @@ class NVBAxisMap {
 
     virtual int valType() const = 0;
     virtual NVBAxisMap::MapType mapType() const { return General; }
-    virtual NVBAxisMap::Type mappingType() const = 0;
+    virtual NVBAxisMap::ValueType mappingType() const = 0;
 
-		virtual QVariant value(QList<int> indexes) = 0;
+		virtual NVBVariant value(QList<int> indexes) = 0;
 };
 
 class NVBColorMap;
