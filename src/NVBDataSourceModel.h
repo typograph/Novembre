@@ -32,7 +32,8 @@ protected slots:
 	void setSource(const NVBDataSource * s);
 	void calculateCrosses();
 	void initIcons();
-	void updateIcons();
+	void parentAboutToReform();
+	void parentReformed();
 public:
 	
   NVBDataSourceModel(const NVBDataSource * source);
@@ -50,8 +51,6 @@ public:
 //  virtual Qt::DropActions supportedDropActions () const;
   virtual QStringList mimeTypes () const;
 //  virtual bool dropMimeData ( const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent );
-
-  void clear();
 
 //  virtual NVB::ViewType viewType() { return NVB::IconView; }
 

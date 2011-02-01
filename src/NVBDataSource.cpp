@@ -1,6 +1,7 @@
 #include "NVBDataSource.h"
 #include "NVBMap.h"
 #include "NVBDataTransforms.h"
+#include "NVBColorMaps.h"
 
 NVBDataSet::NVBDataSet(NVBDataSource * parent,
 						QString name,

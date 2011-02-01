@@ -1,8 +1,13 @@
 #include "NVBDataSourceModel.h"
 #include "NVBDatasetIcons.h"
+#include "NVBMimeData.h"
 
+#define PageRole Qt::UserRole
 
-NVBDataSourceModel::NVBDataSourceModel(const NVBDataSource * s) : QAbstractListModel()
+NVBDataSourceModel::NVBDataSourceModel(const NVBDataSource * s)
+: QAbstractListModel()
+, source(0)
+, m(Direct)
 {
 	setSource(s);
 }
@@ -15,47 +20,70 @@ NVBDataSourceModel::~NVBDataSourceModel()
 void NVBDataSourceModel::setSource(const NVBDataSource* s)
 {
 	if (source) {
-		source->disconnect(this);
+		disconnect(source,0,this,0);
 		releaseDataSource(source);
 		}
 
-	source = s
+	source = s;
 
 	if (source) {
 		useDataSource(source);
 
-		connect(source,SIGNAL(objectPopped(NVBDataSource*,NVBDataSource*)),this,SLOT(setSource(const NVBDataSource*)));
-		connect(source,SIGNAL(objectPushed(NVBDataSource*,NVBDataSource*)),this,SLOT(setSource(const NVBDataSource*)));
-		connect(source,SIGNAL(axesResized()),this,SLOT(updateIcons()));
-		connect(source,SIGNAL(dataReformed()),this,SLOT(updateIcons()));
+		connect(source,SIGNAL(objectPopped(const NVBDataSource*, const NVBDataSource*)),this,SLOT(setSource(const NVBDataSource*)));
+		connect(source,SIGNAL(objectPushed(const NVBDataSource*, const NVBDataSource*)),this,SLOT(setSource(const NVBDataSource*)));
 
-		updateIcons();
+		connect(source,SIGNAL(axesAboutToBeResized()),this,SLOT(parentAboutToReform()));
+		connect(source,SIGNAL(axesResized()),this,SLOT(parentReformed()));
+		connect(source,SIGNAL(dataAboutToBeReformed()),this,SLOT(parentAboutToReform()));
+		connect(source,SIGNAL(dataReformed()),this,SLOT(parentReformed()));
+
+		initIcons();
 		}
-}
-
-void NVBDataSourceModel::clear()
-{
-
 }
 
 QVariant NVBDataSourceModel::data(const QModelIndex& index, int role) const
 {
-
+  if (!index.isValid()) return QVariant();
+  if (index.row() >= rowCount()) return QVariant();
+//  if (role == Qt::CheckStateRole) return QVariant(Qt::Checked);
+//  if (role == OriginalIndexRole) return QVariant(pages.at(index.row()).row());
+	NVBDataSet * dset = source->dataSets().at(index.row());
+  switch (role) {
+    case Qt::DecorationRole : return QIcon(icons.at(index.row()));
+    case Qt::DisplayRole    :
+    case Qt::EditRole       : return dset->name();
+    case Qt::StatusTipRole  :
+    case Qt::ToolTipRole    : return dset->name();
+    case PageRole           : return QVariant::fromValue(dset);
+    default : return QVariant();
+    }
 }
 
 Qt::ItemFlags NVBDataSourceModel::flags(const QModelIndex& index) const
 {
-    return QAbstractItemModel::flags(index);
+  return QAbstractItemModel::flags(index);
 }
 
 QMimeData* NVBDataSourceModel::mimeData(const QModelIndexList& indexes) const
 {
-    return QAbstractItemModel::mimeData(indexes);
+  if (indexes.count() > 1) {
+    NVBOutputError("Dragging more than one object");
+    return 0;
+    }
+
+  if (indexes.isEmpty()) return 0;
+
+  return new NVBDataSourceMimeData(indexes.at(0).data(PageRole).value<NVBDataSource*>());
 }
 
 QStringList NVBDataSourceModel::mimeTypes() const
 {
-  return QStringList() << NVBDataSourceMimeData::dataSourceMimeType();
+  return QStringList()
+		<< NVBDataSourceMimeData::dataSetMimeType()
+		<< NVBDataSourceMimeData::dataSourceMimeType()
+		<< "text/plain"
+		<< "image/x-qt-image"
+		;
 }
 
 int NVBDataSourceModel::rowCount(const QModelIndex& parent) const
@@ -73,21 +101,17 @@ int NVBDataSourceModel::rowCount(const QModelIndex& parent) const
 			}
 }
 
-void NVBDataSourceModel::updateIcons()
-{
-
-}
-
 void NVBDataSourceModel::calculateCrosses()
 {
-
+	crosses.clear();
+	// TODO implement crosspages
 }
 
 void NVBDataSourceModel::initIcons()
 {
 	icons.clear();
 	
-	switch(mode) {
+	switch(m) {
 		case Direct: {
 			foreach(const NVBDataSet * dset, source->dataSets())
 				icons << createDatasetIcon(dset);
@@ -101,4 +125,14 @@ void NVBDataSourceModel::initIcons()
 			break;
 			}
 		}
+}
+
+void NVBDataSourceModel::parentAboutToReform() {
+	beginResetModel();
+}
+
+
+void NVBDataSourceModel::parentReformed()	{
+	initIcons();
+	endResetModel();
 }
