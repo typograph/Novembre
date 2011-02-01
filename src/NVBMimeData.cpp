@@ -10,6 +10,7 @@
 //
 //
 #include "NVBMimeData.h"
+#include <QtCore/QStringList>
 
 NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSource * source, NVBDataSet * dataset)
  : QMimeData()

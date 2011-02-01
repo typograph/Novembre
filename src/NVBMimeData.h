@@ -27,7 +27,7 @@ public :
   virtual bool hasFormat ( const QString & mimeType ) const;
 
   NVBDataSource * getDataSource() { return internal; }
-  NVBDataSource * getDataSet() { return dset; }
+  NVBDataSet * getDataSet() { return dset; }
 
   static QString dataSourceMimeType() { return QString("novembre/datasource"); }
   static QString dataSetMimeType() { return QString("novembre/dataset"); }
