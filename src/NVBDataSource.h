@@ -43,6 +43,8 @@ class NVBAxis {
 
 };
 
+// Q_DECLARE_METATYPE(NVBAxis)
+
 class NVBDataSet : public QObject {
 	Q_OBJECT
 	friend class NVBConstructableDataSource;
@@ -116,6 +118,9 @@ class NVBDataSet : public QObject {
 		void dataChanged();
 
 };
+
+Q_DECLARE_METATYPE(NVBDataSet*)
+// Q_DECLARE_METATYPE(const NVBDataSet*)
 
 /// Increases the reference count for the source \a source
 void useDataSource(const NVBDataSource* source);
@@ -205,6 +210,8 @@ class NVBDataSource : public QObject {
 		void objectPushed(const NVBDataSource * newobj, const NVBDataSource * oldobj);
 
 };
+
+Q_DECLARE_METATYPE(NVBDataSource*)
 
 class NVBConstructableDataSource : public NVBDataSource {
 	protected:
