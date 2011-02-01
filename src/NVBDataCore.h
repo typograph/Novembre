@@ -3,6 +3,7 @@
 
 #include <QtCore/QVector>
 #include "NVBDataGlobals.h"
+#include "NVBLogger.h"
 
 class NVBDataSet;
 
@@ -66,20 +67,43 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 
 double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes);
 
-#define forAllSlices(dataset,sliceaxes,targetaxes) \
-	QVector<axissize_t> _slice_ixs((dataset)->nAxes(),0); \
-	cycle __LINE_NUMBER__: \
-	for(axisindex_t _aix = 0; _aix < _slice_ixs.count(); _aix++) \
-		if (_slice_ixs[i] == (dataset)->sizeAt(i) - 1) { \
-			_slice_ixs[i] = 0; \
-			} \
-		else { \
-			_slice_ixs[i] += 1; \
-			double * d = sliceDataSet(dataset,sliceaxes,_slice_ixs,targetaxes); \
-			\
-			free(d); \
-			goto cycle__LINE_NUMBER_; \
-			}
+class NVBSliceCounter {
+	const NVBDataSet * dset;
+	bool is_running;
+	double * slice;
+	QVector<axissize_t> indexes, axisSizes;
+	const QVector<axisindex_t> sliceAxes, targetAxes;
+
+	public:
+		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliceaxes, const QVector<axisindex_t> & tgaxes = QVector<axisindex_t>());
+
+		~NVBSliceCounter() ;
+
+		static bool stepIndexVector(QVector<axissize_t> & ixs, const QVector<axissize_t> & sizes) ;
 		
+		void stepIndexVector();
+		inline bool counting() { return is_running; }
+
+		inline double * getSlice() const { return slice; }
+
+//		inline bool canContinue() const { return cnt; }
+//		inline void setContinue(bool can) { cnt = can; }
+
+		inline const QVector<axissize_t> & sliceCoords() const { return indexes; }
+};
+
+/**
+ *
+ * @def forEachSlice(variable,dataset,sliceaxes,targetaxes)
+ *
+ * Runs a cycle on all slices in dataset on sliceaxes. Variable \a variable
+ * of type double * is available inside the cycle.
+ */
+
+#define forEachSlice(dataset,sliceaxes,tgaxes) \
+	for(NVBSliceCounter _counter(dataset,sliceaxes,tgaxes); _counter.counting(); _counter.stepIndexVector())
+
+#define SLICE_DATA _counter.getSlice()
+#define SLICE_INDEXES _counter.sliceCoords()
 
 #endif
