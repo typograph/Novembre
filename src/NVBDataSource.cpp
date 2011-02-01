@@ -37,12 +37,23 @@ axissize_t NVBDataSet::sizeAt(int i) const {
 double NVBDataSet::min() const { return NVBMaxMinTransform::findMinimum(this); }
 double NVBDataSet::max() const { return NVBMaxMinTransform::findMaximum(this); }
 
-inline NVBDataComments NVBDataSet::comments() { return p->getAllComments(); }
+inline NVBDataComments NVBDataSet::comments() const { return dataSource()->getAllComments(); }
 
-NVBColorMap* NVBDataSet::colorMap() const {
+const NVBColorMap* NVBDataSet::colorMap() const {
 	if (clr)
 		return clr;
-	return parent()->defaultColormap();
+	return dataSource()->defaultColorMap();
+}
+
+void useDataSource(const NVBDataSource* source) {
+  if (!source) return;
+  source->refCount++;
+}
+
+void releaseDataSource(const NVBDataSource* source) {
+  if (!source) return;
+  source->refCount--;
+  if (!source->refCount) delete const_cast<NVBDataSource *>(source);
 }
 
 /**
@@ -57,7 +68,7 @@ NVBDataSource::NVBDataSource() {
 NVBDataSource::~NVBDataSource() {
 }
 
-const NVBColorMap* NVBDataSource::defaultColourMap() const {
+const NVBColorMap* NVBDataSource::defaultColorMap() const {
 	return new NVBGrayRampColorMap(); // TODO : move to NVBToolsFactory
 }
 
