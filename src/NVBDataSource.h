@@ -96,7 +96,7 @@ class NVBDataSet : public QObject {
     axissize_t sizeAt(int i) const;
     inline axisindex_t nAxes() const { return as.count(); }
 
-		NVBColorMap * colorMap() const ;
+		const NVBColorMap * colorMap() const ;
 
 		inline NVBDataSource * dataSource() const { return p; }
 
@@ -105,7 +105,7 @@ class NVBDataSet : public QObject {
 		double min() const;
 		double max() const;
 
-    inline NVBDataComments comments();
+    inline NVBDataComments comments() const;
 
 //    inline QVector<NVBDataMap*> maps() const { return ms; }
 //    void addMapping(NVBDataMap* map) { ms.append(map); }
@@ -118,17 +118,17 @@ class NVBDataSet : public QObject {
 };
 
 /// Increases the reference count for the source \a source
-void useDataSource(NVBDataSource* source);
+void useDataSource(const NVBDataSource* source);
 /// Decreases the reference count for the source \a source
-void releaseDataSource(NVBDataSource* source);
+void releaseDataSource(const NVBDataSource* source);
 
 class NVBDataSource : public QObject {
 	Q_OBJECT
 	private:
 		/// Number of references to this source. Note, that creating an object uses it automatically
-		unsigned int refCount;
-		friend void useDataSource(NVBDataSource* source);
-		friend void releaseDataSource(NVBDataSource* source);
+		mutable unsigned int refCount;
+		friend void useDataSource(const NVBDataSource* source);
+		friend void releaseDataSource(const NVBDataSource* source);
 
 	protected:
 		NVBAxesProps outputAxesProps;
@@ -144,7 +144,7 @@ class NVBDataSource : public QObject {
 
 		virtual const QList< NVBDataSet * > & dataSets() const = 0;
 
-		virtual const NVBColorMap * defaultColorMap() const ;
+		virtual const NVBColorMap * defaultColorMap() const;
 		
 		/// \returns the comment for the given \a key
 		virtual NVBVariant getComment(const QString& key) const = 0;
@@ -192,7 +192,7 @@ class NVBDataSource : public QObject {
 			* Below it, is \a newobj. \a newobj can be 0, meaning chain self-destruction.
 			* Because of that, this signal has always to be connected with Qt::QueuedConnection.
 			*/
-		void objectPopped( NVBDataSource * newobj, NVBDataSource * oldobj);
+		void objectPopped(const NVBDataSource * newobj, const NVBDataSource * oldobj);
 
 		/**
 			* @fn objectPushed
@@ -202,7 +202,7 @@ class NVBDataSource : public QObject {
 			* This object ( referenced by \a oldobj ) is wrapped with a filter.
 			* The filter is given by \a newobj.
 			*/
-		void objectPushed( NVBDataSource * newobj, NVBDataSource * oldobj);
+		void objectPushed(const NVBDataSource * newobj, const NVBDataSource * oldobj);
 
 };
 
@@ -241,6 +241,5 @@ class NVBConstructableDataSource : public NVBDataSource {
 		virtual NVBDataSource * parent() const { return 0; }
 
 };
-
 
 #endif
