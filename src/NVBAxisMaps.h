@@ -16,7 +16,7 @@ class NVBAxisTMap : public NVBAxisMap {
     NVBAxisTMap(QList<T> values):NVBAxisMap(),vs(values) {;}
     ~NVBAxisTMap() {;}
 
-    inline NVBAxisMap::Type mappingType() const { return NVBAxisMap::Template; }
+    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Template; }
     virtual inline int dimension() const { return 1; }
     virtual inline int valType() const { return qMetaTypeId<T>(); }
 
@@ -26,8 +26,8 @@ class NVBAxisTMap : public NVBAxisMap {
       return T();
       }
 
-		QVariant value(QList<int> indexes) {
-			return QVariant::fromValue<T>(value(indexes.first()));
+		NVBVariant value(QList<int> indexes) {
+			return NVBVariant::fromValue<T>(value(indexes.first()));
 			}
 };
 
@@ -54,7 +54,7 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 			{;}
 
     inline NVBAxisMap::MapType mapType() const { return t; }
-    inline NVBAxisMap::Type mappingType() const { return NVBAxisMap::Physical; }
+    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Physical; }
 
     NVBPhysValue value(int i) const {
       if (t == NVBAxisMap::Linear)
@@ -74,9 +74,8 @@ class NVBAxisPointMap : public NVBAxisTMap<NVBPhysPoint> {
 			vs << NVBPhysPoint(p,dimension);
       }
     NVBAxisPointMap(QList<NVBPhysPoint> points):NVBAxisTMap<NVBPhysPoint>(points) {;}
-    ~NVBAxisPointMap();
 
-    inline NVBAxisMap::Type mappingType() const { return NVBAxisMap::Point; }
+    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
 };
 
 class NVBAxes2DGridMap : public NVBAxisMap {
@@ -87,19 +86,26 @@ class NVBAxes2DGridMap : public NVBAxisMap {
     NVBAxes2DGridMap(NVBPhysPoint origin, QTransform transform):NVBAxisMap(),o(origin),t(transform) {;}
 
     inline NVBAxisMap::MapType mapType() const { return NVBAxisMap::Linear2D; }
-    inline NVBAxisMap::Type mappingType() const { return NVBAxisMap::Grid; }
+    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
     virtual inline int dimension() const { return 2; }
 
     inline NVBPhysPoint value(int i, int j) const {
       return o + t.map(QPointF(i,j));
       }
 
-		QVariant value(QList<int> indexes) {
-			return QVariant::fromValue<NVBPhysPoint>(value(indexes.first(),indexes.at(1)));
+		NVBVariant value(QList<int> indexes) {
+			return NVBVariant::fromValue<NVBPhysPoint>(value(indexes.first(),indexes.at(1)));
 			}
 
     inline NVBPhysPoint origin() const { return o; }
     inline QTransform transformation() const { return t; }
+};
+
+class NVBAxisColorMap : public NVBAxisTMap<QColor> {
+  public:
+    NVBAxisColorMap(QList<QColor> colors):NVBAxisTMap<QColor>(colors) {;}
+
+    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Color; }
 };
 
 #endif
