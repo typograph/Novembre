@@ -106,9 +106,9 @@ void NVBConstructableDataSource::addAxisMap(NVBAxisMap * map, axisindex_t axis) 
 	axs[axis].addMapping(map);
 	}
 
-void NVBConstructableDataSource::addDataSet(QString name, double * data, NVBDimension dimension, QVector<axisindex_t> axes)  {
+void NVBConstructableDataSource::addDataSet(QString name, double* data, NVBDimension dimension, QVector< axisindex_t > axes, NVBDataSet::Type type) {
 	if (axes.count() == 0)
 		for(int i=0; i<axes.count(); i++)
 			axes << i;
-	dsets.append(new NVBDataSet(this,name,data,dimension,axes));
+	dsets.append(new NVBDataSet(this,name,data,dimension,axes,type));
 	}
