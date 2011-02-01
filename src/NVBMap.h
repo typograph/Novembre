@@ -103,8 +103,8 @@ class NVBColorInstance {
 		void setXAxis(axisindex_t x);
 		void setYAxis(axisindex_t y);
 		
-		QPixmap * colorize(QVector<axissize_t> slice, QSize i_wxh = QSize()) const;
-		QPixmap * colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
+		QPixmap colorize(QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize()) const;
+		QPixmap colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
 };
 
 /**
@@ -122,7 +122,7 @@ class NVBColorMap {
 
     virtual QRgb colorize(double z) const = 0;
 
-		NVBColorInstance * instantiate(const NVBDataSet * data) { return new NVBColorInstance(data,this); }
+		NVBColorInstance * instantiate(const NVBDataSet * data) const { return new NVBColorInstance(data,this); }
 };
 
 
