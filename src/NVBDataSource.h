@@ -235,7 +235,7 @@ class NVBConstructableDataSource : public NVBDataSource {
 		virtual inline const NVBAxis & axis(axisindex_t i) const { return axs.at(i); }
     virtual NVBAxis & addAxis(QString name, axissize_t length);
 		virtual void addAxisMap(NVBAxisMap * map, axisindex_t axis = -1);
-		virtual void addDataSet(QString name, double * data, NVBDimension dimension, QVector<axisindex_t> axes = QVector<axisindex_t>());
+		virtual void addDataSet(QString name, double * data, NVBDimension dimension, QVector<axisindex_t> axes = QVector<axisindex_t>(), NVBDataSet::Type type = NVBDataSet::Undefined);
 		virtual const QList< NVBAxis > & axes() const { return axs; }
 		virtual const QList< NVBDataSet * > & dataSets() const { return dsets; }
 

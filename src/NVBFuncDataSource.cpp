@@ -20,7 +20,7 @@ void NVBFuncDataSource::addAxis(QString name, axissize_t resolution, NVBDimensio
 	anameix.insert(name,axs.count()-1);
 }
 
-const NVBDataSet * NVBFuncDataSource::addDataSet(QString name, NVBDimension dim, FillFunc f, QStringList axes)
+const NVBDataSet * NVBFuncDataSource::addDataSet(QString name, NVBDimension dim, FillFunc f, QStringList axes, NVBDataSet::Type type )
 {
 	QVector<axisindex_t> ixs;
 	QVector<axissize_t> szs;
@@ -39,7 +39,7 @@ const NVBDataSet * NVBFuncDataSource::addDataSet(QString name, NVBDimension dim,
 
 	fillNArray(data,szs.count(),szs.constData(),f);
 	
-	NVBConstructableDataSource::addDataSet(name,data,dim,ixs);
+	NVBConstructableDataSource::addDataSet(name,data,dim,ixs,type);
 
 	return dsets.last();
 }
