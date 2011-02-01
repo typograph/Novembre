@@ -382,7 +382,7 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes) : dset(dataset)
 		, is_running(true)
 		, slice(0)
-		, indexes(0,sliceaxes.count())
+		, indexes((axissize_t)sliceaxes.count(),0)
 		, sliceAxes(sliceaxes)
 		, targetAxes(dataset ? (tgaxes.isEmpty() ? targetaxes(dataset->nAxes(), sliceAxes) : tgaxes) : QVector<axisindex_t>()) {
 	if (!dataset) {
