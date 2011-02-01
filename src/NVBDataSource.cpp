@@ -15,6 +15,7 @@ NVBDataSet::NVBDataSet(NVBDataSource * parent,
 	,	dim(dimension)
 	,	as(axes)
 	, clr(colormap)
+	, t(tp)
 	{;}
 
 NVBDataSet::~NVBDataSet() {
@@ -22,12 +23,11 @@ NVBDataSet::~NVBDataSet() {
 	}
 
 QVector<axissize_t> NVBDataSet::sizes() const {
-	static QVector<axissize_t> r;
-	if (r.isEmpty()) {
+	if (asizes.isEmpty()) {
 		foreach (axisindex_t i, as)
-			r << p->axis(i).length();
+			asizes << p->axis(i).length();
 		}
-	return r;
+	return asizes;
 	}
 
 axissize_t NVBDataSet::sizeAt(int i) const {
