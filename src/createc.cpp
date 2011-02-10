@@ -35,6 +35,13 @@ QStringList CreatecFileGenerator::availableInfoFields() const {
     return QStringList() \
             << "Bias" \
             << "Setpoint" \
+						<< "VertFBMode" \
+						<< "Scanmode" \
+						<< "CHMode" \
+						<< "VFBMode" \
+						<< "RotCMode" \
+						<< "Latmanmode" \
+						<< "LockinMode" \
             ;
 }
 
@@ -218,7 +225,14 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	
 	comments.insert("Bias",header.value("BiasVoltage").toPhysValue());
 	comments.insert("Setpoint",header.value("Current").toPhysValue());
-	
+	comments.insert("VertFBMode",header.value("VertFBMode").toInt());
+	comments.insert("Scanmode",header.value("Scanmode").toInt());
+	comments.insert("CHMode",header.value("CHMode").toInt());
+	comments.insert("VFBMode",header.value("VFBMode").toInt());
+	comments.insert("RotCMode",header.value("RotCMode").toInt());
+	comments.insert("Latmanmode",header.value("Latmanmode").toInt());
+	comments.insert("LockinMode",header.value("LockinMode").toInt());
+
 	int nchannels = header.value("Channels").toInt();
 	for (int i = 0; i < nchannels; i++)
 		fi->pages.append(NVBPageInfo(header.value("BiasVoltage",QString()).toString(),type,QSize(header.value("Num.X",0).toInt(),header.value("Num.Y",0).toInt()),comments));
