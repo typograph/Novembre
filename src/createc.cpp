@@ -234,6 +234,11 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	comments.insert("LockinMode",header.value("LockinMode").toInt());
 
 	int nchannels = header.value("Channels").toInt();
+#ifdef TMP_VOLTAGE_MAP
+	if (type == NVB::SpecPage) nchannels = 13;
+#else
+	if (type == NVB::SpecPage) nchannels = 12;
+#endif
 	for (int i = 0; i < nchannels; i++)
 		fi->pages.append(NVBPageInfo(header.value("BiasVoltage",QString()).toString(),type,QSize(header.value("Num.X",0).toInt(),header.value("Num.Y",0).toInt()),comments));
 	
@@ -610,7 +615,10 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 		if (file_headerX.value("Vpoint0.t").toInt() == 0) {
 			result << new CreatecVertPage();
 			result.last()->setColorModel(new NVBConstDiscrColorModel(Qt::black));
-			result.last()->pagename = "dI/dV";
+			if (file_headerX.value("VertFBMode").toInt() == 1)
+				result.last()->pagename = "z(U)";
+			else
+				result.last()->pagename = "dI/dV";
 			result.last()->zd = NVBDimension("V");
 			result.last()->xd = NVBDimension("m");
 			result.last()->yd = NVBDimension("m");
