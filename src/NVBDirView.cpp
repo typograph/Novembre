@@ -49,7 +49,7 @@ QModelIndex NVBDirView::indexAt(const QPoint & point) const
     return QModelIndex();
 
   // Using fileDistance here is too expensive
-  if ( point.y() <= topMargin() || point.y() > (model()->rowCount() - top_row)*gridSize.height())
+	if ( point.y() <= topMargin())// || point.y() > (model()->rowCount() - top_row)*gridSize.height())
     return QModelIndex();
 
   int irow = top_row;
@@ -57,6 +57,9 @@ QModelIndex NVBDirView::indexAt(const QPoint & point) const
 
   while (inside_y > fileHeight(irow))
     inside_y -= fileHeight(irow++);
+
+	if (irow >= model()->rowCount())
+		return QModelIndex();
 
   inside_y -= topMargin();
   if (inside_y < 0)
@@ -70,10 +73,10 @@ QModelIndex NVBDirView::indexAt(const QPoint & point) const
   if (inside_y < 0)
     return QModelIndex();
 
-  int row = (point.x()-leftMargin())/gridSize.width();
-  int col = inside_y/gridSize.height();
+	int col = (point.x()-leftMargin())/gridSize.width();
+	int row = inside_y/gridSize.height();
 
-  return model()->index(row+col*pages_per_row,0,model()->index(irow,0));
+	return model()->index(col+row*pages_per_row,0,model()->index(irow,0));
 
 }
 
@@ -507,20 +510,44 @@ void NVBDirView::scrollContentsBy(int dx, int dy)
   QAbstractItemView::scrollContentsBy(dx,dy);
 }
 
+/**
+	* \fn NVBDirView::headerHeight
+	*
+	* \returns Height of the header (equal to text height)
+	*/
+
 int NVBDirView::headerHeight() const
 {
   return style()->pixelMetric(QStyle::PM_TitleBarHeight);
 }
+
+/**
+	* \fn NVBDirView::midMargin
+	*
+	* \returns Distance between the header and the first grid line (items)
+	*/
 
 int NVBDirView::midMargin() const
 {
   return 3;
 }
 
+/**
+	* \fn NVBDirView::topMargin
+	*
+	* \returns Distance between the top of the view / bottom of previous item and the header
+	*/
+
 int NVBDirView::topMargin() const
 {
   return 5;
 }
+
+/**
+	* \fn NVBDirView::btmMargin
+	*
+	* \returns Distance between the last row of items and the next file
+	*/
 
 int NVBDirView::btmMargin() const
 {
