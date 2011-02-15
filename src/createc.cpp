@@ -239,9 +239,18 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 #else
 	if (type == NVB::SpecPage) nchannels = 12;
 #endif
-	for (int i = 0; i < nchannels; i++)
-		fi->pages.append(NVBPageInfo(header.value("BiasVoltage",QString()).toString(),type,QSize(header.value("Num.X",0).toInt(),header.value("Num.Y",0).toInt()),comments));
-	
+
+	QSize dataSize;
+	if (type == NVB::SpecPage) {
+		int vpmax = qMax(qMax(header.value("Vpoint0.t",0).toInt(),header.value("Vpoint1.t",0).toInt()),qMax(header.value("Vpoint2.t",0).toInt(),header.value("Vpoint3.t",0).toInt()));
+		int zpmax = qMax(qMax(header.value("Zpoint0.t",0).toInt(),header.value("Zpoint1.t",0).toInt()),qMax(header.value("Zpoint2.t",0).toInt(),header.value("Zpoint3.t",0).toInt()));
+		dataSize = QSize(qMax(vpmax,zpmax),info.count());
+		}
+	else
+		dataSize = QSize(header.value("Num.X",0).toInt(),header.value("Num.Y",0).toInt());
+	for (int i = 0; i < nchannels; i++)	
+		fi->pages.append(NVBPageInfo(header.value("BiasVoltage",QString()).toString(),type,dataSize,comments));
+
 	return fi;
 }
 
