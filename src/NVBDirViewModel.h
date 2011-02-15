@@ -44,6 +44,8 @@ public:
 
 	void setDisplayItems(QModelIndexList items);
 
+	NVBAssociatedFilesInfo getAllFiles(const QModelIndex & index);
+
 private:
   NVBFileFactory * fileFactory;
 	QList<QPersistentModelIndex> indexes;

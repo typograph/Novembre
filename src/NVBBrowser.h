@@ -202,7 +202,7 @@ private slots:
 signals:
     void shown();
 		void closeRequest();
-    void pageRequest(QString filename, int pagenum);  
+//    void pageRequest(QString filename, int pagenum);
 		void pageRequest(const NVBAssociatedFilesInfo &, int pagenum);
 };
 

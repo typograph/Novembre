@@ -289,3 +289,18 @@ void NVBDirViewModel::defineWindow(int start, int end)
 			files[i] = 0;
 			}
 }
+
+NVBAssociatedFilesInfo NVBDirViewModel::getAllFiles(const QModelIndex & index) {
+	if (!index.isValid() || !dirModel) return NVBAssociatedFilesInfo();
+
+	if (index.internalId() == 0)
+		return dirModel->getAllFiles(indexes.at(index.row()));
+	else {
+		if (loadFile(index.internalId()-1))
+			return files.at(index.internalId()-1)->sources();
+		else
+			return NVBAssociatedFilesInfo();
+		}
+
+}
+
