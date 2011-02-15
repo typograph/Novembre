@@ -356,7 +356,7 @@ void NVBBrowser::showItems() {
 
 void NVBBrowser::loadPage( const QModelIndex & item )
 {
-	emit pageRequest(item.parent().data(Qt::ToolTipRole).toString(),item.row());
+	emit pageRequest( dirViewModel->getAllFiles(item),item.row());
 }
 
 void NVBBrowser::switchIconSize( QAction* action ) {
