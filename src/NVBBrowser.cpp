@@ -230,7 +230,8 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 //  dirView->hide();
 	dirViewModel = new NVBDirViewModel(files,fileModel,this);
 	dirView->setModel(dirViewModel);
-
+// This will make the model release files. Might not be the best solution
+//  connect(dirView,SIGNAL(dataWindow(int,int)),dirViewModel,SLOT(defineWindow(int,int)));
 	iconSizeActionGroup = new QActionGroup(this);
 
 	dirView->insertAction(0,iconSizeActionGroup->addAction("512x512"));
@@ -347,62 +348,10 @@ NVBBrowser::~ NVBBrowser( )
   confile->setValue("Browser/FileListSize", fileList->size());
   confile->setValue("Browser/ShowPageInfo", piview->isVisible());
   if (fileModel) delete fileModel;
-//  if (theFile) theFile->release();
-/* there's no selection!
-  if (selection) {
-    delete selection;
-    selection = NULL;
-    }
-*/
-/*
-  if (theFile) {
-    theFile->release();
-    theFile = NULL;
-    pageList->setModel(NULL);
-    }
-*/
 }
 
 void NVBBrowser::showItems() {
-
 	dirViewModel->setDisplayItems(fileList->selectionModel()->selectedIndexes());
-
-	/*
-  if (fileModel->isAFile(item)) {
-    pageList->show();
-    dirView->hide();
-    dirView->setModel(0);
-    if (dirViewModel) {
-      delete dirViewModel;
-      dirViewModel = 0;
-      }
-
-    if (theFile) {
-      theFile->release();
-      theFile = NULL;
-      pageRefactor->setModel(NULL);
-      } 
-
-		theFile = files->openFile(fileModel->getAllFiles(item));
-    if (theFile) {
-      theFile->use();
-      pageRefactor->setModel(theFile);
-      }
-    else {
-			NVBOutputError(QString("Couldn't get file %1").arg(fileModel->getAllFiles(item).name()));
-      }
-    
-    }
-  else {
-    if (dirViewModel) delete dirViewModel;
-//     dirViewModel = new NVBDirViewModel(files, QPersistentModelIndex(fileModel->mapToSource(item.sibling(item.row(),0))), fileModel, this);
-    dirViewModel = new NVBDirViewModel(files, QPersistentModelIndex(item.sibling(item.row(),0)), fileModel, this);
-    dirView->setModel(dirViewModel);
-    connect(dirView,SIGNAL(dataWindow(int,int)),dirViewModel,SLOT(defineWindow(int,int)));
-    dirView->show();
-    pageList->hide();
-    }
-		*/
 }
 
 void NVBBrowser::loadPage( const QModelIndex & item )
@@ -770,67 +719,6 @@ void NVBBrowser::addFolder(const QModelIndex & index) {
 
 }
 
-/*
-NVBColumnDialog::NVBColumnDialog() {
-  QHBoxLayout * h = new QHBoxLayout(this);
-  QVBoxLayout * e = new QVBoxLayout();
-  QGridLayout * l = new QGridLayout();
-
-  h->addLayout(e);
-  e->addLayout(l);
-
-  l->addWidget(new QLabel("Name",this),0,0,Qt::AlignRight);
-  l->addWidget(new QLabel("Contents",this),1,0,Qt::AlignRight);
-
-  nameEdit = new QLineEdit(this);
-  l->addWidget(nameEdit,0,1,Qt::AlignHCenter);
-  cntEdit = new QLineEdit(this);
-  l->addWidget(cntEdit,1,1,Qt::AlignHCenter);
-
-  QToolButton * tb = new QToolButton(this);
-  tb->setDefaultAction(new QAction("?",tb));
-  tb->defaultAction()->setToolTip("Show help on possible field values");
-  tb->defaultAction()->setCheckable(true);
-  l->addWidget(tb,1,2,Qt::AlignLeft);
-
-  QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-  connect(buttonBox,SIGNAL(accepted()),this,SLOT(tryAccept()));
-  connect(buttonBox,SIGNAL(rejected()),this,SLOT(reject()));
-
-  e->addWidget(buttonBox);
-
-  QLabel * help = new QLabel("The \"Contents\" field may contain one of the following:<ol><li>Predefined file parameter names, i.e. <b>fileName</b>, <b>fileSize</b>, <b>fileDate</b>, <b>fileTime</b>, <b>fileDateTime</b>.</li><li>Predefined page paremeter names, i.e. <b>Name</b>, <b>Size</b>, <b>isTopo</b>, <b>isSpec</b>.</li><li>Page comment names, e.g. <b>Bias</b> or <b>Setpoint</b>. Please bear in mind that those are file format-specific.</li><li>Page selectors in the form \"?T\", \"?S\" or \"?!\", followed by any of the following:<ul><li>Free text, output as given.</li><li>Page paremeters as above, parenthesised.</li><li>One of <b>$X</b> (x size), <b>$Y</b> (y size) or <b>$$</b> for $.</li></ul></li></ol>");
-  help->hide();
-  h->addWidget(help);
-
-  connect(tb,SIGNAL(toggled(bool)),help,SLOT(setVisible(bool)));
-
-  setLayout(h);
-}
-
-QString NVBColumnDialog::getColumn()
-{
-  int result;
-  NVBColumnDialog * dialog  = new NVBColumnDialog();
-  result = dialog->exec();
-  QString clmncode = dialog->nameEdit->text()+"/"+dialog->cntEdit->text();
-  delete dialog;
-  if (result == QDialog::Accepted)
-    return clmncode;
-  return QString();
-//  if (ok) *ok = (result == QDialog::Accepted);
-}
-
-void NVBColumnDialog::tryAccept() {
-
-  // TODO One should check "contents" validity here.
-  // Unfortunately it depends greatly on NVBFileInfo, so maybe a method is needed there.
-
-  accept();
-}
-
-*/
-
 void NVBBrowser::updateColumnsVisibility() {
   int nuc = confile->value("Browser/UserColumns").toInt();
   for (int i = 1; i<=nuc; i++) {
@@ -879,38 +767,6 @@ void NVBBrowser::moveColumn( int logicalIndex, int oldVisualIndex, int newVisual
   confile->setValue(QString("Browser/UserColumn%1v").arg(newVisualIndex),true);
 }
 
-/*
-NVBDataFilterDialog::NVBDataFilterDialog(QStringList columns)
-{
-  QHBoxLayout * clmnLayout = new QHBoxLayout();
-
-  clmnLayout->addWidget(new QLabel("Column",this));
-  columnCombo = new QComboBox(this);
-  columnCombo->addItems(columns);
-  columnCombo->setCurrentIndex(1);
-  clmnLayout->addWidget(columnCombo);
-
-  QHBoxLayout * filterLayout = new QHBoxLayout();
-
-  filterLayout->addWidget(new QLabel("Filter",this));
-  filterEdit = new QLineEdit(this);
-  filterLayout->addWidget(filterEdit);
-
-  QVBoxLayout * l = new QVBoxLayout();
-
-  l->addLayout(clmnLayout);
-  l->addLayout(filterLayout);
-  
-  QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-  connect(buttonBox,SIGNAL(accepted()),this,SLOT(accept()));
-  connect(buttonBox,SIGNAL(rejected()),this,SLOT(reject()));
-
-  l->addWidget(buttonBox);
-  
-  setLayout(l);
-}
-
-*/
 void NVBBrowser::addRootFolder()
 {
   addFolder(QModelIndex());
