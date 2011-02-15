@@ -31,11 +31,11 @@ NVBDirView::NVBDirView(QWidget * parent):QAbstractItemView(parent)
 {
   top_row = 0;
   gwidth = 0;
-  pages_per_row = 0;
-  heights.resize(10);
-  setGridSize(iconSize()+QSize(20,20));
+	pages_per_row = 0;
+	heights.resize(10);
+	setGridSize(iconSize()+QSize(20,20));
 }
-
+	
 NVBDirView::~ NVBDirView()
 {
 }
@@ -320,8 +320,6 @@ void NVBDirView::drawHeader(int index, QPainter * painter) const
 {
   int t = fileDistance(index,top_row) + topMargin();
 
-	NVBOutputDMsg("<>");
-
   painter->setBrush(QBrush(Qt::black));
   painter->setPen(QPen(painter->brush(),style()->pixelMetric(QStyle::PM_DefaultFrameWidth),Qt::SolidLine,Qt::RoundCap,Qt::RoundJoin));
 
@@ -343,8 +341,6 @@ void NVBDirView::drawHeader(int index, QPainter * painter) const
 
 void NVBDirView::drawItems(int index, QPainter * painter) const 
 {
-	NVBOutputDMsg(QString::number(index));
-
   int nitems = model()->rowCount(model()->index(index,0));
 //   QStyleOptionViewItem option = ;
 #if QT_VERSION < 0x040300
@@ -508,60 +504,6 @@ void NVBDirView::scrollContentsBy(int dx, int dy)
     setDirtyRegion(viewport()->rect());
     }
   QAbstractItemView::scrollContentsBy(dx,dy);
-}
-
-/**
-	* \fn NVBDirView::headerHeight
-	*
-	* \returns Height of the header (equal to text height)
-	*/
-
-int NVBDirView::headerHeight() const
-{
-  return style()->pixelMetric(QStyle::PM_TitleBarHeight);
-}
-
-/**
-	* \fn NVBDirView::midMargin
-	*
-	* \returns Distance between the header and the first grid line (items)
-	*/
-
-int NVBDirView::midMargin() const
-{
-  return 3;
-}
-
-/**
-	* \fn NVBDirView::topMargin
-	*
-	* \returns Distance between the top of the view / bottom of previous item and the header
-	*/
-
-int NVBDirView::topMargin() const
-{
-  return 5;
-}
-
-/**
-	* \fn NVBDirView::btmMargin
-	*
-	* \returns Distance between the last row of items and the next file
-	*/
-
-int NVBDirView::btmMargin() const
-{
-  return 3;
-}
-
-int NVBDirView::leftMargin() const
-{
-  return 10;
-}
-
-int NVBDirView::rightMargin() const
-{
-  return 10;
 }
 
 int NVBDirView::verticalOffset() const
