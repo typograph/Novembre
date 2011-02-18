@@ -6,43 +6,48 @@
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
+#include <QtCore/QTextStream>
 
 QStringList NVBFileBundle::getFilenamesFromFile(QString filename) {
   QFile file(filename);
 
-	if (!file.open(QIODevice::ReadOnly)) {
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		NVBOutputFileError(&file);
 		return QStringList();
 		}
 	
+	QTextStream fs(&file);
+
 	QStringList fnames;
 	QString path = QFileInfo(file).absolutePath();
 	
-	while (file.canReadLine()) {
-	  QString line = file.readLine(1024);
-	  line.chop(1);
+	QString line;
+	while (!(line = fs.readLine(1024)).isNull())
 	  fnames << path + "/" + line;
-	  }
 	
-	if (!file.atEnd())
-	  fnames << path + "/" + file.read(1024);
+//	if (!file.atEnd())
+//	  fnames << path + "/" + file.read(1024);
 	
 	return fnames;
 }
 
 NVBAssociatedFilesInfo NVBFileBundle::associatedFiles(QString filename) const {
-   QStringList ifnames;
+	QStringList ifnames;
   
-	foreach(QString fname, getFilenamesFromFile(filename))
-	  if (QFileInfo(fname).exists()) {
-		 NVBAssociatedFilesInfo li = fileFactory->associatedFiles(fname);
-		 if (li.count() == 0)
-			 NVBOutputError(QString("File %1 did not load").arg(fname));
-		 else
-		  ifnames << li;
-		}
+	foreach(QString fname, getFilenamesFromFile(filename)) {
+		if (QFileInfo(fname).exists()) {
+			NVBAssociatedFilesInfo li = fileFactory->associatedFiles(fname);
+			if (li.count() == 0)
+				NVBOutputError(QString("File %1 did not load").arg(fname));
+			else
+				ifnames << li;
+			}
 	  else
-		 NVBOutputError(QString("File %1 did not exist, but was mentioned").arg(fname));
+			NVBOutputError(QString("File %1 did not exist, but was mentioned").arg(fname));
+		}
+
+	// We have to add the name of the bundle file here, to mark that it has been loaded.
+	if (ifnames.count()) ifnames.prepend(filename);
 	
 	return NVBAssociatedFilesInfo(QFileInfo(filename).fileName(), ifnames, this);
 }
@@ -54,7 +59,7 @@ NVBFile * NVBFileBundle::loadFile(const NVBAssociatedFilesInfo & info) const thr
 		return 0;
 		}
 
-	if (info.count() == 0) {
+	if (info.count() < 2) {
 		NVBOutputError("No associated files");
 		return 0;
 		}
