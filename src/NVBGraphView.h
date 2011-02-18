@@ -25,6 +25,7 @@
 #include <qwt_scale_draw.h>
 #include <qwt_scale_widget.h>
 #include <qwt_scale_engine.h>
+#include <qwt_plot_zoomer.h>
 
 /*
 class NVBNarrowLinearScaleEngine : public QwtLinearScaleEngine {
@@ -80,9 +81,11 @@ private:
   void addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource * source);
 
   bool d_show_grids;
+	bool d_active_zoom;
 
   QList<NVBVizUnion> supraVizs;
   QList<QwtPlotGrid*> grids;
+	QList<QwtPlotZoomer*> zoomers;
 
   QwtPlot * plotAt(int row);
 
@@ -104,6 +107,8 @@ public:
 public slots:
   void setActiveVisualizer( NVBVizUnion viz, const QModelIndex & index);
   void showGrid(bool);
+	void activateZoom();
+	void deactivateZoom();
 
 protected slots:
   void activateVisualizer(int row);
