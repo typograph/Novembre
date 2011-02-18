@@ -39,3 +39,44 @@ const char * _Gview_grid[] = {
 "                                ",
 "                                "
 };
+
+const char * _Gview_zoom[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 3 1",
+"  c None",
+". c gray50",
+"X c black",
+/* pixels */
+"                                ",
+"                                ",
+"                                ",
+"           X        X           ",
+"        X  X        X  X        ",
+"      X    X        X    X      ",
+"           X        X           ",
+"     X     X        X     X     ",
+"           X        X           ",
+"    X      X        X      X    ",
+"           .        .           ",
+"   XXXXXXX. .XXXXXX. .XXXXXXX   ",
+"           .        .           ",
+"           X        X           ",
+"           X        X           ",
+"           X        X           ",
+"           X        X           ",
+"           X        X           ",
+"           X        X           ",
+"           .        .           ",
+"   XXXXXXX. .XXXXXX. .XXXXXXX   ",
+"           .        .           ",
+"    X      X        X      X    ",
+"           X        X           ",
+"     X     X        X     X     ",
+"           X        X           ",
+"      X    X        X   X       ",
+"       X   X        X  X        ",
+"           X        X           ",
+"                                ",
+"                                ",
+"                                "
+};

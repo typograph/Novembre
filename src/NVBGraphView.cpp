@@ -19,7 +19,7 @@
 #endif
 
 NVBGraphView::NVBGraphView(NVBVizModel * model, QWidget* parent)
- : QFrame(parent), vizmodel(model), d_show_grids(false)
+ : QFrame(parent), vizmodel(model), d_show_grids(false), d_active_zoom(false)
 {
 
   plotlayout = new QVBoxLayout(this);
@@ -70,6 +70,8 @@ void NVBGraphView::rowsInserted(const QModelIndex & parent, int start, int end)
     plot->setCanvasBackground(Qt::white);
     plot->setAutoDelete(false); // The items are managed by the delegates, not by views
 
+		plot->canvas()->setFrameStyle(QFrame::NoFrame);
+
     plotlayout->insertWidget(i,plot);
 
     QwtPlotGrid * grid = new QwtPlotGrid();
@@ -88,11 +90,16 @@ void NVBGraphView::rowsInserted(const QModelIndex & parent, int start, int end)
     
     grid->attach(plot);
 
-    NVBVizUnion tmp = vizmodel->index(i).data(PageVizItemRole).value<NVBVizUnion>();
+		QwtPlotZoomer * zoomer = new QwtPlotZoomer(plot->canvas());
+		zoomer->setEnabled(d_active_zoom);
+		connect(zoomer,SIGNAL(zoomed(QwtDoubleRect)),this,SLOT(deactivateZoom()));
+		zoomers << zoomer;
+
+		NVBVizUnion tmp = vizmodel->index(i).data(PageVizItemRole).value<NVBVizUnion>();
     if (tmp.valid && tmp.vtype == NVB::GraphView) {
       NVBDataSource * source = vizmodel->index(i).data(PageRole).value<NVBDataSource*>();
       addItemToPlot(plot,tmp,source);
-      }
+			}
     plot->replot();
 
     supraVizs.insert(i,NVBVizUnion());
@@ -125,7 +132,13 @@ QToolBar * NVBGraphView::generateToolbar(QWidget * parent) const
   act->setCheckable(true);
   act->setChecked(false);
   connect(act,SIGNAL(toggled(bool)),this,SLOT(showGrid(bool)));  
-  return tBar;
+
+	act = tBar->addAction(QIcon(_Gview_zoom),"Zoom");
+//  act->setCheckable(false);
+//  act->setChecked(false);
+	connect(act,SIGNAL(triggered()),this,SLOT(activateZoom()));
+
+	return tBar;
 }
 
 void NVBGraphView::updateVizs( const QModelIndex & start, const QModelIndex & end )
@@ -156,6 +169,8 @@ void NVBGraphView::addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource 
   tmp.GraphViz->setItemAttribute(QwtPlotItem::AutoScale);
 //   tmp.GraphViz->setItemAttribute(QwtPlotItem::AutoScale);
   tmp.GraphViz->attach(plot);
+
+	zoomers[(plotlayout->indexOf(plot))]->setZoomBase(tmp.GraphViz->boundingRect());
 }
 
 void NVBPhysScaleDraw::updateMultiplier()
@@ -269,4 +284,22 @@ void NVBGraphView::showGrid( bool gshow )
   d_show_grids = gshow;
 }
 
+void NVBGraphView::activateZoom() {
+	if (d_active_zoom) return;
 
+	foreach(QwtPlotZoomer * z, zoomers) {
+		z->setEnabled(true);
+		}
+
+	d_active_zoom = true;
+}
+
+void NVBGraphView::deactivateZoom() {
+	if (!d_active_zoom) return;
+
+	foreach(QwtPlotZoomer * z, zoomers) {
+		z->setEnabled(false);
+		}
+
+	d_active_zoom = false;
+}
