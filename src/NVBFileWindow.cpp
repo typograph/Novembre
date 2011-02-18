@@ -362,6 +362,7 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
     if (view) {
       QToolBar * t = view->generateToolbar(this);
       if (t) {
+				t->setOrientation(Qt::Vertical);
         toolBarLayout->addWidget(t);
         t->show();
         }
@@ -757,11 +758,9 @@ void NVBFileWindow::focusInEvent(QFocusEvent * event)
 #else
   QFrame::focusInEvent(event);
 #endif
-
   if (event->isAccepted())
     emit pageSelected(pageListView->selectedTopPage().data(PageTypeRole).value<NVB::PageType>());
 }
-
 
 void NVBFileWindow::setWidgetVisible(QWidget * widget, bool visible, bool shift)
 {
@@ -851,7 +850,7 @@ void NVBFileWindow::copyView()
 	QClipboard * cb = QApplication::clipboard();
 	cb->setText(windowTitle());
 	QImage i(view->w()->size(),QImage::Format_RGB32);
-  view->w()->render(&i);
+	view->w()->render(&i);
 	cb->setImage(i);
 }
 
