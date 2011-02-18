@@ -102,7 +102,7 @@ Qt::ItemFlags NVBDirViewModel::flags( const QModelIndex & index ) const
 		return QAbstractItemModel::flags(index);
 	if (!index.parent().isValid())
 		return QAbstractItemModel::flags(index) | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
-	return QAbstractItemModel::flags(index) | Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+	return QAbstractItemModel::flags(index) | Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled;
 }
 
 QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
@@ -304,3 +304,20 @@ NVBAssociatedFilesInfo NVBDirViewModel::getAllFiles(const QModelIndex & index) {
 
 }
 
+QMimeData * NVBDirViewModel::mimeData(const QModelIndexList &ixs) const {
+	if (ixs.count() > 1) {
+		NVBOutputError("Dragging more than one object");
+		return 0;
+		}
+
+	if (ixs.isEmpty()) return 0;
+
+	QModelIndex i = ixs.first();
+	if ( i.internalId() == 0 || !loadFile(i.internalId()-1)) return 0;
+
+	return new NVBDataSourceMimeData(NVBToolsFactory::hardlinkDataSource(files.at(i.internalId()-1)->index(i.row(),0).data(PageRole).value<NVBDataSource*>()));
+}
+
+QStringList NVBDirViewModel::mimeTypes () const {
+	return QStringList() << NVBDataSourceMimeData::dataSourceMimeType();
+}

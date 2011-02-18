@@ -46,6 +46,9 @@ public:
 
 	NVBAssociatedFilesInfo getAllFiles(const QModelIndex & index);
 
+	virtual QMimeData * mimeData ( const QModelIndexList & indexes ) const;
+	virtual QStringList mimeTypes () const;
+
 private:
   NVBFileFactory * fileFactory;
 	QList<QPersistentModelIndex> indexes;
