@@ -86,9 +86,19 @@ QToolBar * NVB2DPageView::generateToolbar(QWidget * parent) const
   act->setChecked(showTicks);
     */ 
   
-  act = tBar->addAction(QIcon(_2Dview_export),"Export view",this,SLOT(exportImage()));
-  
+	tBar->addAction(QIcon(_2Dview_export),"Export view",this,SLOT(exportImage()));
+	act = tBar->addAction(QIcon(_2Dview_marker),"Show scale",this,SLOT(setShowMarker(bool)));
+	act->setCheckable(true);
+	act->setChecked(false);
+
   return tBar;
+}
+
+void NVB2DPageView::setShowMarker(bool show) {
+	if (eventCatcher) {
+		eventCatcher->showSizeMarker(show);
+		if (scene()) scene()->update();
+		}
 }
 
 int NVB2DPageView::heightForWidth(int w) const
