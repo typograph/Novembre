@@ -85,6 +85,8 @@ void NVBGraphView::rowsInserted(const QModelIndex & parent, int start, int end)
     grid->enableXMin(true);
     grid->enableY(true);
     grid->enableYMin(true);
+
+		grid->setZ(-100000);
    
     d_show_grids ? grid->show() : grid->hide();
     
@@ -169,6 +171,7 @@ void NVBGraphView::addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource 
   tmp.GraphViz->setItemAttribute(QwtPlotItem::AutoScale);
 //   tmp.GraphViz->setItemAttribute(QwtPlotItem::AutoScale);
   tmp.GraphViz->attach(plot);
+	tmp.GraphViz->setZ(0);
 
 	zoomers[(plotlayout->indexOf(plot))]->setZoomBase(tmp.GraphViz->boundingRect());
 }
