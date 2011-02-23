@@ -1,4 +1,46 @@
 /* XPM */
+const char * _2Dview_marker[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 4 1",
+"  c None",
+". c gray50",
+"X c black",
+"0 c red",
+/* pixels */
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                      .......   ",
+"                     .XXXXXXX.  ",
+"                     .X     X.  ",
+"                     .X     X.  ",
+"                     .X     X.  ",
+"                     .X     X.  ",
+"                     .X     X.  ",
+"                     .XXXXXXX.  ",
+"                      .......   ",
+"                                ",
+"                                "
+};
+
 const char * _2Dview_zoom[] = {
 /* columns rows colors chars-per-pixel */
 "32 32 4 1",
