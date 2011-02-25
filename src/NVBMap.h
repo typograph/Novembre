@@ -29,7 +29,7 @@ class NVBAxisMap {
 	enum ValueType {
 		Template = 0, /// Underfined
 		Physical = 1, /// NVBPhysValue
-		Point = 2,    /// NVBPhysColor
+		Point = 2,    /// NVBPhysPoint
 		Color = 3     /// QColor
 		};
 
