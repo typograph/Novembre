@@ -2,7 +2,7 @@
 #define NVBAXISMAPS_H
 
 #include "NVBMap.h"
-#include "NVBDimension.h"
+#include "NVBUnits.h"
 #include <QtCore/QList>
 #include <QtGui/QTransform>
 
@@ -34,7 +34,7 @@ class NVBAxisTMap : public NVBAxisMap {
 class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
   private:
 		double o, d;
-		NVBDimension dim;
+		NVBUnits dim;
     NVBAxisMap::MapType t;
   public:
     NVBAxisPhysMap(QList<NVBPhysValue> values):NVBAxisTMap<NVBPhysValue>(values),t(NVBAxisMap::General) {;}
@@ -45,7 +45,7 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 			, dim(origin.getDimension())
 			,	t(NVBAxisMap::Linear)
 			{;}
-		NVBAxisPhysMap(double origin, double interval, NVBDimension dimension)
+		NVBAxisPhysMap(double origin, double interval, NVBUnits dimension)
 			: NVBAxisTMap<NVBPhysValue>()
 			, o(origin)
 			, d(interval)
@@ -55,6 +55,8 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 
     inline NVBAxisMap::MapType mapType() const { return t; }
     inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Physical; }
+
+    inline NVBUnits units() const { return dim; }
 
     NVBPhysValue value(int i) const {
       if (t == NVBAxisMap::Linear)
@@ -69,7 +71,7 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 
 class NVBAxisPointMap : public NVBAxisTMap<NVBPhysPoint> {
   public:
-    NVBAxisPointMap(QList<QPointF> points, NVBDimension dimension):NVBAxisTMap<NVBPhysPoint>() {
+    NVBAxisPointMap(QList<QPointF> points, NVBUnits dimension):NVBAxisTMap<NVBPhysPoint>() {
       foreach(QPointF p, points)
 			vs << NVBPhysPoint(p,dimension);
       }

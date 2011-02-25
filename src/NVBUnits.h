@@ -1,5 +1,5 @@
 //
-// C++ Interface: NVBDimension
+// C++ Interface: NVBUnits
 //
 // Description: 
 //
@@ -23,30 +23,30 @@
 #define exp10(x) pow(10,x)
 #endif
 
-class NVBDimension {
+class NVBUnits {
 friend class NVBPhysValue;
 private:
   QString base;
   double mult;
   mutable QString dimstr;
 public:
-  NVBDimension():base(),mult(1) {;}
+  NVBUnits():base(),mult(1) {;}
   /**
-    Construct NVBDimension by deciphering the string into power and unit.
+    Construct NVBUnits by deciphering the string into power and unit.
     If scalable is false, the string will not be deciphered, and the unit will be declared absolute.
 
-    \example NVBDimension("kHz") // kilo Herz
-    \example NVBDimension("DAC",false) // DAC units
+    \example NVBUnits("kHz") // kilo Herz
+    \example NVBUnits("DAC",false) // DAC units
     */
-  NVBDimension( const QString& s, bool scalable = true );
+  NVBUnits( const QString& s, bool scalable = true );
   /**
-    Construct NVBDimension by using the provided string as unit and the multiplier.
+    Construct NVBUnits by using the provided string as unit and the multiplier.
 
-    \example NVBDimension("Hz",1000) // kilo Herz
-    \example NVBDimension("m",1) // meters
+    \example NVBUnits("Hz",1000) // kilo Herz
+    \example NVBUnits("m",1) // meters
     */
-  NVBDimension( const QString& s, double multiplier):base(s),mult(multiplier) {;}
-  ~NVBDimension() {;}
+  NVBUnits( const QString& s, double multiplier):base(s),mult(multiplier) {;}
+  ~NVBUnits() {;}
 
   bool pure() const { return mult == 0 || mult == 1; }
   double purify() {
@@ -60,44 +60,45 @@ public:
   static double multFromChar(QChar c);
 
   QString toStr() const;
+	inline QString baseUnit() { return base; }
 
   bool isScalable() const { return mult != 0; }
 
-  bool isComparableWith(const NVBDimension & d) const {
+  bool isComparableWith(const NVBUnits & d) const {
     return base == d.base;
     }
 
-  bool operator== (const NVBDimension & d) const {
+  bool operator== (const NVBUnits & d) const {
     return toStr() == d.toStr();
     }
 
-  bool operator!= (const NVBDimension & d) const {
+  bool operator!= (const NVBUnits & d) const {
     return base != d.base;
     }
 
-  NVBDimension &  operator+=( int order ) { mult *= exp10(order); return *this; }
-  NVBDimension &  operator-=( int order )  { mult /= exp10(order); return *this; }
+  NVBUnits &  operator+=( int order ) { mult *= exp10(order); return *this; }
+  NVBUnits &  operator-=( int order )  { mult /= exp10(order); return *this; }
 
 };
 
-Q_DECLARE_METATYPE(NVBDimension);
+Q_DECLARE_METATYPE(NVBUnits);
 
 class NVBPhysValue {
 private:
-  NVBDimension dim;
+  NVBUnits dim;
   double value;
   mutable QString valstr;
 public:
   NVBPhysValue():value(0) {;}
   NVBPhysValue(const QString& s);
-  NVBPhysValue(const QString& s, NVBDimension d);
-  NVBPhysValue(double f, NVBDimension d);
+  NVBPhysValue(const QString& s, NVBUnits d);
+  NVBPhysValue(double f, NVBUnits d);
   ~NVBPhysValue() {;}
 
   double getValue( ) const { return value; }
-  double getValue( NVBDimension dim ) const;
+  double getValue( NVBUnits dim ) const;
   
-  NVBDimension getDimension() const { return dim; }
+  NVBUnits getDimension() const { return dim; }
 
 /** Returns a string representation of the value with dimension.
     The first significant digits will be at least at position \a minSignPos
@@ -156,12 +157,12 @@ Q_DECLARE_METATYPE(NVBPhysValue);
 class NVBPhysPoint {
   private:
     QPointF p;
-    NVBDimension d;
+    NVBUnits d;
   public:
 		NVBPhysPoint() {;}
-		NVBPhysPoint(double x, double y, NVBDimension dimension);
+		NVBPhysPoint(double x, double y, NVBUnits dimension);
     NVBPhysPoint(NVBPhysValue,NVBPhysValue);
-    NVBPhysPoint(QPointF point, NVBDimension dimension):p(point),d(dimension) {;}
+    NVBPhysPoint(QPointF point, NVBUnits dimension):p(point),d(dimension) {;}
 
     NVBPhysPoint(const NVBPhysPoint & other):p(other.p),d(other.d) {;}
 
@@ -169,9 +170,9 @@ class NVBPhysPoint {
     
     inline NVBPhysValue x() const { return NVBPhysValue(p.x(),d); }
     inline NVBPhysValue y() const { return NVBPhysValue(p.y(),d); }
-    QPointF point(NVBDimension targetDimension) const;
+    QPointF point(NVBUnits targetDimension) const;
 
-    NVBDimension dimension() const { return d; }
+    NVBUnits dimension() const { return d; }
     operator QPointF () { return p; }
     NVBPhysPoint operator+(const QPointF & other) const {
 			return NVBPhysPoint(p + other, d);

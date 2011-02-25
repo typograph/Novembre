@@ -12,8 +12,8 @@ class NVBFuncDataSource : public NVBConstructableDataSource {
 		NVBFuncDataSource();
     virtual ~NVBFuncDataSource();
 
-		void addAxis(QString name, axissize_t resolution, NVBDimension dim, double start = 0, double end = 0);
-		const NVBDataSet * addDataSet(QString name, NVBDimension dim, FillFunc f, QStringList axes, NVBDataSet::Type type = NVBDataSet::Undefined);
+		void addAxis(QString name, axissize_t resolution, NVBUnits dim, double start = 0, double end = 0);
+		const NVBDataSet * addDataSet(QString name, NVBUnits dim, FillFunc f, QStringList axes, NVBDataSet::Type type = NVBDataSet::Undefined);
 
 };
 

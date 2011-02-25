@@ -44,8 +44,8 @@ QString NVBVariant::toString(const QString & separator) const
         return QVariant::toString();
       if (ut == qMetaTypeId<NVBPhysValue>())
         return value<NVBPhysValue>().toString();
-      if (ut == qMetaTypeId<NVBDimension>())
-        return value<NVBDimension>().toStr();
+      if (ut == qMetaTypeId<NVBUnits>())
+        return value<NVBUnits>().toStr();
       if (ut == qMetaTypeId<NVBVariantList>()) {
         QStringList l;
         foreach (NVBVariant subv, value<NVBVariantList>()) {
@@ -60,12 +60,12 @@ QString NVBVariant::toString(const QString & separator) const
     }
 }
 
-NVBDimension NVBVariant::toDimension() const
+NVBUnits NVBVariant::toDimension() const
 {
-  if (userType() == qMetaTypeId<NVBDimension>())
-    return value<NVBDimension>();
+  if (userType() == qMetaTypeId<NVBUnits>())
+    return value<NVBUnits>();
   else
-    return NVBDimension();
+    return NVBUnits();
 }
 
 NVBPhysValue NVBVariant::toPhysValue() const
@@ -103,8 +103,8 @@ bool NVBVariant::operator==(const NVBVariant & v) const
     return QVariant::operator ==(v);
   if (ut == qMetaTypeId<NVBPhysValue>())
       return value<NVBPhysValue>() == v.toPhysValue();
-  if (ut == qMetaTypeId<NVBDimension>())
-      return value<NVBDimension>() == v.toDimension();
+  if (ut == qMetaTypeId<NVBUnits>())
+      return value<NVBUnits>() == v.toDimension();
   if (ut == qMetaTypeId<NVBVariantList>())
       return variantListEqual<NVBVariant>(value<NVBVariantList>(),v.value<NVBVariantList>());
   return false;
@@ -125,7 +125,7 @@ bool NVBVariant::operator<(const NVBVariant & v) const
     return ((QVariant)*this) < v;
   if (ut == qMetaTypeId<NVBPhysValue>())
     return toPhysValue() < v.toPhysValue();
-  if (ut == qMetaTypeId<NVBDimension>())
+  if (ut == qMetaTypeId<NVBUnits>())
     return toDimension().toStr() < v.toDimension().toStr();
   if (ut == qMetaTypeId<NVBVariantList>())
     return variantListLessThan<NVBVariant>(value<NVBVariantList>(),v.value<NVBVariantList>());

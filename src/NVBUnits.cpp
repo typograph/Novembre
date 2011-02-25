@@ -1,5 +1,5 @@
 //
-// C++ Implementation: NVBDimension
+// C++ Implementation: NVBUnits
 //
 // Description: 
 //
@@ -11,9 +11,9 @@
 //
 
 #include <stdlib.h>
-#include "NVBDimension.h"
+#include "NVBUnits.h"
 
-QChar NVBDimension::charFromOrder(int order, int * neworder)
+QChar NVBUnits::charFromOrder(int order, int * neworder)
 {
   int no;
   if (!neworder) neworder = &no;
@@ -72,7 +72,7 @@ QChar NVBDimension::charFromOrder(int order, int * neworder)
     }
 }
 
-double NVBDimension::multFromChar(QChar c)
+double NVBUnits::multFromChar(QChar c)
 {
     switch(c.toAscii()) { // Greek
       case 'Y'    : return 1e+24; // yotta-
@@ -102,7 +102,7 @@ double NVBDimension::multFromChar(QChar c)
       }
 }
 
-NVBDimension::NVBDimension(const QString& s, bool scalable):mult(1)
+NVBUnits::NVBUnits(const QString& s, bool scalable):mult(1)
 {
   base = s.trimmed();
   if (scalable) {
@@ -118,14 +118,14 @@ NVBDimension::NVBDimension(const QString& s, bool scalable):mult(1)
   }
 }
 
-QString NVBDimension::unitFromOrder(int order) const
+QString NVBUnits::unitFromOrder(int order) const
 {
   if (mult == 0) return base;
   order += (int) floor(log10(fabs(mult)));
   return order ? QString("%1%2").arg(charFromOrder(order)).arg(base) : base;
 }
 
-QString NVBDimension::toStr() const
+QString NVBUnits::toStr() const
 {
   if (!dimstr.isNull()) return dimstr;
 
@@ -152,7 +152,7 @@ NVBPhysValue::NVBPhysValue(const QString & s)
   if ( (i = v.indexOf(' ')) > 0) {
     bool ok;
     value = v.left(i).toDouble(&ok);
-    dim = NVBDimension(v.mid(i));
+    dim = NVBUnits(v.mid(i));
     if (ok)
       value *= dim.purify();
     else
@@ -162,7 +162,7 @@ NVBPhysValue::NVBPhysValue(const QString & s)
 		NVBOutputError(QString("Converting string \"%1\" to number and dimension failed").arg(s));
 }
 
-NVBPhysValue::NVBPhysValue(const QString & s, NVBDimension d):dim(d)
+NVBPhysValue::NVBPhysValue(const QString & s, NVBUnits d):dim(d)
 {
   bool ok;
   value = s.toDouble(&ok);
@@ -172,7 +172,7 @@ NVBPhysValue::NVBPhysValue(const QString & s, NVBDimension d):dim(d)
 		NVBOutputError(QString("Converting string \"%1\" to double failed").arg(s));
 }
 
-NVBPhysValue::NVBPhysValue(double f, NVBDimension d):dim(d),value(f)
+NVBPhysValue::NVBPhysValue(double f, NVBUnits d):dim(d),value(f)
 {
   value *= dim.purify();
 }
@@ -249,7 +249,7 @@ int NVBPhysValue::getPosMult(double nvalue, int minSignPos, int maxSignPos)
   return m;
 }
 
-double NVBPhysValue::getValue( NVBDimension dim ) const
+double NVBPhysValue::getValue( NVBUnits dim ) const
 {
   return value / dim.purify();
 }

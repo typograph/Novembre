@@ -6,7 +6,7 @@
 NVBDataSet::NVBDataSet(NVBDataSource * parent,
 						QString name,
 						double * data,
-						NVBDimension dimension,
+						NVBUnits dimension,
 						QVector<axisindex_t> axes,
 						Type tp,
 						NVBColorMap * colormap)
@@ -106,7 +106,7 @@ void NVBConstructableDataSource::addAxisMap(NVBAxisMap * map, axisindex_t axis) 
 	axs[axis].addMapping(map);
 	}
 
-void NVBConstructableDataSource::addDataSet(QString name, double* data, NVBDimension dimension, QVector< axisindex_t > axes, NVBDataSet::Type type) {
+void NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits dimension, QVector< axisindex_t > axes, NVBDataSet::Type type) {
 	if (axes.count() == 0)
 		for(int i=0; i<axes.count(); i++)
 			axes << i;
