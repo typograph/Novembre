@@ -104,6 +104,7 @@ NVB1DIconEngine::NVB1DIconEngine(const NVBDataSet* dataset)
 #endif
 	, dset(0)
 {
+	selector.addAxisByIndex(0);
 	setSource(dataset);
 }
 
@@ -118,6 +119,7 @@ void NVB1DIconEngine::setSource(const NVBDataSet* dataset)
 		disconnect(dset,0,this,0);
 		dset = 0;
 		cache.clear();
+		instance.reset();
 		}
 
 	dset = dataset;
@@ -125,12 +127,14 @@ void NVB1DIconEngine::setSource(const NVBDataSet* dataset)
 	if (dset) {
 		connect(dset, SIGNAL(dataChanged()), SLOT(redrawCache()) );
 		connect(dset, SIGNAL(destroyed()), SLOT(setSource()) );
+		instance = selector.instantiate(dset);
 		}
 }
 
 void NVB1DIconEngine::paint(QPainter* painter, const QRect& rect, QIcon::Mode , QIcon::State )
 {
 	if (!dset) return;
+	if (!instance.isValid()) return;
 
 	if (!cache.contains(rect.size()))
 		cache.insert(rect.size(), drawCacheAt(rect.size()));
@@ -143,42 +147,40 @@ QPixmap NVB1DIconEngine::drawCacheAt(QSize size) {
 	pxm.fill();
 	QPainter p;
 	p.begin(&pxm);
-	
-	QVector<axisindex_t> sliceAxes;
-	for(axisindex_t i = 0; i < dset->nAxes(); i += 1)
-		sliceAxes << i;
-	sliceAxes.remove(taxis);
 
 	// Big question - how many curves do we draw ?
-	// This should, technically, be a user setting
+	// FIXME This should, technically, be a user setting
 	// Let's be crazy and draw everything
 
 	NVBValueScaler<double,int> h(dset->min(),dset->max(),0,size.height()-1);
 
-	// FIXME Should use colors from maps
-	//    painter.setPen(QPen(colorlist.at(i)));
+	axissize_t maxw = instance.matchedAxis(0).length();
 
-	if (size.width() > dset->sizeAt(taxis)) { //
-		NVBValueScaler<axissize_t,int> w(0,dset->sizeAt(taxis)-1,0,size.width()-1);
-		forEachSlice(dset,sliceAxes,QVector<axisindex_t>() << taxis) {
-			for (axissize_t j = dset->sizeAt(taxis)-1; j > 0; j--)
-				p.drawLine(w.scale(j-1),h.scale(SLICE_DATA[j-1]),w.scale(j),h.scale(SLICE_DATA[j]));
+	if ((axissize_t) size.width() > maxw) { // Lines TODO Think about drawing splines
+		NVBValueScaler<axissize_t,int> w(0,maxw-1,0,size.width()-1);
+		forEachSliceAcross(instance) {
+			p.setPen(QPen(instance.associatedColor(SLICE)));
+			for (axissize_t j = maxw-1; j > 0; j--)
+				p.drawLine(w.scale(j-1),h.scale(SLICE.data[j-1]),w.scale(j),h.scale(SLICE.data[j]));
 			}
 		}
-	else if (size.width() < dset->sizeAt(taxis)) { //
-		NVBValueScaler<int,axissize_t> w(0,size.width()-1,0,dset->sizeAt(taxis)-1);
-		forEachSlice(dset,sliceAxes,QVector<axisindex_t>() << taxis) {
+	else if ((axissize_t) size.width() < maxw) { // Draw select points
+		NVBValueScaler<int,axissize_t> w(0,size.width()-1,0,maxw-1);
+		forEachSliceAcross(instance) {
+			p.setPen(QPen(instance.associatedColor(SLICE)));
 			for (axissize_t j = size.width()-1; j > 0; j--)
-				p.drawLine(j-1,h.scale(SLICE_DATA[w.scale(j-1)]),j,h.scale(SLICE_DATA[w.scale(j)]));
+				p.drawLine(j-1,h.scale(SLICE.data[w.scale(j-1)]),j,h.scale(SLICE.data[w.scale(j)]));
 			}
 		}
 	else {
-		forEachSlice(dset,sliceAxes,QVector<axisindex_t>() << taxis) {
-			for (axissize_t j = dset->sizeAt(taxis)-1; j > 0; j--)
-				p.drawLine(j-1,h.scale(SLICE_DATA[j-1]),j,h.scale(SLICE_DATA[j]));
+		forEachSliceAcross(instance) { // draw 1:1
+			p.setPen(QPen(instance.associatedColor(SLICE)));
+			for (axissize_t j = maxw-1; j > 0; j--)
+				p.drawLine(j-1,h.scale(SLICE.data[j-1]),j,h.scale(SLICE.data[j]));
 			}
 		}
 	p.end();
+	
 	return pxm;
 }
 	

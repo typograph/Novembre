@@ -1,55 +1,26 @@
 #ifndef NVBDATASOURCE_H
 #define NVBDATASOURCE_H
 
-#include <QtCore/QVector>
-#include <QtCore/QList>
-#include <QtCore/QString>
-#include "NVBDataGlobals.h"
-#include "NVBUnits.h"
-#include "NVBVariant.h"
-#include "NVBAxesSelector.h"
-
-class NVBAxis;
 class NVBDataSet;
 class NVBAxisMap;
 class NVBColorMap;
 class NVBDataSource;
+class NVBAxisPhysMap;
+
+#include <QtCore/QVector>
+#include <QtCore/QList>
+#include <QtCore/QString>
+#include "NVBAxis.h"
+#include "NVBUnits.h"
+#include "NVBVariant.h"
+#include "NVBAxisSelector.h"
 
 typedef QMap<QString,NVBVariant> NVBDataComments;
-
-class NVBAxis {
-	friend class NVBConstructableDataSource;
-  private:
-    /// Parent data source (to be able to implement functions)
-    NVBDataSource * p;
-    /// Axis name
-    QString n;
-    /// Axis length
-    axissize_t l;
-    /// Relevant mappings
-    QVector< NVBAxisMap * > ms;
-
-	  void addMapping( NVBAxisMap * map ) { ms.append(map); }
-
-	public:
-    NVBAxis(NVBDataSource * parent, QString name, axissize_t length) : p(parent), n(name), l(length) {;}
-    NVBAxis(const NVBAxis & other) : p(other.p), n(other.n), l(other.l), ms(other.ms) {;}
-    // NVBAxis doesn't own anything, neither the parent, nor the maps.
-    ~NVBAxis() {;}
-
-    inline QString name() const { return n; }
-    inline axissize_t length() const { return l; }
-    inline QVector<NVBAxisMap*> maps() const { return ms; }
-
-    inline NVBDataSource * dataSource() { return p; }
-
-};
-
-// Q_DECLARE_METATYPE(NVBAxis)
 
 class NVBDataSet : public QObject {
 	Q_OBJECT
 	friend class NVBConstructableDataSource;
+	friend class NVBSelectorInstance;
 	public:
 		/// Initial type of the data
 		/*!
@@ -97,7 +68,8 @@ class NVBDataSet : public QObject {
 		inline NVBUnits dimension() const { return dim; }
 		inline const double * data() const { return d; }
     QVector<axissize_t> sizes() const;
-    axissize_t sizeAt(int i) const;
+    axissize_t sizeAt(axisindex_t i) const;
+		const NVBAxis & axisAt(axisindex_t i) const ;
     inline axisindex_t nAxes() const { return as.count(); }
 
 		const NVBColorMap * colorMap() const ;
@@ -222,7 +194,7 @@ class NVBConstructableDataSource : public NVBDataSource {
 		/// Axis sizes
 		QList< NVBAxis > axs;
 		/// Axis maps
-		QList< NVBAxisMap * > amaps;
+		QList< NVBAxisMapping > amaps;
 		/// Datasets
 		QList< NVBDataSet * > dsets;
 		/// Color maps
@@ -234,8 +206,8 @@ class NVBConstructableDataSource : public NVBDataSource {
 
 		virtual inline const NVBAxis & axis(axisindex_t i) const { return axs.at(i); }
     virtual NVBAxis & addAxis(QString name, axissize_t length);
-		virtual void addAxisMap(NVBAxisMap * map, axisindex_t axis = -1);
-		virtual void addDataSet(QString name, double * data, NVBDimension dimension, QVector<axisindex_t> axes = QVector<axisindex_t>(), NVBDataSet::Type type = NVBDataSet::Undefined);
+		virtual void addAxisMap(NVBAxisMap * map, QVector<axisindex_t> axes);
+		virtual void addDataSet(QString name, double * data, NVBUnits dimension, QVector<axisindex_t> axes = QVector<axisindex_t>(), NVBDataSet::Type type = NVBDataSet::Undefined);
 		virtual const QList< NVBAxis > & axes() const { return axs; }
 		virtual const QList< NVBDataSet * > & dataSets() const { return dsets; }
 

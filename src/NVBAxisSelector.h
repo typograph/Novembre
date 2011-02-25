@@ -18,36 +18,55 @@
 #define NVBAXISSELECTOR_H
 
 #include <QtCore/QList>
-#include "NVBDimension.h"
+#include <QtGui/QColor>
+#include "NVBUnits.h"
+#include "NVBAxis.h"
+#include "NVBDataGlobals.h"
+
+struct NVBDataSlice;
 
 class NVBDataSet;
+class NVBDataSource;
+struct NVBSelectorAxisPrivate;
+class NVBSelectorInstance;
 
 struct NVBSelectorAxis {
+	NVBSelectorAxisPrivate * p;
+
+	NVBSelectorAxis();
+	NVBSelectorAxis(const NVBSelectorAxis & other);
+	~NVBSelectorAxis();
+	
 	NVBSelectorAxis & byIndex(int index);
 	NVBSelectorAxis & byMinLength(int length);
 
-	NVBSelectorAxis & byDimension(NVBDimension dimension);
-	NVBSelectorAxis & byMapDimension(int dimension);
+	NVBSelectorAxis & byUnits(NVBUnits dimension);
+	NVBSelectorAxis & byMapDimensions(int dimension);
 	NVBSelectorAxis & byTypeId(int typeId);
-	<template class T>
-	inline NVBSelectorAxis & byType<T>() { return byTypeId(qMetaTypeId<T>()); }
+	
+	template <class T>
+	inline NVBSelectorAxis & byType() { return byTypeId(qMetaTypeId<T>()); }
+
+	NVBSelectorAxis & need(int more_axes);
+
+	bool matches(const NVBAxis & axis, bool buddy = false) const;
+	bool needMore(int matched) const;
+	
 };
 
 struct NVBSelectorCase {
 	enum Type { Undefined, AND, OR };
 	int id;
 	Type t;
-	union {
-		QList<NVBSelectorCase> cases;
-		QList<NVBSelectorAxis> axes;
-	};
+	QList<NVBSelectorCase> cases;
+	QList<NVBSelectorAxis> axes;
 
 	NVBSelectorCase(int caseId = 0, Type caseType = Undefined)
 	: id(caseId)
 	, t(caseType)
 	{;}
 
-	NVBSelectorInstance instantiate(const NVBDataSet * dataSet);
+	NVBSelectorCase(const NVBSelectorCase & other) ;
 
 	NVBSelectorCase & addCase(int caseId = 0, Type caseType = Undefined);
 
@@ -55,22 +74,70 @@ struct NVBSelectorCase {
 	inline NVBSelectorAxis & addAxisByIndex(int index) { return addAxis().byIndex(index); }
 	inline NVBSelectorAxis & addAxisByMinLength(int length) { return addAxis().byMinLength(length); }
 
-	inline NVBSelectorAxis & addAxisByDimension(NVBDimension dimension) { return addAxis().byDimension(dimension); }
-	inline NVBSelectorAxis & addAxisByMapDimension(int dimension) { return addAxis().byMapDimension(dimension); }
+	inline NVBSelectorAxis & addAxisByUnits(NVBUnits dimension) { return addAxis().byUnits(dimension); }
+	inline NVBSelectorAxis & addAxisByMapDimensions(int dimension) { return addAxis().byMapDimensions(dimension); }
 	inline NVBSelectorAxis & addAxisByTypeId(int typeId) { return addAxis().byTypeId(typeId); }
-	<template class T>
-	inline NVBSelectorAxis & addAxisByType<T>() { return addAxisByTypeId(qMetaTypeId<T>()); }
 
-	NVBSelectorAxis & addDependentAxis();
+template <class T>
+	inline NVBSelectorAxis & addAxisByType() { return addAxisByTypeId(qMetaTypeId<T>()); }
+
+	bool matches(const NVBDataSet * dataSet);
+
+	NVBSelectorInstance instantiate(const NVBDataSet * dataSet);
+//	NVBSelectorInstance instantiate(const NVBDataSource * dataSource);
+
+	void optimize();
+//	NVBSelectorAxis & addDependentAxis();
 };
+
+typedef NVBSelectorCase NVBAxisSelector;
+typedef NVBSelectorCase NVBAxesProps;
 
 class NVBSelectorInstance {
+	private:
+		bool valid;
+		const NVBSelectorCase * s;
+		const NVBDataSource * dataSource;
+		const NVBDataSet * dataSet;
+		QVector<axisindex_t> matchedaxes;
+		QVector<axisindex_t> otheraxes;
+
+	private:
+		bool matchAxes(axisindex_t start);
+		
+		/// Constructs a new selector instance on the given \a dataset, using predetermined axis sets
+		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSet * dataset, QVector<axisindex_t> mas, QVector<axisindex_t> oas);
+	public:
+		NVBSelectorInstance(const NVBSelectorCase * selector = 0);
+		/// Constructs a new selector instance on the given \a dataset, using \a selector rules
+		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSet * dataset);
+//		/// Constructs a new selector instance on the given \a datasource, using \a selector rules
+//		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSource * datasource);
+
+		/// Sub-instantiates this instance on \a dataset.
+		NVBSelectorInstance matchDataset(const NVBDataSet * dataset);
+		/// Sub-instantiates this instance on dataset number \a i of the datasource.
+		NVBSelectorInstance matchDataset(axisindex_t i);
+
+		inline bool isValid() const { return valid; }
+		inline void reset() { valid = false; }
+
+		QColor associatedColor(const NVBDataSlice & slice);
+
+		inline const NVBDataSet * matchedDataset() const { return dataSet; }
+		inline int matchedCase() const { return s ? s->id : -1; }
+
+		const NVBAxis & matchedAxis(axisindex_t i) ;
+		const NVBAxis & otherAxis(axisindex_t i) ;
+
+		inline QVector<axisindex_t> matchedAxes() { return matchedaxes; }
+		inline QVector<axisindex_t> otherAxes() { return otheraxes; }
 };
 
-class NVBAxisSelector : public NVBSelectorCase {
-	public:
-		NVBAxisSelector():NVBSelectorCase() {;}
-		~NVBAxisSelector() {;}
-};
+#define forEachSliceAcross(instance) \
+	forEachSlice(instance.matchedDataset(), instance.matchedAxes(), instance.otherAxes())
+
+#define forEachSliceAlong(instance) \
+	forEachSlice(instance.matchedDataset(), instance.otherAxes(), instance.matchedAxes())
 
 #endif // NVBAXISSELECTOR_H

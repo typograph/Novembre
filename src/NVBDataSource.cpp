@@ -2,6 +2,7 @@
 #include "NVBMap.h"
 #include "NVBDataTransforms.h"
 #include "NVBColorMaps.h"
+#include "NVBAxisMaps.h"
 
 NVBDataSet::NVBDataSet(NVBDataSource * parent,
 						QString name,
@@ -32,7 +33,7 @@ QVector<axissize_t> NVBDataSet::sizes() const {
 	return asizes;
 	}
 
-axissize_t NVBDataSet::sizeAt(int i) const {
+axissize_t NVBDataSet::sizeAt(axisindex_t i) const {
 	return p->axis(as.at(i)).length();
 	}
 
@@ -89,7 +90,7 @@ NVBConstructableDataSource::NVBConstructableDataSource() : NVBDataSource() {
 }
 
 NVBConstructableDataSource::~NVBConstructableDataSource() {
-	foreach(NVBAxisMap * am, amaps) delete am;
+	foreach(NVBAxisMapping am, amaps) delete am.map;
 	foreach(NVBDataSet * ds, dsets) delete ds;
 	foreach(NVBColorMap * cm, cmaps) delete cm;
 }
@@ -99,11 +100,12 @@ NVBAxis & NVBConstructableDataSource::addAxis(QString name, axissize_t length) {
 	return axs.last();
 	}
 
-void NVBConstructableDataSource::addAxisMap(NVBAxisMap * map, axisindex_t axis) { // Try the same with NVBAxisSelector
-	if (axis == -1)
-		axis = axs.count()-1;
-	amaps.append(map);
-	axs[axis].addMapping(map);
+void NVBConstructableDataSource::addAxisMap(NVBAxisMap * map, QVector<axisindex_t> axes) { // Try the same with NVBAxisSelector
+	if (axes.isEmpty())
+		axes << axs.count()-1;
+	amaps.append(NVBAxisMapping(map,axes));
+	foreach(axisindex_t a, axes)
+		axs[a].addMapping(amaps.last());
 	}
 
 void NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits dimension, QVector< axisindex_t > axes, NVBDataSet::Type type) {
@@ -112,3 +114,15 @@ void NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits
 			axes << i;
 	dsets.append(new NVBDataSet(this,name,data,dimension,axes,type));
 	}
+
+void NVBAxis::addMapping(NVBAxisMapping mapping) {
+	ms.append(mapping);
+	if (mapping.map->mappingType() == NVBAxisMap::Physical)
+		pm = dynamic_cast<NVBAxisPhysMap*>(mapping.map);
+	}
+	
+const NVBAxis& NVBDataSet::axisAt(axisindex_t i) const {
+	return p->axis(i);
+	}
+
+

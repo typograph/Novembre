@@ -67,12 +67,22 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 
 double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes);
 
+struct NVBDataSlice {
+	double * data;
+	QVector<axissize_t> indexes, axisSizes;
+	const QVector<axisindex_t> sliceAxes, targetAxes;
+
+	NVBDataSlice(const QVector<axissize_t> sizes , const QVector<axisindex_t> & sliceaxes, const QVector<axisindex_t> & tgaxes);
+//	NVBDataSlice(const NVBDataSet * dataset, const QVector<axisindex_t> & sliceaxes, const QVector<axisindex_t> & tgaxes);
+	~NVBDataSlice() { if(data) free(data); }
+
+	void calculate(const NVBDataSet * dset) ;
+};
+
 class NVBSliceCounter {
 	const NVBDataSet * dset;
 	bool is_running;
-	double * slice;
-	QVector<axissize_t> indexes, axisSizes;
-	const QVector<axisindex_t> sliceAxes, targetAxes;
+	NVBDataSlice slice;
 
 	public:
 		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliceaxes, const QVector<axisindex_t> & tgaxes = QVector<axisindex_t>());
@@ -84,12 +94,7 @@ class NVBSliceCounter {
 		void stepIndexVector();
 		inline bool counting() { return is_running; }
 
-		inline double * getSlice() const { return slice; }
-
-//		inline bool canContinue() const { return cnt; }
-//		inline void setContinue(bool can) { cnt = can; }
-
-		inline const QVector<axissize_t> & sliceCoords() const { return indexes; }
+		inline const NVBDataSlice & getSlice() const { return slice; }
 };
 
 /**
@@ -103,7 +108,6 @@ class NVBSliceCounter {
 #define forEachSlice(dataset,sliceaxes,tgaxes) \
 	for(NVBSliceCounter _counter(dataset,sliceaxes,tgaxes); _counter.counting(); _counter.stepIndexVector())
 
-#define SLICE_DATA _counter.getSlice()
-#define SLICE_INDEXES _counter.sliceCoords()
+#define SLICE _counter.getSlice()
 
 #endif

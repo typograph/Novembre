@@ -5,6 +5,7 @@
 #include <QtGui/QIcon>
 #include <QtGui/QIconEngine>
 #include "NVBDataGlobals.h"
+#include "NVBAxisSelector.h"
 
 class NVBDataSet;
 class NVBColorInstance;
@@ -46,9 +47,11 @@ class NVB1DIconEngine : public QObject, public QIconEngine {
 	Q_OBJECT
 	private:
 		const NVBDataSet* dset;
-		axisindex_t taxis;
 		QMap<QSize,QPixmap> cache;
 
+		NVBAxisSelector selector;
+		NVBSelectorInstance instance;
+		
 		QPixmap drawCacheAt(QSize size);
 	public:
 		NVB1DIconEngine(const NVBDataSet* dataset);
