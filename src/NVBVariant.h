@@ -13,7 +13,7 @@
 #define NVBVARIANT_H
 
 #include <QtCore/QVariant>
-#include "NVBDimension.h"
+#include "NVBUnits.h"
 
 class NVBVariant;
 Q_DECLARE_METATYPE(NVBVariant);
@@ -63,14 +63,14 @@ public:
 template <typename T>
   NVBVariant ( const T & val):QVariant() { setValue(val); }
 /*template <>
-  NVBVariant ( const NVBDimension & val);
+  NVBVariant ( const NVBUnits & val);
 template <>
   NVBVariant ( const NVBPhysValue & val);*/
   virtual ~NVBVariant () {;}
 
 //   QVariant toVariant () const ;
   QString toString (const QString & separator = QString("")) const ;
-  NVBDimension toDimension () const;
+  NVBUnits toDimension () const;
   NVBPhysValue toPhysValue () const;
   NVBVariantList toList() const;
 
@@ -87,7 +87,7 @@ template <>
   operator QVariant() const { return QVariant::fromValue(*this); }
   operator NVBVariantList() const { return toList(); }
   operator NVBPhysValue() const { return toPhysValue(); }
-  operator NVBDimension() const { return toDimension(); }
+  operator NVBUnits() const { return toDimension(); }
   operator QString() const { return toString(); }
 };
 

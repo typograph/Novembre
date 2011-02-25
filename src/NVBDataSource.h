@@ -5,7 +5,7 @@
 #include <QtCore/QList>
 #include <QtCore/QString>
 #include "NVBDataGlobals.h"
-#include "NVBDimension.h"
+#include "NVBUnits.h"
 #include "NVBVariant.h"
 #include "NVBAxesSelector.h"
 
@@ -69,7 +69,7 @@ class NVBDataSet : public QObject {
     /// Value array
     double * d;
 		/// Value dimension
-		NVBDimension dim;
+		NVBUnits dim;
 		/// Axis indexes
 		QVector<axisindex_t> as;
 		/// Colors
@@ -85,7 +85,7 @@ class NVBDataSet : public QObject {
 		NVBDataSet(NVBDataSource * parent,
 							 QString name,
 							 double * data,
-							 NVBDimension dimension,
+							 NVBUnits dimension,
 							 QVector<axisindex_t> axes,
 							 Type type = Undefined,
 							 NVBColorMap * colormap = 0);
@@ -94,7 +94,7 @@ class NVBDataSet : public QObject {
     ~NVBDataSet();
 		
     inline QString name() const { return n; }
-		inline NVBDimension dimension() const { return dim; }
+		inline NVBUnits dimension() const { return dim; }
 		inline const double * data() const { return d; }
     QVector<axissize_t> sizes() const;
     axissize_t sizeAt(int i) const;

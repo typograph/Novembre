@@ -28,7 +28,7 @@ SOURCES += \
 
 HEADERS += \
 					 src/NVBScaler.h \
-           src/NVBDimension.h \
+           src/NVBUnits.h \
            src/NVBVariant.h \
 					 src/NVBMap.h \
 					 src/NVBDataCore.h \
@@ -47,7 +47,7 @@ HEADERS += \
            src/NVBFile.h \
 
 SOURCES += \
-           src/NVBDimension.cpp \
+           src/NVBUnits.cpp \
            src/NVBVariant.cpp \
 					 src/NVBMap.cpp \
 					 src/NVBDataCore.cpp \

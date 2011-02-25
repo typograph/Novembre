@@ -1,5 +1,5 @@
 #include "NVBFuncDataSource.h"
-#include "NVBDimension.h"
+#include "NVBUnits.h"
 #include "NVBAxisMaps.h"
 
 NVBFuncDataSource::NVBFuncDataSource() : NVBConstructableDataSource()
@@ -12,15 +12,15 @@ NVBFuncDataSource::~NVBFuncDataSource()
 
 }
 
-void NVBFuncDataSource::addAxis(QString name, axissize_t resolution, NVBDimension dim, double start, double end)
+void NVBFuncDataSource::addAxis(QString name, axissize_t resolution, NVBUnits dim, double start, double end)
 {
 	NVBConstructableDataSource::addAxis(name,resolution);
 	if (start == end) end = resolution;
-	NVBConstructableDataSource::addAxisMap(new NVBAxisPhysMap(start,(end-start)/(resolution-1),dim));
+	NVBConstructableDataSource::addAxisMap( new NVBAxisPhysMap(start,(end-start)/(resolution-1),dim), QVector<axisindex_t>() << (nAxes()-1));
 	anameix.insert(name,axs.count()-1);
 }
 
-const NVBDataSet * NVBFuncDataSource::addDataSet(QString name, NVBDimension dim, FillFunc f, QStringList axes, NVBDataSet::Type type )
+const NVBDataSet * NVBFuncDataSource::addDataSet(QString name, NVBUnits dim, FillFunc f, QStringList axes, NVBDataSet::Type type )
 {
 	QVector<axisindex_t> ixs;
 	QVector<axissize_t> szs;
