@@ -18,28 +18,20 @@
 #include "NVBMap.h"
 #include "NVBAxisMaps.h"
 #include "NVBDataSource.h"
+#include "NVBDataCore.h"
 
 // NVBSelectorAxis
 
 struct NVBAxisProperty {
-	enum NVBAxisPropertyType {
-		Invalid = 0,
-		Index,
-		MinLength,
-		Units,
-		MapDimensions,
-		TypeID
-	};
-
-	NVBAxisPropertyType type;
+	NVBSelectorAxis::NVBAxisPropertyType type;
 	int i;
 	NVBUnits u;
 
-	NVBAxisProperty(NVBAxisPropertyType t, int ii)
+	NVBAxisProperty(NVBSelectorAxis::NVBAxisPropertyType t, int ii)
 		: type(t)
 		, i(ii)
 		{;}
-	NVBAxisProperty(NVBAxisPropertyType t, NVBUnits uu)
+	NVBAxisProperty(NVBSelectorAxis::NVBAxisPropertyType t, NVBUnits uu)
 		: type(t)
 		, u(uu)
 		{;}
@@ -48,6 +40,7 @@ struct NVBAxisProperty {
 struct NVBSelectorAxisPrivate {
 	int refCount;
 	int mult;
+	NVBSelectorAxis::NVBAxisPropertyType multType;
 	QList<NVBAxisProperty> axisProperties;
 
 	NVBSelectorAxisPrivate() : refCount(0), mult (1) {;}
@@ -75,85 +68,178 @@ bool NVBSelectorAxis::needMore(int matched) const {
 
 NVBSelectorAxis& NVBSelectorAxis::byIndex(int index)
 	{
-		if (p) p->axisProperties.prepend(NVBAxisProperty(NVBAxisProperty::Index, index));
+		if (p) p->axisProperties.prepend(NVBAxisProperty(NVBSelectorAxis::Index, index));
 		return *this;
 	}
 
 NVBSelectorAxis& NVBSelectorAxis::byMapDimensions(int dimension)
 	{
-		if (p) p->axisProperties.append(NVBAxisProperty(NVBAxisProperty::MapDimensions, dimension));
+		if (p) p->axisProperties.append(NVBAxisProperty(NVBSelectorAxis::MapDimensions, dimension));
 		return *this;
 	}
 
 NVBSelectorAxis& NVBSelectorAxis::byMinLength(int length)
 	{
-		if (p) p->axisProperties.append(NVBAxisProperty(NVBAxisProperty::MinLength, length));
+		if (p) p->axisProperties.append(NVBAxisProperty(NVBSelectorAxis::MinLength, length));
 		return *this;
 	}
 
 NVBSelectorAxis& NVBSelectorAxis::byTypeId(int typeId)
 	{
-		if (p) p->axisProperties.append(NVBAxisProperty(NVBAxisProperty::TypeID, typeId));
+		if (p) p->axisProperties.append(NVBAxisProperty(NVBSelectorAxis::TypeID, typeId));
 		return *this;
 	}
 
 NVBSelectorAxis& NVBSelectorAxis::byUnits(NVBUnits dimension)
 	{
-		if (p) p->axisProperties.append(NVBAxisProperty(NVBAxisProperty::Units, dimension));
+		if (p) p->axisProperties.append(NVBAxisProperty(NVBSelectorAxis::Units, dimension));
 		return *this;
 	}
 
-NVBSelectorAxis& NVBSelectorAxis::need(int more_axes)
+NVBSelectorAxis& NVBSelectorAxis::need(int more_axes, NVBAxisPropertyType type)
 	{
-		if (p) p->mult = more_axes;
+		if (p) {
+			p->mult = more_axes;
+			if (type == Index) {
+				NVBOutputError("Multiple axes can't match on the same index. Reverting to default.");
+				p->multType = Index;
+				}
+			else
+				p->multType = type;
+			}
 		return *this;
 	}
 
-bool NVBSelectorAxis::matches(const NVBAxis & axis, bool buddy) const
+bool NVBSelectorAxis::matches(const NVBAxis & axis, const NVBAxis & buddy) const
 	{
-		NVBOutputDMsg(QString("Trying to match axis \"%1\"").arg(axis.name()));
+		NVBOutputDMsg(QString("Trying to match axis %1").arg(axis.name()));
 		if (!p) return true;
-		bool b; // Cannot define b within switch-case
-		foreach(NVBAxisProperty ap, p->axisProperties) {
-			switch(ap.type) {
-				case NVBAxisProperty::Index :
-					NVBOutputDMsg(QString("Trying to match by index %1").arg(ap.i));
-					if (!buddy && axis.dataSource()->axis(ap.i) != axis) return false;
-					break;
-				case NVBAxisProperty::MinLength :
-					NVBOutputDMsg(QString("Trying to match by min. length %1").arg(ap.i));
-					if (axis.length() < (axissize_t) ap.i) return false;
-					break;
-				case NVBAxisProperty::MapDimensions :
-					NVBOutputDMsg(QString("Trying to match by %1D map").arg(ap.i));
-					b = false;
+		NVBOutputDMsg(QString("Buddy axis %1").arg(buddy.isValid() ? buddy.name() : "not specified"));
+		if (!buddy.isValid() || p->multType == Invalid || p->mult == 1) {
+			if (p->axisProperties.isEmpty()) {
+				NVBOutputDMsg("Empty rules matched");
+				return true;
+				}
+			foreach(NVBAxisProperty ap, p->axisProperties) {
+				switch(ap.type) {
+					case Index :
+						NVBOutputDMsg(QString("Trying to match by index %1").arg(ap.i));
+						if (!buddy.isValid() && axis.dataSource()->axis(ap.i) != axis) return false;
+						break;
+					case MinLength :
+						NVBOutputDMsg(QString("Trying to match by min. length %1").arg(ap.i));
+						if (axis.length() < (axissize_t) ap.i) return false;
+						break;
+					case MapDimensions : {
+						NVBOutputDMsg(QString("Trying to match by %1D map").arg(ap.i));
+						bool b = false;
+						foreach(NVBAxisMapping m, axis.maps())
+							b = b || (m.map->dimension() == ap.i);
+						if (!b) return false;
+						break;
+						}
+					case TypeID : {
+						NVBOutputDMsg(QString("Trying to match by type %1").arg(QMetaType::typeName(ap.i)));
+						bool b = false;
+						foreach(NVBAxisMapping m, axis.maps())
+							b = b || (m.map->valType() == ap.i);
+						if (!b) return false;
+						break;
+						}
+					case Units :
+						NVBOutputDMsg(QString("Trying to match by units [%1]").arg(ap.u.baseUnit()));
+						NVBOutputDMsg(axis.physMap() ? QString("Axis is in [%1]").arg(axis.physMap()->units().baseUnit()) : QString("No units available"));
+						if (!axis.physMap() || !axis.physMap()->units().isComparableWith(ap.u)) return false;
+						break;
+					default:
+						return false;
+					};
+				};
+			return true;
+			}
+		else {
+			if (buddy.dataSource() != axis.dataSource()) return false;
+			switch(p->multType) {
+				case Index :
+					NVBOutputError("Two axes can't match by index");
+					return false;
+				case MinLength :
+					NVBOutputDMsg(QString("Trying to match buddy by min. length %1").arg(buddy.length()));
+					return (buddy.length() > axis.length());
+				case MapDimensions : {
+					NVBOutputDMsg(QString("Trying to match buddy by map"));
+					// This case is interpreted as : we look for a map spanning both axes with map dimension as specified.
+					axisindex_t i = buddy.parentIndex(); // we are looking in this axis's maps for the one also on buddy
+					axisindex_t md = 0;
+					foreach(NVBAxisProperty q, p->axisProperties) {
+						if (q.type == MapDimensions) {
+							md = (axisindex_t) q.i;
+							break;
+							}
+						}
+					bool b = false;
 					foreach(NVBAxisMapping m, axis.maps())
-						 b = b || (m.map->dimension() == ap.i);
-					if (!b) return false;
-					break;
-				case NVBAxisProperty::TypeID :
-					NVBOutputDMsg(QString("Trying to match by type %1").arg(QMetaType::typeName(ap.i)));
-					b = false;
+						b = b || ((!md || m.map->dimension() == md) && m.axes.contains(i) && m.axes.count() >= p->mult);
+					return b;
+					// The last clause is there to guard agains a case where there are two maps with correct
+					// dimensions, we need three axes, but one of the maps has the first and the second,
+					// and the other the first and the third.
+					// This method might still fail if we need three axes, and the two matching maps are on 1,2,4 and 1,3,5
+					// The matching will select axes 1,2 and 3. However, this is quite unlikely to happen.
+					// FIXME This case should be documented, however.
+					// One possible workaround is to change the matching procedure.
+					}
+				case TypeID : {
+					NVBOutputDMsg(QString("Trying to match buddy by type"));
+					// This case is interpreted as : we look for a map spanning both axes with map type as specified.
+					axisindex_t i = buddy.parentIndex(); // we are looking in this axis's maps for the one also on buddy
+					int mt = QMetaType::Void;
+					foreach(NVBAxisProperty q, p->axisProperties) {
+						if (q.type == TypeID) {
+							mt = q.i;
+							break;
+							}
+						}
+					bool b = false;
 					foreach(NVBAxisMapping m, axis.maps())
-						 b = b || (m.map->valType() == ap.i);
-					if (!b) return false;
-					break;
-				case NVBAxisProperty::Units :
-					NVBOutputDMsg(QString("Trying to match by units %1").arg(ap.u.baseUnit()));
-					NVBOutputDMsg(axis.physMap() ? QString("Axis is in %1").arg(axis.physMap()->units().baseUnit()) : QString("No units available"));
-					if (!axis.physMap() || !axis.physMap()->units().isComparableWith(ap.u)) return false;
-					break;
+						b = b || ((!mt || m.map->valType() == mt) && m.axes.contains(i) && m.axes.count() >= p->mult);
+					return b;
+					}
+				case Units : {
+					NVBOutputDMsg(QString("Trying to match buddy by units [%1]").arg(buddy.physMap() ? buddy.physMap()->units().baseUnit() : "NULL"));
+					// This case is interpreted as follows :
+					// If the rules include units, we look for a map spanning both axes with map units as specified.
+					// If the rules don't include units, we look for a map with same units.
+					bool inc = false;
+					foreach(NVBAxisProperty q, p->axisProperties) {
+						if (q.type == Units) {
+							inc = true;
+							break;
+							}
+						}
+					if (inc)
+						return buddy.maps().at(
+							buddy.maps().indexOf(
+								NVBAxisMapping(
+									buddy.physMap(),
+									QVector<axisindex_t>()
+							))).axes.contains(axis.parentIndex());
+					else {
+						if (buddy.physMap() && axis.physMap())
+							return buddy.physMap()->units().isComparableWith(axis.physMap()->units());
+						return !buddy.physMap() && !axis.physMap();
+						}
+					}
 				default:
 					return false;
-				};
-			};
-		return true;
-	}
+				};			
+			}
+}
 
 // NVBSelectorCase
 
 
-NVBSelectorCase::NVBSelectorCase(const NVBSelectorCase& other) {
+NVBSelectorCase::NVBSelectorCase(const NVBSelectorCase & other) {
 	id = other.id;
 	t = other.t;
 	switch (other.t) {
@@ -259,7 +345,7 @@ void NVBSelectorCase::optimize() {
 						in -= 1;
 						i -= 1;
 					}
-					else if (axes.at(i).p->axisProperties.first().type == NVBAxisProperty::Index && !axes.at(i).needMore(1)) {
+					else if (axes.at(i).p->axisProperties.first().type == NVBSelectorAxis::Index && !axes.at(i).needMore(1)) {
 						if (i != i0) axes.swap(i,i0);
 						i0 += 1;
 					}
@@ -275,24 +361,6 @@ void NVBSelectorCase::optimize() {
 			NVBOutputError("Unrecognized selector type");
 			break;
 		}
-	}
-
-QColor NVBSelectorInstance::associatedColor(const NVBDataSlice& slice) {
-	Q_UNUSED(slice)
-/* test code layout for colors
-
-	getMapsByType<QColor>(sliceAxes,::Inside)
-
-	if 0 :
-		getMapsByType<QColor>(sliceAxes,::Outside)
-	if 1:
-		mapValueAt(sliceindex)
-	if >1:
-		select one that has less axes outside / spans more axes /is the first one
-
-*/
-
-	return Qt::black;
 	}
 	
 /**
@@ -320,6 +388,8 @@ NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const 
 		dataSet = ds;
 		dataSource = ds->dataSource();
 
+		NVBOutputDMsg("Matching dataset " + ds->name());
+		
 		// Fill in otheraxes and check first axes that use direct indexes
 		for(axisindex_t i = 0; i < ds->nAxes(); i += 1)
 			otheraxes << i;
@@ -335,8 +405,8 @@ NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const 
 		while(i < selector->axes.count()) {
 			NVBOutputDMsg(QString("Checking rule %1 for simplicity").arg(i));
 			const NVBSelectorAxis a = s->axes.at(i);
-			if (!a.p || a.p->axisProperties.isEmpty() || a.p->axisProperties.first().type != NVBAxisProperty::Index || a.needMore(1)) {
-				NVBOutputDMsg(QString("Rule %1 is not simple: %2").arg(i).arg(a.p ? (a.p->axisProperties.isEmpty() ? "Empty rule data" : (a.p->axisProperties.first().type == NVBAxisProperty::Index ? "More than one axis needed" : "Rule is not an index rule") ) : "NULL rule data"));
+			if (!a.p || a.p->axisProperties.isEmpty() || a.p->axisProperties.first().type != NVBSelectorAxis::Index || a.needMore(1)) {
+				NVBOutputDMsg(QString("Rule %1 is not simple: %2").arg(i).arg(a.p ? (a.p->axisProperties.isEmpty() ? "Empty rule data" : (a.p->axisProperties.first().type == NVBSelectorAxis::Index ? "More than one axis needed" : "Rule is not an index rule") ) : "NULL rule data"));
 				break;
 				}
 			axisindex_t k = (axisindex_t)a.p->axisProperties.first().i;
@@ -413,14 +483,19 @@ bool NVBSelectorInstance::matchAxes(axisindex_t start)
 
 		foreach(axisindex_t i, otheraxes) {
 			NVBOutputDMsg(QString("Trying to match axis %1 against rule %2").arg(i).arg(start));
-			if (s->axes.at(start).matches(dataSet->axisAt(i), matched)) {
+			if (s->axes.at(start).matches(dataSet->axisAt(i), matched ? dataSet->axisAt(matchedaxes.last()) : NVBAxis())) {
 				matchedaxes << i;
 				otheraxes.remove(otheraxes.indexOf(i));
 				matched += 1;
-				if (!s->axes.at(start).needMore(matched) && matchAxes(start+1)) return true;
-				matched -= 1;
-				otheraxes.append(i);
-				matchedaxes.remove(matchedaxes.count()-1);
+				if (!s->axes.at(start).needMore(matched)) {
+					if (matchAxes(start+1))
+						return true;
+					else {
+						matched -= 1;
+						otheraxes.append(i);
+						matchedaxes.remove(matchedaxes.count()-1);
+						}
+					}
 				}
 			else
 				NVBOutputDMsg(QString("Match axis %1 against rule %2 failed").arg(i).arg(start));

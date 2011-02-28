@@ -39,7 +39,7 @@ class NVBAxisMap {
     virtual NVBAxisMap::MapType mapType() const { return General; }
     virtual NVBAxisMap::ValueType mappingType() const = 0;
 
-		virtual NVBVariant value(QList<int> indexes) = 0;
+		virtual NVBVariant value(QVector<axissize_t> indexes) = 0;
 };
 
 class NVBColorMap;

@@ -23,9 +23,10 @@ class NVB2DIconEngine : public QObject, public QIconEngine {
 	Q_OBJECT
 	protected:
 		const NVBDataSet * dset;
-		NVBColorInstance * i;
+		NVBColorInstance * ci;
 		QList<QPixmap> cache;
-
+		NVBAxisSelector selector;
+		NVBSelectorInstance si;
 	public :
 		
 		NVB2DIconEngine(const NVBDataSet* dataset);
