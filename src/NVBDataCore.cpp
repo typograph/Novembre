@@ -2,6 +2,7 @@
 
 #include "NVBDataCore.h"
 #include "NVBDataSource.h"
+#include "NVBMap.h"
 
 // More laconic version would be this:
 // void sliceNArray(const double * const data, axisindex_t n, double * target, axisindex_t m, const axissize_t * sizes, const axissize_t * slice, const axisindex_t * newaxes = 0);
@@ -358,6 +359,8 @@ QVector<axissize_t> subvector(QVector<axissize_t> sizes, QVector<axisindex_t> sl
 double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> sliceixs, QVector<axisindex_t> tgaxes) {
 //	axissize_t szd = prod(n,sizes);
 // 	axissize_t szt = subprod(sizes,n-m,targetaxes);
+	if (!data) return 0;
+
 	QVector<axissize_t> dsizes = data->sizes();
 
 	if (tgaxes.isEmpty())
@@ -382,7 +385,7 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes) : dset(dataset)
 	, is_running(true)
 	, slice(
-			dataset ? dataset->sizes() : QVector<axissize_t>(sliceaxes.count(),0),
+			dataset,
 			sliceaxes,
 			dataset ? (tgaxes.isEmpty() ? targetaxes(dataset->nAxes(), sliceaxes) : tgaxes) : QVector<axisindex_t>())
 	{
@@ -390,7 +393,7 @@ NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisi
 		NVBOutputError("NULL dataset");
 		throw;
 		}
-	slice.calculate(dset);
+	slice.calculate();
 	}
 
 NVBSliceCounter::~NVBSliceCounter() {
@@ -408,20 +411,81 @@ bool NVBSliceCounter::stepIndexVector(QVector< axissize_t >& ixs, const QVector<
 	}
 
 void  NVBSliceCounter::stepIndexVector() {
-	if ( (is_running = stepIndexVector(slice.indexes, slice.axisSizes)) )
-		slice.calculate(dset);
+	if ( (is_running = stepIndexVector(slice.indexes, slice.sizes)) )
+		slice.calculate();
 	}
 
-NVBDataSlice::NVBDataSlice(QVector<axissize_t> axissizes, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes) : data(0)
-		, indexes((axissize_t)sliceaxes.count(),0)
-		, axisSizes(subvector(axissizes,sliceaxes))
-		, sliceAxes(sliceaxes)
-		, targetAxes(tgaxes)
-		{;}
+/**
+	* \fn NVBDataSlice::NVBDataSlice
+	*
+	* \param sizes
+	*/
+NVBDataSlice::NVBDataSlice(const NVBDataSet * ds, const QVector< axisindex_t >& sliced, const QVector< axisindex_t >& kept)
+: dataset(ds)
+, data(0)
+, slicedAxes(sliced)
+, sliceAxes(kept)
+, indexes((axissize_t)sliced.count(),0)
+	{
+	if (!ds) NVBOutputError("Null dataset");
+	sizes = subvector(ds->sizes(),sliced);
+	}
 
-void NVBDataSlice::calculate(const NVBDataSet* dset) {
+void NVBDataSlice::calculate() {
 	if (data) free(data);
-	data = sliceDataSet(dset, sliceAxes, indexes, targetAxes);
+	data = sliceDataSet(dataset, slicedAxes, indexes, sliceAxes);
 	}
 
+void operator+=(QColor a, const QColor & b) {
+	if (!a.isValid())
+		a = b;
+	else {
+		a.setBlueF((a.blueF() + b.blueF())/2);
+		a.setGreenF((a.greenF() + b.greenF())/2);
+		a.setRedF((a.redF() + b.redF())/2);
+		}
+}
+
+QColor NVBDataSlice::associatedColor() const {
+	if (!dataset) return Qt::black;
+
+	QList<NVBAxisMapping> mappings;
+
+	foreach(axisindex_t i, slicedAxes)
+		foreach(NVBAxisMapping m, dataset->axisAt(i).maps())
+			if ( m.map->mappingType() == NVBAxisMap::Color && ! mappings.contains(m))
+				mappings << m;
+
+	if (mappings.isEmpty()) return Qt::black;
+
+	QColor c;
+	QVector<axissize_t> ixs = parentIndexes();
+	foreach(NVBAxisMapping m, mappings)
+		c += (m.map->value(subvector(ixs,m.axes))).value<QColor>();
+
+	return c;
+	
+	}
+
+QVector<axissize_t> NVBDataSlice::parentIndexes() const {
+	QVector<axissize_t> r(dataset->dataSource()->nAxes(),0);
+	for (axisindex_t i = 0; i < dataset->dataSource()->nAxes(); i +=1 ) {
+		axisindex_t k = dataset->indexAtParent(i);
+		if (k>=0) r[i] = indexes.at(k);
+		}
+	return r;
+}
+
+NVBSliceSingle::NVBSliceSingle(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes)
+: slice(0)
+{
+	if (!dataset) 
+		NVBOutputError("NULL dataset");
+	else {
+		slice = new NVBDataSlice(dataset, sliceaxes, dataset ? (tgaxes.isEmpty() ? targetaxes(dataset->nAxes(), sliceaxes) : tgaxes) : QVector<axisindex_t>());
+		slice->calculate();
+		}
+}
+
+NVBSliceSingle::~NVBSliceSingle() { killSlice(); }
 

@@ -2,6 +2,7 @@
 #define NVBDATACORE_H
 
 #include <QtCore/QVector>
+#include <QtGui/QColor>
 #include "NVBDataGlobals.h"
 #include "NVBLogger.h"
 
@@ -68,15 +69,27 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes);
 
 struct NVBDataSlice {
+	/// The dataset that is sliced
+	const NVBDataSet * dataset;
+	/// Data block of the current slice
 	double * data;
-	QVector<axissize_t> indexes, axisSizes;
-	const QVector<axisindex_t> sliceAxes, targetAxes;
+	/// Indices of sliced axes of \a dataset
+	const QVector<axisindex_t> slicedAxes;
+	/// Indices of remaining axes of \a dataset
+	const QVector<axisindex_t> sliceAxes;
+	/// Indexes of the slice on \a slicedAxes
+	QVector<axissize_t> indexes;
+	/// Sizes of \a slicedAxes
+	QVector<axissize_t> sizes;
 
-	NVBDataSlice(const QVector<axissize_t> sizes , const QVector<axisindex_t> & sliceaxes, const QVector<axisindex_t> & tgaxes);
-//	NVBDataSlice(const NVBDataSet * dataset, const QVector<axisindex_t> & sliceaxes, const QVector<axisindex_t> & tgaxes);
+	NVBDataSlice(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept);
 	~NVBDataSlice() { if(data) free(data); }
 
-	void calculate(const NVBDataSet * dset) ;
+	/// Slices the dataset at \a indexes
+	void calculate() ;
+
+	QColor associatedColor() const;
+	QVector<axissize_t> parentIndexes() const;
 };
 
 class NVBSliceCounter {
@@ -85,7 +98,7 @@ class NVBSliceCounter {
 	NVBDataSlice slice;
 
 	public:
-		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliceaxes, const QVector<axisindex_t> & tgaxes = QVector<axisindex_t>());
+		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept = QVector<axisindex_t>());
 
 		~NVBSliceCounter() ;
 
@@ -97,17 +110,40 @@ class NVBSliceCounter {
 		inline const NVBDataSlice & getSlice() const { return slice; }
 };
 
+class NVBSliceSingle {
+	NVBDataSlice * slice;
+
+	public:
+		NVBSliceSingle(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept = QVector<axisindex_t>()) ;
+
+		~NVBSliceSingle();
+
+		inline bool hasSlice() { return slice != 0; }
+		inline void killSlice() {if (slice) { delete(slice); slice = 0;} }
+		inline const NVBDataSlice & getSlice() const { return *slice; }
+};
+
 /**
  *
- * @def forEachSlice(variable,dataset,sliceaxes,targetaxes)
+ * @def forEachSlice(dataset,slicedaxes,keptaxes)
  *
- * Runs a cycle on all slices in dataset on sliceaxes. Variable \a variable
- * of type double * is available inside the cycle.
+ * Runs a cycle on all slices in dataset on slicedaxes. Variable \a SLICE
+ * of type NVBDataSlice is available inside the cycle.
  */
 
-#define forEachSlice(dataset,sliceaxes,tgaxes) \
-	for(NVBSliceCounter _counter(dataset,sliceaxes,tgaxes); _counter.counting(); _counter.stepIndexVector())
+#define forEachSlice(dataset,sliced,kept) \
+	for(NVBSliceCounter _counter(dataset,sliced,kept); _counter.counting(); _counter.stepIndexVector())
 
+/**
+ *
+ * @def forSingleSlice(dataset,slicedaxes,keptaxes)
+ *
+ * Calculates a single slice in dataset on slicedaxes. Variable \a SLICE
+ * of type NVBDataSlice is available inside the cycle.
+ */
+#define forSingleSlice(dataset,sliced,kept) \
+	for(NVBSliceSingle _counter(dataset,sliced,kept); _counter.hasSlice(); _counter.killSlice())
+		
 #define SLICE _counter.getSlice()
 
 #endif

@@ -69,6 +69,8 @@ class NVBDataSet : public QObject {
 		inline const double * data() const { return d; }
     QVector<axissize_t> sizes() const;
     axissize_t sizeAt(axisindex_t i) const;
+		inline axisindex_t parentIndex(axisindex_t i) const { return as.at(i); }
+		inline axisindex_t indexAtParent(axisindex_t i) const { return as.indexOf(i); }
 		const NVBAxis & axisAt(axisindex_t i) const ;
     inline axisindex_t nAxes() const { return as.count(); }
 

@@ -23,8 +23,6 @@
 #include "NVBAxis.h"
 #include "NVBDataGlobals.h"
 
-struct NVBDataSlice;
-
 class NVBDataSet;
 class NVBDataSource;
 struct NVBSelectorAxisPrivate;
@@ -32,6 +30,15 @@ class NVBSelectorInstance;
 
 struct NVBSelectorAxis {
 	NVBSelectorAxisPrivate * p;
+
+	enum NVBAxisPropertyType {
+		Invalid = 0,
+		Index,
+		MinLength,
+		Units,
+		MapDimensions,
+		TypeID
+	};
 
 	NVBSelectorAxis();
 	NVBSelectorAxis(const NVBSelectorAxis & other);
@@ -47,9 +54,9 @@ struct NVBSelectorAxis {
 	template <class T>
 	inline NVBSelectorAxis & byType() { return byTypeId(qMetaTypeId<T>()); }
 
-	NVBSelectorAxis & need(int more_axes);
+	NVBSelectorAxis & need(int more_axes, NVBAxisPropertyType t = Invalid);
 
-	bool matches(const NVBAxis & axis, bool buddy = false) const;
+	bool matches(const NVBAxis & axis, const NVBAxis & buddy = NVBAxis() ) const;
 	bool needMore(int matched) const;
 	
 };
@@ -122,8 +129,6 @@ class NVBSelectorInstance {
 		inline bool isValid() const { return valid; }
 		inline void reset() { valid = false; }
 
-		QColor associatedColor(const NVBDataSlice & slice);
-
 		inline const NVBDataSet * matchedDataset() const { return dataSet; }
 		inline int matchedCase() const { return s ? s->id : -1; }
 
@@ -139,5 +144,11 @@ class NVBSelectorInstance {
 
 #define forEachSliceAlong(instance) \
 	forEachSlice(instance.matchedDataset(), instance.otherAxes(), instance.matchedAxes())
+
+#define forSingleSliceAcross(instance) \
+	forSingleSlice(instance.matchedDataset(), instance.matchedAxes(), instance.otherAxes())
+
+#define forSingleSliceAlong(instance) \
+	forSingleSlice(instance.matchedDataset(), instance.otherAxes(), instance.matchedAxes())
 
 #endif // NVBAXISSELECTOR_H

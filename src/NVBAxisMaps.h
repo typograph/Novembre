@@ -20,13 +20,13 @@ class NVBAxisTMap : public NVBAxisMap {
     virtual inline int dimension() const { return 1; }
     virtual inline int valType() const { return qMetaTypeId<T>(); }
 
-    T value(int i) const {
-      if (i>=0 && i<vs.size())
+    T value(axissize_t i) const {
+      if (i < (axissize_t) vs.size())
 				return vs.at(i);
       return T();
       }
 
-		NVBVariant value(QList<int> indexes) {
+		NVBVariant value(QVector<axissize_t> indexes) {
 			return NVBVariant::fromValue<T>(value(indexes.first()));
 			}
 };
@@ -58,7 +58,7 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 
     inline NVBUnits units() const { return dim; }
 
-    NVBPhysValue value(int i) const {
+    NVBPhysValue value(axissize_t i) const {
       if (t == NVBAxisMap::Linear)
 				return NVBPhysValue(o + d*i,dim);
       return NVBAxisTMap<NVBPhysValue>::value(i);
@@ -91,11 +91,11 @@ class NVBAxes2DGridMap : public NVBAxisMap {
     inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
     virtual inline int dimension() const { return 2; }
 
-    inline NVBPhysPoint value(int i, int j) const {
+    inline NVBPhysPoint value(axissize_t i, axissize_t j) const {
       return o + t.map(QPointF(i,j));
       }
 
-		NVBVariant value(QList<int> indexes) {
+		NVBVariant value(QVector<axissize_t> indexes) {
 			return NVBVariant::fromValue<NVBPhysPoint>(value(indexes.first(),indexes.at(1)));
 			}
 

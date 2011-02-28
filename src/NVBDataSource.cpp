@@ -122,7 +122,11 @@ void NVBAxis::addMapping(NVBAxisMapping mapping) {
 	}
 	
 const NVBAxis& NVBDataSet::axisAt(axisindex_t i) const {
-	return p->axis(i);
+	return p->axis(as.at(i));
 	}
 
-
+axisindex_t NVBAxis::parentIndex() const
+ {
+	if (!p) return -1;
+	return p->axes().indexOf(*this);
+}

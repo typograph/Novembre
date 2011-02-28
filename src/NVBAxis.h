@@ -13,6 +13,8 @@ struct NVBAxisMapping {
 	QVector<axisindex_t> axes;
 	NVBAxisMapping() : map(0) {;}
 	NVBAxisMapping(NVBAxisMap * m, QVector<axisindex_t> a) : map(m), axes(a) {;}
+	bool operator==(const NVBAxisMapping & other) { return map == other.map; }
+	bool operator==(const NVBAxisMap * other_map) { return map == other_map; }
 };
 
 class NVBAxis {
@@ -32,6 +34,7 @@ class NVBAxis {
 	  void addMapping( NVBAxisMapping mapping ) ;
 
 	public:
+		NVBAxis():p(0) {;}
     NVBAxis(NVBDataSource * parent, QString name, axissize_t length) : p(parent), n(name), l(length), pm(0) {;}
     NVBAxis(const NVBAxis & other) : p(other.p), n(other.n), l(other.l), ms(other.ms), pm(other.pm) {;}
     // NVBAxis doesn't own anything, neither the parent, nor the maps.
@@ -52,6 +55,9 @@ class NVBAxis {
 		inline bool operator!=(const NVBAxis & other) const {
 			return !operator==(other);
 			}
+
+		inline bool isValid() const { return p!=0; }
+		axisindex_t parentIndex() const;
 };
 
 // Q_DECLARE_METATYPE(NVBAxis)
