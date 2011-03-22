@@ -87,7 +87,7 @@ private:
   mutable QString valstr;
 public:
   NVBPhysValue():value(0) {;}
-  NVBPhysValue(const QString& s);
+	NVBPhysValue(const QString& s, bool scalableDimension = true);
   NVBPhysValue(const QString& s, NVBDimension d);
   NVBPhysValue(double f, NVBDimension d);
   ~NVBPhysValue() {;}
