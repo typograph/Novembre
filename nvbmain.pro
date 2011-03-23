@@ -13,10 +13,13 @@ contains(CONFIG,NVBLog){
 
 # STMFile tools
 HEADERS += \
+	   src/NVBDimension.h \
+           src/NVBFile.h \
            src/NVBJointFile.h \
            src/NVBFileBundle.h \
            src/NVBFileFactory.h
 SOURCES += \
+	   src/NVBDimension.cpp \
            src/NVBJointFile.cpp \
            src/NVBFileBundle.cpp \
            src/NVBFileFactory.cpp
@@ -66,6 +69,7 @@ contains(CONFIG,NVBStatic) {
 
 HEADERS += \
            src/NVBVizModel.h \
+           src/NVBPageViewModel.h \
            src/QCollapsibleBox.h \
            src/NVBDelegateStackView.h \
            src/NVBWidgetStackModel.h \
