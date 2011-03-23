@@ -281,7 +281,8 @@ NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStri
 
   int data_points = _resolution.width() * _resolution.height();
 
-	QDataStream ds(&file);
+  QDataStream ds(&file);
+  ds.setVersion(QDataStream::Qt_4_0);
   float buffer;
   double * tdata = (double*) malloc(data_points*8);
   data = (double*) malloc(data_points*8);
