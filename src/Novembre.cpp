@@ -152,8 +152,13 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
 #ifndef NVB_STATIC
       setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
 #endif
-      qApp->setProperty("filesFactory",QVariant::fromValue(new NVBFileFactory()));
-      qApp->setProperty("toolsFactory",QVariant::fromValue(new NVBToolsFactory()));
+	NVBFileFactory * ff = new NVBFileFactory();
+	if (!ff) NVBCriticalError("Filefactory failed to initialize.");
+	qApp->setProperty("filesFactory",QVariant::fromValue(ff));
+
+	NVBToolsFactory * tf = new NVBToolsFactory;
+	if (!tf) NVBCriticalError("Tools factory failed to initialize");
+	qApp->setProperty("toolsFactory",QVariant::fromValue(tf));
       break;
       }
     catch (int err) {
