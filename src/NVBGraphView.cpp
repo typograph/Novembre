@@ -95,7 +95,7 @@ void NVBGraphView::rowsInserted(const QModelIndex & parent, int start, int end)
 		QwtPlotZoomer * zoomer = new QwtPlotZoomer(plot->canvas());
 		zoomer->setEnabled(d_active_zoom);
 		connect(zoomer,SIGNAL(zoomed(QwtDoubleRect)),this,SLOT(deactivateZoom()));
-		zoomers << zoomer;
+		zoomers.prepend(zoomer);
 
 		NVBVizUnion tmp = vizmodel->index(i).data(PageVizItemRole).value<NVBVizUnion>();
     if (tmp.valid && tmp.vtype == NVB::GraphView) {
