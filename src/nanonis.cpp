@@ -66,11 +66,12 @@ QStringList NanonisFileGenerator::availableInfoFields() const {
 }
 
 NVBAssociatedFilesInfo NanonisFileGenerator::associatedFiles(QString filename) const {
-		static QRegExp multispec = QRegExp("[/\\\\]([^/\\\\]*[^/\\\\0-9])\\d+\\.dat$",Qt::CaseInsensitive,QRegExp::RegExp);
-		if (!filename.contains(multispec))
+//		static QRegExp multispec = QRegExp("[/\\\\]([^/\\\\]*[^/\\\\0-9])\\d+\\.dat$",Qt::CaseInsensitive,QRegExp::RegExp);
+//		if (!filename.contains(multispec))
 				return NVBAssociatedFilesInfo(QFileInfo(filename).fileName(), QStringList(filename), this);
 //				return NVBFileGenerator::associatedFiles(filename);
-		else {
+/*
+else {
 			QString path = QFileInfo(filename).absolutePath();
 			// Workaround for files with spaces in names
 			QDir dir  = QDir(path,QString(),QDir::Name,QDir::Files);
@@ -81,6 +82,7 @@ NVBAssociatedFilesInfo NanonisFileGenerator::associatedFiles(QString filename) c
 			if (!files.count()) return NVBAssociatedFilesInfo();
 			return NVBAssociatedFilesInfo( multispec.cap(1)+".dat", files, this);
 			}
+*/
 }
 
 NanonisHeader NanonisFileGenerator::getNanonisHeader( QFile & file )
@@ -123,7 +125,7 @@ NVBFile * NanonisFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 		return 0;
 		}
 
-	if (info.count() > 1)
+	if (info.count() > 1 || info.first().right(3) == "dat")
 		return loadSpecAggregation(info);
 
 	QFile file(info.first());
@@ -170,13 +172,13 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 		return 0;
 		}
 
-	if (info.count() > 1)
-		return loadSpecAggregationInfo(info);
-
 	if (info.count() == 0) {
 		NVBOutputError("No associated files");
 		return 0;
 		}
+
+	if (info.count() > 1 || info.first().right(3) == "dat")
+		return loadSpecAggregationInfo(info);
 
 	QFile file(info.first());
 
