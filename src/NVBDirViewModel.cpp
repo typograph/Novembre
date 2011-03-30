@@ -159,36 +159,36 @@ QModelIndex NVBDirViewModel::parent( const QModelIndex & index ) const
 
 void NVBDirViewModel::parentInsertingRows(const QModelIndex & parent, int first, int last)
 {
-	if (parent == dirindex) {
-		int fc = dirModel->folderCount(dirindex);
-		first = qMax(first,fc);
-		if (last >= first) {
-			operationRunning = true;
-			beginInsertRows(QModelIndex(),first - fc, last - fc);
-			}
+	if (dirindex.isValid() && parent == dirindex) {
+		operationRunning = true;
 		}
 }
 
 void NVBDirViewModel::parentInsertedRows(const QModelIndex & /*parent*/, int first, int last)
 {
 	if (operationRunning) {
-		rowcounts.insert(first,last-first+1,0);
-		cacheRowCounts(first,last);
-		for(int i = 0; i < unloadables.size(); i++) {
-			if (unloadables.at(i) >= first)
-				unloadables[i] += last-first+1;
+		int fc = dirModel->folderCount(dirindex);
+		first = qMax(first,fc);
+		if (last >= first) {
+			beginInsertRows(QModelIndex(),first - fc, last - fc);
+			rowcounts.insert(first,last-first+1,0);
+			cacheRowCounts(first,last);
+			for(int i = 0; i < unloadables.size(); i++) {
+				if (unloadables.at(i) >= first)
+					unloadables[i] += last-first+1;
+				}
+			files.insert(first,last-first+1,0);
+			for (int i = first; i <= last; i += 1)
+				indexes.insert(i,QPersistentModelIndex(dirModel->index(i,0,dirindex)));
+			endInsertRows();
 			}
-		files.insert(first,last-first+1,0);
-		for (int i = first; i <= last; i += 1)
-			indexes.insert(i,QPersistentModelIndex(dirModel->index(i,0,dirindex)));
-		endInsertRows();
+		operationRunning = false;
 		}
-	operationRunning = false;
 }
 
 void NVBDirViewModel::parentRemovingRows(const QModelIndex & parent, int first, int last)
 {
-	if (parent == dirindex) {
+	if (dirindex.isValid() && parent == dirindex) {
 		int fc = dirModel->folderCount(dirindex);
 		first = qMax(first,fc);
 		if (last >= first) {
@@ -218,8 +218,8 @@ void NVBDirViewModel::parentRemovedRows(const QModelIndex & /*parent*/, int firs
 
 //     rowcounts.resize(dirModel->fileCount(dirindex));
 		endRemoveRows();
+		operationRunning = false;
 		}
-	operationRunning = false;
 }
 
 void NVBDirViewModel::cacheRowCounts( ) const
