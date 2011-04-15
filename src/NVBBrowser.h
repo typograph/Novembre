@@ -48,7 +48,6 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QCheckBox>
-#include <QTreeView>
 #include <QLabel>
 #include <QPushButton>
 #include <QFrame>
@@ -60,6 +59,8 @@
 #include <QApplication>
 
 //#define NVB_BROWSER_ICONSIZE 64
+
+class NVBFileListView;
 
 class NVBFolderInputDialog : public QDialog {
 Q_OBJECT
@@ -132,13 +133,27 @@ private:
   QAction * exportFolderAction;
   QAction * adjustColumnsAction;
   QAction * showFiltersAction;
+	QAction * clearFiltersAction;
   QAction * showPageInfoAction;
   QAction * setViewFileAction;
   QAction * refreshFoldersContentsAction;
 //     QToolButton * plusButton;
   QActionGroup * iconSizeActionGroup;
 
+	QMenu * foldersMenu;
+	QMenu * columnsMenu;
+	QMenu * remColumnsMenu;
+
   NVBFileFactory * files;
+
+	NVBFileListView * fileList;
+	NVBPageInfoView * piview;
+	NVBPageRefactorModel * pageRefactor;
+	NVBDirModel * fileModel;
+	NVBDirViewModel * dirViewModel;
+	NVBDirView * dirView;
+
+	void fillFolders( QString index, QModelIndex parent);
 
 protected:
   Q_PROPERTY(unsigned short iconSize READ getIconSize());
@@ -146,26 +161,7 @@ protected:
   QSettings* confile;
 
   void closeEvent(QCloseEvent *event);
-  // void populateList0Level(int);
   void populateListLevel(int, QString = QString(), const QModelIndex& parent = QModelIndex());
-
-private slots:
-  void updateFolders();
-  void updateColumnsVisibility();
-  void updateColumns();
-
-private:
-  void fillFolders( QString index, QModelIndex parent);
-
-  bool eventFilter(QObject *obj, QEvent *event);
-  QTreeView * fileList;
-//  QListView * pageList;
-  NVBPageInfoView * piview;
-//  NVBFile * theFile;
-  NVBPageRefactorModel * pageRefactor;
-  NVBDirModel * fileModel;
-  NVBDirViewModel * dirViewModel;
-  NVBDirView * dirView;
 
 public:
   NVBBrowser( QWidget *parent = 0, Qt::WindowFlags flags = 0 );
@@ -177,33 +173,40 @@ public:
   virtual QSize sizeHint () const { return confile->value("Browser/Size", QSize(400, 300)).toSize(); }
 
 public slots:
+
 	void showItems();
   void loadPage(const QModelIndex & item);
 
   void addFolder(const QModelIndex & index);
-//    void addContainerFolder();
-//    void addRootFolder();
-//     void removeFolder();
   void switchIconSize(QAction*);
 
 private slots:
+
   void setViewType(bool);
+
   void addRootFolder();
   void addSubfolder();
   void removeFolder();
-//   void editColumns();
-//   void showFilters();
+	void exportData();
 
-  void resizeColumns();
-  void moveColumn(int,int,int);
-  virtual void showEvent ( QShowEvent * event ) { event->accept(); emit shown(); }
-  void columnAction(QAction*);
-  void folderAction(const QModelIndex & index, QAction * action);
+	void showFoldersMenu() {foldersMenu->exec(QCursor::pos());}
+	void enableFolderActions(const QModelIndex & index);
+
+	void updateFolders();
+	void updateColumnsVisibility();
+	void updateColumns();
+
+	void moveColumn(int,int,int);
+	void columnAction();
+	void populateColumnsMenu();
+	void showColumnsMenu() {columnsMenu->exec(QCursor::pos());}
+
+	virtual void showEvent ( QShowEvent * event ) { event->accept(); emit shown(); }
+
 signals:
-    void shown();
-		void closeRequest();
-//    void pageRequest(QString filename, int pagenum);
-		void pageRequest(const NVBAssociatedFilesInfo &, int pagenum);
+	void shown();
+	void closeRequest();
+	void pageRequest(const NVBAssociatedFilesInfo &, int pagenum);
 };
 
 #endif
