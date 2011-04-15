@@ -103,7 +103,7 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
         new NVBLogFile(conf->value("LogFile").toString(),this);
         break;
         }
-      catch (int err) {
+			catch (...) {
 				QMessageBox::critical(0,"Log error","Cannot access the logfile. Please check the settings");
 				if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
         }
