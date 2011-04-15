@@ -18,6 +18,8 @@
 #include <QtCore/QStringList>
 #include <QtCore/QDir>
 #include <QtCore/QLibrary>
+#include <QtCore/QThread>
+#include <QtCore/QEvent>
 //#include <dlfcn.h>
 
 #include "NVBLogger.h"
@@ -25,7 +27,17 @@
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
 
+
 // using namespace NVBErrorCodes;
+
+class NVBFileLoadEvent : public QEvent {
+public:
+	QString name;
+	NVBFile * file;
+	NVBFileLoadEvent(QString n, NVBFile * f):QEvent(QEvent::User),name(n),file(f) {;}
+};
+
+
 
 class NVBFileQueue : protected QList<NVBFile*> {
 private:
@@ -48,11 +60,14 @@ public:
 		virtual NVBFile * consult(const NVBAssociatedFilesInfo & info);
 };
 
-class NVBFileLoader : public QObject {
+class NVBFileLoader : public QThread {
 Q_OBJECT
 public:
-	NVBFileLoader(QString dir);
-
+	NVBAssociatedFilesInfo info;
+	NVBFile * file;
+	QList<QObject *> customers;
+	NVBFileLoader(const NVBAssociatedFilesInfo & i, QObject * r):info(i),file(0),customers( QList<QObject*>() << r ) {;}
+	virtual void run();
 };
 
 /**
@@ -69,6 +84,12 @@ private:
 	/// Loaded files in use
 		QList<NVBFile *> files;
 	
+	/// Loader threads
+		QList<NVBFileLoader *> loaders;
+
+	/// Check if a loader for a file is created already
+		NVBFileLoader * getLoaderInProgress(const NVBAssociatedFilesInfo & info);
+
 	/// Find file in list by name
 		int loadedFileIndex( QString filename );
 		NVBFile * retrieveLoadedFile( QString filename );
@@ -103,6 +124,7 @@ public:
 	/// @param filename Name of the file to be open
 		NVBFile* openFile( QString filename );
 		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
+		void openFile( const NVBAssociatedFilesInfo & info, const QObject * receiver );
 
 	/// Load only info from \a filename. Reuses loaded files if any
 	/// @param filename Name of the file for the info to be read from.
@@ -133,6 +155,8 @@ private slots:
 		void bury(NVBFile *);
 	/// Removes the file associated with \a filename from all caches
 		void release(QString filename);
+	/// Removes a finished loader
+		void removeLoader();
 };
 
 Q_DECLARE_METATYPE(NVBFileFactory*);

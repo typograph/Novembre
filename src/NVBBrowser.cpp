@@ -351,7 +351,7 @@ NVBBrowser::~ NVBBrowser( )
 }
 
 void NVBBrowser::showItems() {
-	dirViewModel->setDisplayItems(fileList->selectionModel()->selectedIndexes());
+	dirViewModel->setDisplayItems(fileList->selectionModel()->selectedRows());
 }
 
 void NVBBrowser::loadPage( const QModelIndex & item )

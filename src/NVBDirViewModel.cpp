@@ -77,6 +77,9 @@ bool NVBDirViewModel::loadFile(int index) const
 	if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 
+	fileFactory->openFile(dirModel->getAllFiles(indexes[index]),this);
+	return false;
+/*
 	NVBFile * f = fileFactory->openFile(dirModel->getAllFiles(indexes[index]));
 	if (f) {
 		f->use();
@@ -89,6 +92,42 @@ bool NVBDirViewModel::loadFile(int index) const
 //     emit layoutChanged();
 		return false;
 		}
+*/
+}
+
+bool NVBDirViewModel::event ( QEvent * e ) {
+	if (e->type() == QEvent::User) {
+		NVBFileLoadEvent * x = static_cast<NVBFileLoadEvent*>(e);
+		if (x) {
+			fileLoaded(x->name,x->file);
+			return true;
+		}
+	}
+	return QAbstractItemModel::event(e);
+}
+
+void NVBDirViewModel::fileLoaded(QString name, NVBFile * file)
+{
+	int index = -1;
+
+	for(int i = rowCount()-1;i>=0;i-=1)
+		if (indexes.at(i).data(Qt::DisplayRole) == name) {
+			index = i;
+			break;
+			}
+
+	if (index < 0)
+		return;
+
+	if (file) {
+		file->use();
+		files[index] = file;
+		}
+	else
+		unloadables << index;
+
+	QModelIndex fileix = this->index(index,0);
+	emit dataChanged(this->index(0,0,fileix),this->index(file->rowCount()-1,0,fileix));
 }
 
 int NVBDirViewModel::columnCount( const QModelIndex & ) const
@@ -113,13 +152,61 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 		return indexes.at(index.row()).data(role);
 		}
 	else {
-		if (loadFile(index.internalId()-1))
+		if (files.at(index.internalId()-1))
 			return files.at(index.internalId()-1)->index(index.row(),0).data(role);
-		else
-			return QVariant();
+		else if (unloadables.contains(index.internalId()-1))
+			return unloadableData(role);
+		else {
+			loadFile(index.internalId()-1);
+			return inProgressData(role);
+			}
 		}
 
 	return QVariant();
+}
+
+QVariant NVBDirViewModel::unloadableData(int role) const {
+	static QString dataul("Cannot be loaded");
+	if (unavailable.isNull()) {
+		unavailable = QPixmap(20,20);
+		QPainter p(&unavailable);
+		p.fillRect(0,0,20,20,Qt::white);
+		p.setPen(Qt::red);
+		p.drawLine(0,0,20,20);
+		p.drawLine(0,20,20,0);
+		p.end();
+	}
+	switch(role) {
+		case Qt::DecorationRole:
+			return QVariant::fromValue<QPixmap>(unavailable);
+		case Qt::DisplayRole:
+			return dataul;
+		default:
+			return QVariant();
+	}
+}
+
+QVariant NVBDirViewModel::inProgressData(int role) const {
+	static QString datal("Loading");
+	if (loading.isNull()) {
+		loading = QPixmap(20,20);
+		QPainter p(&loading);
+		p.fillRect(0,0,20,20,Qt::white);
+		p.setPen(Qt::black);
+		p.drawLine(5,5,15,15);
+		p.drawLine(5,5,15,5);
+		p.drawLine(5,15,15,5);
+		p.drawLine(5,15,15,15);
+		p.end();
+	}
+	switch(role) {
+		case Qt::DecorationRole:
+			return QVariant::fromValue<QPixmap>(loading);
+		case Qt::DisplayRole:
+			return datal;
+		default:
+			return QVariant();
+	}
 }
 
 QVariant NVBDirViewModel::headerData( int /*section*/, Qt::Orientation /*orientation*/, int /*role*/ ) const
@@ -159,28 +246,38 @@ QModelIndex NVBDirViewModel::parent( const QModelIndex & index ) const
 
 void NVBDirViewModel::parentInsertingRows(const QModelIndex & parent, int first, int last)
 {
-	if (dirindex.isValid() && parent == dirindex) {
-		operationRunning = true;
-		}
+    Q_UNUSED(first)
+    Q_UNUSED(last)
+    if (dirindex.isValid() && parent == dirindex)
+        operationRunning = true;
 }
 
 void NVBDirViewModel::parentInsertedRows(const QModelIndex & /*parent*/, int first, int last)
 {
 	if (operationRunning) {
 		int fc = dirModel->folderCount(dirindex);
-		first = qMax(first,fc);
+                first -= fc;
+                last -= fc;
+                first = qMax(first,0);
 		if (last >= first) {
-			beginInsertRows(QModelIndex(),first - fc, last - fc);
-			rowcounts.insert(first,last-first+1,0);
-			cacheRowCounts(first,last);
+                        beginInsertRows(QModelIndex(),first, last);
+/*
+                        if (last >= rowcounts.count()) {
+                            rowcounts.resize(last+1);
+                            files.resize(last+1);
+                            unloadables.resize(last+1);
+                            }
+*/
+                        rowcounts.insert(first,last-first+1,0);
+                        for (int i = first; i <= last; i += 1)
+                                indexes.insert(i,QPersistentModelIndex(dirModel->index(fc+i,0,dirindex)));
 			for(int i = 0; i < unloadables.size(); i++) {
 				if (unloadables.at(i) >= first)
 					unloadables[i] += last-first+1;
 				}
 			files.insert(first,last-first+1,0);
-			for (int i = first; i <= last; i += 1)
-				indexes.insert(i,QPersistentModelIndex(dirModel->index(i,0,dirindex)));
-			endInsertRows();
+                        cacheRowCounts(first,last);
+                        endInsertRows();
 			}
 		operationRunning = false;
 		}
@@ -296,10 +393,11 @@ NVBAssociatedFilesInfo NVBDirViewModel::getAllFiles(const QModelIndex & index) {
 	if (index.internalId() == 0)
 		return dirModel->getAllFiles(indexes.at(index.row()));
 	else {
-		if (loadFile(index.internalId()-1))
-			return files.at(index.internalId()-1)->sources();
-		else
-			return NVBAssociatedFilesInfo();
+		return dirModel->getAllFiles(indexes.at(index.internalId()-1));
+//		if (loadFile(index.internalId()-1))
+//			return files.at(index.internalId()-1)->sources();
+//		else
+//			return NVBAssociatedFilesInfo();
 		}
 
 }
