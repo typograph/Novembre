@@ -49,6 +49,8 @@ public:
 	virtual QMimeData * mimeData ( const QModelIndexList & indexes ) const;
 	virtual QStringList mimeTypes () const;
 
+	virtual bool event ( QEvent * e );
+
 private:
   NVBFileFactory * fileFactory;
 	QList<QPersistentModelIndex> indexes;
@@ -62,6 +64,11 @@ private:
   void cacheRowCounts() const;
   void cacheRowCounts ( int first, int last ) const;
 
+	mutable QPixmap unavailable, loading;
+
+	QVariant unloadableData(int role) const;
+	QVariant inProgressData(int role) const;
+
 private slots:
   void parentInsertingRows( const QModelIndex & parent, int first, int last );
   void parentInsertedRows( const QModelIndex & parent, int first, int last );
@@ -70,6 +77,7 @@ private slots:
 //  void parentChangingLayout();
 //  void parentChangedLayout();
   bool loadFile(int index) const;
+	void fileLoaded(QString name, NVBFile * file);
 
 public slots:
   void defineWindow(int start,int end);
