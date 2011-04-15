@@ -446,22 +446,20 @@ void NVBDirView::drawItems(int index, QPainter * painter) const
 
 void NVBDirView::setModel(QAbstractItemModel * m)
 {
-  verticalScrollBar()->setRange(0, -1);
-  if (m == 0) {
-    top_row = 0;
-    QAbstractItemView::setModel(m);
-    updateScrollBars();
-    }
-  else {
-    QAbstractItemView::setModel(m);
-    top_row = 0;
+	top_row = 0;
+	verticalScrollBar()->setRange(0, -1);
+	QAbstractItemView::setModel(m);
+
+	if (m != 0) {
 //     offsets.resize(heights.size()+1);
     connect(m,SIGNAL(layoutChanged()),this,SLOT(updateScrollBars()));
 		connect(m,SIGNAL(modelReset()),this,SLOT(updateScrollBars()));
 		connect(m,SIGNAL(rowsInserted(QModelIndex,int,int)),this,SLOT(updateScrollBars()));
     connect(m,SIGNAL(rowsRemoved(QModelIndex,int,int)),this,SLOT(updateScrollBars()));
-    updateScrollBars();
     }
+
+	updateScrollBars();
+
 }
 
 void NVBDirView::resizeEvent(QResizeEvent * event)
@@ -516,10 +514,12 @@ void NVBDirView::updateScrollBars()
 //   heights.fill(-1);
 //   offsets.fill(-1);
   if (model()) {
-		if (top_row < 0 || top_row >= model()->rowCount())
-      top_row = model()->rowCount() - 1;
     verticalScrollBar()->setRange(0, model()->rowCount()-1);
-    }
+		if (top_row < 0 || top_row >= model()->rowCount()) {
+			top_row = 0; //model()->rowCount() - 1;
+			scrollToTop();
+			}
+		}
   else
     verticalScrollBar()->setRange(0, -1);
   update();
