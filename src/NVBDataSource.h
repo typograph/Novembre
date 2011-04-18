@@ -75,6 +75,7 @@ class NVBDataSet : public QObject {
     inline axisindex_t nAxes() const { return as.count(); }
 
 		const NVBColorMap * colorMap() const ;
+		inline void setColorMap(NVBColorMap * m) { clr = m; }
 
 		inline NVBDataSource * dataSource() const { return p; }
 
