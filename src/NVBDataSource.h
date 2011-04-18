@@ -83,7 +83,7 @@ class NVBDataSet : public QObject {
 		double min() const;
 		double max() const;
 
-    inline NVBDataComments comments() const;
+    NVBDataComments comments() const;
 
 //    inline QVector<NVBDataMap*> maps() const { return ms; }
 //    void addMapping(NVBDataMap* map) { ms.append(map); }
