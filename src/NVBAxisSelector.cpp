@@ -84,6 +84,18 @@ NVBSelectorAxis& NVBSelectorAxis::byMinLength(int length)
 		return *this;
 	}
 
+NVBSelectorAxis& NVBSelectorAxis::byMaxLength(int length)
+	{
+		if (p) p->axisProperties.append(NVBAxisProperty(NVBSelectorAxis::MaxLength, length));
+		return *this;
+	}
+
+NVBSelectorAxis& NVBSelectorAxis::byLength(int length)
+	{
+		if (p) p->axisProperties.append(NVBAxisProperty(NVBSelectorAxis::Length, length));
+		return *this;
+	}
+
 NVBSelectorAxis& NVBSelectorAxis::byTypeId(int typeId)
 	{
 		if (p) p->axisProperties.append(NVBAxisProperty(NVBSelectorAxis::TypeID, typeId));
@@ -130,6 +142,14 @@ bool NVBSelectorAxis::matches(const NVBAxis & axis, const NVBAxis & buddy) const
 						NVBOutputDMsg(QString("Trying to match by min. length %1").arg(ap.i));
 						if (axis.length() < (axissize_t) ap.i) return false;
 						break;
+					case MaxLength :
+						NVBOutputDMsg(QString("Trying to match by max. length %1").arg(ap.i));
+						if (axis.length() > (axissize_t) ap.i) return false;
+						break;
+					case Length :
+						NVBOutputDMsg(QString("Trying to match by length %1").arg(ap.i));
+						if (axis.length() != (axissize_t) ap.i) return false;
+						break;
 					case MapDimensions : {
 						NVBOutputDMsg(QString("Trying to match by %1D map").arg(ap.i));
 						bool b = false;
@@ -165,7 +185,13 @@ bool NVBSelectorAxis::matches(const NVBAxis & axis, const NVBAxis & buddy) const
 					return false;
 				case MinLength :
 					NVBOutputDMsg(QString("Trying to match buddy by min. length %1").arg(buddy.length()));
-					return (buddy.length() > axis.length());
+					return (buddy.length() >= axis.length());
+				case MaxLength :
+					NVBOutputDMsg(QString("Trying to match buddy by max. length %1").arg(buddy.length()));
+					return (buddy.length() <= axis.length());
+				case Length :
+					NVBOutputDMsg(QString("Trying to match buddy by length %1").arg(buddy.length()));
+					return (buddy.length() == axis.length());
 				case MapDimensions : {
 					NVBOutputDMsg(QString("Trying to match buddy by map"));
 					// This case is interpreted as : we look for a map spanning both axes with map dimension as specified.

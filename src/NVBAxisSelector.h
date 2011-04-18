@@ -35,6 +35,8 @@ struct NVBSelectorAxis {
 		Invalid = 0,
 		Index,
 		MinLength,
+		MaxLength,
+		Length,
 		Units,
 		MapDimensions,
 		TypeID
@@ -46,6 +48,8 @@ struct NVBSelectorAxis {
 	
 	NVBSelectorAxis & byIndex(int index);
 	NVBSelectorAxis & byMinLength(int length);
+	NVBSelectorAxis & byMaxLength(int length);
+	NVBSelectorAxis & byLength(int length);
 
 	NVBSelectorAxis & byUnits(NVBUnits dimension);
 	NVBSelectorAxis & byMapDimensions(int dimension);
@@ -80,6 +84,8 @@ struct NVBSelectorCase {
 	NVBSelectorAxis & addAxis();
 	inline NVBSelectorAxis & addAxisByIndex(int index) { return addAxis().byIndex(index); }
 	inline NVBSelectorAxis & addAxisByMinLength(int length) { return addAxis().byMinLength(length); }
+	inline NVBSelectorAxis & addAxisByMaxLength(int length) { return addAxis().byMaxLength(length); }
+	inline NVBSelectorAxis & addAxisByLength(int length) { return addAxis().byLength(length); }
 
 	inline NVBSelectorAxis & addAxisByUnits(NVBUnits dimension) { return addAxis().byUnits(dimension); }
 	inline NVBSelectorAxis & addAxisByMapDimensions(int dimension) { return addAxis().byMapDimensions(dimension); }
