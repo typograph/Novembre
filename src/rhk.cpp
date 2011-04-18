@@ -21,8 +21,18 @@
 
 #include "NVBFileInfo.h"
 #include "NVBFile.h"
-#include "rhk.h"
 #include "NVBLogger.h"
+#include "NVBAxisMaps.h"
+#include "NVBColorMaps.h"
+#include "rhk.h"
+#include <stdlib.h>
+
+#include <QtCore/QDateTime>
+
+#define RHK_TOPOPAGE 0
+#define RHK_SPECPAGE 1
+#define RHK_UNKPAGE 2
+#define RHK_ANNOTATEDSPECPAGE 3
 
 /*
 
@@ -49,27 +59,26 @@ void TRHKFile::load( FILE * rf) {
 
 
 QStringList RHKFileGenerator::availableInfoFields() const {
-    return QStringList() \
-            << "System note" \
-            << "Session comment" \
-            << "User comment" \
-            << "Original path" \
-            << "Aquisition date" \
-            << "Aquisition time" \
-            << "X axis label" \
-            << "Y axis label" \
-            << "Status channel" \
-            << "Source type" \
-            << "Image type" \
-            << "Group ID" \
-            << "Time per point" \
-            << "Bias" \
-            << "Setpoint" \
-            << "GUID" \
-            << "Page type" \
-            << "Scan direction" \
-            << "Line type" \
-            ;
+	return QStringList()
+		<< "System note"
+		<< "Session comment"
+		<< "User comment"
+		<< "Original path"
+		<< "Aquisition date & time"
+//		<< "X axis label"
+//		<< "Y axis label"
+		<< "Status channel"
+		<< "Source type"
+		<< "Image type"
+		<< "Group ID"
+		<< "Time per point"
+		<< "Bias"
+		<< "Setpoint"
+		<< "GUID"
+//		<< "Page type"
+		<< "Scan direction"
+		<< "Line type"
+		;
 }
 
 
@@ -92,20 +101,23 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 		return 0;
 		}
 
+	NVBFile * f;
+
 	try {
-		NVBFile * f = new NVBFile(info);
+		f = new NVBFile(info);
 		}
 	catch (...) { // New threw something
+		NVBOutputError("Memory allocation for NVBFile failed.");
 		return 0;
 		}
 
-/*
-	while(!file.atEnd())
-		f->addSource(loadNextPage(file));
-	*/
-
 // how to do it?
 // 
+// The logical way would be to load datasets one-by-one.
+// While the axes are the same, we keep the same datasource.
+
+	while(!file.atEnd())
+		loadNextPage(file,*f);
 
 	return f;
 }
@@ -143,10 +155,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 		return 0;
 		}
 
-//  QString name;
-  NVB::PageType type;
-//  QSize size;
-  QMap<QString,NVBVariant> comments;
+  NVBDataComments comments;
   TRHKHeader header;
   QStringList strings;
   int version;
@@ -171,37 +180,14 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
       }
 
     strings = loadRHKStrings(file,header.string_count);
-  
-    comments.insert("System note",strings.at(1));
-    comments.insert("Session comment",strings.at(2));
-    comments.insert("User comment",strings.at(3));
-    comments.insert("Original path",strings.at(4));
-    comments.insert("Aquisition date",strings.at(5));
-    comments.insert("Aquisition time",strings.at(6));
-    comments.insert("X axis label",strings.at(10));
-    comments.insert("Y axis label",strings.at(11));
-  
-    if (strings.size() >= 13) comments.insert("Status channel",strings.at(12));
-    for (int i = 13; i<strings.size(); i++) {
-      comments.insert(QString("Unexpected comment #%1").arg(i-12),strings.at(i));
-      }
-  
-    comments.insert("Source type",getSourceTypeString(header.source_type));
-    comments.insert("Image type",getImageTypeString(header.image_type));
-    comments.insert("Group ID",QString::number(header.group_ID));
-  
-    comments.insert("Time per point",NVBPhysValue(QString("%1 s").arg(header.period)));
-    comments.insert("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
-    comments.insert("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
-    comments.insert("GUID",getGUIDString(header.page_ID));
+
+		RHKFileGenerator::CommentsFromString(comments,strings);
+		RHKFileGenerator::CommentsFromHeader(comments,header);
   
     file.seek(file.pos() + header.page_data_size);
 
     switch (header.type) {
       case 0 : { // Topography
-        type = NVB::TopoPage;
-        comments.insert("Page type",getPageTypeString(header.page_type));
-        comments.insert("Scan direction",getDirectionString(header.scan));
         if (header.colorinfo_count > 1)
 					NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
         quint16 cs;
@@ -210,34 +196,35 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
         break;
         }
       case 1 : { // Spectroscopy
-        type = NVB::SpecPage;
-        comments.insert("Line type",getLineTypeString(header.line_type));
 /* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
         if (header.colorinfo_count != 0) 
 					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
 */
-        if (header.page_type != 7 && header.page_type != 31)
+				// Skip curve position data
+				if (header.page_type != 7 && header.page_type != 31)
           file.seek(file.pos() + 2*sizeof(float)*header.y_size);
+				fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
         break;
         }
-      case 3 : {
+      case 3 : { // Annotated spectroscopy, whatever that means
 				NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
-        type = NVB::SpecPage;
+//       type = NVB::SpecPage;
         file.seek(file.pos() + 2*sizeof(float)*header.y_size);
         }
-      case 2 :
+      case 2 : // RHK lists this case as RESERVED
       default : {
-				NVBOutputError(QString("Non-existing (%1) page found. Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
-        type = NVB::InvalidPage;
+				NVBOutputError(QString("Non-existing page found (type %1). Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
+//        type = NVB::InvalidPage;
         }
       }
-    fi->pages.append(NVBPageInfo(strings.at(0),type,QSize(header.x_size,header.y_size),comments));
+		fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
     }
 
   return fi;
 }
 
-NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file)
+void RHKFileGenerator::loadNextPage(QFile& file, QList< NVBDataSource* > & sources
+)
 {
   const char MAGIC[] = {  0x53, 0x00,
   0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
@@ -246,87 +233,107 @@ NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file)
   0x30, 0x00, 0x32, 0x00, 0x20, 0x00, 0x31, 0x00,
   0x00, 0x00}; // STImage 004.002 1
 
+// This is just one version of the header, very specific one,
+// including the "Unicode" part (that I have no idea about).
+// Technically, it should be simple to extend this code to
+// other versions FIXME
+// At the moment, the comparison goes only up to byte 27,
+// which is just before the '2'
+
   TRHKHeader h;
   file.peek((char*)&h,44);
   if (memcmp(h.version, MAGIC, 28) != 0) {
-		NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to the developer").arg(file.fileName()));
-		return 0;
+		NVBOutputError(QString("Page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to the developer").arg(file.fileName()));
+		return;
     }
   switch (h.type) {
     case 0 : {
 			NVBOutputVPMsg("Topography page found");
-      return new RHKTopoPage(file);
+      loadTopoPage(file,sources);
+			return;
       }
     case 1 : {
 			NVBOutputVPMsg("Spectroscopy page found");
-      return new RHKSpecPage(file);
+      loadSpecPage(file,sources);
+			return;
       }
     case 3 : {
 			NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
-			return 0;
+			return;
       }
     case 2 :
     default : {
-			NVBOutputError(QString("Non-existing (%1) page found. Your file might be corrupted. If not, please send the file %2 to the developer").arg(h.type).arg(file.fileName()));
-			return 0;
+			NVBOutputError(QString("Non-existing page found (type %1). Your file might be corrupted. If not, please send the file %2 to the developer").arg(h.type).arg(file.fileName()));
+			return;
       }
     }
 }
 
-RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
+void RHKFileGenerator::loadTopoPage(QFile& file, QList< NVBDataSource* >& sources)
 {
-  header = RHKFileGenerator::getRHKHeader(file);
-  
-  int version = header.version[14]-0x30; // 0,1,..9
-  if (version == 1) {
-    header.colorinfo_count = 1;
-    header.grid_ysize = 0;
-    header.grid_xsize = 0;
-    }
+  TRHKHeader header = RHKFileGenerator::getRHKHeader(file);
+	NVBDataComments comments;
+	
+  int version = header.version[14]-0x30; // 0,1,..9 [version in 004.00V]
+	if (version > 2) {
+		NVBOutputError(QString("Page header has a higher version number (%1) than supported by this plugin. Please, inform the developper about this.").arg(version));
+		return;
+		}
 
-  setComment("Page type",RHKFileGenerator::getPageTypeString(header.page_type));
+  QStringList strings = RHKFileGenerator::loadRHKStrings(file,header.string_count);
+	RHKFileGenerator::CommentsFromString(comments,strings);
+	RHKFileGenerator::CommentsFromHeader(comments,header);
 
-  strings = RHKFileGenerator::loadRHKStrings(file,header.string_count);
+// Before we start doing anything else, we have to make sure if we want a new datasource
 
-  pagename = strings.at(0).trimmed();
-  setComment("System note",strings.at(1));
-  setComment("Session comment",strings.at(2));
-  setComment("User comment",strings.at(3));
-  setComment("Original path",strings.at(4));
-  setComment("Aquisition date",strings.at(5));
-  setComment("Aquisition time",strings.at(6));
+	NVBAxisSelector s;
+	s.addAxisByLength(header.x_size).byUnits(NVBUnits(strings.at(7)));
+	s.addAxisByLength(header.y_size).byUnits(NVBUnits(strings.at(8)));
 
-  xd = NVBDimension(strings.at(7));
-  yd = NVBDimension(strings.at(8));
-  zd = NVBDimension(strings.at(9));
+	NVBSelectorInstance inst = s.instantiate(sources);
+	NVBConstructableDataSource * ds;
+	QVector<axisindex_t> ia(2);
+	
+	if(!inst.isValid()) {
+		NVBOutputDMsg("No suitable existing datasource found");
+		ds = new NVBConstructableDataSource();
+		sources << ds;
+		
+		// Add X axis
+		ia[0] = 0;
+		ds->addAxis(strings.at(10).isEmpty() ? "X" : strings.at(10),header.x_size);
+		ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
 
-  setComment("X axis label",strings.at(10));
-  setComment("Y axis label",strings.at(11));
+		// Add Y axis
+		ia[1] = 1;
+		ds->addAxis(strings.at(11).isEmpty() ? "Y" : strings.at(11),header.y_size);
+		ds->addAxisMap(new NVBAxisPhysMap(header.y_offset,header.y_scale,NVBUnits(strings.at(8))));
 
-  if (strings.size() >= 13) setComment("Status channel",strings.at(12));
-  for (int i = 13; i<strings.size(); i++) {
-    setComment(QString("Unexpected comment #%1").arg(i-12),strings.at(i));
-    }
+	// TODO Angle in topography -> we have to check first if the X&Y are rotated or not, and if not, create a new ds
+	//	ds->addAxisMap(new NVBAxes2DGridMap(NVBPhysPoint(header.x_offset,header.y_offset,NVBUnits(strings.at(7))),QTransform().rotate(header.angle)),ia);
+		}
+	else {
+		ds = qobject_cast<NVBConstructableDataSource*>(inst.matchedDatasource());
+		ia = inst.matchedAxes();
+		NVBOutputDMsg(QString("Found a datasource with matching axes at %1 and %2").arg(ia.at(0)).arg(ia.at(1)));
+		if (ia.at(0) == -1) {
+			// Add X axis
+			ia[0] = ds->nAxes();
+			ds->addAxis(strings.at(10).isEmpty() ? "X" : strings.at(10),header.x_size);
+			ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
+			}
+		if (ia.at(1) == -1) {
+			ia[1] = ds->nAxes();
+			ds->addAxis(strings.at(11).isEmpty() ? "Y" : strings.at(11),header.y_size);
+			ds->addAxisMap(new NVBAxisPhysMap(header.y_offset,header.y_scale,NVBUnits(strings.at(8))));
+			}
+		}
 
-  _resolution = QSize(header.x_size,header.y_size);
-  _position = QRectF(0,0,fabs(header.x_scale*header.x_size),fabs(header.y_scale*header.y_size));
-  _position.moveCenter(QPointF(header.x_offset, -header.y_offset));
-
-  setComment("Source type",RHKFileGenerator::getSourceTypeString(header.source_type));
-  setComment("Image type",RHKFileGenerator::getImageTypeString(header.image_type));
-
-  setComment("Scan direction",RHKFileGenerator::getDirectionString(header.scan));
-  setComment("Group ID",QString::number(header.group_ID));
-
-  setComment("Time per point",NVBPhysValue(QString("%1 s").arg(header.period)));
-  setComment("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
-  setComment("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
-
-  // TODO Angle in topography
-
-  setComment("GUID",RHKFileGenerator::getGUIDString(header.page_ID));
+//  comments.insert("Page type",RHKFileGenerator::getPageTypeString(header.page_type));
 
   qint32 * dataRHK = (qint32*)malloc(header.page_data_size);
+	double * data;
+	
   if (file.read((char*)dataRHK,header.page_data_size) < header.page_data_size) {
 		NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
     free(dataRHK);
@@ -334,19 +341,17 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
   else {
     double * tdata = (double*)calloc(sizeof(double),header.x_size*header.y_size);
 
-    scaler<qint32,double> intscaler(header.z_offset,header.z_scale);
+    NVBValueScaler<qint32,double> intscaler(header.z_offset,header.z_scale);
     scaleMem<qint32,double>(tdata,intscaler,dataRHK,header.x_size*header.y_size);
     free(dataRHK);
 
-/*    int fx = header.x_scale > 0 ? 1 : -1;
-    int fy = header.y_scale > 0 ? -1 : 1; // RHK y axis is inverted with respect to Qt's y axis*/
     data = (double*)calloc(sizeof(double),header.x_size*header.y_size);
     // RHK y axis is inverted with respect to Qt's y axis
     flipMem<double>(data, tdata, header.x_size, header.y_size, !(header.x_scale > 0), header.y_scale > 0 );
     free(tdata);
-
-    getMinMax();
     }
+
+	NVBDataSet * dset = ds->addDataSet(strings.at(0).trimmed(),data,NVBUnits(strings.at(9)),ia,NVBDataSet::Topography);
 
   if (header.colorinfo_count == 1) {
     TRHKColorInfo cInfo;
@@ -356,12 +361,12 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
       file.seek(file.pos() + cInfo.parameter_count+2 - sizeof(TRHKColorInfo));
 
     if (data) {
-      setColorModel(new NVBHSVWheelContColorModel(cInfo.start_h/360, cInfo.end_h/360, cInfo.start_s, cInfo.end_s, cInfo.start_b, cInfo.end_b,zMin,zMax));
+      dset->setColorMap(new NVBHSVWheelColorMap(cInfo.start_h/360, cInfo.end_h/360, cInfo.start_s, cInfo.end_s, cInfo.start_b, cInfo.end_b));
       }
     }
   else {
 		NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
-// FIXME    NVBSetContColorModel * m = new NVBSetContColorModel();
+// FIXME  Multiple coloring :  NVBSetContColorModel * m = new NVBSetContColorModel();
     for (int i = 0; i < header.colorinfo_count; i++) {
       qint16 len;
       file.read((char*)&len,2);
@@ -370,78 +375,41 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
     }
 }
 
-RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
+void RHKFileGenerator::loadSpecPage(QFile & file, QList<NVBDataSource*> & sources )
 {
   
-  header = RHKFileGenerator::getRHKHeader(file);
+  TRHKHeader header = RHKFileGenerator::getRHKHeader(file);
+	NVBDataComments comments;
 
-  int version = header.version[14]-0x30; // 0,1,..9
-  if (version == 1) {
-    header.colorinfo_count = 1;
-    header.grid_ysize = 0;
-    header.grid_xsize = 0;
-    }
+  int version = header.version[14]-0x30; // 0,1,..9 [version in 004.00V]
+	if (version > 2) {
+		NVBOutputError(QString("Page header has a higher version number (%1) than supported by this plugin. Please, inform the developper about this.").arg(version));
+		return;
+		}
 
-//  if (!file) file = file;
+  QStringList strings = RHKFileGenerator::loadRHKStrings(file,header.string_count);
 
-  setComment("Line type",RHKFileGenerator::getLineTypeString(header.line_type));
+	RHKFileGenerator::CommentsFromString(comments,strings);
+	RHKFileGenerator::CommentsFromHeader(comments,header);
 
-  strings = RHKFileGenerator::loadRHKStrings(file,header.string_count);
+// We have to deduce the shape of the data
+	
+// To get to the points we have to load the data first
 
-  pagename = strings.at(0).trimmed();
-  setComment("System note",strings.at(1));
-  setComment("Session comment",strings.at(2));
-  setComment("User comment",strings.at(3));
-  setComment("Original path",strings.at(4));
-  setComment("Aquisition date",strings.at(5));
-  setComment("Aquisition time",strings.at(6));
-
-  // TODO Find out how to get this dimension
-  xd = NVBDimension("m");
-  yd = NVBDimension("m");
-  td = NVBDimension(strings.at(7));
-  zd = NVBDimension(strings.at(9));
-
-  setComment("X axis label",strings.at(10));
-//  setComment("Y axis label",strings.at(11));
-
-  if (strings.size() >= 13) setComment("Status channel",strings.at(12));
-  for (int i = 13; i<strings.size(); i++) {
-    setComment(QString("Unexpected comment #%1").arg(i-12),strings.at(i));
-    }
-
-  _datasize = QSize(header.x_size,header.y_size);
-
-  setComment("Source type",RHKFileGenerator::getSourceTypeString(header.source_type));
-  setComment("Image type",RHKFileGenerator::getImageTypeString(header.image_type));
-
-//  setComment("Scan direction",RHKFileGenerator::getDirectionString(header.scan));
-  setComment("Group ID",QString::number(header.group_ID));
-
-  setComment("Time per point",NVBPhysValue(QString("%1 s").arg(header.period)));
-  setComment("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
-  setComment("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
-
-  setComment("GUID",RHKFileGenerator::getGUIDString(header.page_ID));
-
-  xs = (double*)calloc(sizeof(double),header.x_size);
+/*
+	double xs = (double*)calloc(sizeof(double),header.x_size);
   if (header.x_scale > 0)
     for (int i = 0; i<header.x_size; i++)
 #ifdef RHK_SUBSTRACT_BIAS
       xs[i] = header.x_offset+i*header.x_scale+header.bias;
-#else      
-      xs[i] = header.x_offset+i*header.x_scale;
-#endif
-  else
-    for (int i = 0; i<header.x_size; i++)
-#ifdef RHK_SUBSTRACT_BIAS
       xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale+header.bias;
-#else      
+#else
       xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale;
 #endif
+*/
 
-  ys = (double*)calloc(sizeof(double),header.x_size*header.y_size);
-  switch (header.line_type) {
+  double * ys;
+  switch (header.line_type) { // Some of pages have float type data, and some have the DAC values
     case 19: // Gdatalog
     case 21: // Gechem
     case 13: // Givnorm
@@ -453,63 +421,219 @@ RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
       float * tdata = (float*)malloc(header.page_data_size);
       if (file.read((char*)tdata,header.page_data_size) < header.page_data_size) {
 				NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
-        }
-      else {
-        scaler<float,double> floatscaler(0,1); //### Suppose there's no scaling
-        scaleMem<float,double>(ys,floatscaler,tdata,header.x_size*header.y_size);
-        }
-      free(tdata);
+				free(tdata);
+				return;
+				}
+
+			NVBValueScaler<float,double> floatscaler(0,1); //### Suppose there's no scaling
+			ys = floatscaler.scaleMem(tdata,header.x_size*header.y_size);
+
+			free(tdata);
       break;
       }
     default : {
       qint32 * tdata = (qint32*)malloc(header.page_data_size);
       if (file.read((char*)tdata,header.page_data_size) < header.page_data_size) {
 				NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
+				free(tdata);
+				return;
         }
-      else {
-        scaler<qint32,double> intscaler(header.z_offset,header.z_scale);
-        scaleMem<qint32,double>(ys,intscaler,tdata,header.x_size*header.y_size);
-        }
-      free(tdata);
+
+			ys = NVBValueScaler<qint32,double>(header.z_offset,header.z_scale).scaleMem(tdata,header.x_size*header.y_size);
+
+			free(tdata);
       break;
       }
     }
-  if (header.x_scale < 0) {
-    double * tmp = (double*)calloc(sizeof(double),header.x_size*header.y_size);
-    flipMem<double>(tmp,ys,header.x_size,header.y_size,true,false);
-    free(ys);
-    ys = tmp;
-    }
+		
+  if (header.x_scale < 0)
+    flipMem<double>(ys,header.x_size,header.y_size,true,false);
+
+	// Load position data
 
   float * posdata = (float*)calloc(sizeof(float),2*header.y_size);
   float * xposdata = posdata;
   float * yposdata = posdata + header.y_size;
-  if ( header.page_type != 7 && header.page_type != 31  &&  file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
+  if ( header.page_type != 7 && header.page_type != 31 && file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
 		NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
     }
-  else {
-    for (int i = 0; i<header.y_size; i++) {
-      _positions.append(QPointF(xposdata[i],-yposdata[i]));
-      _data.append(new QwtCPointerData(xs,ys+i*header.x_size,header.x_size));
-      }
-    }
-  free(posdata);
+//      _positions.append(QPointF(xposdata[i],-yposdata[i]));
+//     _data.append(new QwtCPointerData(xs,ys+i*header.x_size,header.x_size));
+	
+	// OK, let's find out
+	int nx=0, ny=0, np=0;
 
-  setColorModel(new NVBRandomDiscrColorModel(header.y_size));
+// Basically, we can go on on two things
+// First, some of the grid variants are encoded in header.page_type
+// Second, header version 2 has grid_xsize and grid_ysize (which are, unfortunately, usually zero)
+// Third, XPMPro measures curves one-by-one, first by point, then by X, then by Y, so the number of
+// repeated positions in X gives point multiplicity and the number of repetitions in Y gives point times X.
 
+	switch(header.page_type) {
+		case 11 : { // Image IV 4x4
+			nx = 4;
+			ny = 4;
+			break;
+			}
+		case 12 : { // Image IV 8x8
+			nx = 8;
+			ny = 8;
+			break;
+			}
+		case 13 : { // Image IV 16x16
+			nx = 16;
+			ny = 16;
+			break;
+			}
+		case 14 : { // Image IV 32x32
+			nx = 32;
+			ny = 32;
+			break;
+			}
+		case 15 : { // Image IV center
+			nx = 1;
+			ny = 1;
+			break;
+			}
+		case 23 : { // Image IV 64x64
+			nx = 64;
+			ny = 64;
+			break;
+			}
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 19:
+		case 20:
+			NVBOutputError(QString("Weird page type for spectroscopy : %1").arg(RHKFileGenerator::getPageTypeString(header.page_type)));
+			break;
+		}
+
+	if (nx == 0) {
+		if (header.grid_xsize > 0) {
+			nx = header.grid_xsize;
+			ny = header.grid_ysize;
+			}
+		else {
+			for(np = 1; np < header.y_size && xposdata[np] == xposdata[0]; np++) {;}
+			for(nx = 1; nx*np < header.y_size && yposdata[nx*np] == yposdata[0]; nx++) {;}
+			for(ny = 1; ny*nx*np < header.y_size && xposdata[ny*nx*np] == xposdata[0]; ny++) {;}
+			if (ny * nx * np != header.y_size) {
+				// There's probably no grid.
+				// There might be more than one spectrum per point, though.
+				nx = 0;
+				ny = 0;
+				}
+			}
+		}
+		
+	if (np == 0) {
+		if (nx != 0)
+			np = header.y_size / nx / ny;
+		else
+			np = 1;
+		}
+
+	// Now, the axes
+	// If np != 1 -> "samples" axis
+	// If nx != 0 -> X and Y axes
+
+	// I need an intelligent approach!!!
+	// The easiest way would be to use NVBAxisSelector with a datasource.
+		
+	NVBAxisSelector s;
+	unsigned char status = 0; // Bit 1 - np > 1 , Bit 2 - there's a grid.
+	
+	// FIXME can X or Y have length 1? If yes, this should be taken into account by _not_ looking for these axes
+	
+	s.addAxisByLength(header.x_size).byUnits(NVBUnits(strings.at(7)));
+	if (np > 1) {
+		s.addAxisByLength(np);
+		status |= 1;
+		}
+	if (nx != 0) {
+		if (nx == 1)
+			NVBOutputPMsg(QString("X axis length 1. This should be taken better care of. Please send file %1 to the developer.").arg(file.fileName()));
+		if (ny == 1)
+			NVBOutputPMsg(QString("Y axis length 1. This should be taken better care of. Please send file %1 to the developer.").arg(file.fileName()));
+		s.addAxisByLength(nx);
+		s.addAxisByLength(ny);
+		status |= 2;
+		}
+	else { // Instead of a grid we have some points
+		s.addAxisByLength(header.y_size / np);
+		}
+	
+	NVBSelectorInstance inst = s.instantiate(sources);
+	NVBConstructableDataSource * ds = 0;
+	QVector<axisindex_t> ia(((!status) & 2 >> 1) + status + 1); // 0 -> 2, 1-> 3, 2-> 3, 3-> 4
+	
+	if (!inst.isValid()) { // We have to create the axes
+		ds = new NVBConstructableDataSource();
+		sources << ds;
+		ds->addAxis(strings.at(10).isEmpty() ? "t" : strings.at(10),header.x_size);
+		ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
+		if (status & 1)
+			ds->addAxis("Samples",np);
+		if (status & 2) {
+			ds->addAxis("X",nx);
+			ds->addAxisMap(new NVBAxisPhysMap(xposdata[0],xposdata[np] - xposdata[0],NVBUnits(strings.at(7))));
+			ds->addAxis("Y",ny);
+			ds->addAxisMap(new NVBAxisPhysMap(yposdata[0],yposdata[nx*np] - yposdata[0],NVBUnits(strings.at(8))));
+			}
+		else {
+			ds->addAxis("Points", header.y_size / np);
+			ds->addAxisMap(new NVBAxisPointMap(pointsFromXY(header.y_size/np,xposdata,yposdata),NVBUnits("m")));
+			}
+		for(int i=0;i<ia.size();i+=1)
+			ia[i] = i;
+		}
+	else {
+		ds = qobject_cast< NVBConstructableDataSource* >( inst.matchedDatasource() );
+		ia = inst.matchedAxes();
+		if (ia.at(0) == -1) {
+			ds->addAxis(strings.at(10).isEmpty() ? "t" : strings.at(10),header.x_size);
+			ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
+			}
+		if (status & 1 && ia.at(1) == -1) { // No samples axis matched
+			ia[0] = ds->nAxes();
+			ds->addAxis("Samples",np);
+			}
+		if (status & 2) { 
+			if (ia.at(1 + (status & 1)) == -1) { // No X axis match
+				ia[status & 1] = ds->nAxes();
+				ds->addAxis("X",nx);
+				ds->addAxisMap(new NVBAxisPhysMap(xposdata[0],xposdata[np] - xposdata[0],NVBUnits(strings.at(7))));
+				}
+			if (ia.at(2 + (status & 1)) == -1) { // No Y axis match
+				ia[1 + (status & 1)] = ds->nAxes();
+				ds->addAxis("Y",ny);
+				ds->addAxisMap(new NVBAxisPhysMap(yposdata[0],yposdata[nx*np] - yposdata[0],NVBUnits(strings.at(8))));
+				}
+			}
+		else if (ia.at(1 + (status & 1)) == -1) {
+			ds->addAxis("Points", header.y_size / np);
+			ds->addAxisMap(new NVBAxisPointMap(pointsFromXY(header.y_size/np,xposdata,yposdata),NVBUnits("m")));
+			}
+	}
+
+	// TODO Is there angle in spectroscopy. If so, we should pre-rotate X and Y positions.
+		
+  // TODO Find out how to get this dimension
+//  xd = NVBUnits("m");
+//  yd = NVBUnits("m");
+//  td = NVBUnits(strings.at(7));
+//  zd = NVBUnits(strings.at(9));
+
+	ds->addDataSet(strings.at(0).trimmed(),ys,NVBUnits(strings.at(9)),ia,NVBDataSet::Spectroscopy);
+	
 /* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
   if (header.colorinfo_count != 0) 
 		NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
 */
-}
-
-RHKSpecPage::~ RHKSpecPage()
-{
-  while (!_data.isEmpty()) {
-    delete _data.takeFirst();
-    }
-  if (xs) free(xs);
-  if (ys) free(ys);
 }
 
 QString RHKFileGenerator::getGUIDString(RHK_GUID id) {
@@ -643,6 +767,12 @@ TRHKHeader RHKFileGenerator::getRHKHeader(QFile & file)
     file.seek(file.pos() + header.parameter_size+2-sizeof(TRHKHeader));
   else
     memset(((char*)header.version)+header.parameter_size,0,sizeof(TRHKHeader) - header.parameter_size - 2);
+	int version = header.version[14]-0x30;
+  if (version == 1) {
+    header.colorinfo_count = 1;
+    header.grid_ysize = 0;
+    header.grid_xsize = 0;
+    }
   return header;
 }
 
@@ -658,10 +788,62 @@ QStringList RHKFileGenerator::loadRHKStrings(QFile & file, qint16 nstrings)
     r << QString::fromUcs4(s,slen);
     free(s);
     }
-  return r;
+
+// Check X and Y labels
+
+	if (r.at(10).isEmpty())
+		r[10] = "X";
+	if (r.at(11).isEmpty())
+		r[11] = "Y";
+
+return r;
+}
+
+void RHKFileGenerator::CommentsFromString(NVBDataComments& comments, const QStringList& strings) {
+  comments.insert("System note",strings.at(1));
+  comments.insert("Session comment",strings.at(2));
+  comments.insert("User comment",strings.at(3));
+  comments.insert("Original path",strings.at(4));
+
+	QDateTime dt(QDate::fromString(strings.at(5),"MM/dd/yy"),QTime::fromString(strings.at(6),"hh:mm:ss"));
+	if (dt.isValid()) comments.insert("Aquisition date & time",dt);
+	else comments.insert("Aquisition date & time",strings.at(5) + " " + strings.at(6));
+
+	if (strings.size() >= 13) comments.insert("Status channel",strings.at(12));
+
+	for (int i = 13; i<strings.size(); i++) {
+		comments.insert(QString("Unexpected comment #%1").arg(i-12),strings.at(i));
+		}
 }
 
 
+void RHKFileGenerator::CommentsFromHeader(NVBDataComments& comments, const TRHKHeader& header)
+{
+		comments.insert("Source type",getSourceTypeString(header.source_type));
+		comments.insert("Image type",getImageTypeString(header.image_type));
+		comments.insert("Group ID",QString::number(header.group_ID));
+		switch (header.type) {
+			case 0:
+				comments.insert("Page type",getPageTypeString(header.page_type));
+				comments.insert("Scan direction",getDirectionString(header.scan));
+				break;
+			case 1:
+				comments.insert("Line type",getLineTypeString(header.line_type));
+				break;
+			}
+		comments.insert("Time per point",NVBPhysValue(QString("%1 s").arg(header.period)));
+		comments.insert("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
+		comments.insert("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
+		comments.insert("GUID",getGUIDString(header.page_ID));
+		comments.insert("Group ID",QString::number(header.group_ID));
 
+}
 
-Q_EXPORT_PLUGIN2(rhk, RHKFileGenerator)
+QList< QPointF > RHKFileGenerator::pointsFromXY(int length, float* x, float* y) {
+	QList<QPointF> points;
+	for (int i = 0; i < length; i++)
+		points << QPointF(x[i],y[i]);
+	return points;
+}
+
+Q_EXPORT_PLUGIN2(rhk, RHKFileGenerator);

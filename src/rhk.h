@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2006-2010 by Timofey Balashov   *
- *   Timofey.Balashov@pi.uka.de   *
+ *   Copyright (C) 2006-2011 by Timofey Balashov                           *
+ *   Timofey.Balashov@pi.uka.de                                            *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -21,24 +21,10 @@
 #ifndef RHK_H
 #define RHK_H
 
-//#include <stdlib.h>
-//#include <stdio.h>
-
-//#include "mychar.h"
-
-#define RHK_TOPOPAGE 0
-#define RHK_SPECPAGE 1
-#define RHK_UNKPAGE 2
-#define RHK_ANNOTATEDSPECPAGE 3
-
-#include <QtPlugin>
-#include <QFile>
-#include "dimension.h"
+#include <QtCore/QFile>
+#include "NVBUnits.h"
 #include "NVBFileGenerator.h"
-#include "NVBContColoring.h"
-#include "NVBDiscrColoring.h"
 // #include "NVBLogger.h"
-#include "NVBPages.h"
 
 /*GUID*/
 typedef struct {
@@ -85,7 +71,6 @@ struct TRHKHeader{
   qint32 grid_ysize;
 };
 
-
 /*TRHKCOLORTRANSFORM*/
 struct  TRHKColorTransform{
   float gamma;
@@ -124,7 +109,6 @@ Q_OBJECT
 Q_INTERFACES(NVBFileGenerator);
 
 private:
-  static NVBDataSource * loadNextPage(QFile & file);
   static TRHKHeader getRHKHeader(QFile & file);
   static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
   static QString getPageTypeString(qint32 type);
@@ -134,28 +118,32 @@ private:
   static QString getDirectionString(qint32 type);
   static QString getImageTypeString(qint32 type);
 
-  friend class RHKTopoPage;
-  friend class RHKSpecPage;
+	static void loadNextPage(QFile & file, QList<NVBDataSource*> & sources );
+	static void loadTopoPage(QFile & file, QList<NVBDataSource*> & sources );
+	static void loadSpecPage(QFile & file, QList<NVBDataSource*> & sources );
+	static void CommentsFromString(NVBDataComments & comments, const QStringList & strings);
+	static void CommentsFromHeader(NVBDataComments & comments, const TRHKHeader & header);
+	
+	static QList<QPointF> pointsFromXY(int length, float * x, float * y);
 
 public:
   RHKFileGenerator():NVBFileGenerator() {;}
   virtual ~RHKFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("RHK XPMPro files");}
-  virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for [SM2], SM3 and [SM4] files"); }
+  virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for SM3 files"); }
 
   virtual inline QStringList extFilters() const {
       static QStringList exts = QStringList() << "*.SM3" ; // FIXME << "*.SM2" << "*.SM4";
       return exts;
   }
 
-//  virtual bool canLoadFile(QString filename);
 	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
 	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
   virtual QStringList availableInfoFields() const;
 
-	//- Using super's method, since RHK only uses one file per project.
+	//- Using super's method, since RHK only uses one file per measurement.
 	// virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 };
 
