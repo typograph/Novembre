@@ -113,12 +113,14 @@ void NVBConstructableDataSource::addAxisMap(NVBAxisMap * map, QVector<axisindex_
 		axs[a].addMapping(amaps.last());
 	}
 
-void NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits dimension, QVector< axisindex_t > axes, NVBDataSet::Type type) {
+NVBDataSet * NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits dimension, QVector< axisindex_t > axes, NVBDataSet::Type type, NVBColorMap * map)
+{
 	if (axes.count() == 0)
 		for(int i=0; i<axes.count(); i++)
 			axes << i;
-	dsets.append(new NVBDataSet(this,name,data,dimension,axes,type));
-	}
+	dsets.append(new NVBDataSet(this,name,data,dimension,axes,type,map));
+	return dsets.last();
+}
 
 void NVBAxis::addMapping(NVBAxisMapping mapping) {
 	ms.append(mapping);

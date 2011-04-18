@@ -193,6 +193,7 @@ class NVBDataSource : public QObject {
 Q_DECLARE_METATYPE(NVBDataSource*)
 
 class NVBConstructableDataSource : public NVBDataSource {
+	Q_OBJECT
 	protected:
 		/// Comments for the source
 		NVBDataComments comments;
@@ -211,8 +212,8 @@ class NVBConstructableDataSource : public NVBDataSource {
 
 		virtual inline const NVBAxis & axis(axisindex_t i) const { return axs.at(i); }
     virtual NVBAxis & addAxis(QString name, axissize_t length);
-		virtual void addAxisMap(NVBAxisMap * map, QVector<axisindex_t> axes);
-		virtual void addDataSet(QString name, double * data, NVBUnits dimension, QVector<axisindex_t> axes = QVector<axisindex_t>(), NVBDataSet::Type type = NVBDataSet::Undefined);
+		virtual void addAxisMap(NVBAxisMap * map, QVector<axisindex_t> axes = QVector<axisindex_t>());
+		virtual NVBDataSet * addDataSet(QString name, double* data, NVBUnits dimension, QVector< axisindex_t > axes = QVector<axisindex_t>(), NVBDataSet::Type type = NVBDataSet::Undefined, NVBColorMap* map = 0);
 		virtual const QList< NVBAxis > & axes() const { return axs; }
 		virtual const QList< NVBDataSet * > & dataSets() const { return dsets; }
 
