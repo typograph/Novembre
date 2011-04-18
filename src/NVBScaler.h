@@ -23,6 +23,90 @@
 
 #include <sys/types.h>
 #include <math.h>
+#include <string.h>
+#include <stdlib.h>
+
+template<class fromT, class toT>
+class NVBValueScaler;
+
+template <typename T>
+void arrayCopyRowtoCol( T* dest, const T* src, unsigned int row, unsigned int col, unsigned int width, unsigned int height) {
+  if ( row >= height || col >= height ) throw;
+  for (unsigned int i = 0; i < width; i++)
+    dest[col + i*height] = src[row*width + i];
+}
+
+template <typename T>
+void arrayTranslateRow( T* dest, const T* src, unsigned int row, unsigned int width, unsigned int height) {
+arrayCopyRowtoCol<T>(dest,src,row,row,width,height);
+}
+
+template <typename T>
+void arrayTranslate( T* dest, const T* src, unsigned int width, unsigned int height) {
+for (uint row = 0; row<height; row++)
+ arrayCopyRowtoCol<T>(dest,src,row,row,width,height);
+}
+
+template <typename T>
+void getMemMinMax(T* mem, unsigned long size, T & min, T & max) {
+  min = max = mem[0];
+  for (unsigned long i = 1; i<size; i++) {
+    if (mem[i] > max) max = mem[i];
+    if (mem[i] < min) min = mem[i];
+    }
+}
+
+template <typename fromT, typename toT>
+void scaleMem(toT * dest, const NVBValueScaler<fromT,toT> & _scaler, const fromT* src, unsigned long size) {
+  for (unsigned long i = 0; i<size; i++)
+    dest[i] = _scaler.scale(src[i]);
+}
+
+template<typename T>
+void flipMem(T * dest, const T * source, int width, int height, bool flw, bool flh) {
+  int fi;
+  if (!flw && !flh)
+    memcpy(dest,source,width*height*sizeof(T));
+  else {
+    int wflip = flw ? -1 : 1;
+    int hflip = flh ? -1 : 1;
+    for (int i = 0; i<height; i++) {
+      fi = (height - 1 - hflip*(height-1))/2 + hflip*i;
+      for (int j = 0; j<width; j++)
+        dest[j+i*width] = source[(width-1 - wflip*(width-1))/2 + wflip*j+fi*width];
+      }
+    }
+}
+
+template<typename T>
+void flipMem(T * data, int width, int height, bool flw, bool flh) {
+	T t;
+  if (!flw && !flh)
+   return;
+	else if (flw && !flh) {
+    for (int i = (height-1)*width; i>=0; i -= width)
+      for (int j = (int)floor(width/2)-1; j>=0; j--) {
+				t = data[j+i];
+				data[j+i] = data[width-j-1+i];
+				data[width-j-1+i] = t;
+			}
+		}
+	else if (!flw && flh) {
+    for (int i =(int)floor(height/2)-1; i>=0; i--) {
+			memcpy(data+i*width,data+(height-i-1)*width,sizeof(T)*width);
+			}		
+		}
+  else {
+    for (int i = 0; i<height; i++) {
+      int fi = height-1-i;
+      for (int j = 0; j<width; j++) {
+				t = data[j+i*width];
+        data[j+i*width] = data[width - 1 - j + fi*width];
+				data[width-1-j+fi*width] = t;
+				}
+      }
+    }
+}
 
 template<class T>
 void calcOM(T & offset, T & mult, T imin, T imax, T omin, T omax) {
@@ -123,9 +207,20 @@ public:
 		shift_output(eo);
 		}
 
-  toT scale(fromT value) const { return (toT)(value*scale_multiplier + scale_offset); }
-  toT scaleInt(fromT value) const { return (toT)round(value*scale_multiplier + scale_offset); }
-  toT scaleLength(fromT value) const { return (toT)(value*scale_multiplier); }
+  inline toT scale(fromT value) const { return (toT)(value*scale_multiplier + scale_offset); }
+  inline toT scaleInt(fromT value) const { return (toT)round(value*scale_multiplier + scale_offset); }
+  inline toT scaleLength(fromT value) const { return (toT)(value*scale_multiplier); }
+
+	toT * scaleMem(const fromT * data, unsigned long size) {
+		toT * dest = (toT*)malloc(size*sizeof(toT));
+		if (dest)
+			scaleMem(dest,data,size);
+		return dest;
+		}
+		
+	inline void scaleMem(toT * dest, const fromT * data, unsigned long size) {
+		::scaleMem<fromT,toT>(dest, *this, data, size);
+		}
 };
 
 template <class fromT, class toT>
