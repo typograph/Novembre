@@ -120,6 +120,8 @@ class NVBDataSource : public QObject {
     virtual ~NVBDataSource();
 
 		virtual const NVBAxis & axis(axisindex_t i) const = 0;
+		NVBAxis axisByName(QString name) const ;
+		virtual axisindex_t axisIndexByName(QString name) const;
 		virtual const QList< NVBAxis > & axes() const = 0;
 		virtual axisindex_t nAxes() const { return (axisindex_t)axes().count(); }
 

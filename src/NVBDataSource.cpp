@@ -135,3 +135,21 @@ axisindex_t NVBAxis::parentIndex() const
 	if (!p) return -1;
 	return p->axes().indexOf(*this);
 }
+
+NVBAxis NVBDataSource::axisByName(QString name) const
+{
+	for(axisindex_t i = 0; i<nAxes(); i+=1)
+		if (axis(i).name() == name)
+			return axis(i);
+
+	return NVBAxis();
+}
+
+axisindex_t NVBDataSource::axisIndexByName(QString name) const
+{
+	for(axisindex_t i = 0; i<nAxes(); i+=1)
+		if (axis(i).name() == name)
+			return i;
+
+	return -1;
+}
