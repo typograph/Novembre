@@ -2,12 +2,12 @@
 #ifndef NVBTOKENS_H
 #define NVBTOKENS_H
 
-#include <QString>
-#include <QPair>
-#include <QList>
-#include <QMap>
-#include <QMetaType>
-#include <QSharedData>
+#include <QtCore/QString>
+#include <QtCore/QPair>
+#include <QtCore/QList>
+#include <QtCore/QMap>
+#include <QtCore/QMetaType>
+#include <QtCore/QSharedData>
 
 namespace NVBTokens {
 
@@ -27,9 +27,18 @@ struct NVBPCommentToken : NVBToken {
 };
 
 struct NVBGotoToken : NVBToken {
-  enum NVBCondType {None = 0, Stop, IsSpec, IsTopo} condition;
-  int gototrue;
-  int gotofalse;
+  enum NVBCondType {
+		None = 0,
+		Stop,
+		IsSpec,
+		IsTopo,
+		HasNAxes,
+		HasAtLeastNAxes,
+		HasAtMostNAxes
+	} condition;
+	int n;
+  unsigned int gototrue;
+  unsigned int gotofalse;
   
   NVBGotoToken(NVBCondType c, int t = -1, int f = -1):NVBToken(Goto),condition(c),gototrue(t),gotofalse(f) {;}
 };
@@ -40,7 +49,7 @@ struct NVBFileParamToken : NVBToken {
 };  
 
 struct NVBPageParamToken : NVBToken {
-  enum NVBPageParam {Invalid = 0, Name, DataSize, IsTopo, IsSpec, XSize, YSize} pparam;
+  enum NVBPageParam {Invalid = 0, Name, DataSize, Units, NAxes, IsTopo, IsSpec} pparam;
   NVBPageParamToken(NVBPageParam p):NVBToken(PageParam),pparam(p) {;}
 };
 
@@ -116,6 +125,7 @@ private:
 
   static QString readFromTo( int start, int end, const QList< NVBToken * > & tokens);
   static QList< NVBToken * > tokenizeSubString( QString s, int & pos );
+	static unsigned int getUInt(QString s, int & pos);
 };
 
 };

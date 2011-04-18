@@ -1,7 +1,7 @@
 
 #include "NVBTokens.h"
 #include "NVBLogger.h"
-#include <QRegExp>
+#include <QtCore/QRegExp>
 
 using namespace NVBTokens;
 
@@ -46,8 +46,8 @@ QMap<NVBPageParamToken::NVBPageParam,NVBDescrPair > NVBTokenList::initPageParamN
   fnames.insert(NVBPageParamToken::DataSize,NVBDescrPair("pageDataSize","Page dimensions"));
   fnames.insert(NVBPageParamToken::IsSpec,NVBDescrPair("isSpec","Page is a spectroscopy page"));
   fnames.insert(NVBPageParamToken::IsTopo,NVBDescrPair("isTopo","Page is a topography page"));
-  fnames.insert(NVBPageParamToken::XSize,NVBDescrPair("XSize","X resolution"));
-  fnames.insert(NVBPageParamToken::YSize,NVBDescrPair("YSize","Y resolution"));
+  fnames.insert(NVBPageParamToken::Units,NVBDescrPair("Units","Data units"));
+  fnames.insert(NVBPageParamToken::NAxes,NVBDescrPair("NAxes","Number of axes"));
 
 //  fnames.insert(NVBPageParamToken::,NVBDescrPair("",""));
 
@@ -113,6 +113,18 @@ QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > 
             }
           case NVBGotoToken::IsSpec : {
             s += "?S";
+            break;
+            }
+          case NVBGotoToken::HasNAxes : {
+            s += QString("?=%1").arg(static_cast<NVBGotoToken*>(tokens.at(i))->n);
+            break;
+            }
+          case NVBGotoToken::HasAtLeastNAxes : {
+            s += QString("?>%1").arg(static_cast<NVBGotoToken*>(tokens.at(i))->n - 1);
+            break;
+            }
+          case NVBGotoToken::HasAtMostNAxes : {
+            s += QString("?<%1").arg(static_cast<NVBGotoToken*>(tokens.at(i))->n + 1);
             break;
             }
           }
@@ -197,6 +209,27 @@ QList< NVBToken * > NVBTokenList::tokenizeSubString( QString s, int & pos)
             }
           case 'T' : {
             result << new NVBGotoToken(NVBGotoToken::IsTopo);
+            break;
+            }
+          case '=' : {
+            result << new NVBGotoToken(NVBGotoToken::HasNAxes);
+						pos += 2;
+            static_cast<NVBGotoToken*>(result.last())->n = getUInt(s,pos);
+						pos -= 2;
+            break;
+            }
+          case '>' : {
+            result << new NVBGotoToken(NVBGotoToken::HasAtLeastNAxes);
+						pos += 2;
+            static_cast<NVBGotoToken*>(result.last())->n = getUInt(s,pos)+1;
+						pos -= 2;
+            break;
+            }
+          case '<' : {
+            result << new NVBGotoToken(NVBGotoToken::HasAtMostNAxes);
+						pos += 2;
+            static_cast<NVBGotoToken*>(result.last())->n = getUInt(s,pos)-1;
+						pos -= 2;
             break;
             }
           case '!' : {
@@ -338,6 +371,18 @@ QString NVBTokenList::verboseString() const
         prefix = "Topography: ";
         break;
         }
+      case NVBGotoToken::HasAtLeastNAxes : {
+        prefix = QString("Has >= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
+        break;
+        }
+      case NVBGotoToken::HasAtMostNAxes : {
+        prefix = QString("Has <= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
+        break;
+        }
+      case NVBGotoToken::HasNAxes : {
+        prefix = QString("Has %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
+        break;
+        }
       default : {
         prefix = "(): ";
         break;
@@ -390,6 +435,13 @@ QString NVBTokens::NVBTokenList::compactTokens( QList< NVBToken * > t)
 {
   return readFromTo(0, t.size(), t);
 }
+
+unsigned int NVBTokens::NVBTokenList::getUInt(QString s, int & pos) {
+	int k = pos;
+	for(; pos < s.length() && s[pos].isDigit(); pos += 1) {;}
+	return s.mid(k,pos-k).toUInt();
+}
+
 
 
 
