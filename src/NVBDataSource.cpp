@@ -5,12 +5,12 @@
 #include "NVBAxisMaps.h"
 
 NVBDataSet::NVBDataSet(NVBDataSource * parent,
-						QString name,
-						double * data,
-						NVBUnits dimension,
-						QVector<axisindex_t> axes,
-						Type tp,
-						NVBColorMap * colormap)
+			QString name,
+			double * data,
+			NVBUnits dimension,
+			QVector<axisindex_t> axes,
+			Type tp,
+			NVBColorMap * colormap)
 	:	QObject()
 	,	p(parent)
 	,	n(name)
@@ -40,7 +40,12 @@ axissize_t NVBDataSet::sizeAt(axisindex_t i) const {
 double NVBDataSet::min() const { return NVBMaxMinTransform::findMinimum(this); }
 double NVBDataSet::max() const { return NVBMaxMinTransform::findMaximum(this); }
 
-inline NVBDataComments NVBDataSet::comments() const { return dataSource()->getAllComments(); }
+NVBDataComments NVBDataSet::comments() const {
+	if (dataSource())
+		return dataSource()->getAllComments();
+	else
+		return NVBDataComments();
+}
 
 const NVBColorMap* NVBDataSet::colorMap() const {
 	if (clr)
