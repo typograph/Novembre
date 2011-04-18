@@ -12,9 +12,7 @@
 #ifndef NVBFILE_H
 #define NVBFILE_H
 
-#include <QtCore/QString>
-#include <QtCore/QRectF>
-
+#include <QtCore/QList>
 #include "NVBFileInfo.h"
 
 /**
@@ -22,7 +20,7 @@
 	An NVBFile is created by NVBFileFactory after a file load request.
 	It contains a number of NVBDataSources and global comments.
 	*/
-class NVBFile : public QList<NVBDataSource*>{
+class NVBFile : public QObject, public QList<NVBDataSource*> {
 	Q_OBJECT
 	friend class NVBFileGenerator;
 
@@ -30,23 +28,27 @@ class NVBFile : public QList<NVBDataSource*>{
 		NVBAssociatedFilesInfo files;
 		int refCount;
 		NVBDataComments comments;
+    NVBFile();
+		NVBFile(QList<NVBDataSource*>);
 	public:
-		/// Constructs an empty file with \a source
-		NVBFile(NVBAssociatedFilesInfo sources):sourceInfo(sources),refCount(0) {;}
-		NVBFile(NVBAssociatedFilesInfo sources, QList<NVBDataSource*> pages);
+		NVBFile(const NVBFile & other):QObject(),QList< NVBDataSource* >(other) {;}
+		NVBFile(NVBAssociatedFilesInfo sources): QObject(), QList<NVBDataSource*>(), files(sources), refCount(0) {;}
+		NVBFile(NVBAssociatedFilesInfo sources, QList<NVBDataSource*> pages, NVBDataComments file_comments): QObject(), QList<NVBDataSource*>(pages), files(sources), refCount(0), comments(file_comments) {;}
+
 		virtual ~NVBFile();
 
 		/// Returns info about the original files
 		NVBAssociatedFilesInfo sources() const { return files; }
 
-		inline NVBDataComments getAllComments() { return comments; }
+		inline NVBDataComments getAllComments() const { return comments; }
+		NVBVariant getComment(const QString & key) const;
 
 		inline QString name() const { return files.name(); }
 
-		/// Adds a datasource to the end of file.
-		virtual void addSource(NVBDataSource * data);
-		/// Adds data to the end of file.
-		virtual void addSources(QList<NVBDataSource *> pages);
+//		/// Adds a datasource to the end of file.
+//		virtual void addSource(NVBDataSource * data);
+//		/// Adds data to the end of file.
+//		virtual void addSources(QList<NVBDataSource *> pages);
 	//  /// Sets an icon for the last page
 	//  virtual void setVisualizer(NVBVizUnion visualizer);
 
@@ -60,8 +62,6 @@ class NVBFile : public QList<NVBDataSource*>{
 	signals:
 		/// This signal is emitted when the file is not in use any more (refcount == 0).
 		void free(NVBFile *);
-//		/// This signal is emitted when the file is deleted. \a filename is the name of this file.
-//		void free(QString name);
 };
 
 #endif

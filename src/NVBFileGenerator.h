@@ -13,9 +13,9 @@
 #ifndef NVBFILEGENERATOR_H
 #define NVBFILEGENERATOR_H
 
-#include <QtPlugin>
-#include <QString>
-#include <QStringList>
+#include <QtCore/QtPlugin>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 #include "NVBFileInfo.h"
 
 class NVBFileInfo;
@@ -57,7 +57,7 @@ public:
 	/// Load file information from \param info
 	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw() = 0;
 
-  /// Possible info keys in comments (used in user column format GUI)
+  /// Possible info keys in comments (used in user column format)
 	virtual QStringList availableInfoFields() const = 0;
   /// Files that will be open on loading this file (including the file itself)
   virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const {
@@ -66,8 +66,8 @@ public:
 
 };
 
-Q_DECLARE_INTERFACE(NVBFileGenerator, "com.novembre.fileGenerator/0.1");
+// NVBFileGenerator interface should have the same major version as Novembre itself
+// Minor version should be the same or smaller
+Q_DECLARE_INTERFACE(NVBFileGenerator, "com.novembre.fileGenerator/0.1.0");
 
 #endif
-
-

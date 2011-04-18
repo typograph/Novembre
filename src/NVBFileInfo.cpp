@@ -12,6 +12,7 @@
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
 #include "NVBFile.h"
+#include <QtCore/QDateTime>
 
 using namespace NVBTokens;
 
@@ -58,7 +59,7 @@ NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
 			return created;
       }
     case NVBFileParamToken::NPages : {
-      return pages.size();
+      return count();
       }
     default :
       return NVBVariant();
@@ -72,25 +73,24 @@ NVBVariant NVBFileInfo::pageParam(NVBDataInfo pi, NVBPageParamToken::NVBPagePara
     case NVBPageParamToken::Name : {
       return pi.name;
       }
-/*
-		case NVBPageParamToken::IsTopo : {
-      return pi.type == NVB::TopoPage;
-      }
-    case NVBPageParamToken::IsSpec : {
-      return pi.type == NVB::SpecPage;;
-      }
-*/
 		case NVBPageParamToken::DataSize : {
-			return NVBVariantList() << pi.sizes;
+			NVBVariantList l;
+			foreach(axissize_t s, pi.sizes)
+				l << s;
+			return l;
       }
-/*
-		case NVBPageParamToken::XSize : {
-      return pi.datasize.width();
+		case NVBPageParamToken::Units : {
+			return pi.dimension;
       }
-    case NVBPageParamToken::YSize : {
-      return pi.datasize.height();
+		case NVBPageParamToken::NAxes : {
+      return pi.sizes.count();
       }
-*/
+		case NVBPageParamToken::IsTopo : {
+      return pi.type == NVBDataSet::Topography;
+      }
+		case NVBPageParamToken::IsSpec : {
+      return pi.type == NVBDataSet::Spectroscopy;
+      }
     default :
       return NVBVariant();
     }
@@ -105,7 +105,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 		else {   
 			NVBVariantList ans, pans;
 			
-			foreach(NVBDataInfo pi, pages) {
+			foreach(NVBDataInfo pi, *this) {
 				
 				pans.clear();
 				
@@ -116,7 +116,11 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 							break;
 							}
 						case NVBToken::PageComment : {
-							pans << pi.comments.value(static_cast<NVBVerbatimToken*>(list.at(i++))->sparam,QVariant());
+							NVBVariant tv = pi.comments.value(static_cast<NVBVerbatimToken*>(list.at(i++))->sparam,QVariant());
+							if (tv.isValid())
+								pans << tv;
+							else
+								pans << comments.value(static_cast<NVBVerbatimToken*>(list.at(i++))->sparam,QVariant());
 							break;
 							}
 						case NVBToken::FileParam : {
@@ -133,22 +137,44 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 									i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
 									break;
 									}
-/*
 								case NVBGotoToken::IsSpec : {
-									if (pi.type == NVB::SpecPage)
+									if (pi.type == NVBDataSet::Spectroscopy)
 										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
 									else
 										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
 									break;
 									}
 								case NVBGotoToken::IsTopo : {
-									if (pi.type == NVB::TopoPage)
+									if (pi.type == NVBDataSet::Topography)
 										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
 									else
 										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
 									break;
 									}
-*/
+								case NVBGotoToken::HasNAxes : {
+									if (pi.sizes.count() == static_cast<NVBGotoToken*>(list.at(i))->n)
+										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
+									else
+										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
+									break;
+									}
+								case NVBGotoToken::HasAtLeastNAxes : {
+									if (pi.sizes.count() >= static_cast<NVBGotoToken*>(list.at(i))->n)
+										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
+									else
+										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
+									break;
+									}
+								case NVBGotoToken::HasAtMostNAxes : {
+									if (pi.sizes.count() <= static_cast<NVBGotoToken*>(list.at(i))->n)
+										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
+									else
+										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
+									break;
+									}
+/*								case NVBGotoToken:: : {
+									break;
+									} */
 								case NVBGotoToken::Stop : {
 									continue;
 									}
@@ -176,10 +202,10 @@ QString NVBFileInfo::getInfoAsString(const NVBTokenList & list) const
 NVBFileInfo::NVBFileInfo(const NVBFile * const file)
 {
 	files = file->sources();
-	comments = files->getAllComments();
-	foreach(NVBDataSource * source, file)
-		foreach(NVBDataSet set, &source)
-			dataInfos.append(NVBPageInfo(set));
+	comments = file->getAllComments();
+	foreach(NVBDataSource * source, *file)
+		foreach(const NVBDataSet * set, source->dataSets())
+			append(NVBDataInfo(set));
 }
 
 bool NVBAssociatedFilesInfo::operator==(const NVBAssociatedFilesInfo & other) const {
@@ -192,4 +218,23 @@ NVBFileInfo * NVBAssociatedFilesInfo::loadFileInfo() const
 {
 	if (!generator()) return 0;
 	return generator()->loadFileInfo(*this);
+}
+
+NVBVariant NVBFileInfo::getComment(const QString& key) {
+	if (comments.contains(key))
+		return comments.value(key);
+	else {
+		NVBVariantList l;
+		foreach(const NVBDataInfo & i, *this) {
+			NVBVariant v = i.comments.value(key);
+			if (v.isValid())
+				l << v;
+			}
+		if (l.isEmpty())
+			return NVBVariant();
+		else if (l.count() == 1)
+			return l.first();
+		else
+			return NVBVariant(l);
+		}
 }
