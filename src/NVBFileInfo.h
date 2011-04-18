@@ -52,7 +52,7 @@ public:
 
 		bool operator==(const NVBAssociatedFilesInfo & other) const;
 		bool operator!=(const NVBAssociatedFilesInfo & other) const {
-			return !(*this == other);
+			return operator==(other);
 		}
 
 };
@@ -75,25 +75,28 @@ struct NVBDataInfo {
 
 	NVBDataInfo(const NVBDataSet * source) {
 		name = source->name();
+		type = source->type();
 		dimension = source->dimension();
 		sizes = source->sizes();
 		comments = source->comments();
 		}
 
-	NVBDataInfo(QString dataName, NVBUnits dataDimension, QVector<axissize_t> dataSizes, NVBDataComments dataComments)
+	NVBDataInfo(QString dataName, NVBUnits dataDimension, QVector<axissize_t> dataSizes, NVBDataComments dataComments, NVBDataSet::Type dataType = NVBDataSet::Undefined)
 	:	name(dataName)
+	, type(dataType)
 	, dimension(dataDimension)
 	,	sizes(dataSizes)
 	, comments( dataComments)
 	{;}
 
 	QString name;
+	NVBDataSet::Type type;
 	NVBUnits dimension;
 	QVector<axissize_t> sizes;
 	NVBDataComments comments;
 };
 
-class NVBFileInfo {
+class NVBFileInfo : public QList<NVBDataInfo> {
 	private:
 	public:
 		/// Generates an invalid NVBFileInfo
@@ -105,9 +108,10 @@ class NVBFileInfo {
 		virtual ~NVBFileInfo() {;}
 
 		NVBAssociatedFilesInfo files;
-		QList<NVBDataInfo> dataInfos;
 		NVBDataComments comments;
 
+		NVBVariant getComment(const QString & key);
+		
 		NVBVariant getInfo(const NVBTokens::NVBTokenList & list) const;
 		QString getInfoAsString(const NVBTokens::NVBTokenList & list) const;
 
