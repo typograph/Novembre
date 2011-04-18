@@ -331,6 +331,46 @@ NVBSelectorInstance NVBSelectorCase::instantiate(const NVBDataSet* dataSet) {
 		return NVBSelectorInstance(this);
 	}
 
+/**
+ *
+ * \fn NVBSelectorCase::instantiate(QList<NVBDataSource *> dataSources)
+ * 
+ * Armed with a list of datasources, this function tries to find the best match between
+ * them. The best match is defined as the datasource that has the biggest number of matching axes.
+ * In case of competition between different cases and/or datasources, the priority is with
+ * the first in the list.
+ * 
+ * The resulting instance might have invalid indices in the matchedAxes(), that correspond
+ * to unmatched axes. 
+ */
+
+NVBSelectorInstance NVBSelectorCase::instantiate(QList<NVBDataSource *> dataSources) {
+	// Brute-force : get an instance for each datasource, check where more axes matched
+	// Easier if there's only one selector case
+	if (t != NVBSelectorCase::AND) {
+		NVBOutputError("Only one case per selector is supported when instantiating on list");
+		return NVBSelectorInstance(this);
+		}
+
+	if (axes.count() == 0) {
+		NVBOutputPMsg("Called with empty case : might be a bug");
+		return NVBSelectorInstance(this);		
+		}
+
+	NVBSelectorInstance result(this);
+	int maxmatched = 0;
+	foreach(const NVBDataSource * source, dataSources) {
+		NVBSelectorInstance i(this,source);
+		int matched = i.matchedAxes().count() - i.matchedAxes().count(-1);
+		if (matched > maxmatched) {
+			result = i;
+			maxmatched = matched;
+			}
+		}
+		
+	return result;
+}
+
 /*
 NVBSelectorInstance NVBSelectorCase::instantiate(const NVBDataSource* dataSource) {
 	NVBOutputDMsg(QString("Trying to match case %1").arg(id));
@@ -448,15 +488,15 @@ NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const 
 				}
 			}
 		// Matching axes is recursive, so let's use another function
-		valid = matchAxes(i);
+		valid = matchAxes(i,false);
 	}
 
-#if 0
 /**
-* When NVBSelectorInstance is constructed on a datasource, it is looking for a set of axes of this dataSource,
-* matching the supplied rules. The axes defined by the rules are aggregated into \fn matchedAxes(),
-* and the other axes into \fn otherAxes(). If the rules couldn't be matched, the constructed instance
-* is invalid. To convert this instance into a dataset-based one, use \fn matchDataset()
+* When NVBSelectorInstance is constructed on a datasource, it is matching each axis of the rules
+* against an axis of this dataSource. The axes defined by the rules are aggregated into \fn matchedAxes(),
+* with the non-matched rule places filled with '-1'. The other axes are put into \fn otherAxes().
+* If no rule matched, the constructed instance is invalid.
+* TODO To convert this instance into a dataset-based one, use \fn matchDataset()
 *
 * @param selector The NVBSelectorCase to be matched
 * @param ds DataSource to match \a selector against
@@ -464,13 +504,10 @@ NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const 
 NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const NVBDataSource* ds)
  : valid(false)
  , s(selector)
+ , dataSet(0)
 	{
 		if (!ds || !selector) {
 			NVBOutputError(ds ? "NULL selector" : "NULL datasource");
-			return;
-			}
-		if (s->axes.count() > ds->nAxes()) {
-			NVBOutputDMsg(QString("A datasource with %1 axes will not match a selector with %2").arg(ds->nAxes()).arg(s->axes.count()));
 			return;
 			}
 			
@@ -478,12 +515,34 @@ NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const 
 
 		// Fill in otheraxes and check first axes that use direct indexes
 		for(axisindex_t i = 0; i < ds->nAxes(); i += 1)
-			otherAxes() << i;
+			otheraxes << i;
+
+		axisindex_t i = 0;
+		while(i < selector->axes.count()) {
+			NVBOutputDMsg(QString("Checking rule %1 for simplicity").arg(i));
+			const NVBSelectorAxis a = s->axes.at(i);
+			if (!a.p || a.p->axisProperties.isEmpty() || a.p->axisProperties.first().type != NVBSelectorAxis::Index || a.needMore(1)) {
+				NVBOutputDMsg(QString("Rule %1 is not simple: %2").arg(i).arg(a.p ? (a.p->axisProperties.isEmpty() ? "Empty rule data" : (a.p->axisProperties.first().type == NVBSelectorAxis::Index ? "More than one axis needed" : "Rule is not an index rule") ) : "NULL rule data"));
+				break;
+				}
+			axisindex_t k = (axisindex_t)a.p->axisProperties.first().i;
+			if (a.matches(ds->axes().at(k))) {
+				NVBOutputDMsg(QString("Index axis matched at %1").arg(k));
+				matchedaxes << k;
+				otheraxes.remove(otheraxes.indexOf(k));
+				i += 1;
+				}
+			else { // this axis will not match anything else, so we skip it
+				NVBOutputDMsg(QString("Index axis didn't match at %1").arg(k));
+				matchedaxes << -1;
+				i += 1;
+				}
+			}
 
 		// Matching axes is recursive, so let's use another function
-		valid = matchAxes(0);
+		valid = matchAxes(i,true);
+
 	}
-#endif
 
 NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const NVBDataSet* dataset, QVector< axisindex_t > mas, QVector< axisindex_t > oas)
 	: valid(true)
@@ -497,24 +556,27 @@ NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector, const 
 NVBSelectorInstance::NVBSelectorInstance(const NVBSelectorCase* selector)
 	: valid(false)
 	, s(selector)
+	, dataSource(0)
+	, dataSet(0)
 	{;}
 
-bool NVBSelectorInstance::matchAxes(axisindex_t start)
+bool NVBSelectorInstance::matchAxes(axisindex_t start, bool skipunmatched)
 	{
 		if (start == s->axes.count()) {
-			NVBOutputDMsg(QString("All rules matched"));
-			return true;
+			NVBOutputDMsg(QString(skipunmatched ? "No more rules" : "All rules matched"));
+			return !skipunmatched || otheraxes.count() != dataSource->nAxes();
 			}
+			
 		int matched = 0;
 
 		foreach(axisindex_t i, otheraxes) {
 			NVBOutputDMsg(QString("Trying to match axis %1 against rule %2").arg(i).arg(start));
-			if (s->axes.at(start).matches(dataSet->axisAt(i), matched ? dataSet->axisAt(matchedaxes.last()) : NVBAxis())) {
+			if (s->axes.at(start).matches(sourceAxis(i), matched ? sourceAxis(matchedaxes.last()) : NVBAxis())) {
 				matchedaxes << i;
 				otheraxes.remove(otheraxes.indexOf(i));
 				matched += 1;
 				if (!s->axes.at(start).needMore(matched)) {
-					if (matchAxes(start+1))
+					if (matchAxes(start+1,skipunmatched))
 						return true;
 					else {
 						matched -= 1;
@@ -528,7 +590,12 @@ bool NVBSelectorInstance::matchAxes(axisindex_t start)
 			}
 			
 		NVBOutputDMsg(QString("Rule %1 didn't match any axis").arg(start));
-		return false;
+		if (skipunmatched) {
+			matchedaxes << -1;
+			return matchAxes(start+1,skipunmatched);
+			}
+		else
+			return false;
 	}
 
 /**
@@ -559,16 +626,28 @@ NVBSelectorInstance NVBSelectorInstance::matchDataset(axisindex_t i) {
 	return NVBSelectorInstance(s,ds,subMatched,subOther);
 }
 
-const NVBAxis& NVBSelectorInstance::matchedAxis(axisindex_t i) {
-	// TODO find out which one is correct
-//	if (dataSource) return dataSource->axis(matchedaxes.at(i));
-	return dataSet->axisAt(matchedaxes.at(i));
+NVBAxis NVBSelectorInstance::matchedAxis(axisindex_t i) {
+	if (dataSet)
+		return dataSet->axisAt(matchedaxes.at(i));
+	if (dataSource && matchedAxes().at(i) >= 0)
+		return dataSource->axis(matchedaxes.at(i));
+	return NVBAxis();
 	}
 
-const NVBAxis& NVBSelectorInstance::otherAxis(axisindex_t i) {
-	// TODO find out which one is correct
-//	if (dataSource) return dataSource->axis(otheraxes.at(i));
-	return dataSet->axisAt(otheraxes.at(i));
+NVBAxis NVBSelectorInstance::otherAxis(axisindex_t i) {
+	if (dataSet)
+		return dataSet->axisAt(otheraxes.at(i));
+	if (dataSource)
+		return dataSource->axis(otheraxes.at(i));
+	return NVBAxis();
+	}
+
+NVBAxis NVBSelectorInstance::sourceAxis(axisindex_t i) {
+	if (dataSet)
+		return dataSet->axisAt(i);
+	if (dataSource)
+		return dataSource->axis(i);
+	return NVBAxis();
 	}
 
 

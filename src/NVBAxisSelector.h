@@ -97,7 +97,7 @@ template <class T>
 	bool matches(const NVBDataSet * dataSet);
 
 	NVBSelectorInstance instantiate(const NVBDataSet * dataSet);
-//	NVBSelectorInstance instantiate(const NVBDataSource * dataSource);
+	NVBSelectorInstance instantiate(QList<NVBDataSource *> dataSources);
 
 	void optimize();
 //	NVBSelectorAxis & addDependentAxis();
@@ -116,7 +116,8 @@ class NVBSelectorInstance {
 		QVector<axisindex_t> otheraxes;
 
 	private:
-		bool matchAxes(axisindex_t start);
+		bool matchAxes(axisindex_t start, bool skipUnmatched);
+		NVBAxis sourceAxis(axisindex_t i) ;
 		
 		/// Constructs a new selector instance on the given \a dataset, using predetermined axis sets
 		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSet * dataset, QVector<axisindex_t> mas, QVector<axisindex_t> oas);
@@ -124,8 +125,8 @@ class NVBSelectorInstance {
 		NVBSelectorInstance(const NVBSelectorCase * selector = 0);
 		/// Constructs a new selector instance on the given \a dataset, using \a selector rules
 		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSet * dataset);
-//		/// Constructs a new selector instance on the given \a datasource, using \a selector rules
-//		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSource * datasource);
+		/// Constructs a new selector instance on the given \a datasource, using \a selector rules
+		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSource * datasource);
 
 		/// Sub-instantiates this instance on \a dataset.
 		NVBSelectorInstance matchDataset(const NVBDataSet * dataset);
@@ -136,10 +137,11 @@ class NVBSelectorInstance {
 		inline void reset() { valid = false; }
 
 		inline const NVBDataSet * matchedDataset() const { return dataSet; }
+		inline NVBDataSource * matchedDatasource() const { return const_cast<NVBDataSource*>(dataSource); }
 		inline int matchedCase() const { return s ? s->id : -1; }
 
-		const NVBAxis & matchedAxis(axisindex_t i) ;
-		const NVBAxis & otherAxis(axisindex_t i) ;
+		NVBAxis matchedAxis(axisindex_t i) ;
+		NVBAxis otherAxis(axisindex_t i) ;
 
 		inline QVector<axisindex_t> matchedAxes() { return matchedaxes; }
 		inline QVector<axisindex_t> otherAxes() { return otheraxes; }
