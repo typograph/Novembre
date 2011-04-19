@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 
 	QListView * view;
 	l->addWidget(view = new QListView(mn));
-	view->setModel(new NVBDataSourceModel(fl->first()));
+	view->setModel(new NVBDataSourceListModel(*fl));
 	view->setViewMode(QListView::IconMode);
 	view->setFlow(QListView::LeftToRight);
 	view->setResizeMode(QListView::Adjust);
