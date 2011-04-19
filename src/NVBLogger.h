@@ -93,7 +93,7 @@ void NVBOutputFileErrorMessage(QString Issuer, const QFile * file);
 #endif
 
 #ifdef NVB_DEBUG
-#define NVBOutputDMsg(M)  NVBOutputMessage(NVB::DebugEntry, QString(), M)
+#define NVBOutputDMsg(M)  NVBOutputMessage(NVB::DebugEntry, NVB_CURRENT_FUNCTION, M)
 #else
 #define NVBOutputDMsg(...) (void)0
 #endif
