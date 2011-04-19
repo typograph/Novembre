@@ -125,12 +125,15 @@ bool NVBTestGenApplication::notify( QObject * receiver, QEvent * event )
 #ifdef NVB_ENABLE_LOG
 void NVBTestGenApplication::message(NVB::LogEntryType type, QString issuer, QString text)
 {
-  if (type == NVB::CriticalErrorEntry)
+  qDebug() << issuer << "->" << text;
+/*
+	if (type == NVB::CriticalErrorEntry)
     QMessageBox::critical(0,issuer,text);
   else if (type == NVB::ErrorEntry)
     qDebug() << issuer << "->" << text;
   else if (type == NVB::DebugEntry)
     qDebug() << text;
+*/
 }
 #endif
 
