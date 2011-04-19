@@ -73,8 +73,15 @@ QMimeData* NVBDataSourceModel::mimeData(const QModelIndexList& indexes) const
 
   if (indexes.isEmpty()) return 0;
 
-  return new NVBDataSourceMimeData(indexes.at(0).data(PageRole).value<NVBDataSource*>());
+  return mimeData(indexes.first());
 }
+
+QMimeData* NVBDataSourceModel::mimeData(const QModelIndex& index) const
+{
+  return new NVBDataSourceMimeData(index.data(PageRole).value<NVBDataSource*>());
+}
+
+
 
 QStringList NVBDataSourceModel::mimeTypes() const
 {
@@ -135,4 +142,102 @@ void NVBDataSourceModel::parentAboutToReform() {
 void NVBDataSourceModel::parentReformed()	{
 	initIcons();
 	endResetModel();
+}
+
+typedef QPair<NVBDataSourceModel *, int> NVBDSLModelSubIndex;
+
+class NVBDataSourceListModelPrivate {
+private:
+	QList<NVBDataSourceModel*> models;
+public:
+	NVBDataSourceListModelPrivate(const QList<NVBDataSource*> & sources) {
+		foreach(NVBDataSource * s, sources)
+			models << new NVBDataSourceModel(s);
+		}
+
+	~NVBDataSourceListModelPrivate() {
+		}
+	
+	NVBDSLModelSubIndex map(int k) const { //FIXME inefficient
+		foreach(NVBDataSourceModel * m, models) {
+			if (k >= m->rowCount() )
+				k -= m->rowCount();
+			else
+				return NVBDSLModelSubIndex(m,k);
+			}
+		NVBOutputError("Index out of bounds");
+		return NVBDSLModelSubIndex(0,k);
+		}
+	
+	int count() const { //FIXME very inefficient
+		int r = 0;
+		foreach(NVBDataSourceModel * m, models)
+			r += m->rowCount();
+		return r;
+		}
+		
+};
+
+NVBDataSourceListModel::NVBDataSourceListModel(QList<NVBDataSource*> sources)
+	: QAbstractListModel(0)
+	, p(0)
+{ //FIXME This model doesn't react to changes in child models
+	p = new NVBDataSourceListModelPrivate(sources);
+	if (!p) {
+		NVBOutputError("Memory allocation for private failed.");
+		throw;
+		}
+		
+}
+
+NVBDataSourceListModel::~NVBDataSourceListModel() {
+	if (p) delete p;
+}
+
+
+int NVBDataSourceListModel::rowCount(const QModelIndex& parent) const
+{
+	return p->count();
+}
+
+QVariant NVBDataSourceListModel::data(const QModelIndex& index, int role) const
+{
+	NVBDSLModelSubIndex i = p->map(index.row());
+	if (i.first)
+		return i.first->data(i.first->index(i.second),role);
+	return QVariant();
+}
+
+Qt::ItemFlags NVBDataSourceListModel::flags(const QModelIndex& index) const
+{
+	NVBDSLModelSubIndex i = p->map(index.row());
+	if (i.first)
+		return i.first->flags(i.first->index(i.second));
+	return Qt::NoItemFlags;
+}
+
+QMimeData* NVBDataSourceListModel::mimeData(const QModelIndexList& indexes) const
+{
+  if (indexes.count() > 1) {
+    NVBOutputError("Dragging more than one object");
+    return 0;
+    }
+
+  if (indexes.isEmpty()) return 0;
+
+	QModelIndex index = indexes.first();
+	NVBDSLModelSubIndex i = p->map(index.row());
+	if (i.first)
+		return i.first->mimeData(i.first->index(i.second));
+	return 0;
+}
+
+QStringList NVBDataSourceListModel::mimeTypes() const
+{
+  return QStringList()
+		<< NVBDataSourceMimeData::dataSetMimeType()
+		<< NVBDataSourceMimeData::dataSourceMimeType()
+		<< "text/plain"
+		<< "image/x-qt-image"
+		;
 }
