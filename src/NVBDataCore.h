@@ -102,9 +102,9 @@ class NVBSliceCounter {
 
 		~NVBSliceCounter() ;
 
-		static bool stepIndexVector(QVector<axissize_t> & ixs, const QVector<axissize_t> & sizes) ;
+		static bool stepIndexVector(QVector<axissize_t> & ixs, const QVector<axissize_t> & sizes, int step) ;
 		
-		void stepIndexVector();
+		void stepIndexVector(int step = 1);
 		inline bool counting() { return is_running; }
 
 		inline const NVBDataSlice & getSlice() const { return slice; }
@@ -133,6 +133,17 @@ class NVBSliceSingle {
 
 #define forEachSlice(dataset,sliced,kept) \
 	for(NVBSliceCounter _counter(dataset,sliced,kept); _counter.counting(); _counter.stepIndexVector())
+
+/**
+ *
+ * @def forNSlices(dataset,N,slicedaxes,keptaxes)
+ *
+ * Runs a cycle on N slices in dataset on slicedaxes. Variable \a SLICE
+ * of type NVBDataSlice is available inside the cycle.
+ */
+
+#define forNSlices(dataset,N,sliced,kept) \
+	for(NVBSliceCounter _counter(dataset,sliced,kept); _counter.counting(); _counter.stepIndexVector(subprod(dataset->sizes().constData(),sliced.count(),sliced.constData())/N))
 
 /**
  *

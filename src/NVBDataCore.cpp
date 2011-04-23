@@ -399,19 +399,27 @@ NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisi
 NVBSliceCounter::~NVBSliceCounter() {
 	}
 
-bool NVBSliceCounter::stepIndexVector(QVector< axissize_t >& ixs, const QVector< axissize_t >& sizes) {
-	for (axisindex_t i = 0; i < ixs.count(); i++)
+bool NVBSliceCounter::stepIndexVector(QVector< axissize_t >& ixs, const QVector< axissize_t >& sizes, int step) {
+	if (step == 0) return true;
+
+	for (axisindex_t i = 0; i < ixs.count(); i++) {
+		step += ixs.at(i);
+		ixs[i] = step % sizes.at(i);
+		step /= sizes.at(i);
+		if (step == 0) return true;
+		}
+/*		
 		if (ixs.at(i) == sizes.at(i) - 1)
 			ixs[i] = 0;
 		else {
 			ixs[i] += 1;
 			return true;
-			}
+			} */
 	return false;
 	}
 
-void  NVBSliceCounter::stepIndexVector() {
-	if ( (is_running = stepIndexVector(slice.indexes, slice.sizes)) )
+void  NVBSliceCounter::stepIndexVector(int step) {
+	if ( (is_running = stepIndexVector(slice.indexes, slice.sizes,step)) )
 		slice.calculate();
 	}
 
