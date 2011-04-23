@@ -78,7 +78,7 @@ struct NVBDataInfo {
 		type = source->type();
 		dimension = source->dimension();
 		sizes = source->sizes();
-		comments = source->comments();
+		comments = source->getAllComments();
 		}
 
 	NVBDataInfo(QString dataName, NVBUnits dataDimension, QVector<axissize_t> dataSizes, NVBDataComments dataComments, NVBDataSet::Type dataType = NVBDataSet::Undefined)
