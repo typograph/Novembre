@@ -117,7 +117,7 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 // While the axes are the same, we keep the same datasource.
 
 	while(!file.atEnd())
-		loadNextPage(file,*f);
+		loadNextPage(file,f);
 
 	return f;
 }
@@ -223,7 +223,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   return fi;
 }
 
-void RHKFileGenerator::loadNextPage(QFile& file, QList< NVBDataSource* > & sources
+void RHKFileGenerator::loadNextPage(QFile& file, NVBFile * sources
 )
 {
   const char MAGIC[] = {  0x53, 0x00,
@@ -269,7 +269,7 @@ void RHKFileGenerator::loadNextPage(QFile& file, QList< NVBDataSource* > & sourc
     }
 }
 
-void RHKFileGenerator::loadTopoPage(QFile& file, QList< NVBDataSource* >& sources)
+void RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 {
   TRHKHeader header = RHKFileGenerator::getRHKHeader(file);
 	NVBDataComments comments;
@@ -283,6 +283,7 @@ void RHKFileGenerator::loadTopoPage(QFile& file, QList< NVBDataSource* >& source
   QStringList strings = RHKFileGenerator::loadRHKStrings(file,header.string_count);
 	RHKFileGenerator::CommentsFromString(comments,strings);
 	RHKFileGenerator::CommentsFromHeader(comments,header);
+	sources->filterAddComments(comments);
 
 // Before we start doing anything else, we have to make sure if we want a new datasource
 
@@ -290,14 +291,14 @@ void RHKFileGenerator::loadTopoPage(QFile& file, QList< NVBDataSource* >& source
 	s.addAxisByLength(header.x_size).byUnits(NVBUnits(strings.at(7)));
 	s.addAxisByLength(header.y_size).byUnits(NVBUnits(strings.at(8)));
 
-	NVBSelectorInstance inst = s.instantiate(sources);
+	NVBSelectorInstance inst = s.instantiate(*sources);
 	NVBConstructableDataSource * ds;
 	QVector<axisindex_t> ia(2);
 	
 	if(!inst.isValid()) {
 		NVBOutputDMsg("No suitable existing datasource found");
-		ds = new NVBConstructableDataSource();
-		sources << ds;
+		ds = new NVBConstructableDataSource(sources);
+		sources->append(ds);
 		
 		// Add X axis
 		ia[0] = 0;
@@ -351,7 +352,8 @@ void RHKFileGenerator::loadTopoPage(QFile& file, QList< NVBDataSource* >& source
     free(tdata);
     }
 
-	NVBDataSet * dset = ds->addDataSet(strings.at(0).trimmed(),data,NVBUnits(strings.at(9)),ia,NVBDataSet::Topography);
+	ds->filterAddComments(comments);
+	NVBDataSet * dset = ds->addDataSet(strings.at(0).trimmed(),data,NVBUnits(strings.at(9)),comments,ia,NVBDataSet::Topography);
 
   if (header.colorinfo_count == 1) {
     TRHKColorInfo cInfo;
@@ -375,7 +377,7 @@ void RHKFileGenerator::loadTopoPage(QFile& file, QList< NVBDataSource* >& source
     }
 }
 
-void RHKFileGenerator::loadSpecPage(QFile & file, QList<NVBDataSource*> & sources )
+void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 {
   
   TRHKHeader header = RHKFileGenerator::getRHKHeader(file);
@@ -391,6 +393,7 @@ void RHKFileGenerator::loadSpecPage(QFile & file, QList<NVBDataSource*> & source
 
 	RHKFileGenerator::CommentsFromString(comments,strings);
 	RHKFileGenerator::CommentsFromHeader(comments,header);
+	sources->filterAddComments(comments);
 
 // We have to deduce the shape of the data
 	
@@ -567,13 +570,13 @@ void RHKFileGenerator::loadSpecPage(QFile & file, QList<NVBDataSource*> & source
 		s.addAxisByLength(header.y_size / np);
 		}
 	
-	NVBSelectorInstance inst = s.instantiate(sources);
+	NVBSelectorInstance inst = s.instantiate(*sources);
 	NVBConstructableDataSource * ds = 0;
 	QVector<axisindex_t> ia(((!status) & 2 >> 1) + status + 1); // 0 -> 2, 1-> 3, 2-> 3, 3-> 4
 	
 	if (!inst.isValid()) { // We have to create the axes
-		ds = new NVBConstructableDataSource();
-		sources << ds;
+		ds = new NVBConstructableDataSource(sources);
+		sources->append(ds);
 		ds->addAxis(strings.at(10).isEmpty() ? "t" : strings.at(10),header.x_size);
 		ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
 		if (status & 1)
@@ -628,7 +631,8 @@ void RHKFileGenerator::loadSpecPage(QFile & file, QList<NVBDataSource*> & source
 //  td = NVBUnits(strings.at(7));
 //  zd = NVBUnits(strings.at(9));
 
-	ds->addDataSet(strings.at(0).trimmed(),ys,NVBUnits(strings.at(9)),ia,NVBDataSet::Spectroscopy);
+	ds->filterAddComments(comments);
+	ds->addDataSet(strings.at(0).trimmed(),ys,NVBUnits(strings.at(9)),comments,ia,NVBDataSet::Spectroscopy);
 	
 /* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
   if (header.colorinfo_count != 0) 

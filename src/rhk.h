@@ -118,9 +118,9 @@ private:
   static QString getDirectionString(qint32 type);
   static QString getImageTypeString(qint32 type);
 
-	static void loadNextPage(QFile & file, QList<NVBDataSource*> & sources );
-	static void loadTopoPage(QFile & file, QList<NVBDataSource*> & sources );
-	static void loadSpecPage(QFile & file, QList<NVBDataSource*> & sources );
+	static void loadNextPage(QFile & file, NVBFile * sources );
+	static void loadTopoPage(QFile & file, NVBFile * sources );
+	static void loadSpecPage(QFile & file, NVBFile * sources );
 	static void CommentsFromString(NVBDataComments & comments, const QStringList & strings);
 	static void CommentsFromHeader(NVBDataComments & comments, const TRHKHeader & header);
 	
