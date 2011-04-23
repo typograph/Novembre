@@ -182,7 +182,8 @@ QPixmap NVB1DIconEngine::drawCacheAt(QSize size) {
 
 	if ((axissize_t) size.width() > maxw) { // Lines TODO Think about drawing splines
 		NVBValueScaler<axissize_t,int> w(0,maxw-1,0,size.width()-1);
-		forEachSliceAlong(instance) {
+		p.setRenderHint(QPainter::Antialiasing, true);
+		forNSlicesAlong(instance,100) {
 			p.setPen(QPen(SLICE.associatedColor()));
 			for (axissize_t j = maxw-1; j > 0; j--)
 				p.drawLine(w.scale(j-1),h.scale(SLICE.data[j-1]),w.scale(j),h.scale(SLICE.data[j]));
@@ -190,14 +191,15 @@ QPixmap NVB1DIconEngine::drawCacheAt(QSize size) {
 		}
 	else if ((axissize_t) size.width() < maxw) { // Draw select points
 		NVBValueScaler<int,axissize_t> w(0,size.width()-1,0,maxw-1);
-		forEachSliceAlong(instance) {
+		p.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::HighQualityAntialiasing | QPainter::SmoothPixmapTransform | QPainter::NonCosmeticDefaultPen , false);
+		forNSlicesAlong(instance,100) {
 			p.setPen(QPen(SLICE.associatedColor()));
 			for (axissize_t j = size.width()-1; j > 0; j--)
 				p.drawLine(j-1,h.scale(SLICE.data[w.scale(j-1)]),j,h.scale(SLICE.data[w.scale(j)]));
 			}
 		}
 	else {
-		forEachSliceAlong(instance) { // draw 1:1
+		forNSlicesAlong(instance,100) { // draw 1:1
 			p.setPen(QPen(SLICE.associatedColor()));
 			for (axissize_t j = maxw-1; j > 0; j--)
 				p.drawLine(j-1,h.scale(SLICE.data[j-1]),j,h.scale(SLICE.data[j]));
