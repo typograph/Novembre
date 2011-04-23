@@ -189,7 +189,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
     switch (header.type) {
       case 0 : { // Topography
         if (header.colorinfo_count > 1)
-					NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
+	 NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
         quint16 cs;
         file.peek((char*)&cs,2);
         file.seek(file.pos() + header.colorinfo_count*(cs+2));
@@ -198,26 +198,27 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
       case 1 : { // Spectroscopy
 /* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
         if (header.colorinfo_count != 0) 
-					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
+	  NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to 
+Timofey").arg(file.fileName()));
 */
-				// Skip curve position data
-				if (header.page_type != 7 && header.page_type != 31)
-          file.seek(file.pos() + 2*sizeof(float)*header.y_size);
-				fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
+	// Skip curve position data
+	  if (header.page_type != 7 && header.page_type != 31)
+            file.seek(file.pos() + 2*sizeof(float)*header.y_size);
+//	  fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
         break;
         }
       case 3 : { // Annotated spectroscopy, whatever that means
-				NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
+	NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
 //       type = NVB::SpecPage;
         file.seek(file.pos() + 2*sizeof(float)*header.y_size);
         }
       case 2 : // RHK lists this case as RESERVED
       default : {
-				NVBOutputError(QString("Non-existing page found (type %1). Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
+	NVBOutputError(QString("Non-existing page found (type %1). Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
 //        type = NVB::InvalidPage;
         }
       }
-		fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
+    fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
     }
 
   return fi;
