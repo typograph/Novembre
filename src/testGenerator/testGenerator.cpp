@@ -2,7 +2,7 @@
 
 #include <QtGui/QWidget>
 #include <QtGui/QTreeWidget>
-#include <QtGui/QComboBox>
+#include <QtGui/QLineEdit>
 #include <QtGui/QFileSystemModel>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QFileDialog>
@@ -25,95 +25,41 @@ int main(int argc, char** argv) {
 	
 	QWidget * mn;
 	QVBoxLayout * l;
-	QComboBox * files;
-	QTreeWidget * tree;
 	
 	app.setActiveWindow(mn = new QWidget());
 	mn->setLayout(l = new QVBoxLayout());
-	l->addWidget(files = new QComboBox(mn));
-	QFileSystemModel * model = new QFileSystemModel(files);
-	model->setFilter(QDir::AllEntries | QDir::Readable | QDir::Executable);
-//	model->setNameFilters(QStringList(QString("*.sm3")));
+	l->addWidget(app.files = new QLineEdit(mn));
+	QFileSystemModel * model = new QFileSystemModel(app.files);
+	model->setFilter(QDir::AllEntries | QDir::AllDirs | QDir::NoDotAndDotDot);
+	model->setNameFilters(QStringList(QString("*.sm3")));
 	model->setReadOnly(true);
-	model->setRootPath("/");
-	files->setModel(model);
-	files->setCompleter(new QCompleter(model,files));
-	files->setAutoCompletion(true);
-	files->setEditable(true);
-	l->addWidget(tree = new QTreeWidget(mn));
-	tree->setColumnCount(1);
+	model->setResolveSymlinks(true);
+	model->setRootPath("/home/timoty/programming/Novembre/test_files/");
+
+	QCompleter * cmpl = new QCompleter(model,app.files);
+	app.files->setCompleter(cmpl);
+	cmpl->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
+
+	app.connect(app.files,SIGNAL(editingFinished()),&app,SLOT(openFile()));
+
+	l->addWidget(app.tree = new QTreeWidget(mn));
+	app.tree->setColumnCount(1);
 	
-	RHKFileGenerator gen;
-	//"/home/timoty/programming/Novembre/test_files/rhk/data1850.sm3"
-	NVBAssociatedFilesInfo inf = gen.associatedFiles(argv[1]/*QFileDialog::getOpenFileName(l,"Select file to load")*/);
-	
-	NVBFileInfo * fi = gen.loadFileInfo(inf);
-	QFont font(QApplication::font());
-	font.setBold(true);
+	l->addWidget(app.view = new QListView(mn));
+	app.view->setViewMode(QListView::IconMode);
+	app.view->setFlow(QListView::LeftToRight);
+	app.view->setResizeMode(QListView::Adjust);
+	app.view->setGridSize(QSize(120,140));
+	app.view->setIconSize(QSize(100,100));
 
-	tree->addTopLevelItem(new QTreeWidgetItem(tree,QStringList(fi->files.name())));
-	
-	QTreeWidgetItem * item;
-	item = new QTreeWidgetItem(tree,QStringList("Info"));
-	item->setFont(0,font);
-//	tree->addTopLevelItem(item);
-	foreach(NVBDataInfo i, *fi) {
-		QTreeWidgetItem * di = new QTreeWidgetItem(item,QStringList(QString("%1 [%2]").arg(i.name,i.dimension.baseUnit())));
-		foreach(axissize_t sz, i.sizes)
-			new QTreeWidgetItem(di,QStringList(QString::number(sz)));
-		}
-//	l->setText(l->text() + "\n" + fi->files.name());
-//	l->setText(l->text() + "\n" + fi->files.name());
-	
-	NVBFile * fl = gen.loadFile(inf);
-	
-	item = new QTreeWidgetItem(tree,QStringList("File"));
-	item->setFont(0,font);
-//	tree->addTopLevelItem(item);
-
-	new QTreeWidgetItem(item,QStringList(fl->name()));
-//	new QTreeWidgetItem(item,QString::number(fl->count()));
-
-	QTreeWidgetItem * cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
-	NVBDataComments cmnts = fl->getAllComments();
-	foreach(QString key, cmnts.keys())
-		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
-	
-	for(int i=0; i < fl->count(); i++) {
-		const NVBDataSource * src = fl->at(i);
-		QTreeWidgetItem * dsi = new QTreeWidgetItem(item,QStringList(QString("Source")));
-
-		QTreeWidgetItem * dsa = new QTreeWidgetItem(dsi,QStringList(QString("Axes")));
-		foreach(const NVBAxis & a, src->axes())
-			new QTreeWidgetItem(dsa,QStringList(QString("%1 *%2").arg(a.name()).arg(a.length())));
-
-		dsa = new QTreeWidgetItem(dsi,QStringList(QString("Data")));
-		foreach(NVBDataSet * ds, src->dataSets()) {
-			cmnt = new QTreeWidgetItem(dsa,QStringList(QString("%1 [%2]").arg(ds->name(),ds->dimension().baseUnit())));
-			cmnts = ds->getAllComments();
-			foreach(QString key, cmnts.keys())
-				new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
-			
-			}
-
-		cmnt = new QTreeWidgetItem(dsi,QStringList(QString("Comments")));
-		cmnts = src->getAllComments();
-		foreach(QString key, cmnts.keys())
-			new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
-		
-	}
-
-	QListView * view;
-	l->addWidget(view = new QListView(mn));
-	view->setModel(new NVBDataSourceListModel(*fl));
-	view->setViewMode(QListView::IconMode);
-	view->setFlow(QListView::LeftToRight);
-	view->setResizeMode(QListView::Adjust);
-	view->setGridSize(QSize(120,140));
-	view->setIconSize(QSize(100,100));
-
+//	app.view->hide();
 
 	mn->show();
+
+	if (argc > 1) {
+		app.files->setText(argv[1]);
+		app.openFile(argv[1]);
+		}
 	
 	return app.exec();
 	
@@ -167,4 +113,83 @@ NVBTestGenApplication::~ NVBTestGenApplication()
 #ifdef NVB_ENABLE_LOG
   delete property("Logger").value<NVBLogger*>();
 #endif
+}
+
+void NVBTestGenApplication::openFile(QString name) {
+
+	tree->clear();
+
+	RHKFileGenerator gen;
+
+	//"/home/timoty/programming/Novembre/test_files/rhk/data1850.sm3"
+	NVBAssociatedFilesInfo inf = gen.associatedFiles(name.isEmpty() ? files->text() : name/*QFileDialog::getOpenFileName(l,"Select 
+file to 
+load")*/);
+	
+
+	NVBFileInfo * fi = inf.loadFileInfo();
+	if (!fi) return;
+
+	QFont font(QApplication::font());
+	font.setBold(true);
+
+	tree->setHeaderLabel(fi->files.name());
+	
+	QTreeWidgetItem * item;
+	item = new QTreeWidgetItem(tree,QStringList("Info"));
+	item->setFont(0,font);
+//	tree->addTopLevelItem(item);
+	foreach(NVBDataInfo i, *fi) {
+		QTreeWidgetItem * di = new QTreeWidgetItem(item,QStringList(QString("%1 [%2]").arg(i.name,i.dimension.baseUnit())));
+		foreach(axissize_t sz, i.sizes)
+			new QTreeWidgetItem(di,QStringList(QString::number(sz)));
+		}
+//	l->setText(l->text() + "\n" + fi->files.name());
+//	l->setText(l->text() + "\n" + fi->files.name());
+	
+	NVBFile * fl = gen.loadFile(inf);
+	
+	item = new QTreeWidgetItem(tree,QStringList("File"));
+	item->setFont(0,font);
+//	tree->addTopLevelItem(item);
+
+	new QTreeWidgetItem(item,QStringList(fl->name()));
+//	new QTreeWidgetItem(item,QString::number(fl->count()));
+
+	QTreeWidgetItem * cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
+	NVBDataComments cmnts = fl->getAllComments();
+	foreach(QString key, cmnts.keys())
+		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
+	
+	for(int i=0; i < fl->count(); i++) {
+		const NVBDataSource * src = fl->at(i);
+		QTreeWidgetItem * dsi = new QTreeWidgetItem(item,QStringList(QString("Source")));
+
+		QTreeWidgetItem * dsa = new QTreeWidgetItem(dsi,QStringList(QString("Axes")));
+		foreach(const NVBAxis & a, src->axes())
+			new QTreeWidgetItem(dsa,QStringList(QString("%1 *%2").arg(a.name()).arg(a.length())));
+
+		dsa = new QTreeWidgetItem(dsi,QStringList(QString("Data")));
+		foreach(NVBDataSet * ds, src->dataSets()) {
+			cmnt = new QTreeWidgetItem(dsa,QStringList(QString("%1 [%2]").arg(ds->name(),ds->dimension().baseUnit())));
+			cmnts = ds->getAllComments();
+			foreach(QString key, cmnts.keys())
+				new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
+			
+			}
+
+		cmnt = new QTreeWidgetItem(dsi,QStringList(QString("Comments")));
+		cmnts = src->getAllComments();
+		foreach(QString key, cmnts.keys())
+			new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
+		
+	}
+
+	QAbstractItemModel * m = view->model();
+
+	view->setModel(new NVBDataSourceListModel(*fl));
+
+	if (m) delete m;
+
+
 }
