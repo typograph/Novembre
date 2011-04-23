@@ -3,7 +3,7 @@
 #include <QtGui/QWidget>
 #include <QtGui/QTreeWidget>
 #include <QtGui/QComboBox>
-#include <QtGui/QDirModel>
+#include <QtGui/QFileSystemModel>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QFileDialog>
 #include <QtGui/QMessageBox>
@@ -13,6 +13,7 @@
 #include <QtCore/QStringList>
 #include <QtGui/QFont>
 #include <QtGui/QListView>
+#include <QtGui/QCompleter>
 
 #include "../rhk.h"
 #include "../NVBFile.h"
@@ -30,7 +31,13 @@ int main(int argc, char** argv) {
 	app.setActiveWindow(mn = new QWidget());
 	mn->setLayout(l = new QVBoxLayout());
 	l->addWidget(files = new QComboBox(mn));
-	files->setModel(new QDirModel(QStringList(QString("*.sm3")),QDir::AllEntries | QDir::Readable,QDir::Name | QDir::DirsFirst,files));
+	QFileSystemModel * model = new QFileSystemModel(files);
+	model->setFilter(QDir::AllEntries | QDir::Readable | QDir::Executable);
+//	model->setNameFilters(QStringList(QString("*.sm3")));
+	model->setReadOnly(true);
+	model->setRootPath("/");
+	files->setModel(model);
+	files->setCompleter(new QCompleter(model,files));
 	files->setAutoCompletion(true);
 	files->setEditable(true);
 	l->addWidget(tree = new QTreeWidget(mn));
@@ -67,15 +74,33 @@ int main(int argc, char** argv) {
 	new QTreeWidgetItem(item,QStringList(fl->name()));
 //	new QTreeWidgetItem(item,QString::number(fl->count()));
 
+	QTreeWidgetItem * cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
+	NVBDataComments cmnts = fl->getAllComments();
+	foreach(QString key, cmnts.keys())
+		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
+	
 	for(int i=0; i < fl->count(); i++) {
 		const NVBDataSource * src = fl->at(i);
 		QTreeWidgetItem * dsi = new QTreeWidgetItem(item,QStringList(QString("Source")));
+
 		QTreeWidgetItem * dsa = new QTreeWidgetItem(dsi,QStringList(QString("Axes")));
 		foreach(const NVBAxis & a, src->axes())
 			new QTreeWidgetItem(dsa,QStringList(QString("%1 *%2").arg(a.name()).arg(a.length())));
+
 		dsa = new QTreeWidgetItem(dsi,QStringList(QString("Data")));
-		foreach(NVBDataSet * ds, src->dataSets())
-			new QTreeWidgetItem(dsa,QStringList(QString("%1 [%2]").arg(ds->name(),ds->dimension().baseUnit())));
+		foreach(NVBDataSet * ds, src->dataSets()) {
+			cmnt = new QTreeWidgetItem(dsa,QStringList(QString("%1 [%2]").arg(ds->name(),ds->dimension().baseUnit())));
+			cmnts = ds->getAllComments();
+			foreach(QString key, cmnts.keys())
+				new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
+			
+			}
+
+		cmnt = new QTreeWidgetItem(dsi,QStringList(QString("Comments")));
+		cmnts = src->getAllComments();
+		foreach(QString key, cmnts.keys())
+			new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
+		
 	}
 
 	QListView * view;
