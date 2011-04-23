@@ -50,6 +50,8 @@ class NVBDataSet : public QObject {
 //    QVector<NVBDataMap*> ms;
 		Type t;
 
+		NVBDataComments comments;
+		
 	protected:
 		mutable QVector<axissize_t> asizes;
 		
@@ -85,7 +87,10 @@ class NVBDataSet : public QObject {
 		double min() const;
 		double max() const;
 
-    NVBDataComments comments() const;
+		//! \returns all comments belonging to the dataset
+    inline NVBDataComments getAllComments() const { return comments; }
+    //! \returns comment from this dataset, or if \a recursive, also from the parent datasource
+		NVBVariant getComment(const QString & key, bool recursive = true) const;
 
 //    inline QVector<NVBDataMap*> maps() const { return ms; }
 //    void addMapping(NVBDataMap* map) { ms.append(map); }
@@ -106,7 +111,11 @@ void useDataSource(const NVBDataSource* source);
 void releaseDataSource(const NVBDataSource* source);
 
 class NVBDataSource : public QObject {
+	
+	friend class NVBFile;
+	
 	Q_OBJECT
+
 	private:
 		/// Number of references to this source. Note, that creating an object uses it automatically
 		mutable unsigned int refCount;
@@ -115,6 +124,7 @@ class NVBDataSource : public QObject {
 
 	protected:
 		NVBAxesProps outputAxesProps;
+		NVBDataComments comments;
 		
   public:
 
@@ -132,9 +142,11 @@ class NVBDataSource : public QObject {
 		virtual const NVBColorMap * defaultColorMap() const;
 		
 		/// \returns the comment for the given \a key
-		virtual NVBVariant getComment(const QString& key) const = 0;
+		virtual NVBVariant getComment(const QString& key, bool recursive = true) const;
 		/// \returns all the available comments in a QMap
-		virtual const NVBDataComments& getAllComments() const = 0;
+		virtual NVBDataComments getAllComments() const;
+		/// \returns a unified list of all dataset comments for key
+		virtual NVBVariant collectComments(const QString & key) const;
 
 
 		/// Control widget for NVBWidgetStack
@@ -160,6 +172,7 @@ class NVBDataSource : public QObject {
 	public slots:
 		/// To be used by "on-top" data sources. Emits \a objectPushed()
 		virtual inline void override( NVBDataSource * newpt) { emit objectPushed(newpt,this); }
+
 	signals:
 		/// Some change will occur to sizes of axes.
 		void axesAboutToBeResized();
@@ -198,8 +211,6 @@ Q_DECLARE_METATYPE(NVBDataSource*)
 class NVBConstructableDataSource : public NVBDataSource {
 	Q_OBJECT
 	protected:
-		/// Comments for the source
-		NVBDataComments comments;
 		/// Axis sizes
 		QList< NVBAxis > axs;
 		/// Axis maps
@@ -218,16 +229,17 @@ class NVBConstructableDataSource : public NVBDataSource {
 		virtual inline const NVBAxis & axis(axisindex_t i) const { return axs.at(i); }
     virtual NVBAxis & addAxis(QString name, axissize_t length);
 		virtual void addAxisMap(NVBAxisMap * map, QVector<axisindex_t> axes = QVector<axisindex_t>());
-		virtual NVBDataSet * addDataSet(QString name, double* data, NVBUnits dimension, QVector< axisindex_t > axes = QVector<axisindex_t>(), NVBDataSet::Type type = NVBDataSet::Undefined, NVBColorMap* map = 0);
+		virtual NVBDataSet * addDataSet(QString name, double* data, NVBUnits dimension, NVBDataComments comments, QVector< axisindex_t > axes = QVector<axisindex_t>(), NVBDataSet::Type type = NVBDataSet::Undefined, NVBColorMap* map = 0);
 		virtual const QList< NVBAxis > & axes() const { return axs; }
 		virtual const QList< NVBDataSet * > & dataSets() const { return dsets; }
 
 		virtual inline void addComment(QString key, QString value) { comments.insert(key,value); }
-		/// \returns the comment for the given \a key
-		virtual inline NVBVariant getComment(const QString& key) const { return comments.value(key); }
-		/// \returns all the available comments in a QMap
-		virtual inline const NVBDataComments& getAllComments() const { return comments; }
-		inline void setComments(NVBDataComments _cms) { comments = _cms; }
+//		/// \returns the comment for the given \a key
+//		virtual NVBVariant getComment(const QString& key, bool recursive = true) const ;
+//		/// \returns all the available comments in a QMap
+//		virtual inline const NVBDataComments& getAllComments() const { return cmnts; }
+
+		void filterAddComments(NVBDataComments& newComments);
 		
 		virtual QWidget * controlWidget() const { return 0; }
 		virtual NVBDataSource * parent() const { return 0; }
