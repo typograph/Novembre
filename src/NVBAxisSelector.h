@@ -153,6 +153,12 @@ class NVBSelectorInstance {
 #define forEachSliceAlong(instance) \
 	forEachSlice(instance.matchedDataset(), instance.otherAxes(), instance.matchedAxes())
 
+#define forNSlicesAcross(instance,N) \
+	forNSlices(instance.matchedDataset(), N, instance.matchedAxes(), instance.otherAxes())
+
+#define forNSlicesAlong(instance,N) \
+	forNSlices(instance.matchedDataset(), N, instance.otherAxes(), instance.matchedAxes())
+
 #define forSingleSliceAcross(instance) \
 	forSingleSlice(instance.matchedDataset(), instance.matchedAxes(), instance.otherAxes())
 
