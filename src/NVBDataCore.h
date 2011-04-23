@@ -95,16 +95,17 @@ struct NVBDataSlice {
 class NVBSliceCounter {
 	const NVBDataSet * dset;
 	bool is_running;
+	int step;
 	NVBDataSlice slice;
 
 	public:
-		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept = QVector<axisindex_t>());
+		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept = QVector<axisindex_t>(), int maxCount = -1);
 
 		~NVBSliceCounter() ;
 
 		static bool stepIndexVector(QVector<axissize_t> & ixs, const QVector<axissize_t> & sizes, int step) ;
 		
-		void stepIndexVector(int step = 1);
+		void stepIndexVector();
 		inline bool counting() { return is_running; }
 
 		inline const NVBDataSlice & getSlice() const { return slice; }
@@ -143,7 +144,7 @@ class NVBSliceSingle {
  */
 
 #define forNSlices(dataset,N,sliced,kept) \
-	for(NVBSliceCounter _counter(dataset,sliced,kept); _counter.counting(); _counter.stepIndexVector(subprod(dataset->sizes().constData(),sliced.count(),sliced.constData())/N))
+	for(NVBSliceCounter _counter(dataset,sliced,kept,N); _counter.counting();_counter.stepIndexVector())
 
 /**
  *

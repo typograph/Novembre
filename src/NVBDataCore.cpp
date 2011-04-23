@@ -382,7 +382,7 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 	return tdata;
 }
 
-NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes) : dset(dataset)
+NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes, int maxCount) : dset(dataset)
 	, is_running(true)
 	, slice(
 			dataset,
@@ -393,6 +393,14 @@ NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisi
 		NVBOutputError("NULL dataset");
 		throw;
 		}
+
+	if (maxCount <= 0)
+		step = 1;
+	else {
+		step = qMax( (axissize_t)1, subprod(dataset->sizes().constData(),sliceaxes.count(),sliceaxes.constData())/maxCount);
+		}
+
+
 	slice.calculate();
 	}
 
@@ -418,8 +426,8 @@ bool NVBSliceCounter::stepIndexVector(QVector< axissize_t >& ixs, const QVector<
 	return false;
 	}
 
-void  NVBSliceCounter::stepIndexVector(int step) {
-	if ( (is_running = stepIndexVector(slice.indexes, slice.sizes,step)) )
+void  NVBSliceCounter::stepIndexVector() {
+	if ( (is_running = stepIndexVector(slice.indexes, slice.sizes, step)) )
 		slice.calculate();
 	}
 
