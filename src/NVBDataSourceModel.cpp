@@ -2,6 +2,8 @@
 #include "NVBDatasetIcons.h"
 #include "NVBMimeData.h"
 
+#include <QtCore/QAbstractItemModel>
+
 #define PageRole Qt::UserRole
 
 NVBDataSourceModel::NVBDataSourceModel(const NVBDataSource * s)
@@ -144,65 +146,43 @@ void NVBDataSourceModel::parentReformed()	{
 	endResetModel();
 }
 
-typedef QPair<NVBDataSourceModel *, int> NVBDSLModelSubIndex;
-
-class NVBDataSourceListModelPrivate {
-private:
-	QList<NVBDataSourceModel*> models;
-public:
-	NVBDataSourceListModelPrivate(const QList<NVBDataSource*> & sources) {
-		foreach(NVBDataSource * s, sources)
-			models << new NVBDataSourceModel(s);
-		}
-
-	~NVBDataSourceListModelPrivate() {
-		}
-	
-	NVBDSLModelSubIndex map(int k) const { //FIXME inefficient
-		foreach(NVBDataSourceModel * m, models) {
-			if (k >= m->rowCount() )
-				k -= m->rowCount();
-			else
-				return NVBDSLModelSubIndex(m,k);
-			}
-		NVBOutputError("Index out of bounds");
-		return NVBDSLModelSubIndex(0,k);
-		}
-	
-	int count() const { //FIXME very inefficient
-		int r = 0;
-		foreach(NVBDataSourceModel * m, models)
-			r += m->rowCount();
-		return r;
-		}
-		
-};
+// --------------- NVBDataSourceListModel
 
 NVBDataSourceListModel::NVBDataSourceListModel(QList<NVBDataSource*> sources)
 	: QAbstractListModel(0)
-	, p(0)
-{ //FIXME This model doesn't react to changes in child models
-	p = new NVBDataSourceListModelPrivate(sources);
-	if (!p) {
-		NVBOutputError("Memory allocation for private failed.");
-		throw;
-		}
+{
+	cachecounts << 0;
+	foreach(NVBDataSource * s, sources) {
 		
+		NVBDataSourceModel * m = new NVBDataSourceModel(s);
+		
+		connect(m,SIGNAL(dataChanged(QModelIndex,QModelIndex)),this,SLOT(subDataChanged(QModelIndex,QModelIndex)));
+		connect(m,SIGNAL(modelAboutToBeReset()),this,SLOT(subModelAboutToBeReset()));
+		connect(m,SIGNAL(modelReset ()),this,SLOT(subModelReset()));
+		connect(m,SIGNAL(rowsAboutToBeInserted(const QModelIndex&,int,int)),this,SLOT(subRowsAboutToBeInserted(const QModelIndex&,int,int)));
+		connect(m,SIGNAL(rowsAboutToBeMoved(const QModelIndex&,int,int,const QModelIndex&,int)),this,SLOT(subRowsAboutToBeMoved(const QModelIndex&,int,int,const QModelIndex&,int)));
+		connect(m,SIGNAL(rowsAboutToBeRemoved(const QModelIndex&,int,int)),this,SLOT(subRowsAboutToBeRemoved(QModelIndex,int,int)));
+		connect(m,SIGNAL(rowsInserted(QModelIndex,int,int)),this,SLOT(subRowsInserted(QModelIndex,int,int)));	connect(m,SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),this,SLOT(subRowsMoved(QModelIndex,int,int,QModelIndex,int)));
+		connect(m,SIGNAL(rowsRemoved(QModelIndex,int,int)),this,SLOT(subRowsRemoved(QModelIndex,int,int)));
+
+		models << m;
+		cachecounts << cachecounts.last() + m->rowCount();
+		}
 }
 
 NVBDataSourceListModel::~NVBDataSourceListModel() {
-	if (p) delete p;
+	foreach(NVBDataSourceModel * m, models)
+		delete m;
 }
 
-
-int NVBDataSourceListModel::rowCount(const QModelIndex& parent) const
+int NVBDataSourceListModel::rowCount(const QModelIndex& ) const
 {
-	return p->count();
+	return cachecounts.last();
 }
 
 QVariant NVBDataSourceListModel::data(const QModelIndex& index, int role) const
 {
-	NVBDSLModelSubIndex i = p->map(index.row());
+	NVBDSLModelSubIndex i = map(index.row());
 	if (i.first)
 		return i.first->data(i.first->index(i.second),role);
 	return QVariant();
@@ -210,7 +190,7 @@ QVariant NVBDataSourceListModel::data(const QModelIndex& index, int role) const
 
 Qt::ItemFlags NVBDataSourceListModel::flags(const QModelIndex& index) const
 {
-	NVBDSLModelSubIndex i = p->map(index.row());
+	NVBDSLModelSubIndex i = map(index.row());
 	if (i.first)
 		return i.first->flags(i.first->index(i.second));
 	return Qt::NoItemFlags;
@@ -226,7 +206,7 @@ QMimeData* NVBDataSourceListModel::mimeData(const QModelIndexList& indexes) cons
   if (indexes.isEmpty()) return 0;
 
 	QModelIndex index = indexes.first();
-	NVBDSLModelSubIndex i = p->map(index.row());
+	NVBDSLModelSubIndex i = map(index.row());
 	if (i.first)
 		return i.first->mimeData(i.first->index(i.second));
 	return 0;
@@ -241,3 +221,98 @@ QStringList NVBDataSourceListModel::mimeTypes() const
 		<< "image/x-qt-image"
 		;
 }
+
+NVBDSLModelSubIndex NVBDataSourceListModel::map(int k) const {
+	if (k < 0) {
+		NVBOutputError("Index out of bounds");
+		return NVBDSLModelSubIndex(0,0);
+		}
+
+	QList<int>::const_iterator it = qUpperBound(cachecounts,k);
+	int i = it - cachecounts.begin() - 1;
+	// If k is in list, it belongs to next element
+	// If k is not in list, it belongs to the next element anyway
+
+	if (i+1 < cachecounts.count())
+		return NVBDSLModelSubIndex(models.at(i),k-cachecounts.at(i));
+	else {
+		NVBOutputError("Index out of bounds");
+		return NVBDSLModelSubIndex(0,0);
+		}
+}
+
+#define callerModelIndex() models.indexOf(qobject_cast<NVBDataSourceModel*>(sender()))
+#define callerModelStartIndex() cachecounts.at(callerModelIndex())
+#define callerModelRowCount() qobject_cast<NVBDataSourceModel*>(sender())->rowCount()
+
+void NVBDataSourceListModel::subDataChanged(QModelIndex topLeft, QModelIndex bottomRight)
+{
+	int mi = callerModelStartIndex();
+	emit dataChanged(index(mi+topLeft.row()),index(mi+bottomRight.row()));
+}
+
+void NVBDataSourceListModel::subModelAboutToBeReset()
+{
+	// Can't do anything here. Or&
+	int mi = callerModelIndex();
+	int rc = callerModelRowCount();
+	beginRemoveRows(QModelIndex(),cachecounts.at(mi),cachecounts.at(mi+1)-1);
+	for(int i = mi+1; i<cachecounts.size(); i++) {
+		cachecounts[i] -= rc;
+		}
+	endRemoveRows();
+}
+
+void NVBDataSourceListModel::subModelReset()
+{
+	int mi = callerModelIndex();
+	int rc = callerModelRowCount();
+	beginInsertRows(QModelIndex(),cachecounts.at(mi),cachecounts.at(mi)+rc-1);
+	for(int i = mi+1; i<cachecounts.size(); i++) {
+		cachecounts[i] += rc;
+		}	
+	endInsertRows();
+}
+
+void NVBDataSourceListModel::subRowsAboutToBeInserted(const QModelIndex& , int start, int end)
+{
+	int mi = callerModelStartIndex();
+	beginInsertRows(QModelIndex(),mi+start,mi+end);
+}
+
+void NVBDataSourceListModel::subRowsInserted(const QModelIndex& , int start, int end)
+{
+	int mi = callerModelIndex();
+	int rc = end-start+1;
+	for(int i = mi+1; i<cachecounts.size(); i++)
+		cachecounts[i] += rc;
+	endInsertRows();
+}
+
+void NVBDataSourceListModel::subRowsAboutToBeMoved(const QModelIndex& , int sourceStart, int sourceEnd, const QModelIndex& , int destinationRow)
+{
+	int mi = callerModelStartIndex();
+	beginMoveRows(QModelIndex(),mi+sourceStart,mi+sourceEnd,QModelIndex(),mi+destinationRow);
+}
+
+void NVBDataSourceListModel::subRowsMoved(const QModelIndex& , int , int , const QModelIndex&, int )
+{
+	// moving rows doesn't affect the cache
+	endMoveRows();
+}
+
+void NVBDataSourceListModel::subRowsAboutToBeRemoved(const QModelIndex& , int start, int end)
+{
+	int mi = callerModelStartIndex();
+	beginRemoveRows(QModelIndex(),mi+start,mi+end);
+}
+
+void NVBDataSourceListModel::subRowsRemoved(const QModelIndex& , int start, int end)
+{
+	int mi = callerModelIndex();
+	int rc = end-start+1;
+	for(int i = mi+1; i<cachecounts.size(); i++)
+		cachecounts[i] -= rc;
+	endRemoveRows();
+}
+

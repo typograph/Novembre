@@ -59,12 +59,15 @@ protected slots:
 	*/
 };
 
-class NVBDataSourceListModelPrivate;
+typedef QPair<NVBDataSourceModel *, int> NVBDSLModelSubIndex;
 
 class NVBDataSourceListModel : public QAbstractListModel {
-
+Q_OBJECT;
 private:
-	NVBDataSourceListModelPrivate * p;
+	QList<NVBDataSourceModel*> models;
+	QList<int> cachecounts;
+
+	NVBDSLModelSubIndex map(int k) const;
 
 public:
 	explicit NVBDataSourceListModel(QList< NVBDataSource * > sources);
@@ -77,6 +80,17 @@ public:
 
   virtual QMimeData * mimeData ( const QModelIndexList & indexes ) const;
   virtual QStringList mimeTypes () const;
+	
+private slots:
+	void subDataChanged(QModelIndex,QModelIndex);
+	void	subModelAboutToBeReset ();
+	void	subModelReset ();
+	void	subRowsAboutToBeInserted ( const QModelIndex & parent, int start, int end );
+	void	subRowsAboutToBeMoved ( const QModelIndex & sourceParent, int sourceStart, int sourceEnd, const QModelIndex & destinationParent, int destinationRow );
+	void	subRowsAboutToBeRemoved ( const QModelIndex & parent, int start, int end );
+	void	subRowsInserted ( const QModelIndex & parent, int start, int end );
+	void	subRowsMoved ( const QModelIndex & sourceParent, int sourceStart, int sourceEnd, const QModelIndex & destinationParent, int destinationRow );
+	void	subRowsRemoved ( const QModelIndex & parent, int start, int end );
 
 };
 
