@@ -1,6 +1,7 @@
 #ifndef NVBDATASOURCE_H
 #define NVBDATASOURCE_H
 
+class NVBFile;
 class NVBDataSet;
 class NVBAxisMap;
 class NVBColorMap;
@@ -140,6 +141,8 @@ class NVBDataSource : public QObject {
 		virtual QWidget * controlWidget() const = 0;
 		/// For wrappers
 		virtual NVBDataSource * parent() const = 0;
+		/// Original file
+		virtual NVBFile * origin() const = 0;
 
 		/**
 			* To have safe changing of plugin parameters, a datasource has to have
@@ -205,9 +208,11 @@ class NVBConstructableDataSource : public NVBDataSource {
 		QList< NVBDataSet * > dsets;
 		/// Color maps
 		QList< NVBColorMap * > cmaps;
+		/// Parent file
+		NVBFile * o;
 		
 	public:
-		NVBConstructableDataSource();
+		NVBConstructableDataSource(NVBFile * orig);
 		virtual ~NVBConstructableDataSource();
 
 		virtual inline const NVBAxis & axis(axisindex_t i) const { return axs.at(i); }
@@ -226,6 +231,9 @@ class NVBConstructableDataSource : public NVBDataSource {
 		
 		virtual QWidget * controlWidget() const { return 0; }
 		virtual NVBDataSource * parent() const { return 0; }
+
+		/// Original file
+		virtual NVBFile * origin() const { return o;}
 
 };
 

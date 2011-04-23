@@ -3,6 +3,7 @@
 #include "NVBDataTransforms.h"
 #include "NVBColorMaps.h"
 #include "NVBAxisMaps.h"
+#include "NVBFile.h"
 
 NVBDataSet::NVBDataSet(NVBDataSource * parent,
 			QString name,
@@ -91,7 +92,12 @@ void NVBDataSource::setOutputRequirements(NVBAxesProps axesprops) {
 	*
 	*/
 
-NVBConstructableDataSource::NVBConstructableDataSource() : NVBDataSource() {
+NVBConstructableDataSource::NVBConstructableDataSource(NVBFile * orig)
+ : NVBDataSource() 
+ , o(orig)
+{
+	if (!o)
+		NVBOutputError("Created without file");
 }
 
 NVBConstructableDataSource::~NVBConstructableDataSource() {
