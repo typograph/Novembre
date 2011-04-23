@@ -41,11 +41,15 @@ axissize_t NVBDataSet::sizeAt(axisindex_t i) const {
 double NVBDataSet::min() const { return NVBMaxMinTransform::findMinimum(this); }
 double NVBDataSet::max() const { return NVBMaxMinTransform::findMaximum(this); }
 
-NVBDataComments NVBDataSet::comments() const {
-	if (dataSource())
-		return dataSource()->getAllComments();
-	else
-		return NVBDataComments();
+NVBVariant NVBDataSet::getComment(const QString & key, bool recursive) const {
+	
+	if (comments.contains(key))
+		return comments.value(key);
+	
+	if (recursive && dataSource())
+		return dataSource()->getComment(key);
+	
+	return NVBVariant();
 }
 
 const NVBColorMap* NVBDataSet::colorMap() const {
@@ -86,6 +90,28 @@ void NVBDataSource::setOutputRequirements(NVBAxesProps axesprops) {
 	if (parent()) parent()->setOutputRequirements(inputRequirements());
 }
 
+NVBVariant NVBDataSource::collectComments(const QString& key) const
+{
+	NVBVariant v = getComment(key,false);
+	if (v.isValid()) return v;
+	
+	NVBVariantList l;
+	foreach(NVBDataSet * s, this->dataSets()) {
+		NVBVariant v = s->getComment(key,false);
+		if (v.isValid())
+			l << v;
+		}
+
+	if (l.isEmpty())
+		return NVBVariant();
+	else if (l.count() == 1)
+		return l.first();
+	else
+		return NVBVariant(l);
+	
+}
+
+
 /**
 	* \class NVBConstructableDataSource
 	*
@@ -119,12 +145,13 @@ void NVBConstructableDataSource::addAxisMap(NVBAxisMap * map, QVector<axisindex_
 		axs[a].addMapping(amaps.last());
 	}
 
-NVBDataSet * NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits dimension, QVector< axisindex_t > axes, NVBDataSet::Type type, NVBColorMap * map)
+NVBDataSet * NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits dimension, NVBDataComments datacomments, QVector< axisindex_t > axes, NVBDataSet::Type type, NVBColorMap * map)
 {
 	if (axes.count() == 0)
 		for(int i=0; i<axes.count(); i++)
 			axes << i;
 	dsets.append(new NVBDataSet(this,name,data,dimension,axes,type,map));
+	dsets.last()->comments = datacomments;
 	return dsets.last();
 }
 
@@ -160,4 +187,70 @@ axisindex_t NVBDataSource::axisIndexByName(QString name) const
 			return i;
 
 	return -1;
+}
+NVBVariant NVBDataSource::getComment(const QString& key, bool recursive) const {
+	if (comments.contains(key))
+		return comments.value(key);
+		
+	if (recursive && origin()) {
+		NVBVariant comment = origin()->getComment(key);
+		if (comment.isValid())
+			return comment;
+		}
+	
+	if (parent())
+		return parent()->getComment(key,recursive);
+	
+	return NVBVariant();
+}
+
+/**
+ * If you add comments directly to the dataset, some of the comments might get duplicated
+ * between datasets. It is more useful to put the common comments into NVBDataSource,
+ * and the individual ones into datasets.
+ * \a newComments parameter will be filtered.
+ * \li If a comment from \a newComments is already in the datasource and is the same, it will be removed from \anewComments.
+ * \li If a comment from \a newComments is already in the datasource and is different, the comment in the datasource will be propagated to all already included datasets, and will be left in \a newComments
+ * \li If a comment is new, it will just stay in \a newComments
+ * \li If datasource has no comments, \a newComments will become the new comment list and the original object will be cleared
+ * 
+ * Intended use:
+ * \code
+ * NVBDataComments c;
+ * ...
+ * c.insert(...);
+ * ...
+ * NVBConstructableDataSource * d = new NVBConstructableDataSource;
+ * d->filterAddComments(c);
+ * d->addDataSet(...,c,...)
+ * \endcode
+ **/
+void NVBConstructableDataSource::filterAddComments(NVBDataComments & _cms)
+{
+	if (_cms.isEmpty())
+		return;
+	
+	if (dataSets().count() == 0) {
+		comments.unite(_cms);
+		_cms.clear();
+		return;
+		}
+		
+	foreach (QString key, comments.keys())
+		if (_cms.contains(key) && _cms.value(key) == comments.value(key))
+				_cms.remove(key);
+		else {
+			foreach(NVBDataSet * set, dsets)
+				set->comments.insert(key,comments.value(key));
+			comments.remove(key);
+			}
+			
+	return;
+}
+
+NVBDataComments NVBDataSource::getAllComments() const {
+	if (!parent()) 
+		return comments;
+	else
+		return NVBDataComments(comments).unite(parent()->comments);
 }

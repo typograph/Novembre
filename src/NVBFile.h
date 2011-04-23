@@ -40,9 +40,16 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 		/// Returns info about the original files
 		NVBAssociatedFilesInfo sources() const { return files; }
 
+		//! \Returns all file-global comments 
 		inline NVBDataComments getAllComments() const { return comments; }
-		NVBVariant getComment(const QString & key) const;
+		//! Return a file-global comment for \a key
+		inline NVBVariant getComment(const QString & key) const { return comments.value(key); }
+		//! Return a unified list of comments for all datasources for \a key
+		NVBVariant collectComments(const QString & key) const;
 
+		//! Checks for global comment duplicates, \sa NVBConstructableDataSource::filterAddComments
+		void filterAddComments(NVBDataComments & comments);
+		
 		inline QString name() const { return files.name(); }
 
 //		/// Adds a datasource to the end of file.
