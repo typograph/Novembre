@@ -266,8 +266,6 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 {
   if ( dir.exists() ) {
 
-    QFileInfoList infos = dir.entryInfoList();
-
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
     if (isRecursive()) {
@@ -314,11 +312,8 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 
 		qSort(ixrm.begin(),ixrm.end(),qGreater<int>());
 
-		foreach(int k, ixrm) {
-			emit beginOperation(this,k,1,FileRemove);
-			delete files.takeAt(k);
-			emit endOperation();
-			}
+		foreach(int k, ixrm)
+			removeOrigFileAt(k);
 
 #if QT_VERSION < 0x040400
 		#error "You can't compile Novembre > 0.0.4 on Qt < 4.4, sorry"
