@@ -80,13 +80,13 @@ bool NVBDirModelFileInfoFilter::operator()(const NVBFileInfo * fi) const {
 	}
 
 
-NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),populated(true),loaded(true),type(NoContent) {;}
+NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),status(NVBDirEntry::Loaded),type(NoContent) {;}
 
 NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label) :
-	/*QObject(),*/ parent(_parent),label(_label),populated(true),loaded(true),type(NoContent) {;}
+	/*QObject(),*/ parent(_parent),label(_label),status(NVBDirEntry::Loaded),type(NoContent) {;}
 
 NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label, QDir _dir, bool recursive) :
-	/*QObject(),*/ parent(_parent),label(_label),dir(_dir),populated(false),loaded(false),type(recursive ? AllContent : FileContent)
+	/*QObject(),*/ parent(_parent),label(_label),dir(_dir),status(NVBDirEntry::Virgin),type(recursive ? AllContent : FileContent)
 {
 
 //   if (recursive) recurseFolders();
@@ -225,7 +225,7 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 
 	qApp->setOverrideCursor(Qt::BusyCursor);
 
-	populated = true;
+	status = NVBDirEntry::Populated;
 
 	if ( dir.exists() ) {
 		if (isRecursive()) {
@@ -257,6 +257,7 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 	}
 	else {
 		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
+		status = NVBDirEntry::Error;
 		qApp->restoreOverrideCursor();
 		}
 }
@@ -334,6 +335,7 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
   else {
 		NVBOutputError(QString("Directory %1 ceased to exist").arg(dir.absolutePath()));
 		qApp->restoreOverrideCursor();
+		status = NVBDirEntry::Error;
 		// TODO be more user-friendly. Display an error message
     return false;
     }

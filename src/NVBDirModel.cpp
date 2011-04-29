@@ -100,9 +100,13 @@ int NVBDirModel::columnCount( const QModelIndex & parent ) const
 
 Qt::ItemFlags NVBDirModel::flags( const QModelIndex & index ) const
 {
-  if (!index.isValid() || index.column())
+	if (!index.isValid()) // || index.column()
     return QAbstractItemModel::flags(index);
-	return QAbstractItemModel::flags(index) | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+
+	if (isAFile(index) || indexToEntry(index)->getStatus() != NVBDirEntry::Error)
+		return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+	else
+		return Qt::ItemIsSelectable; // QAbstractItemModel::flags(index)
 }
 
 QVariant NVBDirModel::data( const QModelIndex & index, int role ) const
