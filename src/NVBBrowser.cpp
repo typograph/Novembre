@@ -85,18 +85,18 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   if (folders) {
 
     folders->setPopupMode(QToolButton::InstantPopup);
-    QMenu * foldersMenu = new QMenu(this);
+		QMenu * foldersBtnMenu = new QMenu(this);
   
-    addRootFolderAction = foldersMenu->addAction(QIcon(_browser_rootplus),QString("Add folder"));
+		addRootFolderAction = foldersBtnMenu->addAction(QIcon(_browser_rootplus),QString("Add folder"));
     connect(addRootFolderAction,SIGNAL(triggered()),this,SLOT(addRootFolder()));
   
-    addFolderAction = foldersMenu->addAction(QIcon(_browser_plus),QString("Add subfolder"));
+		addFolderAction = foldersBtnMenu->addAction(QIcon(_browser_plus),QString("Add subfolder"));
     connect(addFolderAction,SIGNAL(triggered()),this,SLOT(addSubfolder()));
   
-    removeFolderAction = foldersMenu->addAction(QIcon(_browser_minus),QString("Remove folder"));
+		removeFolderAction = foldersBtnMenu->addAction(QIcon(_browser_minus),QString("Remove folder"));
     connect(removeFolderAction,SIGNAL(triggered()),this,SLOT(removeFolder()));
 
-    folders->setMenu(foldersMenu);
+		folders->setMenu(foldersBtnMenu);
 
     }
 
@@ -761,6 +761,31 @@ void NVBBrowser::updateColumns()
     confile->setValue(QString("Browser/UserColumn%1").arg(i),QString("%1/%2").arg(fileModel->headerData(i,Qt::Horizontal,Qt::DisplayRole).toString()).arg(fileModel->headerData(i,Qt::Horizontal,NVBColStrKeyRole).toString()));
     }
 
+}
+
+void NVBBrowser::showFoldersMenu() {
+	QModelIndex i = fileList->indexAt(fileList->mapFromGlobal(QCursor::pos()));
+	if (!i.isValid()) {
+		addFolderAction->setEnabled(true);
+		removeFolderAction->setEnabled(false);
+		exportFolderAction->setEnabled(false);
+		}
+	else if (fileModel->isAFile(i)) {
+		addFolderAction->setEnabled(false);
+		removeFolderAction->setEnabled(false);
+		exportFolderAction->setEnabled(false);
+		}
+	else if (!(fileModel->flags(i) & Qt::ItemIsEnabled)) { // Status == error
+		addFolderAction->setEnabled(false);
+		removeFolderAction->setEnabled(true);
+		exportFolderAction->setEnabled(false);
+		}
+
+	foldersMenu->exec(QCursor::pos());
+
+	addFolderAction->setEnabled(true);
+	removeFolderAction->setEnabled(true);
+	exportFolderAction->setEnabled(true);
 }
 
 void NVBBrowser::setViewType(bool b)

@@ -189,7 +189,7 @@ private slots:
   void removeFolder();
 	void exportData();
 
-	void showFoldersMenu() {foldersMenu->exec(QCursor::pos());}
+	void showFoldersMenu();
 	void enableFolderActions(const QModelIndex & index);
 
 	void updateFolders();
