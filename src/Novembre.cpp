@@ -36,6 +36,13 @@ int main(int argc, char *argv[])
   try {
     NVBApplication app(argc, argv);
     
+		if (app.otherInstanceIsRunning()) {
+			app.passParamsToOtherInstance();
+			return 0;
+			}
+
+		app.createFactories();
+
     NVBMain widget;
     widget.setWindowTitle( QString("Novembre") );
     widget.show();
@@ -64,34 +71,38 @@ int main(int argc, char *argv[])
 
 */
 
-NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,argv),confile(QString("%1/.NVB").arg(QDir::homePath()))
+NVBApplication::NVBApplication( int & argc, char ** argv )
+: QApplication(argc,argv),confile(QString("%1/.NVB").arg(QDir::homePath()))
+, conf(0)
+, socketBusy(false)
+, firstrun(false)
 { 
 #if QT_VERSION >= 0x040400
-  setApplicationVersion(NVB_VERSION);
+	setApplicationVersion(NVB_VERSION);
 #endif
 
-  setQuitOnLastWindowClosed(true);
+	setQuitOnLastWindowClosed(true);
 
 #ifdef NVB_ENABLE_LOG
 // For threads, we have to do that
-  qRegisterMetaType<NVB::LogEntryType>("NVB::LogEntryType");
-  NVBLogger * l = new NVBLogger(this);
-  setProperty("Logger",QVariant::fromValue(l));
-  connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),this,SLOT(message(NVB::LogEntryType, QString, QString)));
+	qRegisterMetaType<NVB::LogEntryType>("NVB::LogEntryType");
+	NVBLogger * l = new NVBLogger(this);
+	setProperty("Logger",QVariant::fromValue(l));
+	connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),this,SLOT(message(NVB::LogEntryType, QString, QString)));
 #endif
 //  connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),qobject_cast<NVBApplication*>(this),SLOT(message(NVB::LogEntryType, QString, QString)));
 
   // Loading objects
 
-  parseArguments();
+	parseArguments();
 
   // Configuration
 
   // TODO system dependent config file
 
-	bool firstrun = !QFile::exists(confile);
+	firstrun = !QFile::exists(confile);
 
-  QSettings * conf = new QSettings(confile,QSettings::IniFormat,this);
+	conf = new QSettings(confile,QSettings::IniFormat,this);
   setProperty("NVBSettings",QVariant::fromValue(conf));
 
   // Start logging
@@ -123,50 +134,60 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
     conf->setValue("UDPPort",i);
   }
 
-  if (!msgSocket.bind(QHostAddress::LocalHost,conf->value("UDPPort").toInt(),QUdpSocket::DontShareAddress)) {
-    // We are not the only instance
+	socketBusy = !msgSocket.bind(QHostAddress::LocalHost,conf->value("UDPPort").toInt(),QUdpSocket::DontShareAddress);
+
+	if (socketBusy) // We are not the only instance
 		NVBOutputPMsg("UDP Port busy. Novembre must be running");
-    foreach (QString filename, filesSupplied)
-      msgSocket.writeDatagram(filename.toLatin1(),QHostAddress::LocalHost,conf->value("UDPPort").toInt());
-    quit();
-    return;
-  }
+	else {
+		NVBOutputPMsg("UDP Port free. Novembre instance starting...");
+		connect(&msgSocket,SIGNAL(readyRead()),this,SLOT(openFileFrocketData()));
+		}
 
-	NVBOutputPMsg("UDP Port free. Novembre instance starting...");
+}
 
-  connect(&msgSocket,SIGNAL(readyRead()),this,SLOT(openFileFrocketData()));
+bool NVBApplication::otherInstanceIsRunning() {
+	return socketBusy;
+}
+
+void NVBApplication::passParamsToOtherInstance() {
+	foreach (QString filename, filesSupplied)
+		msgSocket.writeDatagram(filename.toLatin1(),QHostAddress::LocalHost,conf->value("UDPPort").toInt());
+	// quit(); // OOps, this doesn't work, as we're not in the event loop yet
+}
+
+void NVBApplication::createFactories() {
 
 #ifdef NVB_STATIC
-  if (firstrun)
-    NVBSettings::showGeneralSettings();
+	if (firstrun)
+		NVBSettings::showGeneralSettings();
 #else
-  if (firstrun || !conf->contains("PluginPath"))
-    conf->setValue("PluginPath",NVB_PLUGINS);
-  if (!QFile::exists(conf->value("PluginPath").toString()))
-    if (NVBSettings::showGeneralSettings() == QDialog::Rejected)
-      throw;
+	if (firstrun || !conf->contains("PluginPath"))
+		conf->setValue("PluginPath",NVB_PLUGINS);
+	if (!QFile::exists(conf->value("PluginPath").toString()))
+		if (NVBSettings::showGeneralSettings() == QDialog::Rejected)
+			throw;
 #endif
 
-  while (true) {
-    try {
+	while (true) {
+		try {
 #ifndef NVB_STATIC
-      setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
+			setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
 #endif
-	NVBFileFactory * ff = new NVBFileFactory();
-	if (!ff) NVBCriticalError("Filefactory failed to initialize.");
-	qApp->setProperty("filesFactory",QVariant::fromValue(ff));
+			NVBFileFactory * ff = new NVBFileFactory();
+			if (!ff) NVBCriticalError("Filefactory failed to initialize.");
+			qApp->setProperty("filesFactory",QVariant::fromValue(ff));
 
-	NVBToolsFactory * tf = new NVBToolsFactory;
-	if (!tf) NVBCriticalError("Tools factory failed to initialize");
-	qApp->setProperty("toolsFactory",QVariant::fromValue(tf));
-      break;
-      }
-    catch (int err) {
+			NVBToolsFactory * tf = new NVBToolsFactory;
+			if (!tf) NVBCriticalError("Tools factory failed to initialize");
+			qApp->setProperty("toolsFactory",QVariant::fromValue(tf));
+
+			break;
+			}
+		catch (int err) {
 			QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
 			if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
-      }
-    }
-
+			}
+		}
 }
 
 bool NVBApplication::notify( QObject * receiver, QEvent * event )
