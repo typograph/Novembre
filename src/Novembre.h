@@ -44,6 +44,10 @@ private:
   QStringList filesSupplied;
   QUdpSocket msgSocket;
   NVBMain * mainWindow;
+	QSettings * conf;
+
+	bool socketBusy;
+	bool firstrun;
 
   void parseArguments();
 public:
@@ -54,6 +58,10 @@ public:
   QString applicationVersion() { return NVB_VERSION; }
   Q_PROPERTY(QString applicationVersion READ applicationVersion);
 #endif
+
+	bool otherInstanceIsRunning();
+	void passParamsToOtherInstance();
+	void createFactories();
 
   void setMainWindow(NVBMain * widget);
 
