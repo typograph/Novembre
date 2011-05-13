@@ -127,7 +127,7 @@ void NVBDirViewModel::fileLoaded(QString name, NVBFile * file)
 		unloadables << index;
 
 	QModelIndex fileix = this->index(index,0);
-	emit dataChanged(this->index(0,0,fileix),this->index(file->rowCount()-1,0,fileix));
+	emit dataChanged(this->index(0,0,fileix),this->index(rowCount(fileix)-1,0,fileix));
 }
 
 int NVBDirViewModel::columnCount( const QModelIndex & ) const
