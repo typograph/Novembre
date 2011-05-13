@@ -479,14 +479,23 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
     file.seek(0x4004);
 
     quint32 * idata = (quint32*)malloc(data_points*4);
+		if (!idata) {
+			NVBOutputError("Memory allocation failed");
+			file.close();
+			return result;
+			}
 
     scaler<quint32,double> intscaler;
 
     for (int i = 0; i < nchannels; i++) {
       file.read((char*)idata,data_points*4);
       double * data = (double*) malloc(data_points*8);
-      scaleMem<quint32,double>(data,intscaler,idata,data_points);
-      result << new CreatecDatPage(file_header,i,data);
+			if (data) {
+				scaleMem<quint32,double>(data,intscaler,idata,data_points);
+				result << new CreatecDatPage(file_header,i,data);
+				}
+			else
+				NVBOutputError("Memory allocation failed");
     }
 
     free(idata);
@@ -497,7 +506,19 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
     uLongf unzsize = data_points * 800; // * nchannels
 
     qint8 *zbuf = (qint8*)malloc(zsize);
-    float *buf  = (float*)malloc(unzsize);
+		if (!zbuf) {
+			NVBOutputError("Memory allocation failed");
+			file.close();
+			return result;
+			}
+
+		float *buf  = (float*)malloc(unzsize);
+		if (!buf) {
+			NVBOutputError("Memory allocation failed");
+			free(zbuf);
+			file.close();
+			return result;
+			}
 
     // start of gzdata
     file.seek(0x4000);
@@ -513,9 +534,13 @@ QList<NVBDataSource*> CreatecDatPage::loadAllChannels(QString filename) {
 
     scaler<float,double> intscaler;
     for (int i = 0; i < nchannels; i++) {
-     double * data = (double*) malloc(data_points*8);
-      scaleMem<float,double>(data,intscaler,buf+1+data_points*i,data_points);
-      result << new CreatecDatPage(file_header,i,data);
+			double * data = (double*) malloc(data_points*8);
+			if (data) {
+				scaleMem<float,double>(data,intscaler,buf+1+data_points*i,data_points);
+				result << new CreatecDatPage(file_header,i,data);
+				}
+			else
+				NVBOutputError("Memory allocation failed");
     }
 
     free(buf);
@@ -559,7 +584,12 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
       zd = NVBDimension("nm");
       scaler<double,double> DACscaler(0,file_header.value("Dacto[A]z").toDouble());
       data = (double*) malloc(data_points*8);
-      scaleMem<double,double>(data,DACscaler,bulk_data,data_points);
+			if (data)
+				scaleMem<double,double>(data,DACscaler,bulk_data,data_points);
+			else {
+				NVBOutputError("Memory allocation failed");
+				throw;
+				}
       free(bulk_data);
       break;
     }
@@ -571,7 +601,13 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
                                        file_header.value("ZPiezoconst").toDouble()
                                        );
       data = (double*) malloc(data_points*8);
-      scaleMem<double,double>(data,DACscaler,bulk_data,data_points);
+			if (data)
+				scaleMem<double,double>(data,DACscaler,bulk_data,data_points);
+			else {
+				NVBOutputError("Memory allocation failed");
+				throw;
+				}
+
       free(bulk_data);
       break;
     }
