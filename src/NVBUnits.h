@@ -63,6 +63,7 @@ public:
 	inline QString baseUnit() { return base; }
 
   bool isScalable() const { return mult != 0; }
+	bool isValid() const { return not base.isNull(); }
 
   bool isComparableWith(const NVBUnits & d) const {
     return base == d.base;
