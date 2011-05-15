@@ -19,7 +19,7 @@
 #include <QtCore/QRegExp>
 
 void NVBLogger::outputMessage(NVB::LogEntryType type, QString issuer, QString text) {
-	static QRegExp fnct = QRegExp(" ([^ ]*::[^ ]*)\\(");
+	static QRegExp fnct = QRegExp(" ([^ ]*)\\(");
 	fnct.indexIn(issuer);
 	emit message(type,fnct.cap(1),text,QTime::currentTime());
   }

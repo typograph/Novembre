@@ -20,11 +20,7 @@
 
 // The following piece of code was taken directly from boost/current_function.hpp
 
-#if defined(__GNUC__) || (defined(__MWERKS__) && (__MWERKS__ >= 0x3000)) || (defined(__ICC) && (__ICC >= 600))
-
-# define NVB_CURRENT_FUNCTION __PRETTY_FUNCTION__
-
-#elif defined(__DMC__) && (__DMC__ >= 0x810)
+#if defined(__GNUC__) || (defined(__MWERKS__) && (__MWERKS__ >= 0x3000)) || (defined(__ICC) && (__ICC >= 600)) || (defined(__DMC__) && (__DMC__ >= 0x810))
 
 # define NVB_CURRENT_FUNCTION __PRETTY_FUNCTION__
 
