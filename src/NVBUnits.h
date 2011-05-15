@@ -147,6 +147,14 @@ public:
     return NVBPhysValue();
     }
 
+  NVBPhysValue operator-(const NVBPhysValue &other) const {
+    if (dim.isComparableWith(other.dim)) {
+      return NVBPhysValue(value*dim.mult - other.value*other.dim.mult,dim.base);
+			}
+    NVBOutputError("Attempting to subtract values with different dimensions");
+    return NVBPhysValue();
+    }
+
   NVBPhysValue &  operator*=( double mult ) { value *= mult; return *this; }
   NVBPhysValue &  operator/=( double div )  {  value /= div; return *this; }
 
@@ -171,14 +179,23 @@ class NVBPhysPoint {
     inline NVBPhysValue x() const { return NVBPhysValue(p.x(),d); }
     inline NVBPhysValue y() const { return NVBPhysValue(p.y(),d); }
     QPointF point(NVBUnits targetDimension) const;
+		QPointF vectorTo(const NVBPhysPoint& other, NVBUnits targetDimension = NVBUnits()) const;
+		
+		NVBPhysValue distance(const NVBPhysPoint& other);
 
     NVBUnits dimension() const { return d; }
     operator QPointF () { return p; }
-    NVBPhysPoint operator+(const QPointF & other) const {
+ 
+		NVBPhysPoint operator+(const QPointF & other) const {
 			return NVBPhysPoint(p + other, d);
 			}
+			
     void operator+=(const QPointF & other) {
 			p += other;
+			}
+			
+    NVBPhysPoint operator-(const NVBPhysPoint & other) const {
+			return NVBPhysPoint(p - other.point(d), d);
 			}
 };
 

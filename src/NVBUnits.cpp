@@ -254,3 +254,44 @@ double NVBPhysValue::getValue( NVBUnits dim ) const
   return value / dim.purify();
 }
 
+// --------------
+
+NVBPhysPoint::NVBPhysPoint(NVBPhysValue x, NVBPhysValue y)
+{
+	if (!x.getDimension().isComparableWith(y.getDimension())) {
+		NVBOutputError("Trying to construct NVBPhysPoint from NVBPhysValues with different units");
+		return;
+		}
+		
+	d = x.getDimension().baseUnit();
+	p = QPointF(x.getValue(d),y.getValue(d));
+}
+
+NVBPhysPoint::NVBPhysPoint(double x, double y, NVBUnits dimension)
+{
+	p = QPointF(x,y);
+	d = dimension;
+}
+
+QPointF NVBPhysPoint::point(NVBUnits targetDimension) const
+{
+	if (!d.isComparableWith(targetDimension))
+		return QPointF();
+	return p * d.scaleTo(targetDimension);
+}
+
+QPointF NVBPhysPoint::vectorTo(const NVBPhysPoint & other, NVBUnits targetDimension) const
+{
+	if (!targetDimension.isValid())
+		targetDimension = d;
+	return point(targetDimension) - other.point(targetDimension);
+}
+
+NVBPhysValue NVBPhysPoint::distance(const NVBPhysPoint& other)
+{
+	QPointF po = other.point(d);
+	return NVBPhysValue(sqrt(pow(p.x() - po.x(),2) + pow(p.y() - po.y(),2)),d);
+}
+
+
+
