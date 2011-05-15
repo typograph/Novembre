@@ -432,8 +432,8 @@ double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes) {
 		}
 	
 	return transformNArray(
-		data->data(), data->nAxes(), data->sizes().constData(),
-		axes.count(), axes.constData(), targetaxes(data->nAxes(),axes).constData(),
+		data->data(), data->nAxes(), sz.constData(),
+		sz.count() - axes.count(), targetaxes(data->nAxes(),axes).constData(), axes.constData(), 
 		0,  0,	average);
 }
 
