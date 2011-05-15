@@ -59,7 +59,7 @@ class NVBColorInstance {
 		double zmin,zmax;
 		NVBValueScaler<double,double> zscaler;
 		QVector<axisindex_t> sliceAxes;
-		axisindex_t axisH, axisV;
+		QVector<axisindex_t> xyAxes;
 		void calculateSliceAxes();
 	public:
 		NVBColorInstance(const NVBDataSet * data, const NVBColorMap * map);
@@ -98,6 +98,7 @@ class NVBColorInstance {
 		Set two axis for converting data to images. \a x will be the horizontal axis and \a y will be vertical.
 		*/
 
+		void setImageAxes(QVector<axisindex_t> xy);
 		void setImageAxes(axisindex_t x, axisindex_t y);
 		QVector<axisindex_t> getSliceAxes();
 		void setXAxis(axisindex_t x);
