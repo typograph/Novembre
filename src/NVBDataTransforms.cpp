@@ -13,6 +13,7 @@ void NVBMaxMinTransform::operator() (const double * data, axisindex_t n, const a
 */
 
 double NVBMaxMinTransform::min (const double * data, axisindex_t n, const axissize_t * sizes) {
+	if (!data) return 0;
 	axissize_t szd = prod(n,sizes);
 	double min = data[0];
 	for (axissize_t i = 1; i<szd; i++)
@@ -22,6 +23,7 @@ double NVBMaxMinTransform::min (const double * data, axisindex_t n, const axissi
 }
 
 double NVBMaxMinTransform::max (const double * data, axisindex_t n, const axissize_t * sizes) {
+	if (!data) return 0;
 	axissize_t szd = prod(n,sizes);
 	double max = data[0];
 	for (axissize_t i = 1; i<szd; i++)
