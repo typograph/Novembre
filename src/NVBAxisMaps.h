@@ -9,22 +9,22 @@
 
 template <class T>
 class NVBAxisTMap : public NVBAxisMap {
-  protected:
-    QList<T> vs;
-  public:
-    NVBAxisTMap():NVBAxisMap() {;}
-    NVBAxisTMap(QList<T> values):NVBAxisMap(),vs(values) {;}
-    ~NVBAxisTMap() {;}
+	protected:
+		QList<T> vs;
+	public:
+		NVBAxisTMap():NVBAxisMap() {;}
+		NVBAxisTMap(QList<T> values):NVBAxisMap(),vs(values) {;}
+		~NVBAxisTMap() {;}
 
-    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Template; }
-    virtual inline int dimension() const { return 1; }
-    virtual inline int valType() const { return qMetaTypeId<T>(); }
+		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Template; }
+		virtual inline int dimension() const { return 1; }
+		virtual inline int valType() const { return qMetaTypeId<T>(); }
 
-    T value(axissize_t i) const {
-      if (i < (axissize_t) vs.size())
+		T value(axissize_t i) const {
+			if (i < (axissize_t) vs.size())
 				return vs.at(i);
-      return T();
-      }
+			return T();
+			}
 
 		NVBVariant value(QVector<axissize_t> indexes) {
 			return NVBVariant::fromValue<T>(value(indexes.first()));
@@ -32,12 +32,12 @@ class NVBAxisTMap : public NVBAxisMap {
 };
 
 class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
-  private:
+	private:
 		double o, d;
 		NVBUnits dim;
-    NVBAxisMap::MapType t;
-  public:
-    NVBAxisPhysMap(QList<NVBPhysValue> values):NVBAxisTMap<NVBPhysValue>(values),t(NVBAxisMap::General) {;}
+		NVBAxisMap::MapType t;
+	public:
+		NVBAxisPhysMap(QList<NVBPhysValue> values):NVBAxisTMap<NVBPhysValue>(values),t(NVBAxisMap::General) {;}
 		NVBAxisPhysMap(NVBPhysValue origin, NVBPhysValue interval)
 			: NVBAxisTMap<NVBPhysValue>()
 			, o(origin.getValue())
@@ -53,61 +53,83 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 			,	t(NVBAxisMap::Linear)
 			{;}
 
-    inline NVBAxisMap::MapType mapType() const { return t; }
-    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Physical; }
+		inline NVBAxisMap::MapType mapType() const { return t; }
+		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Physical; }
 
-    inline NVBUnits units() const { return dim; }
+		inline NVBUnits units() const { return dim; }
 
-    NVBPhysValue value(axissize_t i) const {
-      if (t == NVBAxisMap::Linear)
+		NVBPhysValue value(axissize_t i) const {
+			if (t == NVBAxisMap::Linear)
 				return NVBPhysValue(o + d*i,dim);
-      return NVBAxisTMap<NVBPhysValue>::value(i);
-      }
+			return NVBAxisTMap<NVBPhysValue>::value(i);
+			}
+			
+		NVBPhysValue closestValue(NVBPhysValue v) {
+			if (t == NVBAxisMap::Linear)
+				return NVBPhysValue(o + d*round((v.getValue(dim) - o)/d),dim);
+			QList<NVBPhysValue>::const_iterator pos = qLowerBound(vs,v);
+			if (pos == vs.end())
+				return vs.last();
+			if (pos == vs.begin())
+				return vs.first();
+			return (abs((*pos - v).getValue()) < abs((*(pos-1) - v).getValue()) ? *pos : *(pos-1));
+		}
+
+		axissize_t closestValueIndex(NVBPhysValue v) {
+			if (t == NVBAxisMap::Linear)
+				return round((v.getValue(dim) - o)/d);
+			QList<NVBPhysValue>::const_iterator pos = qLowerBound(vs,v);
+			if (pos == vs.end())
+				return vs.count() - 1;
+			if (pos == vs.begin())
+				return 0;
+			return (abs((*pos - v).getValue()) < abs((*(pos-1) - v).getValue()) ? (axissize_t)(pos-vs.begin()) : (axissize_t)(pos-1-vs.begin()));
+		}
 
 		inline NVBPhysValue origin() const { return NVBPhysValue(o,dim); }
 		inline NVBPhysValue interval() const { return NVBPhysValue(d,dim); }
-//    NVBPhysValue end() const;
+//		NVBPhysValue end() const;
 };
 
 class NVBAxisPointMap : public NVBAxisTMap<NVBPhysPoint> {
-  public:
-    NVBAxisPointMap(QList<QPointF> points, NVBUnits dimension):NVBAxisTMap<NVBPhysPoint>() {
-      foreach(QPointF p, points)
+	public:
+		NVBAxisPointMap(QList<QPointF> points, NVBUnits dimension):NVBAxisTMap<NVBPhysPoint>() {
+			foreach(QPointF p, points)
 			vs << NVBPhysPoint(p,dimension);
-      }
-    NVBAxisPointMap(QList<NVBPhysPoint> points):NVBAxisTMap<NVBPhysPoint>(points) {;}
+			}
+		NVBAxisPointMap(QList<NVBPhysPoint> points):NVBAxisTMap<NVBPhysPoint>(points) {;}
 
-    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
+		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
 };
 
 class NVBAxes2DGridMap : public NVBAxisMap {
-  private:
-    NVBPhysPoint o;
-    QTransform t;
-  public:
-    NVBAxes2DGridMap(NVBPhysPoint origin, QTransform transform):NVBAxisMap(),o(origin),t(transform) {;}
+	private:
+		NVBPhysPoint o;
+		QTransform t;
+	public:
+		NVBAxes2DGridMap(NVBPhysPoint origin, QTransform transform):NVBAxisMap(),o(origin),t(transform) {;}
 
-    inline NVBAxisMap::MapType mapType() const { return NVBAxisMap::Linear2D; }
-    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
-    virtual inline int dimension() const { return 2; }
+		inline NVBAxisMap::MapType mapType() const { return NVBAxisMap::Linear2D; }
+		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
+		virtual inline int dimension() const { return 2; }
 
-    inline NVBPhysPoint value(axissize_t i, axissize_t j) const {
-      return o + t.map(QPointF(i,j));
-      }
+		inline NVBPhysPoint value(axissize_t i, axissize_t j) const {
+			return o + t.map(QPointF(i,j));
+			}
 
 		NVBVariant value(QVector<axissize_t> indexes) {
 			return NVBVariant::fromValue<NVBPhysPoint>(value(indexes.first(),indexes.at(1)));
 			}
 
-    inline NVBPhysPoint origin() const { return o; }
-    inline QTransform transformation() const { return t; }
+		inline NVBPhysPoint origin() const { return o; }
+		inline QTransform transformation() const { return t; }
 };
 
 class NVBAxisColorMap : public NVBAxisTMap<QColor> {
-  public:
-    NVBAxisColorMap(QList<QColor> colors):NVBAxisTMap<QColor>(colors) {;}
+	public:
+		NVBAxisColorMap(QList<QColor> colors):NVBAxisTMap<QColor>(colors) {;}
 
-    inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Color; }
+		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Color; }
 };
 
 #endif
