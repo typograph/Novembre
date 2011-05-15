@@ -123,7 +123,7 @@ NVBConstructableDataSource::NVBConstructableDataSource(NVBFile * orig)
  , o(orig)
 {
 	if (!o)
-		NVBOutputError("Created without file");
+		NVBOutputVPMsg("Created without file");
 }
 
 NVBConstructableDataSource::~NVBConstructableDataSource() {
