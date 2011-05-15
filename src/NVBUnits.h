@@ -77,6 +77,16 @@ public:
     return base != d.base;
     }
 
+	double scaleTo(NVBUnits target) const {
+		if (isComparableWith(target)) {
+			if (isScalable())
+				return target.mult/mult;
+			else
+				return 1;
+			}
+		return 0;
+		}
+
   NVBUnits &  operator+=( int order ) { mult *= exp10(order); return *this; }
   NVBUnits &  operator-=( int order )  { mult /= exp10(order); return *this; }
 
