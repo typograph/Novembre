@@ -155,14 +155,10 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 		return 0;
 		}
 
-  NVBDataComments comments;
   TRHKHeader header;
-  QStringList strings;
   int version;
 
   while(!file.atEnd()) {
-
-    comments.clear();
 
     header = getRHKHeader(file);
 
@@ -179,8 +175,9 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
       header.grid_xsize = 0;
       }
 
-    strings = loadRHKStrings(file,header.string_count);
+		QStringList strings = loadRHKStrings(file,header.string_count);
 
+		NVBDataComments comments;
 		RHKFileGenerator::CommentsFromString(comments,strings);
 		RHKFileGenerator::CommentsFromHeader(comments,header);
   
@@ -218,7 +215,8 @@ Timofey").arg(file.fileName()));
 //        type = NVB::InvalidPage;
         }
       }
-    fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
+    fi->filterAddComments(comments);
+		fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
     }
 
   return fi;
