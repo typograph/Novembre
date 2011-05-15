@@ -52,6 +52,8 @@
 
 //--- end boost
 
+#define NVB_ASSERT(cond,what) Q_ASSERT_X(cond,NVB_CURRENT_FUNCTION,what)
+
 class QFile;
 
 namespace NVB {
@@ -102,6 +104,7 @@ void NVBOutputFileErrorMessage(QString Issuer, const QFile * file);
 
 #else
 
+#define NVB_ASSERT(cond,what) Q_ASSERT(cond)
 #define NVBCriticalError(...) qApp->exit(1)
 #define NVBOutputError(...) (void)0
 #define NVBOutputDMsg(...) (void)0
