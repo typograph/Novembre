@@ -39,7 +39,7 @@ const NVBDataSet * NVBFuncDataSource::addDataSet(QString name, NVBUnits dim, Fil
 
 	fillNArray(data,szs.count(),szs.constData(),f);
 	
-	NVBConstructableDataSource::addDataSet(name,data,dim,ixs,type);
+	NVBConstructableDataSource::addDataSet(name,data,dim,NVBDataComments(),ixs,type);
 
 	return dsets.last();
 }
