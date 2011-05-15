@@ -23,7 +23,7 @@ NVBDataSet::NVBDataSet(NVBDataSource * parent,
 	{;}
 
 NVBDataSet::~NVBDataSet() {
-	free(d);
+	if (d) free(d);
 	}
 
 QVector<axissize_t> NVBDataSet::sizes() const {
