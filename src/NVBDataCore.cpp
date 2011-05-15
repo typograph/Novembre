@@ -17,8 +17,8 @@
  * @param target The resulting array
  * @param m The number of axes in @a target
  * @param sizes The sizes of the @a n axes in @a data
- * @param sliceaxes The indexes of the slice axes in the order they are in @a data
- * @param slice The indexes on the sliced axes (in the order they are in @a data)
+ * @param sliceaxes The indexes of the slice axes in any order
+ * @param slice The indexes on the sliced axes (in the same order as @a sizes)
  * @param newaxes The indexes of the original axes in the order they will be in @a target
  *
  * Example (NumPy notation):
@@ -27,6 +27,59 @@
  * @endcode
  */
 void sliceNArray(const double * const data, axisindex_t n, double * target, axisindex_t m, const axissize_t * sizes, const axisindex_t * sliceaxes, const axissize_t * slice, const axisindex_t * newaxes) {
+	
+	if (!target) {
+		NVBOutputError("NULL target pointer");
+		return;
+		}
+
+	if (!data) {
+		NVBOutputError("NULL data pointer");
+		return;
+		}
+
+	if (m > n) {
+		NVBOutputError("Target has more axes than parent");
+		return;
+		}
+
+#ifdef NVB_DEBUG // we can't check this every time when called from transformNArray
+
+	for(axisindex_t i = 0; i<n-m;i++) {
+		if (slice[i] >= sizes[sliceaxes[i]]) {
+			NVBOutputError("Slice index outside range");
+			return;
+			}
+		}
+
+	bool * axix = (bool*)calloc(n,sizeof(bool));
+
+	if (axix) {
+		for(axisindex_t i = 0; i<m;i++) {
+			if (axix[newaxes[i]]) {
+				NVBOutputError(QString("Axis %1 used two times").arg(newaxes[i]));
+				return;
+				}
+			else
+				axix[newaxes[i]] = true;
+			}
+		
+		for(axisindex_t i = 0; i<n-m;i++) {
+			if (axix[sliceaxes[i]]) {
+				NVBOutputError(QString("Axis %1 used two times").arg(sliceaxes[i]));
+				return;
+				}
+			else
+				axix[sliceaxes[i]] = true;
+			}	
+		
+		free(axix);
+		}
+	else
+		NVBOutputError("Not enough memory to check axes indexes");
+	
+#endif
+	
 	// The collect-map of sizes
 	axissize_t * mn;
 
@@ -177,17 +230,17 @@ axissize_t subprod(const axissize_t * numbers, axisindex_t m, const axisindex_t 
  *
  * Feeds slices of @a data to @a transform. Returns a joined array of slices
  *
- * \param data The array to be processe
- * \param n Number of axes in this array
+ * \param data The array to be processed
+ * \param n Number of axes in @a data
  * \param sizes Dimensions of the array (array of size \a n)
- * \param m Number of axes that stay
- * \param sliceaxes Indexes of axes that stay (array of size \a m)
- * \param targetaxes Indexes of axes that are passed to \a transform (array of size \a n-m)
- * \param p Number of new axes
+ * \param m Number of axes that stay unprocessed (those remain in the result)
+ * \param sliceaxes Indexes of axes that stay (array of size \a m), in order they should appear in the result
+ * \param targetaxes Indexes of axes that are passed to \a transform (array of size \a n-m), in order they should be for the transform function
+ * \param p Number of new axes, as returned from @a transform function
  * \param newsizes Sizes of the piece after \a transfrom (array of size \a p)
  * \param transform The transformation function
  *
- * \return The result of the transforms
+ * \return The result of the transform
  *
  * \sa transform
  */
@@ -230,6 +283,61 @@ double * transformNArray(const double * data, axisindex_t n, const axissize_t * 
 																							axisindex_t p, const axissize_t * newsizes,
 						void (*transform)(const double *, axisindex_t, const axissize_t *, axisindex_t, const axissize_t *, double * ) ) {
 
+	if (!data) {
+		NVBOutputError("NULL data pointer");
+		return 0;
+		}
+
+	if (m > n) {
+		NVBOutputError("Transform needs more axes than available");
+		return 0;
+		}
+
+#ifdef NVB_DEBUG
+
+	for(axisindex_t i = 0; i<m; i++) {
+		if (sliceaxes[i] >= n) {
+			NVBOutputError("Slice axis index outside range");
+			return 0;
+			}
+		}
+
+	for(axisindex_t i = 0; i<n-m;i++) {
+		if (targetaxes[i] >= n) {
+			NVBOutputError("Target axis index outside range");
+			return 0;
+			}
+		}
+
+	bool * axix = (bool*)calloc(n,sizeof(bool));
+
+	if (axix) {
+		for(axisindex_t i = 0; i<m;i++) {
+			if (axix[sliceaxes[i]]) {
+				NVBOutputError(QString("Axis %1 used two times").arg(sliceaxes[i]));
+				return 0;
+				}
+			else
+				axix[sliceaxes[i]] = true;
+			}
+		
+		for(axisindex_t i = 0; i<n-m;i++) {
+			if (axix[targetaxes[i]]) {
+				NVBOutputError(QString("Axis %1 used two times").arg(targetaxes[i]));
+				return 0;
+				}
+			else
+				axix[targetaxes[i]] = true;
+			}	
+		
+		free(axix);
+		}
+	else
+		NVBOutputError("Not enough memory to check axes indexes");
+	
+#endif
+	
+	
 	axissize_t szd = prod(n,sizes);
 	axissize_t szt = subprod(sizes,n-m,targetaxes);
 	axissize_t szp = prod(p,newsizes);
