@@ -454,6 +454,22 @@ double* reorderNArray(const double * data, axisindex_t n, const axissize_t * siz
 	return r;
 }
 
+void targetaxes(axisindex_t n, axisindex_t m, const axisindex_t * sliceaxes, axisindex_t * otheraxes) {
+	if (!otheraxes) {
+		NVBOutputError("NULL buffer");
+		return;
+		}
+		
+	axisindex_t i, j, k=0;
+	for (j = 0, i = 0; i<n; i++) {
+		if (j >= (n-m) || sliceaxes[j] > i)
+			otheraxes[k++] = i;
+		else
+			j += 1;
+		}
+	
+}
+
 QVector<axisindex_t> targetaxes(axisindex_t n, QVector<axisindex_t> sliceaxes) {
 	QVector<axisindex_t> tgaxes;
 	axisindex_t i, j;
@@ -473,30 +489,51 @@ QVector<axissize_t> subvector(QVector<axissize_t> sizes, QVector<axisindex_t> sl
 	return tgsizes;
 }
 
+double* sliceNArray(const double * const data, axisindex_t n, axisindex_t m, const axissize_t* sizes, const axisindex_t* sliceaxes, const axissize_t* slice, const axisindex_t* newaxes)
+{
+	double * tdata;
+	if (!newaxes) {
+		axisindex_t * tgaxes = (axisindex_t *) calloc(m,sizeof(axisindex_t));
+		targetaxes(n,m,sliceaxes,tgaxes);
+		axissize_t szp = subprod(sizes,m,tgaxes);
+		tdata = (double *) malloc (szp*sizeof(double));
+		sliceNArray(data,n,tdata,m,sizes,sliceaxes,slice,tgaxes);
+		free(tgaxes);
+		}
+	else {
+		axissize_t szp = subprod(sizes,m,newaxes);
+		tdata = (double *) malloc (szp*sizeof(double));
+		sliceNArray(data,n,tdata,m,sizes,sliceaxes,slice,newaxes);
+		}
+	return tdata;
+}
+
+double* sliceNArray(const double * const data, QVector< axissize_t > sizes, QVector< axisindex_t > sliceaxes, QVector< axissize_t > slice, QVector< axisindex_t > newaxes)
+{	
+	if (sliceaxes.count() != slice.count()) {
+		NVBOutputError("Not enough or too many slice coordinates");
+		return 0;
+		}
+	if (!newaxes.isEmpty() && sizes.count() !=  sliceaxes.count() + newaxes.count()) {
+		qDebug() << sizes << sliceaxes << newaxes;
+		NVBOutputError("Slice axes and result axes don't add up to parent");
+		return 0;		
+		}
+	
+	return sliceNArray(data, sizes.count(), sizes.count() - sliceaxes.count(), sizes.constData(), sliceaxes.constData(), slice.constData(), newaxes.isEmpty() ? 0 : newaxes.constData());
+}
+
+
 double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> sliceixs, QVector<axisindex_t> tgaxes) {
 //	axissize_t szd = prod(n,sizes);
 // 	axissize_t szt = subprod(sizes,n-m,targetaxes);
+
 	if (!data) return 0;
 
 	QVector<axissize_t> dsizes = data->sizes();
 
-	if (tgaxes.isEmpty())
-		tgaxes = targetaxes(dsizes.count(),sliceaxes);
-
- 	axissize_t szp = subprod(dsizes.constData(),tgaxes.count(),tgaxes.constData());
-
-	double * tdata = (double *) malloc (szp*sizeof(double));
-
-	sliceNArray(
-		data->data(),dsizes.count(),
-		tdata,dsizes.count()-sliceaxes.count(),
-		dsizes.constData(),
-		sliceaxes.constData(),
-		sliceixs.constData(),
-		tgaxes.constData()
-		);
+	return sliceNArray( data->data(), dsizes, sliceaxes, sliceixs, tgaxes);
 		
-	return tdata;
 }
 
 NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes, int maxCount) : dset(dataset)

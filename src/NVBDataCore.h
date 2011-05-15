@@ -34,8 +34,17 @@ typedef double (* FillFunc)(axisindex_t, const axissize_t * );
 /// Fill the array with values from a multi-dim. function
 void fillNArray(double * data, axisindex_t n, const axissize_t * sizes, FillFunc);
 
-/// Get a slice at defined indexes
+/// Get a slice at defined indexes (using pre-allocated buffer)
 void sliceNArray(const double * const data, axisindex_t n, double * target, axisindex_t m, const axissize_t * sizes, const axisindex_t * sliceaxes, const axissize_t * slice, const axisindex_t * newaxes);
+
+/// Get a slice at defined indexes (memory allocated by function)
+double * sliceNArray(const double * const data, axisindex_t n, axisindex_t m, const axissize_t * sizes, const axisindex_t * sliceaxes, const axissize_t * slice, const axisindex_t * newaxes = 0);
+
+/// Get a slice at defined indexes (QVector) (memory allocated by function)
+double * sliceNArray(const double * const data, QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes, QVector<axissize_t> slice, QVector<axisindex_t> newaxes = QVector<axisindex_t>());
+
+/// Get a slice of NVBDataSet. The ownership of the slice is passed to the calling function.
+double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> sliceixs, QVector<axisindex_t> targetaxes = QVector<axisindex_t>());
 
 /// Transform data using a transform function
 double * transformNArray(const double * data, axisindex_t n, const axissize_t * sizes,
@@ -60,11 +69,6 @@ double* reorderNArray(const double * data, axisindex_t n, const axissize_t * siz
 
 /// average data arrray
 void average(const double * data, axisindex_t n, const axissize_t * sizes, axisindex_t nc, const axissize_t * coords, double * target);
-
-class NVBDataSet;
-
-/// Get a slice of NVBDataSet. The ownership of the slice is passed to the calling function.
-double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> sliceixs, QVector<axisindex_t> targetaxes = QVector<axisindex_t>());
 
 double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes);
 
