@@ -18,6 +18,7 @@
 #include "../rhk.h"
 #include "../NVBFile.h"
 #include "../NVBDataSourceModel.h"
+#include "../NVBforeach.h"
 
 int main(int argc, char** argv) {
 
@@ -144,7 +145,7 @@ load")*/);
 		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
 	
 //	tree->addTopLevelItem(item);
-	foreach(NVBDataInfo i, *fi) {
+	NVB_FOREACH(NVBDataInfo i, fi) {
 		QTreeWidgetItem * di = new QTreeWidgetItem(item,QStringList(QString("%1 [%2]").arg(i.name,i.dimension.baseUnit())));
 		foreach(axissize_t sz, i.sizes)
 			new QTreeWidgetItem(di,QStringList(QString::number(sz)));
