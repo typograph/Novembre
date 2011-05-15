@@ -314,6 +314,15 @@ void average(const double * data, axisindex_t n, const axissize_t * sizes, axisi
 
 double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes) {
 
+	QVector<axissize_t> sz = data->sizes();
+	
+	if (axes.count() == 0) {
+		axissize_t msz = prod(sz.count(),sz.constData())*sizeof(double);
+		double * tdata = (double*)malloc(msz);
+		memcpy(tdata,data->data(),msz);
+		return tdata;
+		}
+	
 	return transformNArray(
 		data->data(), data->nAxes(), data->sizes().constData(),
 		axes.count(), axes.constData(), targetaxes(data->nAxes(),axes).constData(),
