@@ -138,11 +138,19 @@ load")*/);
 	QTreeWidgetItem * item;
 	item = new QTreeWidgetItem(tree,QStringList("Info"));
 	item->setFont(0,font);
+	QTreeWidgetItem * cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
+	NVBDataComments cmnts = fi->getAllComments();
+	foreach(QString key, cmnts.keys())
+		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
+	
 //	tree->addTopLevelItem(item);
 	foreach(NVBDataInfo i, *fi) {
 		QTreeWidgetItem * di = new QTreeWidgetItem(item,QStringList(QString("%1 [%2]").arg(i.name,i.dimension.baseUnit())));
 		foreach(axissize_t sz, i.sizes)
 			new QTreeWidgetItem(di,QStringList(QString::number(sz)));
+		cmnt = new QTreeWidgetItem(di,QStringList(QString("Comments")));
+		foreach(QString key, i.comments.keys())
+			new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,i.comments.value(key).toString())));		
 		}
 //	l->setText(l->text() + "\n" + fi->files.name());
 //	l->setText(l->text() + "\n" + fi->files.name());
@@ -156,8 +164,8 @@ load")*/);
 	new QTreeWidgetItem(item,QStringList(fl->name()));
 //	new QTreeWidgetItem(item,QString::number(fl->count()));
 
-	QTreeWidgetItem * cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
-	NVBDataComments cmnts = fl->getAllComments();
+	cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
+	cmnts = fl->getAllComments();
 	foreach(QString key, cmnts.keys())
 		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
 	
