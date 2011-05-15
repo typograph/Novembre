@@ -33,7 +33,7 @@ class NVBDataSet : public QObject {
 			Spectroscopy
 			};
 
-	private:
+	protected:
     /// Parent data source (to be able to implement functions)
     NVBDataSource * p;
     /// Data name
@@ -65,11 +65,11 @@ class NVBDataSet : public QObject {
 							 NVBColorMap * colormap = 0);
 							 
     // Dataset owns its data, and will free the memory
-    ~NVBDataSet();
+    virtual ~NVBDataSet();
 		
     inline QString name() const { return n; }
 		inline NVBUnits dimension() const { return dim; }
-		inline const double * data() const { return d; }
+		inline virtual const double * data() const { return d; }
     QVector<axissize_t> sizes() const;
     axissize_t sizeAt(axisindex_t i) const;
 		inline axisindex_t parentIndex(axisindex_t i) const { return as.at(i); }
