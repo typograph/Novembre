@@ -238,3 +238,27 @@ NVBVariant NVBFileInfo::getComment(const QString& key) {
 			return NVBVariant(l);
 		}
 }
+
+void NVBFileInfo::filterAddComments(NVBDataComments& newComments)
+{
+	if (newComments.isEmpty())
+		return;
+
+	if (count() == 0) {
+		comments.unite(newComments);
+		newComments.clear();
+		return;
+		}
+		
+	foreach (QString key, comments.keys())
+		if (newComments.contains(key) && newComments.value(key) == comments.value(key))
+			newComments.remove(key);
+		else {
+			for(int i = 0; i<count(); i++)
+				operator[](i).comments.insert(key,comments.value(key));
+			comments.remove(key);
+			}
+			
+	return;
+
+}
