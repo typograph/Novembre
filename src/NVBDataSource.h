@@ -224,7 +224,7 @@ class NVBConstructableDataSource : public NVBDataSource {
 		NVBFile * o;
 		
 	public:
-		NVBConstructableDataSource(NVBFile * orig);
+		NVBConstructableDataSource(NVBFile * orig = 0);
 		virtual ~NVBConstructableDataSource();
 
 		virtual inline const NVBAxis & axis(axisindex_t i) const { return axs.at(i); }
