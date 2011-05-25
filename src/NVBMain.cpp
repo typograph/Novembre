@@ -150,6 +150,8 @@ void NVBMain::callBrowser()
 			this,SLOT(openPage(const NVBAssociatedFilesInfo&, int)));
 //    conf->setValue("ShowBrowserOnStart",QVariant(true));
     fileBrowser->resize(conf->value("Browser/Size", QSize(400, 300)).toSize());
+		newIcon(browsicon,_main_browse)
+		fileBrowser->setWindowIcon(browsicon);
     }
     
   fileBrowser->show();
