@@ -27,15 +27,37 @@ void NVBFileLoader::run() {
 	if (info.generator()) file = info.generator()->loadFile(info);
 }
 
-NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
+NVBFileFactory::NVBFileFactory()
 {
-	generators.append(new NVBFileBundle(this));
+	deadTree = new NVBFileQueue(5); // TODO Make the size of deadTree user-controllable
+	
+	NVBFileBundle * fbPlugin = new NVBFileBundle(this);
+	allGenerators << fbPlugin;
+	
+	QAction * tAct;
+	tAct = new QAction(fbPlugin->moduleName(),this);
+	tAct->setToolTip(fbPlugin->moduleDesc());
+	tAct->setCheckable(true);
+	tAct->setChecked(true);
+	actMapper.setMapping(tAct,fbPlugin);
+	connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
+	gActions << tAct;
   
 	foreach (QObject *plugin, QPluginLoader::staticInstances()) {
 		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(plugin);
 		if (generator) {
 			NVBOutputPMsg("Static plugin loaded");
-			generators.append(generator);
+			allGenerators << generator;
+
+			tAct = new QAction(generator->moduleName(),this);
+			tAct->setToolTip(generator->moduleDesc());
+			tAct->setCheckable(true);
+			tAct->setChecked(true);
+			actMapper.setMapping(tAct,plugin);
+			connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
+			
+			gActions << tAct;
+		
 		}
 	}
 
@@ -53,21 +75,31 @@ NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 		QPluginLoader loader(dir.absoluteFilePath(fileName));
 		NVBOutputPMsg(QString("Loading plugin %1").arg(fileName));
 		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(loader.instance());
-		if (generator) generators.append(generator);
+		if (generator) {
+			allGenerators.append(generator);
+			NVBOutputPMsg("Dynamic plugin loaded");
+			tAct = new QAction(generator->moduleName(),this);
+			tAct->setToolTip(generator->moduleDesc());
+			tAct->setCheckable(true);
+			tAct->setChecked(true);
+			actMapper.setMapping(tAct,loader.instance());
+			connect(tAct,SIGNAL(toggled()),&actMapper,SLOT(map()));
+			gActions << tAct;
+			}
 		else NVBOutputError(loader.errorString());
 	}
 #endif
 
+	generators = allGenerators;
+	// TODO Disable generators as saved in confile
+	connect(&actMapper,SIGNAL(mapped(QObject*)),this,SLOT(changeGenerator(QObject*)));
+
 	if (generators.size() < 2)
 		NVBCriticalError(QString("No valid plugins found"));
 	else
-		foreach (const NVBFileGenerator * g, generators) {
+		foreach (const NVBFileGenerator * g, generators)
 			commentNames << g->availableInfoFields();
-			QStringList exts = g->extFilters();
-			foreach (QString e, exts)
-				wildcards.insertMulti(e,g);
-//			wildcards.insertMulti(QRegExp(e,Qt::CaseInsensitive,QRegExp::Wildcard),g);
-			}
+	updateWildcards();
 	if (!commentNames.isEmpty()) {
 		commentNames.sort();
 		QString cache = commentNames.first();
@@ -80,6 +112,38 @@ NVBFileFactory::NVBFileFactory():deadTree(new NVBFileQueue(5))
 				}
 			}
 		}
+		
+	
+}
+
+void NVBFileFactory::updateWildcards() {
+	wildcards.clear();
+	foreach (const NVBFileGenerator * g, generators)
+		foreach (QString e, g->extFilters())
+			wildcards.insertMulti(e,g);
+}
+
+void NVBFileFactory::changeGenerator(QObject * go) {
+
+	NVBFileGenerator * generator = qobject_cast<NVBFileGenerator*>(go);
+	
+	if (!generator) {
+		NVBOutputError("Object is not a generator");
+		return;
+		}
+
+	if (!allGenerators.contains(generator)) { // Note - if this check is removed, we could forget about allGenerators
+		NVBOutputError(QString("Generator %1 is not a known generator").arg(generator->moduleName()));
+		return;
+		}
+
+	int gi = generators.indexOf(generator);
+	if (gi >= 0)
+		generators.removeAt(gi);
+	else
+		generators << generator;
+	
+	updateWildcards();
 }
 
 NVBFileFactory::~NVBFileFactory()

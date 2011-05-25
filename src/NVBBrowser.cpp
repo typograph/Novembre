@@ -107,6 +107,23 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   adjustColumnsAction = foldersToolBar->addAction(QIcon(_browser_columns),QString("Edit columns"));
   showFiltersAction = foldersToolBar->addAction(QIcon(_browser_filters),QString("Show data filters"));
 
+	QToolButton * generators = qobject_cast<QToolButton *>(foldersToolBar->widgetForAction( foldersToolBar->addAction(QIcon(_browser_generators),QString("Select file formats"))));
+
+	if (generators) {
+
+		generators->setPopupMode(QToolButton::InstantPopup);
+		QMenu * generatorsBtnMenu = new QMenu(this);
+		if (generatorsBtnMenu) {
+			generatorsBtnMenu->addActions(files->generatorActions());
+			generators->setMenu(generatorsBtnMenu);
+			}
+		else
+			NVBOutputError("Failed to create a menu");
+
+		}
+	else
+		NVBOutputError("Toolbutton not created");
+
   foldersToolBar->addSeparator();
 
   setViewFileAction = foldersToolBar->addAction(QIcon(_browser_turnspeconoff),QString("Select view mode"));
@@ -116,7 +133,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   showPageInfoAction = foldersToolBar->addAction(QIcon(_browser_pageinfo),QString("Info"));
   showPageInfoAction->setCheckable(true);
   showPageInfoAction->setChecked(true);
-
+  
   foldersToolBar->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 
   llayout->addWidget(foldersToolBar);
