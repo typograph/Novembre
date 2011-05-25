@@ -20,6 +20,7 @@
 #include <QtCore/QLibrary>
 #include <QtCore/QThread>
 #include <QtCore/QEvent>
+#include <QtCore/QSignalMapper>
 //#include <dlfcn.h>
 
 #include "NVBLogger.h"
@@ -27,6 +28,7 @@
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
 
+class QAction;
 
 // using namespace NVBErrorCodes;
 
@@ -95,8 +97,13 @@ private:
 		NVBFile * retrieveLoadedFile( QString filename );
 		NVBFile * retrieveLoadedFile( const NVBAssociatedFilesInfo & info);
 
-	/// Available generators
+	/// Available generators (selected by user)
 		QList<const NVBFileGenerator*> generators;
+	/// All available generators
+		QList<const NVBFileGenerator*> allGenerators;
+	///
+		QList<QAction*> gActions;
+		QSignalMapper actMapper;
 
 	/// Load file from \a filename. Returns NULL if file wasn't opened.
 	/// The returned file is already considered in use.
@@ -150,6 +157,9 @@ public:
 	/// Files in \a files will be taken into account and won't be reloaded
 		QList<NVBAssociatedFilesInfo> associatedFilesFromList(QStringList names, QList<NVBAssociatedFilesInfo> * old_files = 0, QList<int> * deleted = 0 ) const;
 
+	/// 
+		QList<QAction*> generatorActions() const { return gActions;}
+
 private slots:
 	/// Put file in the dead tree
 		void bury(NVBFile *);
@@ -157,6 +167,10 @@ private slots:
 		void release(QString filename);
 	/// Removes a finished loader
 		void removeLoader();
+	/// Enables/disables a generator. The object will be cast to NVBFileGenerator
+		void changeGenerator(QObject * go);
+	/// Updates wildcard list
+		void updateWildcards();
 };
 
 Q_DECLARE_METATYPE(NVBFileFactory*);
