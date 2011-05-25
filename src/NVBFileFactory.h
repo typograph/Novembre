@@ -52,7 +52,7 @@ public:
 		virtual ~NVBFileQueue();
 
 	/// Add a file \a file to the queue.
-	/// If queue length goes over the limit at that point, the oldest enrty in the queue is deleted
+	/// If queue length goes over the limit at that point, the oldest entry in the queue is deleted
 		virtual void add(NVBFile* file);
 	/// If a file with \a filename is in the queue, it is removed from the queue and returned
 		virtual NVBFile * retrieve(QString filename);
@@ -73,11 +73,13 @@ public:
 };
 
 /**
-  This class is responsible for creating NVBFile and NVBFileInfo objects.
-  It collects information about provided file plugins and creates NVBFile's.
-  To save up on disk operations, opened files go to a stack.
-*/
-class NVBFileFactory : public QObject{
+ * \class NVBFileFactory
+ *
+ * This class is responsible for creating NVBFile and NVBFileInfo objects.
+ * It collects information about provided file plugins and creates NVBFile's.
+ * To save up on disk operations, opened files go to a stack.
+ */
+class NVBFileFactory : public QObject {
 Q_OBJECT
 private:
 	/// Files that are not used by any window are cached in this structure
