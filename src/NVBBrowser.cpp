@@ -45,8 +45,14 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 {
 
   files = qApp->property("filesFactory").value<NVBFileFactory*>();
+  if (!files) {
+	NVBCriticalError("Browser cannot access the file factory");
+	}
 
   confile = qApp->property("NVBSettings").value<QSettings*>();
+  if (!confile) {
+	NVBCriticalError("Browser cannot access the configuration file");
+	}
 
   setWindowTitle("Browser");
 //  move(confile->value("pos", QPoint(200, 200)).toPoint());
