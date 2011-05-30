@@ -104,6 +104,8 @@ class NVBDataSet : public QObject {
 	/// Size and/or number of some axes has changed. This signal is emitted whenever the parent datasource emits its signal
 		void dataReformed();
 
+	public slots:
+		void invalidateCaches();
 };
 
 Q_DECLARE_METATYPE(NVBDataSet*)
