@@ -132,7 +132,7 @@ class NVBDataSource : public QObject {
     NVBDataSource();
     virtual ~NVBDataSource();
 
-		virtual const NVBAxis & axis(axisindex_t i) const = 0;
+		virtual const NVBAxis & axis(axisindex_t i) const { return axes().at(i);}
 		NVBAxis axisByName(QString name) const ;
 		virtual axisindex_t axisIndexByName(QString name) const;
 		virtual const QList< NVBAxis > & axes() const = 0;
@@ -155,7 +155,7 @@ class NVBDataSource : public QObject {
 		/// For wrappers
 		virtual NVBDataSource * parent() const = 0;
 		/// Original file
-		virtual NVBFile * origin() const = 0;
+		virtual NVBFile * origin() const { return parent() ? parent()->origin() : 0; }
 
 		/**
 			* To have safe changing of plugin parameters, a datasource has to have
