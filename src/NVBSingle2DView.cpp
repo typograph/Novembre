@@ -52,6 +52,7 @@ class NVBAxisWidget : public QWidget {
 
 NVBSingle2DView::NVBSingle2DView(NVBDataSet* data, QWidget * parent)
 : QFrame(parent)
+, plotData(0)
 , colors(0)
 {
 	xAxis = new NVBAxisWidget(this,Qt::Horizontal);
@@ -81,8 +82,6 @@ void NVBSingle2DView::dataSetDestoyed()
 		}
 	plotData = 0;
 }
-
-#include <QtGui/QGradient>
 
 void NVBSingle2DView::paintEvent(QPaintEvent* event)
 {
@@ -125,30 +124,48 @@ void NVBSingle2DView::setDataSet(NVBDataSet* data)
 		colors = 0;
 		}
 	
-	slice.clear();
+//	slice.clear();
 	cache = QPixmap();
 	xi = 0;
 	yi = 1;
-	
+
+	if (plotData)
+		plotData->disconnect(this);
+		
 	plotData = data;
 	
 	if (plotData) {
 		connect(plotData, SIGNAL(dataChanged()), SLOT(regenerateImage()));
-		connect(plotData, SIGNAL(destroyed()), SLOT(dataSetDestoyed()));
+		connect(plotData, SIGNAL(dataReformed()), SLOT(parentDataReformed()));
 		colors = plotData->colorMap()->instantiate(plotData);
 		colors->setImageAxes(0,1);
-		slice.clear();
+//		slice.clear();
 		}
 		
 	regenerateImage();
 }
 
+void NVBSingle2DView::parentDataReformed()
+{
+	if (colors) {
+		delete colors;
+		colors = 0;
+		}
+	if (plotData) {
+		colors = plotData->colorMap()->instantiate(plotData);
+		colors->setImageAxes(0,1);
+		}
+//	slice.clear();
+}
+
+
 void NVBSingle2DView::regenerateImage()
 {
+
 	if (!plotData) {
 		return;
 		}
-		
+
 	if (plotData->nAxes() < 2) {
 		NVBOutputError("Dataset has less than 2 axes");
 		return;
@@ -214,11 +231,11 @@ void NVBSingle2DView::regenerateImage()
 		}
 
 	colors->setImageAxes(xi,yi);
-	if (slice.isEmpty())
-		cache = colors->colorize();	
-	else
-		cache = colors->colorize(slice);	
-	
+//	if (slice.isEmpty())
+	cache = colors->colorize();	
+//	else
+//		cache = colors->colorize(slice);	
+
 	resizeEvent(0);
 }
 
@@ -253,18 +270,20 @@ void NVBSingle2DView::resizeEvent(QResizeEvent* e)
 	update();
 }
 
+/*
 void NVBSingle2DView::setSliceIndexes(QVector< axissize_t > indexes)
 {
 	slice = indexes;
 	cache = colors->colorize(slice);
 	update();
 }
+*/
 
 void NVBSingle2DView::setXYAxes(axisindex_t x, axisindex_t y)
 {
 	xi = x;
 	yi = y;
-	slice.clear();
+//	slice.clear();
 	regenerateImage();
 }
 

@@ -29,7 +29,7 @@ private:
 	QTransform transform;
 	QPixmap cache;
 	
-	QVector<axissize_t> slice;
+//	QVector<axissize_t> slice;
 	axisindex_t xi, yi;
 	
 	NVBAxes2DGridMap * map2D;
@@ -47,7 +47,7 @@ public:
 	
 public slots:
 	void setDataSet(NVBDataSet * data);
-	void setSliceIndexes(QVector<axissize_t> indexes = QVector<axissize_t>());
+//	void setSliceIndexes(QVector<axissize_t> indexes = QVector<axissize_t>());
 	inline void setXYAxes(QVector<axisindex_t> xy) {
 		Q_ASSERT(xy.count() == 2);
 		setXYAxes(xy.at(0), xy.at(1));
@@ -57,6 +57,7 @@ public slots:
 
 private slots:
 	void dataSetDestoyed();
+	void parentDataReformed();
 	
 private:
 	bool map(int x_widget, int y_widget, axissize_t& x_data, axissize_t& y_data);
