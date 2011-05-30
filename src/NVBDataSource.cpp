@@ -20,7 +20,11 @@ NVBDataSet::NVBDataSet(NVBDataSource * parent,
 	,	as(axes)
 	, clr(colormap)
 	, t(tp)
-	{;}
+	{
+		connect(this,SIGNAL(dataChanged()),SLOT(invalidateCaches()));
+		connect(parent,SIGNAL(axesResized()),this,SIGNAL(dataReformed()));
+		connect(parent,SIGNAL(dataReformed()),this,SIGNAL(dataReformed()));
+	}
 
 NVBDataSet::~NVBDataSet() {
 	if (d) free(d);

@@ -100,6 +100,9 @@ class NVBDataSet : public QObject {
 // TODO : think whether reallocation of data should change anything.
 //	A good rule would be not to keep the pointer obtained from here
 		void dataChanged();
+		
+	/// Size and/or number of some axes has changed. This signal is emitted whenever the parent datasource emits its signal
+		void dataReformed();
 
 };
 
