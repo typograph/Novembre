@@ -18,15 +18,23 @@
 */
 
 
-#include "NVBSingleView.h"
 #include <QtGui/QGridLayout>
-#include "NVBSingle2DView.h"
 #include <QtGui/QLabel>
 #include <QtGui/QComboBox>
-#include "NVBPosLabel.h"
+#include <QtGui/QLayoutItem>
+#include <QtGui/QToolBar>
+#include <QtGui/QActionGroup>
+#include <QtGui/QAction>
+
+#include "NVBSingleView.h"
+
 #include "NVBLogger.h"
-#include <QtGui/qlayoutitem.h>
+#include "NVBPosLabel.h"
 #include "NVBDataCore.h"
+#include "NVBSingle2DView.h"
+#include "NVBSingleGraphView.h"
+
+#include "../icons/singleview.xpm"
 
 template <class T, class S>
 QVector<T> mappedVector(const QVector<T> & values, const QVector<S> & indexes) {
@@ -36,6 +44,9 @@ QVector<T> mappedVector(const QVector<T> & values, const QVector<S> & indexes) {
 	return r;
 }
 
+class NVBSingleViewSlices;
+
+/*
 NVBOverridenDataSet::NVBOverridenDataSet(const NVBDataSet* parent)
 : NVBDataSet(parent->dataSource(),parent->name(),const_cast<double*>(parent->data()),parent->dimension(),parent->parentIndexes())
 , orig(parent)
@@ -65,89 +76,165 @@ void NVBOverridenDataSet::setData(double* data, QVector< axisindex_t > axes)
 	axmap = mappedVector<axisindex_t,axisindex_t>(orig->parentIndexes(),axes);
 	emit dataChanged();
 }
-
-NVBAveragingDataSet::NVBAveragingDataSet(const NVBDataSet* parent)
+*/
+NVBAverageSlicingDataSet::NVBAverageSlicingDataSet(const NVBDataSet* parent)
 : NVBDataSet(parent->dataSource(),parent->name(),0,parent->dimension(),parent->parentIndexes())
 , orig(parent)
-, axmap(parent->parentIndexes())
+, avdata(0)
+, avas(parent->parentIndexes())
+, avsizes(parent->sizes())
 {
 
 }
 
-NVBAveragingDataSet::~NVBAveragingDataSet()
+NVBAverageSlicingDataSet::~NVBAverageSlicingDataSet()
 {
+	if (avdata) free(avdata);
 }
 
-const double * NVBAveragingDataSet::data() const {
+const double * NVBAverageSlicingDataSet::data() const {
 	if (d)
 		return NVBDataSet::data();
+	else if (avdata)
+		return avdata;
 	else
 		return orig->data();
 }
 
-void NVBAveragingDataSet::setAveragingAxes(QVector< axisindex_t > axes)
+void NVBAverageSlicingDataSet::setAveragingAxes(QVector< axisindex_t > axes)
 {
-	if (d) free(d);
-	as = orig->parentIndexes();
-	
-	if (!axes.isEmpty()) {
-		d = averageDataSet(orig,axes);
-		for(int i = axes.count()-1; i>=0; i--) // Inverse order to make it easier
-			as.remove(axes.at(i));
-		}
-	else
+	if (d) {
+		free(d);
 		d = 0;
-
-	asizes.clear();
+		}
+		
+	if (avdata) {
+		free(avdata);
+		avdata = 0;
+		}
+		
+	avas = orig->parentIndexes();
+	avsizes = orig->sizes();
 	
+	avaxes.clear();
+	slaxes.clear();
+
+	asizes.clear(); // clear the cache of axis sizes
+
+	if (!axes.isEmpty()) {
+		avaxes = axes;
+		avdata = averageDataSet(orig,avaxes);
+		for(int i = avaxes.count()-1; i>=0; i--) { // Inverse order to make it easier
+			avas.remove(avaxes.at(i));
+			avsizes.remove(avaxes.at(i));
+			}
+		}
+
+	as = avas;
+
+	emit dataReformed();
 	emit dataChanged();
 }
 
+void NVBAverageSlicingDataSet::setSliceAxes(QVector< axisindex_t > axes)
+{
+	QVector<axisindex_t> newslaxes = axes;
+	
+	for(int i=0, j=0; i<newslaxes.size(); i++) {
+		while( j < avaxes.size() && avaxes.at(j) < newslaxes.at(i) )
+			j += 1;
+		newslaxes[i] -= j;
+		}
+	
+	setSliceAxes2(newslaxes);
+}
+
+void NVBAverageSlicingDataSet::setSliceAxes2(QVector< axisindex_t > axes)
+{
+	if (d) {
+		free(d);
+		d = 0;
+		}
+
+	slaxes = axes;
+	asizes.clear(); // clear the cache of axis sizes
+	
+	as = avas;
+	for(int i = slaxes.count()-1; i>=0; i--) // Inverse order to make it easier
+		as.remove(slaxes.at(i));
+	
+	QVector<axissize_t> slixes;
+	slixes.fill(0,slaxes.size());
+	
+	emit dataReformed();
+	
+	setSliceIndexes(slixes);
+	
+	// FIXME recalculate index map
+}
+
+void NVBAverageSlicingDataSet::setSliceIndexes(QVector< axissize_t > indexes)
+{
+	
+	if (slaxes.count()) {
+		if (d)
+			sliceNArray(avdata ? avdata : orig->data(), d, avsizes, slaxes, indexes);			
+		else
+			d = sliceNArray(avdata ? avdata : orig->data(), avsizes, slaxes, indexes);
+		}
+		
+	emit dataChanged();
+}
+
+void NVBAverageSlicingDataSet::reset()
+{
+	setAveragingAxes(QVector< axisindex_t >());
+}
 
 
 // ---------------------
 
-const QStringList axisOpStrings = QStringList() << "Use as X" << "Use as Y" << "Average" << "Slice";
-const QStringList axisOpStringsShort = QStringList() << "Use as X" << "Use as Y";
-
-NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
+NVBSingleViewSliders::NVBSingleViewSliders(const NVBDataSet* ds, NVBSingleView::Type type, QWidget* parent)
 : QWidget(parent)
-, ds(dataSet)
-, ods(new NVBAveragingDataSet(ds))
+, viewType(type)
 {
-	if (!dataSet) {
-		NVBOutputError("Null dataset supplied");
-		return;
-		}
-
 	axisOps.resize(ds->nAxes());
 	axisSlices.resize(ds->nAxes());
 
 	QGridLayout * l = new QGridLayout(this);
 	setLayout(l);
 	
-	l->addWidget(view = new NVBSingle2DView(ods,this),0,0,1,4);
-	
 	connect(&cbs,SIGNAL(mapped(int)),this,SLOT(axisOpChanged(int)));
 	connect(&slds,SIGNAL(mapped(int)),this,SLOT(slicePosChanged(int)));
 	
+	nPlotAxes = (axisindex_t) type;
+	
 	axes << 0 << 1;
+	axisOps[0] = asX;
+	if (nPlotAxes > 1)
+		axisOps[1] = asY;
 	
-	for(axisindex_t i = 2; i < ds->nAxes(); i++)
+	for(axisindex_t i = (axisindex_t) nPlotAxes; i < ds->nAxes(); i++) {
 		av_axes << i;
-	
+		axisOps[i] = (type == NVBSingleView::Graph) ? Keep : Average;
+		}
+
+	QStringList contents;
+	contents << "Use as X";
+	if (nPlotAxes > 1)
+		contents << "Use as Y";
+	if (ds->nAxes() > nPlotAxes)
+		contents << "Average" << "Slice";
+	if (type == NVBSingleView::Graph)
+		contents << "Keep";
+		
 	for(axisindex_t i = 0; i < ds->nAxes(); i++) {
 
 		QLabel * lbl = new QLabel(ds->axisAt(i).name(),this);
 		l->addWidget(lbl,i+1,0);
 
 		QComboBox * cb = new QComboBox(this);
-		if (ds->nAxes() == 2)
-			cb->addItems(axisOpStringsShort);
-		else
-			cb->addItems(axisOpStrings);
-		axisOps[i] = qMin((AxisOp)i,Average);
-		cb->setCurrentIndex(axisOps.at(i));
+		cb->addItems(contents);
 		l->addWidget(cb,i+1,1);
 		cbs.setMapping(cb,i);
 		connect(cb,SIGNAL(currentIndexChanged(int)),&cbs,SLOT(map()));
@@ -167,20 +254,23 @@ NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
 		l->addWidget(pl,i+1,3);
 	}
 	
-	updateAverage();
+	updateCache();
+	updateWidgets();
 }
 
 
-NVBSingleView::~NVBSingleView()
+NVBSingleViewSliders::~NVBSingleViewSliders()
 {
 
 }
 
-void NVBSingleView::axisOpChanged(int index)
+
+void NVBSingleViewSliders::axisOpChanged(int index)
 {
 	QComboBox * cb = qobject_cast<QComboBox*>(cbs.mapping(index));
 	NVB_ASSERT(cb,"No ComboBox mapped");
-	AxisOp nopt = (AxisOp)cb->currentIndex();
+	int ci = cb->currentIndex();
+	AxisOp nopt = ci < nPlotAxes ? (AxisOp)ci : (AxisOp)(ci+2-nPlotAxes);
 	AxisOp aopt = axisOps.at(index);
 	
 	if (aopt == nopt) return;
@@ -191,6 +281,10 @@ void NVBSingleView::axisOpChanged(int index)
 			switch (nopt) {
 				case asX:  //Swap X and Y
 				case asY: {
+					if (nPlotAxes == 1) {
+						NVBOutputError("Invalid way to treat an axis");
+						return;
+						}
 					int ix = axisOps.indexOf(nopt);
 					axisOps[ix] = aopt;
 					axisOps[index] = nopt;
@@ -198,10 +292,12 @@ void NVBSingleView::axisOpChanged(int index)
 					}
 //					break;
 				case Average:
+				case Keep:
 				case Slice: {
 					if (axisOps.count() < 3) return;
 					int i;
-					for(i = 0; axisOps.at(i) == asX || axisOps.at(i) == asY; i++) {;} // There is always at least one
+					// Find an axis that is neither X nor Y - there's always at least 1
+					for(i = 0; axisOps.at(i) == asX || axisOps.at(i) == asY; i++) {;}
 					axisOps[i] = aopt;
 					axisOps[index] = nopt;
 					break;
@@ -211,6 +307,7 @@ void NVBSingleView::axisOpChanged(int index)
 				}
 			break;
 		case Average:
+		case Keep:
 		case Slice:
 			switch (nopt) {
 				case asX:
@@ -221,7 +318,10 @@ void NVBSingleView::axisOpChanged(int index)
 					break;
 					}
 				case Average:
+				case Keep:
 				case Slice:
+					qobject_cast< QAbstractSlider* >(slds.mapping(index))->setValue(0);
+					axisSlices[index] = 0;
 					axisOps[index] = nopt;
 					break;
 				default:
@@ -232,11 +332,14 @@ void NVBSingleView::axisOpChanged(int index)
 			NVBOutputError("Invalid way to treat an axis");
 		}
 
+	emit axisTargetsChanged(axisOps);
+
+	updateCache();
+	
 	updateWidgets();
-	updateAverage();
 }
 
-void NVBSingleView::slicePosChanged(int pos)
+void NVBSingleViewSliders::slicePosChanged(int pos)
 {
 	axisSlices[pos] = qobject_cast< QAbstractSlider* >(slds.mapping(pos))->value();
 	axisindex_t numAv = 0;
@@ -244,12 +347,13 @@ void NVBSingleView::slicePosChanged(int pos)
 		if (axisOps.at(i) != Slice)
 			numAv += 1;
 	sl_ixes[pos - numAv] = axisSlices[pos];
-	view->setSliceIndexes(sl_ixes);
+
+	emit sliceIndexesChanged(sl_ixes);
 }
 
-void NVBSingleView::updateAverage()
+void NVBSingleViewSliders::updateCache()
 {
-	axisindex_t numAv = 0;
+//	axisindex_t numAv = 0;
 //	bool avAxesChanged = false;
 	
 	sl_axes.clear();
@@ -259,41 +363,176 @@ void NVBSingleView::updateAverage()
 	for(int i = 0; i < axisOps.count(); i++)
 		switch(axisOps.at(i)) {
 			case asX:
-				axes[0] = i-numAv;
+				axes[0] = i;
 				break;
 			case asY:
-				axes[1] = i-numAv;
+				axes[1] = i;
 				break;
 			case Average:
-				numAv += 1;
 				av_axes << i;
 				break;
 			case Slice:
-				sl_axes << i - numAv;
+				sl_axes << i;
 				sl_ixes << axisSlices.at(i);
+				break;
+			case Keep:
 				break;
 			}
 	
-//	if (avAxesChanged) {
-		view->setDataSet(0);
-		ods->setAveragingAxes(av_axes);
-		view->setDataSet(ods);
-//	}
-	view->setXYAxes(axes);
-	view->setSliceIndexes(sl_ixes);	
+	emit axisTargetsChanged(axes.first(), axes.last(), av_axes, sl_axes);
+	emit sliceIndexesChanged(sl_ixes);
 }
 
-void NVBSingleView::updateWidgets()
+void NVBSingleViewSliders::updateWidgets()
 {
 	QGridLayout * l = qobject_cast< QGridLayout* >(layout());
 	for(int i = 0; i<axisOps.count(); i++) {
 		QComboBox * cb  = qobject_cast<QComboBox*>(l->itemAtPosition(i+1,1)->widget()); // Combobox 
 		if (cb)
-			cb->setCurrentIndex((int)axisOps.at(i));
+			cb->setCurrentIndex((int)axisOps.at(i) + (axisOps.at(i) < nPlotAxes ? 0 : nPlotAxes-2 ));
 		else
 			NVBOutputError(QString("The item at (%1,1) is not a combobox").arg(i+1));
 		
 		l->itemAtPosition(i+1,2)->widget()->setEnabled(axisOps.at(i) == Slice); // Slider 
 		l->itemAtPosition(i+1,3)->widget()->setEnabled(axisOps.at(i) == Slice); // Label 
+		}
+}
+
+// ------------------
+
+
+
+NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
+: QWidget(parent)
+, ds(dataSet)
+, view2D(0)
+, viewGraph(0)
+{
+	if (!dataSet) {
+		NVBOutputError("Null dataset supplied");
+		return;
+		}
+
+	ods = new NVBAverageSlicingDataSet(ds);
+
+	QVBoxLayout * vl = new QVBoxLayout(this);
+	setLayout(vl);
+	QHBoxLayout * menuLayout = new QHBoxLayout();
+	vl->addLayout(menuLayout);
+	menuLayout->addStretch();
+	QToolBar * viewTB = new QToolBar(this);
+	QAction *tAct;
+	QActionGroup * viewActions = new QActionGroup(this);
+	viewActions->setExclusive(true);
+	
+	tAct = viewTB->addAction(QIcon(_sview_1D),"Graph",this,SLOT(showGraphView()));	
+	tAct->setCheckable(true);
+	tAct->setChecked(true);
+	viewActions->addAction(tAct);
+	tAct = viewTB->addAction(QIcon(_sview_2D),"2D view",this,SLOT(show2DView()));
+	tAct->setCheckable(true);
+	viewActions->addAction(tAct);
+	tAct = viewTB->addAction(QIcon(_sview_3D),"3D view",this,SLOT(show3DView()));
+	tAct->setCheckable(true);
+	viewActions->addAction(tAct);
+	tAct->setEnabled(false);
+	menuLayout->addWidget(viewTB);
+	
+	switch (ds->type()) {
+		case NVBDataSet::Topography:
+		case NVBDataSet::Undefined:
+			createView(NVBSingleView::Image);
+			break;
+		case NVBDataSet::Spectroscopy:
+		default:
+			createView(NVBSingleView::Graph);
+			break;
+		}
+}
+
+void NVBSingleView::createView(NVBSingleView::Type type)
+{
+	if (layout()->count() > 1) {
+		QLayoutItem * tmp;
+		tmp = layout()->takeAt(2);
+		if (tmp) {
+			if (tmp->widget()) delete tmp->widget();
+			delete tmp;
+			}
+		tmp = layout()->takeAt(1);
+		if (tmp) {
+			if (tmp->widget()) delete tmp->widget();
+			delete tmp;
+			}
+		view2D = 0;
+		viewGraph = 0;
+		}
+	
+	ods->reset();
+	
+	NVBSingleViewSliders * sliders = 0;
+	
+	switch(type) {
+		case NVBSingleView::Image :
+			if (ds->nAxes() > 1) {
+				layout()->addWidget(view2D = new NVBSingle2DView(ods,this));
+				layout()->addWidget(sliders = new NVBSingleViewSliders(ds,Image));
+				break;
+				}
+		case NVBSingleView::Graph :
+			layout()->addWidget(viewGraph = new NVBSingleGraphView(ods,this));
+			layout()->addWidget(sliders = new NVBSingleViewSliders(ds,Graph));
+			break;
+		}
+	
+	if (sliders) {
+		connect(sliders, SIGNAL(axisTargetsChanged(axisindex_t, axisindex_t, QVector<axisindex_t>, QVector<axisindex_t>)), this, SLOT(targetsChanged(axisindex_t, axisindex_t, QVector<axisindex_t>, QVector<axisindex_t>)));
+		connect(sliders, SIGNAL(sliceIndexesChanged(QVector<axissize_t>)), this, SLOT(sliceChanged(QVector<axissize_t>)));
+		
+		// Unfortunately, the first signal was emitted before we could connect
+		
+		targetsChanged(sliders->xAxis(),sliders->yAxis(),sliders->averagedAxes(),sliders->slicedAxes());
+		sliceChanged(sliders->sliceIndexes());
+		}
+}
+
+
+NVBSingleView::~NVBSingleView()
+{
+
+}
+
+void NVBSingleView::sliceChanged(QVector< axissize_t > indexes)
+{
+	ods->setSliceIndexes(indexes);
+}
+
+void NVBSingleView::targetsChanged(axisindex_t x, axisindex_t y, QVector< axisindex_t > a, QVector< axisindex_t > s)
+{
+	ods->setAveragingAxes(a);
+	ods->setSliceAxes(s);
+
+	axisindex_t dx=0,dy=0;
+	
+	foreach(axisindex_t i,a) {
+		if (i < x) dx += 1;
+		if (i < y) dy += 1;
+		}
+	foreach(axisindex_t i,s) {
+		if (i < x) dx += 1;
+		if (i < y) dy += 1;
+		}
+	
+	x -= dx;
+	y -= dy;
+	
+	// the ods now as only the necessary axes
+	if (view2D) {
+//		view2D->setDataSet(ods);
+		view2D->setXYAxes(x,y);
+		}
+	else if (viewGraph) {
+//		viewGraph->setDataSet(ods);
+		viewGraph->setXAxis(x);
 		}
 }
