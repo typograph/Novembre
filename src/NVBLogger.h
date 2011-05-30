@@ -12,11 +12,15 @@
 #ifndef NVBLOGGER_H
 #define NVBLOGGER_H
 
+#ifdef NVB_DEBUG
+#include <QtCore/QDebug>
+#endif
+
 #ifdef NVB_ENABLE_LOG
 
-#include <QMetaType>
-#include <QTime>
-#include <QString>
+#include <QtCore/QMetaType>
+#include <QtCore/QTime>
+#include <QtCore/QString>
 
 // The following piece of code was taken directly from boost/current_function.hpp
 
