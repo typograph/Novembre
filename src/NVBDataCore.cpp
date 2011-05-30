@@ -38,6 +38,16 @@ void sliceNArray(const double * const data, axisindex_t n, double * target, axis
 		return;
 		}
 
+	if (n != m && (!sliceaxes || !slice)) {
+		NVBOutputError("NULL sliceaxes/slice pointer");
+		return;
+		}
+
+	if (m != 0 && !newaxes) {
+		NVBOutputError("NULL newaxes pointer");
+		return;
+		}
+
 	if (m > n) {
 		NVBOutputError("Target has more axes than parent");
 		return;
@@ -515,12 +525,28 @@ double* sliceNArray(const double * const data, QVector< axissize_t > sizes, QVec
 		return 0;
 		}
 	if (!newaxes.isEmpty() && sizes.count() !=  sliceaxes.count() + newaxes.count()) {
-		qDebug() << sizes << sliceaxes << newaxes;
-		NVBOutputError("Slice axes and result axes don't add up to parent");
+		NVBOutputError(QString("%1 slice axes and %2 result axes don't add up to %3 parent axes").arg(sliceaxes.count()).arg(newaxes.count()).arg(sizes.count()));
 		return 0;		
 		}
 	
 	return sliceNArray(data, sizes.count(), sizes.count() - sliceaxes.count(), sizes.constData(), sliceaxes.constData(), slice.constData(), newaxes.isEmpty() ? 0 : newaxes.constData());
+}
+
+void sliceNArray(const double * const data, double * target, QVector< axissize_t > sizes, QVector< axisindex_t > sliceaxes, QVector< axissize_t > slice, QVector< axisindex_t > newaxes)
+{	
+	if (sliceaxes.count() != slice.count()) {
+		NVBOutputError("Not enough or too many slice coordinates");
+		return;
+		}
+	if (!newaxes.isEmpty() && sizes.count() !=  sliceaxes.count() + newaxes.count()) {
+		NVBOutputError(QString("%1 slice axes and %2 result axes don't add up to %3 parent axes").arg(sliceaxes.count()).arg(newaxes.count()).arg(sizes.count()));
+		return;		
+		}
+	
+	if (newaxes.isEmpty())
+		newaxes = targetaxes(sizes.count(),sliceaxes);
+	
+	sliceNArray(data, sizes.count(), target, sizes.count() - sliceaxes.count(), sizes.constData(), sliceaxes.constData(), slice.constData(), newaxes.constData());
 }
 
 
@@ -530,9 +556,7 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 
 	if (!data) return 0;
 
-	QVector<axissize_t> dsizes = data->sizes();
-
-	return sliceNArray( data->data(), dsizes, sliceaxes, sliceixs, tgaxes);
+	return sliceNArray( data->data(), data->sizes(), sliceaxes, sliceixs, tgaxes);
 		
 }
 
