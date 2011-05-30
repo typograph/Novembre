@@ -40,6 +40,9 @@ void sliceNArray(const double * const data, axisindex_t n, double * target, axis
 /// Get a slice at defined indexes (memory allocated by function)
 double * sliceNArray(const double * const data, axisindex_t n, axisindex_t m, const axissize_t * sizes, const axisindex_t * sliceaxes, const axissize_t * slice, const axisindex_t * newaxes = 0);
 
+/// Get a slice at defined indexes (QVector) (using pre-allocated buffer)
+void sliceNArray(const double * const data, double * target, QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes, QVector<axissize_t> slice, QVector<axisindex_t> newaxes = QVector<axisindex_t>());
+
 /// Get a slice at defined indexes (QVector) (memory allocated by function)
 double * sliceNArray(const double * const data, QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes, QVector<axissize_t> slice, QVector<axisindex_t> newaxes = QVector<axisindex_t>());
 
