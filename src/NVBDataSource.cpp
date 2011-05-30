@@ -45,6 +45,12 @@ axissize_t NVBDataSet::sizeAt(axisindex_t i) const {
 double NVBDataSet::min() const { return NVBMaxMinTransform::findMinimum(this); }
 double NVBDataSet::max() const { return NVBMaxMinTransform::findMaximum(this); }
 
+void NVBDataSet::invalidateCaches()
+{
+	asizes.clear();
+}
+
+
 NVBVariant NVBDataSet::getComment(const QString & key, bool recursive) const {
 	
 	if (comments.contains(key))
