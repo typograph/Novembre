@@ -6,15 +6,26 @@
 NVBColorInstance::NVBColorInstance ( const NVBDataSet* _data, const NVBColorMap* _map )
 	: source(_map)
 	, data(_data)
-	, zmin(_data->min())
-	, zmax(_data->max())
-	, zscaler(NVBValueScaler<double,double>(zmin,zmax,0,1))
+	, zmin(0)
+	, zmax(1)
+	, zscaler(NVBValueScaler<double,double>(0,1,0,1))
+	, rescaleOnDataChange(true)
 {
 	xyAxes << 0 << 1;
-	
-	if (data->nAxes() < 2)
-		NVBOutputError("Trying to color a 1D-strip is not really meaningful");
-	calculateSliceAxes();
+
+	if (!_map) NVBOutputError("No map supplied");
+	if (!data) NVBOutputError("No data supplied");
+	else {
+		setLimits(data->min(),data->max());
+		
+		if (data->nAxes() < 2)
+			NVBOutputError("Trying to color a 1D-strip is not really meaningful");
+		
+		connect(data,SIGNAL(dataChanged()),this,SLOT(parentDataChanged()));
+		connect(data,SIGNAL(dataReformed()),this,SLOT(parentDataReformed()));
+		
+		calculateSliceAxes();
+		}
 }
 
 void NVBColorInstance::setImageAxes(QVector< axisindex_t > xy)
@@ -63,6 +74,7 @@ void NVBColorInstance::setYAxis(axisindex_t y) {
 	}
 
 QPixmap NVBColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh) const {
+	if (!data) return QPixmap();
 	if (slice.isEmpty())
 		slice.fill(0,data->nAxes()-2);
 	if (i_wxh.isEmpty())
@@ -72,8 +84,6 @@ QPixmap NVBColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh) const
 	free(tdata);
 	return timg;
 }
-
-#include <QtCore/QDebug>
 
 QPixmap NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) const {
 	if (!zs) return QPixmap();
@@ -101,15 +111,24 @@ QPixmap NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) 
 
 void NVBColorInstance::calculateSliceAxes() {
 	sliceAxes.clear();
+	if (!data) return;
 	for(axisindex_t i = 0; i < data->nAxes(); i++)
 		if ( !xyAxes.contains(i) )
 			sliceAxes << i;
 }
 
 void NVBColorInstance::setLimits ( double vmin, double vmax ) {
-  zscaler.change_input(zmin,zmax,vmin,vmax);
-  zmin = vmin;
-  zmax = vmax;
+	// It is impossible to set reasonable values if vmin == vmax
+	if (vmin != vmax) {
+		zscaler.change_input(zmin,zmax,vmin,vmax);
+		zmin = vmin;
+		zmax = vmax;
+		}
+	else { // Map to low limit
+		zscaler.change_input(zmin,zmax,vmin,vmax+1);
+		zmin = vmin;
+		zmax = vmax+1;
+		}
 }
 
 void NVBColorInstance::overrideLimits ( double vmin, double vmax ) {
@@ -119,9 +138,22 @@ void NVBColorInstance::overrideLimits ( double vmin, double vmax ) {
 
 QRgb NVBColorInstance::colorize ( double z ) const {
 	double zn = zscaler.scale(z);
-	if (zn < 0)
+	if (zn < 0 || !source)
 		zn = 0;
 	else if (zn > 1)
 		zn = 1;
 	return source->colorize(zn);
+}
+
+void NVBColorInstance::parentDataChanged()
+{
+	if (rescaleOnDataChange)
+		setLimits(data->min(), data->max());
+}
+
+void NVBColorInstance::parentDataReformed()
+{
+	if (xyAxes.first() >= data->nAxes() || xyAxes.last() >= data->nAxes())
+		setImageAxes(0,1);
+	// parentDataChanged is called anyway, since dataChanged() is emitted on any change
 }
