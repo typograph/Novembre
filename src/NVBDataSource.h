@@ -100,15 +100,21 @@ class NVBDataSet : public QObject {
 //    void addMapping(NVBDataMap* map) { ms.append(map); }
 
 	signals:
-// TODO : think whether reallocation of data should change anything.
-//	A good rule would be not to keep the pointer obtained from here
+	/// The signal is emitted whenever the data has changed. This includes cases when axis sets change
 		void dataChanged();
 		
-	/// Size and/or number of some axes has changed. This signal is emitted whenever the parent datasource emits its signal
+	/// Size and/or number of axes has changed. This signal is emitted whenever the parent datasource emits its signal
 		void dataReformed();
 
+	/// When a datasource is replacing another, it makes all its datasets emit this signal.
+	/// It is also emitted when the dataset is replaced (the pointer to the dataset becomes invalid)	
+		void overwritten(NVBDataSet * newDataSet);
+		
 	public slots:
+	/// Some of the dataset data is cached. This slot clears all cached values. 
 		void invalidateCaches();
+	/// Signal users of the dataset that the other one takes its place
+		void overwrite(NVBDataSet * newDataSet) { emit overwritten(newDataSet); }
 };
 
 Q_DECLARE_METATYPE(NVBDataSet*)
