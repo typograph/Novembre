@@ -182,7 +182,10 @@ void NVBAverageSlicingDataSet::setSliceIndexes(QVector< axissize_t > indexes)
 		else
 			d = sliceNArray(avdata ? avdata : orig->data(), avsizes, slaxes, indexes);
 		}
-		
+	
+	zmin = 1;
+	zmax = -1;
+	
 	emit dataChanged();
 }
 
