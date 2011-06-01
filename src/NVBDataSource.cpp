@@ -20,6 +20,8 @@ NVBDataSet::NVBDataSet(NVBDataSource * parent,
 	,	as(axes)
 	, clr(colormap)
 	, t(tp)
+	, zmin(1)
+	, zmax(-1)
 	{
 		connect(this,SIGNAL(dataChanged()),SLOT(invalidateCaches()));
 		connect(parent,SIGNAL(axesResized()),this,SIGNAL(dataReformed()));
@@ -42,12 +44,22 @@ axissize_t NVBDataSet::sizeAt(axisindex_t i) const {
 	return p->axis(as.at(i)).length();
 	}
 
-double NVBDataSet::min() const { return NVBMaxMinTransform::findMinimum(this); }
-double NVBDataSet::max() const { return NVBMaxMinTransform::findMaximum(this); }
+double NVBDataSet::min() const { getMinMax(); return zmin; }
+double NVBDataSet::max() const { getMinMax(); return zmax; }
+
+void NVBDataSet::getMinMax() const
+{
+	if (zmin > zmax) {
+		NVBMaxMinTransform::findLimits(this,zmin,zmax);
+		}
+}
+
 
 void NVBDataSet::invalidateCaches()
 {
 	asizes.clear();
+	zmin = 1;
+	zmax = -1;
 }
 
 

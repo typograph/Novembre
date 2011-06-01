@@ -11,6 +11,7 @@ class NVBMaxMinTransform : public NVBDataTransform {
 		virtual double singleValueTransform(double) const { return 0; }
 		static double min (const double * data, axisindex_t n, const axissize_t * sizes);
 		static double max (const double * data, axisindex_t n, const axissize_t * sizes);
+		static void minmax (const double * data, axisindex_t n, const axissize_t * sizes, double & dmin, double & dmax);
 	public:
 		NVBMaxMinTransform();
 		
@@ -28,7 +29,9 @@ class NVBMaxMinTransform : public NVBDataTransform {
 namespace NVBMaxMinTransform {
 double min (const double * data, axisindex_t n, const axissize_t * sizes);
 double max (const double * data, axisindex_t n, const axissize_t * sizes);
+void minmax (const double * data, axisindex_t n, const axissize_t * sizes, double & dmin, double & dmax);
 double findMinimum(const NVBDataSet * data);
 double findMaximum(const NVBDataSet * data);
+void findLimits(const NVBDataSet * data, double & dmin, double & dmax);
 }
 #endif // NVBDATATRANSFORMS_H

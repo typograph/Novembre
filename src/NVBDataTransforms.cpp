@@ -7,8 +7,10 @@
 }
 */
 /*
+ * that one should return an array of two values - min and max
+ * 
 void NVBMaxMinTransform::operator() (const double * data, axisindex_t n, const axissize_t * sizes, axisindex_t m, const axisindex_t * slice, double * target) const {
-
+	minmax(data,n,sizes,target[0],target[1]);
 }
 */
 
@@ -32,6 +34,19 @@ double NVBMaxMinTransform::max (const double * data, axisindex_t n, const axissi
 	return max;
 }
 
+void NVBMaxMinTransform::minmax (const double * data, axisindex_t n, const axissize_t * sizes, double & dmin, double & dmax) {
+	if (!data) return;
+	axissize_t szd = prod(n,sizes);
+	dmax = data[0];
+	dmin = dmax;
+	for (axissize_t i = 1; i<szd; i++) {
+		if (data[i] > dmax)
+			dmax = data[i];
+		if (data[i] < dmin)
+			dmin = data[i];		
+		}
+}
+
 double NVBMaxMinTransform::findMinimum(const NVBDataSet * data) {
 	return NVBMaxMinTransform::min(data->data(),data->nAxes(),data->sizes().constData());
 }
@@ -39,6 +54,12 @@ double NVBMaxMinTransform::findMinimum(const NVBDataSet * data) {
 double NVBMaxMinTransform::findMaximum(const NVBDataSet * data) {
 	return NVBMaxMinTransform::max(data->data(),data->nAxes(),data->sizes().constData());
 }
+
+void NVBMaxMinTransform::findLimits(const NVBDataSet* data, double& dmin, double& dmax)
+{
+	NVBMaxMinTransform::minmax(data->data(),data->nAxes(),data->sizes().constData(),dmin,dmax);
+}
+
 
 /*
 static double NVBMaxMinTransform::findMinimum(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> slice) {

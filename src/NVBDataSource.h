@@ -54,6 +54,9 @@ class NVBDataSet : public QObject {
 		
 	protected:
 		mutable QVector<axissize_t> asizes;
+		/// minimum and maximum
+		mutable double zmin, zmax;
+		void getMinMax() const;
 		
 	public:
 		NVBDataSet(NVBDataSource * parent,
