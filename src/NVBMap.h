@@ -52,7 +52,8 @@ class NVBColorMap;
 	A color instance can produce full images using a given color map
 */
 
-class NVBColorInstance {
+class NVBColorInstance : public QObject {
+	Q_OBJECT
 	private:
 		const NVBColorMap * source;
 		const NVBDataSet * data;
@@ -61,6 +62,10 @@ class NVBColorInstance {
 		QVector<axisindex_t> sliceAxes;
 		QVector<axisindex_t> xyAxes;
 		void calculateSliceAxes();
+		bool rescaleOnDataChange;
+	private slots:
+		void parentDataReformed();
+		void parentDataChanged();
 	public:
 		NVBColorInstance(const NVBDataSet * data, const NVBColorMap * map);
 		~NVBColorInstance() {;}
@@ -100,12 +105,17 @@ class NVBColorInstance {
 
 		void setImageAxes(QVector<axisindex_t> xy);
 		void setImageAxes(axisindex_t x, axisindex_t y);
+
 		QVector<axisindex_t> getSliceAxes();
+
+		QPixmap colorize(QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize()) const;
+		QPixmap colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
+
+public slots:
 		void setXAxis(axisindex_t x);
 		void setYAxis(axisindex_t y);
 		
-		QPixmap colorize(QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize()) const;
-		QPixmap colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
+		void setRescaleOnDataChange(bool rescale = true) { rescaleOnDataChange = rescale; }
 };
 
 /**
