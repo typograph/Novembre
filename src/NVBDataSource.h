@@ -24,9 +24,6 @@ class NVBDataSet : public QObject {
 	friend class NVBSelectorInstance;
 	public:
 		/// Initial type of the data
-		/*!
-			* This influences the way this dataset is displayed by default
-			*/
 		enum Type {
 			Undefined = 0 ,
 			Topography ,
@@ -46,8 +43,11 @@ class NVBDataSet : public QObject {
 		QVector<axisindex_t> as;
 		/// Colors
 		NVBColorMap * clr;
-//    /// Relevant mappings
-//    QVector<NVBDataMap*> ms;
+		/// Hint for displaying the dataset 
+		/*!
+			* This paremeter influences the way this dataset is displayed by default.
+			* All datasets are functionally equivalent, independently of their type. 
+			*/
 		Type t;
 
 		NVBDataComments comments;
