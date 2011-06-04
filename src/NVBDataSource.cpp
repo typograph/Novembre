@@ -170,7 +170,7 @@ void NVBConstructableDataSource::addAxisMap(NVBAxisMap * map, QVector<axisindex_
 NVBDataSet * NVBConstructableDataSource::addDataSet(QString name, double* data, NVBUnits dimension, NVBDataComments datacomments, QVector< axisindex_t > axes, NVBDataSet::Type type, NVBColorMap * map)
 {
 	if (axes.count() == 0)
-		for(int i=0; i<axes.count(); i++)
+		for(int i=0; i<this->axes().count(); i++)
 			axes << i;
 	dsets.append(new NVBDataSet(this,name,data,dimension,axes,type,map));
 	dsets.last()->comments = datacomments;
