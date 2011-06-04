@@ -25,22 +25,29 @@
 #include <zlib.h>
 
 #include "NVBLogger.h"
-#include "NVBDimension.h"
+#include "NVBUnits.h"
 #include "NVBScaler.h"
 #include "NVBColorMaps.h"
 #include "NVBFileInfo.h"
+#include "NVBFile.h"
 #include "NVBAxisMaps.h"
 
-typedef quint8 axisindex_t;
-typedef quint64 axissize_t;
+QStringList DATchannelNames = QStringList() << "Topography" << "Current" << "ADC1" << "ADC2";
+QList<NVBUnits> DATchannelDims = QList<NVBUnits>()
+                                    << NVBUnits("nm")
+                                    << NVBUnits("A")
+                                    << NVBUnits("DAC",false)
+                                    << NVBUnits("DAC",false);
+
+
 
 QStringList CreatecFileGenerator::availableInfoFields() const {
-    return QStringList() \
-            << "Bias" \
-            << "Setpoint" \
-						<< "Z piezo constant" \ // ZPiezoconst=  7.33
-						<< "X piezo constant" \ // Xpiezoconst= 30.92
-						<< "Y piezo constant" \ // YPiezoconst= 30.92
+    return QStringList()
+            << "Bias"
+            << "Setpoint"
+						<< "Z piezo constant" // ZPiezoconst=  7.33
+						<< "X piezo constant" // Xpiezoconst= 30.92
+						<< "Y piezo constant" // YPiezoconst= 30.92
 // DAC-Type=20bit
 						<< "STM preset" // Titel / Titel=LTSTM_5K_XYZmain
 // Delta X / Delta X [Dac]=256
@@ -279,7 +286,7 @@ CreatecHeader CreatecFileGenerator::getCreatecHeader( QFile & file )
       if (dimstr.isEmpty())
         tval = ival;
       else
-        tval = NVBPhysValue(ival,NVBDimension(dimstr));
+        tval = NVBPhysValue(ival,NVBUnits(dimstr));
       }
     else {
       double dval = value.toDouble(&ok);
@@ -287,7 +294,7 @@ CreatecHeader CreatecFileGenerator::getCreatecHeader( QFile & file )
         if (dimstr.isEmpty())
           tval = dval;
         else
-          tval = NVBPhysValue(dval,NVBDimension(dimstr));
+          tval = NVBPhysValue(dval,NVBUnits(dimstr));
           } 
       else {
 				if (!dimstr.isEmpty()) NVBOutputError("Dimensionised string in "+s);
@@ -331,26 +338,25 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 	//     - we might have a bunch of (vert) files
 	//     - we might have a (tspec) or a (lat) file [that we don't know how to read]
 
-// TODO Here to fill in fileInfo.
-
 	QString ffname = info.first();
 	QString ext = ffname.right(ffname.size()-ffname.lastIndexOf('.')-1).toLower();
 	if (ext == "dat") {
-		f->addSource( loadAllChannelsFromDAT(ffname) );
+		loadAllChannelsFromDAT(ffname,f);
 		if (info.count() > 1)
 			NVBOutputPMsg("Associated files include more that one *.dat file");
 		}
 	else if (ext == "lat")
-		f->addSource( loadAllChannelsFromLAT(ffname) );
+		loadAllChannelsFromLAT(ffname,f);
 	else if (ext == "vert")
-		f->addSource( loadAllChannelsFromVERT(info) );
+		// FIXME we suppose here, that all the vert files in AFI belong to the same set
+		loadAllChannelsFromVERT(info,f);
 	else if (ext == "tspec")
-		f->addSource( loadAllChannelsFromTSPEC(ffname) );
+		loadAllChannelsFromTSPEC(ffname,f);
 	else {
 		NVBOutputError(QString("Didn't recognise file format of %1").arg(ffname));
 		}
 
-	if (f->fileInfo.dataCount() == 0) {
+	if (f->count() == 0) {
 		delete f;
 		return 0;
 		}
@@ -385,6 +391,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	
 	NVBFileInfo * fi = new NVBFileInfo(info);
 	if (!fi) return 0;
+	fi->filterAddComments(comments); // The comments are the same for all
 	
 	//  QString name;
 	QString filename = info.first();
@@ -392,16 +399,17 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	if (ext == "dat") {
 		QVector<axissize_t> sz;
 		sz << header.value("Num.X").toInt() << header.value("Num.Y").toInt();
-		fi->dataInfos << NVBDataInfo("Topography (forward)", NVBDimension("m"),sz,comments);
-		fi->dataInfos << NVBDataInfo("Topography (backward)",NVBDimension("m"),sz,comments);
+		
+		fi->append(NVBDataInfo("Topography (forward)", NVBUnits("m"),sz,NVBDataComments(),NVBDataSet::Topography));
+		fi->append(NVBDataInfo("Topography (backward)",NVBUnits("m"),sz,NVBDataComments(),NVBDataSet::Topography));
 		if (header.value("Channels").toInt() > 2) {
-			fi->dataInfos << NVBDataInfo("Current (forward)", NVBDimension("A"),sz,comments);
-			fi->dataInfos << NVBDataInfo("Current (backward)",NVBDimension("A"),sz,comments);
+			fi->append(NVBDataInfo("Current (forward)", NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Topography));
+			fi->append(NVBDataInfo("Current (backward)",NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Topography));
 			if (header.value("Channels").toInt() > 4) {
-				fi->dataInfos << NVBDataInfo("ADC1 (forward)", NVBDimension("DAC",false),sz,comments);
-				fi->dataInfos << NVBDataInfo("ADC1 (backward)",NVBDimension("DAC",false),sz,comments);
-				fi->dataInfos << NVBDataInfo("ADC2 (forward)", NVBDimension("DAC",false),sz,comments);
-				fi->dataInfos << NVBDataInfo("ADC2 (backward)",NVBDimension("DAC",false),sz,comments);
+				fi->append(NVBDataInfo("ADC1 (forward)", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
+				fi->append(NVBDataInfo("ADC1 (backward)",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
+				fi->append(NVBDataInfo("ADC2 (forward)", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
+				fi->append(NVBDataInfo("ADC2 (backward)",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
 				}
 			}
 		}
@@ -458,23 +466,23 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 			sz << np; // "Point"
 
 
-		fi->dataInfos << NVBDataInfo("I",    NVBDimension("A"),sz,comments);
-		fi->dataInfos << NVBDataInfo("dI",   NVBDimension("V"),sz,comments);
-		fi->dataInfos << NVBDataInfo("U",    NVBDimension("V"),sz,comments);
-		fi->dataInfos << NVBDataInfo("z",    NVBDimension("nm"),sz,comments);
-		fi->dataInfos << NVBDataInfo("dI2",  NVBDimension("V"),sz,comments);
-		fi->dataInfos << NVBDataInfo("dI_q", NVBDimension("DAC",false),sz,comments);
-		fi->dataInfos << NVBDataInfo("dI2_q",NVBDimension("DAC",false),sz,comments);
-		fi->dataInfos << NVBDataInfo("AD0",  NVBDimension("A"),sz,comments);
-		fi->dataInfos << NVBDataInfo("AD1",  NVBDimension("V"),sz,comments);
-		fi->dataInfos << NVBDataInfo("AD2",  NVBDimension("V"),sz,comments);
-		fi->dataInfos << NVBDataInfo("AD3",  NVBDimension("DAC",false),sz,comments);
-		fi->dataInfos << NVBDataInfo("Dac0", NVBDimension("DAC",false),sz,comments);
+		fi->append(NVBDataInfo("I",    NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("dI",   NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("U",    NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("z",    NVBUnits("nm"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("dI2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("AD0",  NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("AD1",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("AD2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("AD3",  NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("Dac0", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
 		}
 	else if (ext == "lat")
-		fi->dataInfos << NVBDataInfo("I",NVBDimension("A"),QVector<axissize_t>(1,1024),comments);
+		fi->append(NVBDataInfo("I",NVBUnits("A"),QVector<axissize_t>(1,1024),NVBDataComments(),NVBDataSet::Spectroscopy));
 	else if (ext == "tspec")
-		fi->dataInfos << NVBDataInfo("I",NVBDimension("A"),QVector<axissize_t>(1,30),comments);
+		fi->append(NVBDataInfo("I",NVBUnits("A"),QVector<axissize_t>(1,30),NVBDataComments(),NVBDataSet::Spectroscopy));
 	else {
 		NVBOutputError(QString("Unrecognizable file extension in %1").arg(filename));
 		}
@@ -484,22 +492,21 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	return fi;
 }
 
-NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) const {
+void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sources) const {
 
-	NVBDataSource* result = 0;
 	QFile file(filename);
 
 	if (!file.open(QIODevice::ReadOnly)) {
 		NVBOutputFileError(&file);
-		return result;
+		return;
 		}
 	if ( !QString(file.readLine(100)).contains("[param",Qt::CaseInsensitive) ) {
 		NVBOutputError(QString("Unknown file format in %1").arg(filename));
-		return result;
+		return;
 		}
 
   CreatecHeader file_header = getCreatecHeader(file);
-	NVBDataComments comments = commentsFromHeader(header);
+	NVBDataComments comments = commentsFromHeader(file_header);
 
     // initialise data
 
@@ -509,7 +516,7 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
 
 	if (data_points == 0) {
 		NVBOutputError(QString("Zero data size in %1").arg(filename));
-		return result;
+		return;
 		}
 
 // Fill in Z factors
@@ -529,40 +536,36 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
 
 // There are always only 2 axes : X & Y
 
-	result = new NVBDataSource();
+	NVBConstructableDataSource* result = new NVBConstructableDataSource();
 
 	result->addAxis("X",file_header.value("Num.X",0).toInt());
 	result->addAxisMap(
 			new NVBAxisPhysMap(
 					NVBPhysValue(
-							-1e-9*header.value("Scanrotoffx",0).toInt()*
-							header.value("Dacto[A]xy",0).toDouble()
-							-0.5*1e-10*header.value("Length x",0).toPhysValue().getValue()
-							,"m"),
+							-1e-9*file_header.value("Scanrotoffx",0).toInt()*
+							file_header.value("Dacto[A]xy",0).toDouble()
+							-0.5*1e-10*file_header.value("Length x",0).toPhysValue().getValue()
+							,NVBUnits("m")),
 					NVBPhysValue(
-							header.value("Dacto[A]xy",0).toDouble()*
-							header.value("Delta X",0).toPhysValue().getValue()*
-							10e-9,"m")
-					),
-			0);
+							file_header.value("Dacto[A]xy",0).toDouble()*
+							file_header.value("Delta X",0).toPhysValue().getValue()*
+							10e-9,NVBUnits("m"))
+					));
 
 	result->addAxis("Y",file_header.value("Num.Y",0).toInt());
 	result->addAxisMap(
 			new NVBAxisPhysMap(
 					NVBPhysValue(
-							-header.value("Scanrotoffy",0).toInt()*
-							header.value("Dacto[A]xy",0).toDouble()*
-							1e-9,"m"),
+							-file_header.value("Scanrotoffy",0).toInt()*
+							file_header.value("Dacto[A]xy",0).toDouble()*
+							1e-9,NVBUnits("m")),
 					NVBPhysValue(
-							header.value("Dacto[A]xy",0).toDouble()*
-							header.value("Delta Y",0).toPhysValue().getValue()*
-							10e-9,"m")
-					),
-			0);
+							file_header.value("Dacto[A]xy",0).toDouble()*
+							file_header.value("Delta Y",0).toPhysValue().getValue()*
+							10e-9,NVBUnits("m"))
+					));
 
-	result->setComments(comments);
-
-	int magic = header.value("Chan(1,2,4)").toInt();
+	int magic = file_header.value("Chan(1,2,4)").toInt();
 
   file.seek(0);
 
@@ -571,7 +574,8 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
 
   if (format == "[Parameter]") {
 		NVBOutputError("No idea how to deal with [Parameter]");
-    return result;
+		delete result;
+    return;
     }
   else if (format == "[Paramet32]") {
     // this is uncompressed
@@ -581,7 +585,7 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
 		if (!idata) {
 			NVBOutputError("Memory allocation failure");
 			delete result;
-			return 0;
+			return;
 			}
 
 		NVBValueScaler<quint32,double> intscaler;
@@ -593,15 +597,18 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
 				NVBOutputError("Memory allocation failure");
 				free(idata);
 				delete result;
-				return 0;
+				return;
 				}
-			intscaler.override(0,factors.at(channel%magic));
+			intscaler.change_output(0,1,0,factors.at(channel%magic));
 			intscaler.scaleMem(data,idata,data_points);
 			result->addDataSet(
-					DATchannelNames.at(channel%magic) + ((channel/magic == 0) ? " (forward)" : " (backward)"),
-					data,
-					DATchannelDims.at(channel%magic)
-					);
+				DATchannelNames.at(channel%magic) + ((channel/magic == 0) ? " (forward)" : " (backward)"),
+				data,
+				DATchannelDims.at(channel%magic),
+				NVBDataComments(),
+				QVector<axisindex_t>() << 0 << 1,
+				NVBDataSet::Topography
+				);
     }
 
     free(idata);
@@ -615,14 +622,14 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
 		if (!zbuf) {
 			NVBOutputError("Memory allocation failure");
 			delete result;
-			return 0;
+			return;
 			}
 		float *buf  = (float*)malloc(unzsize);
 		if (!buf) {
 			NVBOutputError("Memory allocation failure");
 			free(zbuf);
 			delete result;
-			return 0;
+			return;
 			}
 
     // start of gzdata
@@ -639,20 +646,23 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
 		NVBValueScaler<float,double> intscaler;
 
 		for (int channel = 0; channel < nchannels; channel++) {
-			 double * data = (double*) malloc(data_points*8);
-			 if (!data) {
-				 NVBOutputError("Memory allocation failure");
-				 free(buf);
-				 delete result;
-				 return 0;
-				 }
-			 intscaler.override(0,factors.at(channel%magic));
-			 intscaler.scaleMem(data,buf+1+data_points*i,data_points);
-			 result->addDataSet(
-					 DATchannelNames.at(channel%magic) + ((channel/magic == 0) ? " (forward)" : " (backward)"),
-					 data,
-					 DATchannelDims.at(channel%magic)
-					 );
+			double * data = (double*) malloc(data_points*8);
+			if (!data) {
+				NVBOutputError("Memory allocation failure");
+				free(buf);
+				delete result;
+				return;
+				}
+			intscaler.change_output(0,1,0,factors.at(channel%magic));
+			intscaler.scaleMem(data,buf+1+data_points*channel,data_points);
+			result->addDataSet(
+				DATchannelNames.at(channel%magic) + ((channel/magic == 0) ? " (forward)" : " (backward)"),
+				data,
+				DATchannelDims.at(channel%magic),
+				NVBDataComments(),
+				QVector<axisindex_t>() << 0 << 1,
+				NVBDataSet::Topography
+				);
     }
 
     free(buf);
@@ -660,13 +670,15 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromDAT(QString filename) co
   else {
 		NVBOutputError("No idea how to deal with " + format);
 		delete result;
-		return 0;
+		return;
     }
-
-  return result;
+    
+	sources->filterAddComments(comments);
+	result->filterAddComments(comments);
+  *sources << result;
 }
 
-NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames) const {
+void CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames, NVBFile* sources) const {
 
 	/*
 		So, there are different types of *.vert files
@@ -688,6 +700,7 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 				. It's a grid
 	*/
 
+	qDebug() << filenames;
 	filenames.sort();
 
 	QString reffname = filenames.last();
@@ -698,7 +711,7 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 		QStringList tokens = reffname.mid(nameX+16,reffname.length()-nameX-21).split('.');
 		foreach (QString token, tokens) {
 			bool ok = false;
-			int value = token.mid(1).toInt(&ok,10)+1;
+			int value = token.mid(1).toInt(&ok,10);
 			if (ok)
 				switch (token[0].toLatin1()) {
 					case 'R' : {
@@ -725,13 +738,11 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 		}
 
 
-	NVBDataSource * result;
-	try {
-		result = new NVBDataSource();
-		}
-	catch (...) {
+	NVBConstructableDataSource * result;
+	result = new NVBConstructableDataSource(sources);
+	if (!result) {
 		NVBOutputError("NVBDataSource allocation failed");
-		return 0;
+		return;
 		}
 
 	// Before we add axes, we need to know some parameters
@@ -741,54 +752,63 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 	if (!ffile.open(QIODevice::ReadOnly)) {
 			NVBOutputFileError(&ffile);
 			delete result;
-			return 0;
+			return;
 			}
 
 	CreatecHeader header = CreatecFileGenerator::getCreatecHeader(ffile);
-	result->setComments(commentsFromHeader(header));
+	NVBDataComments comments = commentsFromHeader(header);
 	ffile.seek(0x4006);
 	QStringList sizes(QString(ffile.readLine(200)).split(' ',QString::SkipEmptyParts));
 
 	int npts = sizes.at(0).toInt();
+	int datasize = npts;
 	double X0dac = sizes.at(1).toInt() - header.value("Scanrotoffx").toDouble();
 	double Y0dac = sizes.at(2).toInt() - header.value("Scanrotoffy").toDouble();
 	double dacFactor0 = header.value("Dacto[A]xy").toDouble()*1e-9;
 
 	ffile.close();
 
+	QVector<axisindex_t> axes;
+	
 	result->addAxis("Time", npts);
 	result->addAxisMap(
 			new NVBAxisPhysMap(
 					0,
 					header.value("Vertmandelay").toDouble()/header.value("DSP_Clock").toDouble(),
-					NVBDimension("s")
+					NVBUnits("s")
 					)
 			);
 
-	if (nr != 0)
+	if (nr != 0) {
+		datasize *= nr;
 		result->addAxis("Measurement", nr); // No map here -- these are just measurements
+		}
 	if (nx != 0) {
+		datasize *= nx;
 		result->addAxis("X", nx);
 		result->addAxisMap(
 				new NVBAxisPhysMap(
 						X0dac*dacFactor0,
 						header.value("Length x").toDouble()/nx,
-						NVBDimension("nm")
+						NVBUnits("nm")
 						)
 				);
 		if (ny != 0) {
+			datasize *= ny;
 			result->addAxis("Y", ny);
 			result->addAxisMap(
 					new NVBAxisPhysMap(
 							Y0dac*dacFactor0,
 							header.value("Length y").toDouble()/ny,
-							NVBDimension("nm")
+							NVBUnits("nm")
 							)
 					);
 			}
 		}
-	if (np != 0)
+	if (np != 0) {
+		datasize *= np;
 		result->addAxis("Point", np);
+		}
 
 	// Colors are taken from the STMAFM program by Createc
 	// colors << Qt::green << Qt::blue << Qt::green << Qt::blue
@@ -798,20 +818,20 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 	QVector<double*> datae(12);
 
 	for (int i = 0; i<12; i++)
-		datae[i] = (double*)malloc(npts*sizeof(double));
+		datae[i] = (double*)malloc(datasize*sizeof(double));
 
-	result->addDataSet("I",    datae.at(0), NVBDimension("A"));
-	result->addDataSet("dI",   datae.at(1), NVBDimension("V"));
-	result->addDataSet("U",    datae.at(2), NVBDimension("V"));
-	result->addDataSet("z",    datae.at(3), NVBDimension("nm"));
-	result->addDataSet("dI2",  datae.at(4), NVBDimension("V"));
-	result->addDataSet("dI_q", datae.at(5), NVBDimension("DAC",false));
-	result->addDataSet("dI2_q",datae.at(6), NVBDimension("DAC",false));
-	result->addDataSet("ADC0",  datae.at(7), NVBDimension("A"));
-	result->addDataSet("ADC1",  datae.at(8), NVBDimension("V"));
-	result->addDataSet("ADC2",  datae.at(9), NVBDimension("V"));
-	result->addDataSet("ADC3",  datae.at(10),NVBDimension("DAC",false));
-	result->addDataSet("Dac0", datae.at(11),NVBDimension("DAC",false));
+	result->addDataSet("I",    datae.at(0), NVBUnits("A"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("dI",   datae.at(1), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("U",    datae.at(2), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("z",    datae.at(3), NVBUnits("nm"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("dI2",  datae.at(4), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("dI_q", datae.at(5), NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("dI2_q",datae.at(6), NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("ADC0",  datae.at(7), NVBUnits("A"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("ADC1",  datae.at(8), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("ADC2",  datae.at(9), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("ADC3",  datae.at(10),NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	result->addDataSet("Dac0", datae.at(11),NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
 
 	// Positions
 
@@ -824,7 +844,7 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 
 		if (!file.open(QIODevice::ReadOnly)) {
 				NVBOutputFileError(&file);
-				return 0;
+				return;
 				}
 
 		CreatecHeader file_header = CreatecFileGenerator::getCreatecHeader(file);
@@ -836,7 +856,7 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 
 		if (format != "[Parameter]") {
 			NVBOutputError(QString("Don't know how to deal with format %1").arg(format));
-			return 0;
+			return;
 		}
 
     // initialise data
@@ -848,9 +868,9 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 		double Xdac = sizes.at(1).toInt() - file_header.value("Scanrotoffx").toDouble();
 		double Ydac = sizes.at(2).toInt() - file_header.value("Scanrotoffy").toDouble();
 		double dacFactor = file_header.value("Dacto[A]xy").toDouble()*1e-9;
-		points << NVBPhysPoint(Xdac*dacFactor,Ydac*dacFactor,NVBDimension("m"));
+		points << NVBPhysPoint(Xdac*dacFactor,Ydac*dacFactor,NVBUnits("m"));
 
-		NVBOutputDMsg(QString("X: %1, Y: %2 : DAC %3 -> Point %4 x %5").arg(Xdac).arg(Ydac).arg(dacFactor,8).arg(pos.x(),8).arg(pos.y(),8));
+		NVBOutputDMsg(QString("X: %1, Y: %2 : DAC %3 -> Point %4 x %5").arg(Xdac).arg(Ydac).arg(dacFactor,8).arg(points.last().x().getValue(),8).arg(points.last().y().getValue(),8));
 
 		QVector<double> factor(12,1);
 
@@ -886,28 +906,32 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenam
 
 	// Line/Set is the last axis added
 
-	if (np != 0)
+	if (np > 1)
 		result->addAxisMap(new NVBAxisPointMap(points));
+	else // We suppose all points are the same, as they should be
+		result->addComment("Position",points.first());
 
-	return result;
+	sources->filterAddComments(comments);
+	result->filterAddComments(comments);
+	*sources << result;
 }
 
-NVBDataSource* CreatecFileGenerator::loadAllChannelsFromLAT(QString filename) const {
+void CreatecFileGenerator::loadAllChannelsFromLAT(QString filename, NVBFile* sources) const {
 
-	NVBDataSource * result;
+	NVBConstructableDataSource * result;
 	try {
-		result = new NVBDataSource();
+		result = new NVBConstructableDataSource();
 		}
 	catch (...) {
 		NVBOutputError("NVBDataSource allocation failed");
-		return 0;
+		return;
 		}
 
 	QFile file(filename);
 	if (!file.open(QIODevice::ReadOnly)) {
 			NVBOutputFileError(&file);
 			delete result;
-			return 0;
+			return;
 			}
 
 	QString format(file.readLine(20));
@@ -915,11 +939,12 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromLAT(QString filename) co
 
 	if (format != "[Parameter]") {
 		NVBOutputError(QString("Don't know how to deal with format %1").arg(format));
-		return 0;
+		delete result;
+		return;
 	}
 
 	CreatecHeader header = CreatecFileGenerator::getCreatecHeader(file);
-	result->setComments(commentsFromHeader(header));
+	NVBDataComments comments = commentsFromHeader(header);
 	file.seek(0x4006);
 
 	QStringList sizes(QString(file.readLine(200)).split(' ',QString::SkipEmptyParts));
@@ -934,15 +959,15 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromLAT(QString filename) co
 			new NVBAxisPhysMap(
 					0,
 					header.value("Latmandelay").toDouble()/header.value("DSP_Clock").toDouble(),
-					NVBDimension("s")
+					NVBUnits("s")
 					)
 			);
 
 	double* zs = (double*)malloc(npts*sizeof(double));
 	double* is = (double*)malloc(npts*sizeof(double));
 
-	result->addDataSet("Z", zs, NVBDimension("nm"));
-	result->addDataSet("I", is, NVBDimension("A"));
+	result->addDataSet("Z", zs, NVBUnits("nm"));
+	result->addDataSet("I", is, NVBUnits("A"));
 
 	// Positions
 
@@ -970,32 +995,24 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromLAT(QString filename) co
 		points << NVBPhysPoint(
 								pt_data.at(3).toDouble()*xyfactor,
 								pt_data.at(4).toDouble()*xyfactor,
-								NVBDimension("nm")
+								NVBUnits("nm")
 								);
 		line += 1;
 		}
 
 	result->addAxisMap(new NVBAxisPointMap(points));
 
-	return result;
+	sources->filterAddComments(comments);
+	result->filterAddComments(comments);
+	*sources << result;
 }
 
-NVBDataSource* CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename) const {
-
-	NVBDataSource * result;
-	try {
-		result = new NVBDataSource();
-		}
-	catch (...) {
-		NVBOutputError("NVBDataSource allocation failed");
-		return 0;
-		}
+void CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename, NVBFile* sources) const {
 
 	QFile file(filename);
 	if (!file.open(QIODevice::ReadOnly)) {
 			NVBOutputFileError(&file);
-			delete result;
-			return 0;
+			return;
 			}
 
 	QString format(file.readLine(20));
@@ -1003,21 +1020,32 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename) 
 
 	if (format != "[Parameter]") {
 		NVBOutputError(QString("Don't know how to deal with format %1").arg(format));
-		return 0;
+		return;
 	}
 
+	NVBConstructableDataSource * result;
+	try {
+		result = new NVBConstructableDataSource();
+		}
+	catch (...) {
+		NVBOutputError("NVBDataSource allocation failed");
+		return;
+		}
+
 	CreatecHeader header = CreatecFileGenerator::getCreatecHeader(file);
-	result->setComments(commentsFromHeader(header));
+	NVBDataComments comments = commentsFromHeader(header);
 	file.seek(0x4004);
 	int nparam = file.readLine(800).split('\t').length()-3;
 	file.seek(0x4004);
 
-	result->addAxis("Time", header.value("FFTPoints").toInt());
+	int npts = header.value("FFTPoints").toInt();
+
+	result->addAxis("Time", npts);
 	result->addAxisMap(
 			new NVBAxisPhysMap(
 					0,
 					1/header.value("SpecFreq").toDouble(),
-					NVBDimension("s")
+					NVBUnits("s")
 					)
 			);
 
@@ -1027,23 +1055,23 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename) 
 		datae[i] = (double*)malloc(npts*sizeof(double));
 
 	int freeaxis = 0;
-	result->addDataSet("Z",    datae.at(freeaxis++), NVBDimension("nm"));
-	result->addDataSet("I",    datae.at(freeaxis++), NVBDimension("A"));
+	result->addDataSet("Z",    datae.at(freeaxis++), NVBUnits("nm"));
+	result->addDataSet("I",    datae.at(freeaxis++), NVBUnits("A"));
 	if (nparam > 4) {
-		result->addDataSet("dI",   datae.at(freeaxis++), NVBDimension("V"));
+		result->addDataSet("dI",   datae.at(freeaxis++), NVBUnits("V"));
 		if (nparam > 6) {
-			result->addDataSet("ADC2",  datae.at(freeaxis++), NVBDimension("DAC",false));
-			result->addDataSet("ADC3",  datae.at(freeaxis++), NVBDimension("DAC",false));
+			result->addDataSet("ADC2",  datae.at(freeaxis++), NVBUnits("DAC",false));
+			result->addDataSet("ADC3",  datae.at(freeaxis++), NVBUnits("DAC",false));
 			}
 		}
 
-	result->addDataSet("FFT Z",    datae.at(freeaxis++), NVBDimension("DAC",false));
-	result->addDataSet("FFT I",    datae.at(freeaxis++), NVBDimension("DAC",false));
+	result->addDataSet("FFT Z",    datae.at(freeaxis++), NVBUnits("DAC",false));
+	result->addDataSet("FFT I",    datae.at(freeaxis++), NVBUnits("DAC",false));
 	if (nparam > 4) {
-		result->addDataSet("FFT dI",   datae.at(freeaxis++), NVBDimension("DAC",false));
+		result->addDataSet("FFT dI",   datae.at(freeaxis++), NVBUnits("DAC",false));
 		if (nparam > 6) {
-			result->addDataSet("FFT ADC2",  datae.at(freeaxis++), NVBDimension("DAC",false));
-			result->addDataSet("FFT ADC3",  datae.at(freeaxis++), NVBDimension("DAC",false));
+			result->addDataSet("FFT ADC2",  datae.at(freeaxis++), NVBUnits("DAC",false));
+			result->addDataSet("FFT ADC3",  datae.at(freeaxis++), NVBUnits("DAC",false));
 			}
 		}
 
@@ -1074,7 +1102,9 @@ NVBDataSource* CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename) 
 		line += 1;
 		}
 
-	return result;
+	sources->filterAddComments(comments);
+	result->filterAddComments(comments);
+	*sources << result;
 }
 
 Q_EXPORT_PLUGIN2(createc, CreatecFileGenerator)
