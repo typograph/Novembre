@@ -21,18 +21,13 @@
 #ifndef CREATEC_H
 #define CREATEC_H
 
-//#include <stdlib.h>
-//#include <stdio.h>
-
-//#include "mychar.h"
-
-#include <QtCore/QtPlugin>
-#include <QtCore/QFile>
 #include <QtCore/QHash>
 #include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QFile>
+#include "NVBUnits.h"
 #include "NVBVariant.h"
 #include "NVBFileGenerator.h"
-#include "NVBFile.h"
 
 typedef QHash<QString,NVBVariant> CreatecHeader;
 
@@ -42,27 +37,17 @@ Q_INTERFACES(NVBFileGenerator);
 
 private:
 
-	QStringList DATchannelNames;
-	QList<NVBDimension> DATchannelDims;
-
 	static CreatecHeader getCreatecHeader(QFile & file);
 
 	NVBDataComments commentsFromHeader(const CreatecHeader & header) const;
 
-	NVBDataSource* loadAllChannelsFromDAT(QString filename) const;
-	NVBDataSource* loadAllChannelsFromVERT(QStringList filenames) const;
-	NVBDataSource* loadAllChannelsFromLAT(QString filename) const;
-	NVBDataSource* loadAllChannelsFromTSPEC(QString filename) const;
+	void loadAllChannelsFromDAT(QString filename, NVBFile * sources) const;
+	void loadAllChannelsFromVERT(QStringList filenames, NVBFile * sources) const;
+	void loadAllChannelsFromLAT(QString filename, NVBFile * sources) const;
+	void loadAllChannelsFromTSPEC(QString filename, NVBFile * sources) const;
 
 public:
-	CreatecFileGenerator():NVBFileGenerator() {
-		DATchannelNames << "Topography" << "Current" << "ADC1" << "ADC2";
-		DATchannelDims << NVBDimension("nm")
-									 << NVBDimension("A")
-									 << NVBDimension("DAC",false)
-									 << NVBDimension("DAC",false)
-									 ;
-		}
+	CreatecFileGenerator():NVBFileGenerator() {;}
   virtual ~CreatecFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("Createc SPS files");}
@@ -80,13 +65,5 @@ public:
   virtual QStringList availableInfoFields() const;
   virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 };
-
-/*
-class CreatecFile : public NVBFile {
-public:
-  CreatecFile(QString filename);
-  virtual ~CreatecFile() {;}
-};
-*/
 
 #endif
