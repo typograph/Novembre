@@ -24,6 +24,7 @@
 #include <QtCore/QVector>
 #include <QtCore/QSignalMapper>
 
+class QToolBar;
 class NVBSingle2DView;
 class NVBSingleGraphView;
 
@@ -93,6 +94,8 @@ private:
 	const NVBDataSet * ds;
 	NVBAverageSlicingDataSet * ods;
 	
+	QToolBar * viewTB;
+	
 	NVBSingle2DView * view2D;	
 	NVBSingleGraphView * viewGraph;
 	
@@ -106,6 +109,7 @@ public:
 	virtual ~NVBSingleView();
 
 public slots:
+	void setDataSet(const NVBDataSet * ds);
 	void show3DView() { NVBOutputPMsg("3D view not implemented"); }
 	void show2DView() { createView(Image); }
 	void showGraphView() { createView(Graph); }
