@@ -207,6 +207,8 @@ NVBSingleViewSliders::NVBSingleViewSliders(const NVBDataSet* ds, NVBSingleView::
 	QGridLayout * l = new QGridLayout(this);
 	setLayout(l);
 	
+	setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+	
 	connect(&cbs,SIGNAL(mapped(int)),this,SLOT(axisOpChanged(int)));
 	connect(&slds,SIGNAL(mapped(int)),this,SLOT(slicePosChanged(int)));
 	
@@ -407,30 +409,25 @@ void NVBSingleViewSliders::updateWidgets()
 
 NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
 : QWidget(parent)
-, ds(dataSet)
+, ds(0)
+, ods(0)
 , view2D(0)
 , viewGraph(0)
 {
-	if (!dataSet) {
-		NVBOutputError("Null dataset supplied");
-		return;
-		}
-
-	ods = new NVBAverageSlicingDataSet(ds);
+	setDataSet(dataSet);
 
 	QVBoxLayout * vl = new QVBoxLayout(this);
 	setLayout(vl);
 	QHBoxLayout * menuLayout = new QHBoxLayout();
-	vl->addLayout(menuLayout);
+	vl->addLayout(menuLayout,1);
 	menuLayout->addStretch();
-	QToolBar * viewTB = new QToolBar(this);
+	viewTB = new QToolBar(this);
 	QAction *tAct;
 	QActionGroup * viewActions = new QActionGroup(this);
 	viewActions->setExclusive(true);
 	
 	tAct = viewTB->addAction(QIcon(_sview_1D),"Graph",this,SLOT(showGraphView()));	
 	tAct->setCheckable(true);
-	tAct->setChecked(true);
 	viewActions->addAction(tAct);
 	tAct = viewTB->addAction(QIcon(_sview_2D),"2D view",this,SLOT(show2DView()));
 	tAct->setCheckable(true);
@@ -441,23 +438,17 @@ NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
 	tAct->setEnabled(false);
 	menuLayout->addWidget(viewTB);
 	
-	switch (ds->type()) {
-		case NVBDataSet::Topography:
-		case NVBDataSet::Undefined:
-			createView(NVBSingleView::Image);
-			break;
-		case NVBDataSet::Spectroscopy:
-		default:
-			createView(NVBSingleView::Graph);
-			break;
-		}
+	vl->addStretch();
+	
+	viewTB->setEnabled(false);
 }
 
 void NVBSingleView::createView(NVBSingleView::Type type)
 {
-	if (layout()->count() > 1) {
+	
+	if (layout()->count() > 2) {
 		QLayoutItem * tmp;
-		tmp = layout()->takeAt(2);
+		tmp = layout()->takeAt(1);
 		if (tmp) {
 			if (tmp->widget()) delete tmp->widget();
 			delete tmp;
@@ -470,21 +461,35 @@ void NVBSingleView::createView(NVBSingleView::Type type)
 		view2D = 0;
 		viewGraph = 0;
 		}
-	
+
+	viewTB->setEnabled(false);
+	viewTB->actions().at(0)->setChecked(true);
+	viewTB->actions().at(0)->setChecked(false);
+
+	if (!ods) return;
+
 	ods->reset();
+
+	QVBoxLayout * vl = qobject_cast<QVBoxLayout*>(layout());
+	if (!vl) {
+		NVBOutputError("Layout type conversion failed");
+		return;
+		}
 	
 	NVBSingleViewSliders * sliders = 0;
 	
 	switch(type) {
 		case NVBSingleView::Image :
 			if (ds->nAxes() > 1) {
-				layout()->addWidget(view2D = new NVBSingle2DView(ods,this));
-				layout()->addWidget(sliders = new NVBSingleViewSliders(ds,Image));
+				vl->insertWidget(1,view2D = new NVBSingle2DView(ods,this),1);
+				vl->insertWidget(2,sliders = new NVBSingleViewSliders(ds,Image),1);
+				viewTB->actions().at(1)->setChecked(true);
 				break;
 				}
 		case NVBSingleView::Graph :
-			layout()->addWidget(viewGraph = new NVBSingleGraphView(ods,this));
-			layout()->addWidget(sliders = new NVBSingleViewSliders(ds,Graph));
+			vl->insertWidget(1,viewGraph = new NVBSingleGraphView(ods,this),1);
+			vl->insertWidget(2,sliders = new NVBSingleViewSliders(ds,Graph),1);
+			viewTB->actions().at(0)->setChecked(true);
 			break;
 		}
 	
@@ -497,21 +502,27 @@ void NVBSingleView::createView(NVBSingleView::Type type)
 		targetsChanged(sliders->xAxis(),sliders->yAxis(),sliders->averagedAxes(),sliders->slicedAxes());
 		sliceChanged(sliders->sliceIndexes());
 		}
+
+	viewTB->setEnabled(true);	
 }
 
 
 NVBSingleView::~NVBSingleView()
 {
-
+	if (ods)
+		delete ods;
 }
 
 void NVBSingleView::sliceChanged(QVector< axissize_t > indexes)
 {
-	ods->setSliceIndexes(indexes);
+	if (ods)
+		ods->setSliceIndexes(indexes);
 }
 
 void NVBSingleView::targetsChanged(axisindex_t x, axisindex_t y, QVector< axisindex_t > a, QVector< axisindex_t > s)
 {
+	if (!ods) return;
+	
 	ods->setAveragingAxes(a);
 	ods->setSliceAxes(s);
 
@@ -537,5 +548,31 @@ void NVBSingleView::targetsChanged(axisindex_t x, axisindex_t y, QVector< axisin
 	else if (viewGraph) {
 //		viewGraph->setDataSet(ods);
 		viewGraph->setXAxis(x);
+		}
+}
+
+void NVBSingleView::setDataSet(const NVBDataSet* dataSet)
+{
+	ds = 0;
+	
+	if (ods) {
+		delete ods;
+		ods = 0;
+		}
+		
+	if (dataSet) {
+		ds = dataSet;
+		ods = new NVBAverageSlicingDataSet(ds);
+
+		switch (ds->type()) {
+			case NVBDataSet::Topography:
+			case NVBDataSet::Undefined:
+				createView(NVBSingleView::Image);
+				break;
+			case NVBDataSet::Spectroscopy:
+			default:
+				createView(NVBSingleView::Graph);
+				break;
+			}
 		}
 }
