@@ -257,8 +257,8 @@ void NVBSingle2DView::resizeEvent(QResizeEvent* e)
 		yrange = (yAxis->maximum() - yAxis->minimum()).getValue(mapX->units());
 		s = QSizeF(xrange,yrange);
 		}
-	else { // we try to make the pixels square
-		s = cache.size();
+	else { // we try to make the pixels square // FIXME should be a user setting
+		s = size(); // cache.size();
 		}
 
 	s.scale(size(),Qt::KeepAspectRatio);
