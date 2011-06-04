@@ -188,6 +188,15 @@ QVariant NVBDataSourceListModel::data(const QModelIndex& index, int role) const
 	return QVariant();
 }
 
+const NVBDataSet* NVBDataSourceListModel::dataSetAt(const QModelIndex& index) const
+{
+	NVBDSLModelSubIndex i = map(index.row());
+	if (i.first)
+		return i.first->dataSetAt(i.first->index(i.second));
+	return 0;
+}
+
+
 Qt::ItemFlags NVBDataSourceListModel::flags(const QModelIndex& index) const
 {
 	NVBDSLModelSubIndex i = map(index.row());

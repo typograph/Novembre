@@ -43,6 +43,8 @@ public:
   virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 //  virtual bool setData ( const QModelIndex & index, const QVariant & value, int role = Qt::EditRole );
 
+	const NVBDataSet * dataSetAt(const QModelIndex & index) const { return source->dataSets().at(index.row()); }
+
   virtual Qt::ItemFlags flags ( const QModelIndex & index ) const;
 
 //  virtual bool removeRow ( int row, const QModelIndex & parent = QModelIndex() );
@@ -80,6 +82,8 @@ public:
 
   virtual QMimeData * mimeData ( const QModelIndexList & indexes ) const;
   virtual QStringList mimeTypes () const;
+	
+	const NVBDataSet* dataSetAt(const QModelIndex& index) const;
 	
 private slots:
 	void subDataChanged(QModelIndex,QModelIndex);
