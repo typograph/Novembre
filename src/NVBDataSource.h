@@ -248,7 +248,7 @@ class NVBConstructableDataSource : public NVBDataSource {
 		virtual const QList< NVBAxis > & axes() const { return axs; }
 		virtual const QList< NVBDataSet * > & dataSets() const { return dsets; }
 
-		virtual inline void addComment(QString key, QString value) { comments.insert(key,value); }
+		virtual inline void addComment(QString key, NVBVariant value) { comments.insert(key,value); }
 //		/// \returns the comment for the given \a key
 //		virtual NVBVariant getComment(const QString& key, bool recursive = true) const ;
 //		/// \returns all the available comments in a QMap
