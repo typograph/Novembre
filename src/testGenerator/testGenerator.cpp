@@ -15,10 +15,11 @@
 #include <QtGui/QListView>
 #include <QtGui/QCompleter>
 
-#include "../rhk.h"
+#include "../createc.h"
 #include "../NVBFile.h"
 #include "../NVBDataSourceModel.h"
 #include "../NVBforeach.h"
+#include "../NVBSingleView.h"
 
 int main(int argc, char** argv) {
 
@@ -26,13 +27,16 @@ int main(int argc, char** argv) {
 	
 	QWidget * mn;
 	QVBoxLayout * l;
+	QHBoxLayout * lh;
 	
 	app.setActiveWindow(mn = new QWidget());
-	mn->setLayout(l = new QVBoxLayout());
+	mn->setLayout(lh = new QHBoxLayout());
+	l = new QVBoxLayout();
+	lh->addLayout(l);
 	l->addWidget(app.files = new QLineEdit(mn));
 	QFileSystemModel * model = new QFileSystemModel(app.files);
 	model->setFilter(QDir::AllEntries | QDir::AllDirs | QDir::NoDotAndDotDot);
-	model->setNameFilters(QStringList(QString("*.sm3")));
+	model->setNameFilters(QString("*.dat *.vert *.tspec *.lat").split(" "));
 	model->setReadOnly(true);
 	model->setResolveSymlinks(true);
 	model->setRootPath("/home/timoty/programming/Novembre/test_files/");
@@ -52,6 +56,8 @@ int main(int argc, char** argv) {
 	app.view->setResizeMode(QListView::Adjust);
 	app.view->setGridSize(QSize(120,140));
 	app.view->setIconSize(QSize(100,100));
+
+	lh->addWidget(app.pview = new NVBSingleView(0,mn));
 
 //	app.view->hide();
 
@@ -116,11 +122,24 @@ NVBTestGenApplication::~ NVBTestGenApplication()
 #endif
 }
 
+void NVBTestGenApplication::showPage(const QModelIndex & index) {
+	if (index.isValid()) {
+		NVBDataSourceListModel * m = qobject_cast<NVBDataSourceListModel*>(view->model());
+		if (m) {
+			pview->setDataSet(m->dataSetAt(index));
+			return;
+			}
+		else
+			NVBOutputError("Couldn't convert model");
+		}
+	pview->setDataSet(0);
+}
+
 void NVBTestGenApplication::openFile(QString name) {
 
 	tree->clear();
 
-	RHKFileGenerator gen;
+	CreatecFileGenerator gen;
 
 	//"/home/timoty/programming/Novembre/test_files/rhk/data1850.sm3"
 	NVBAssociatedFilesInfo inf = gen.associatedFiles(name.isEmpty() ? files->text() : name/*QFileDialog::getOpenFileName(l,"Select 
@@ -197,6 +216,8 @@ load")*/);
 	QAbstractItemModel * m = view->model();
 
 	view->setModel(new NVBDataSourceListModel(*fl));
+	view->connect(view->selectionModel(),SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),this,SLOT(showPage(const QModelIndex&)));
+	
 
 	if (m) delete m;
 

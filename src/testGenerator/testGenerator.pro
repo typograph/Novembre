@@ -1,7 +1,7 @@
 # Test harness for arbitrary file generators
 
-HEADERS += ../rhk.h
-SOURCES += ../rhk.cpp
+HEADERS += ../createc.h
+SOURCES += ../createc.cpp
 
 # end of serviceable part
 
@@ -50,7 +50,33 @@ SOURCES += \
 	testGenerator.cpp
 
 
+HEADERS += \
+	../NVBPosLabel.h \
+	../NVBSingle2DView.h \
+	../NVBPlotCurves.h \
+	../NVBPhysScaleDraw.h \
+	../NVBSingleGraphView.h \
+	../NVBSingleView.h
+		
+
+SOURCES += \
+	../NVBPosLabel.cpp \
+	../NVBSingle2DView.cpp \
+	../NVBPlotCurves.cpp \
+	../NVBPhysScaleDraw.cpp \
+	../NVBSingleGraphView.cpp \
+	../NVBSingleView.cpp
+
+
+LIBS += -lqwt6
+
+CONFIG += qt debug
+
 MOC_DIR = .
 DESTDIR = .
 
-CONFIG += qt debug
+DEFINES += \
+	NVB_DEBUG \
+	NVB_ENABLE_LOG \
+	NVB_VERBOSE_LOG 
+
