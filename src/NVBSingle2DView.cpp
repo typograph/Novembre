@@ -46,8 +46,6 @@ class NVBAxisWidget : public QWidget {
 			
 		const NVBPhysValue & minimum() const { return min; }
 		const NVBPhysValue & maximum() const { return max; }
-		
-//		inline NVBAxisPhysMap * map() const {return amap;}
 };
 
 NVBSingle2DView::NVBSingle2DView(NVBDataSet* data, QWidget * parent)
@@ -124,7 +122,6 @@ void NVBSingle2DView::setDataSet(NVBDataSet* data)
 		colors = 0;
 		}
 	
-//	slice.clear();
 	cache = QPixmap();
 	xi = 0;
 	yi = 1;
@@ -135,11 +132,14 @@ void NVBSingle2DView::setDataSet(NVBDataSet* data)
 	plotData = data;
 	
 	if (plotData) {
-		connect(plotData, SIGNAL(dataChanged()), SLOT(regenerateImage()));
-		connect(plotData, SIGNAL(dataReformed()), SLOT(parentDataReformed()));
 		colors = plotData->colorMap()->instantiate(plotData);
 		colors->setImageAxes(0,1);
-//		slice.clear();
+		
+		/* NVBDataSet::dataChanged is connected to NVBColotInstace, and its slot
+		 * has to be called before regenerating the cache
+		 */
+		connect(plotData, SIGNAL(dataChanged()), SLOT(regenerateImage()));
+		connect(plotData, SIGNAL(dataReformed()), SLOT(parentDataReformed()));
 		}
 		
 	regenerateImage();
@@ -240,7 +240,7 @@ void NVBSingle2DView::regenerateImage()
 }
 
 void NVBSingle2DView::resizeEvent(QResizeEvent* e)
-{	
+{		
 	if (map2D) {
 		transform = map2D->transformation();
 		return;
