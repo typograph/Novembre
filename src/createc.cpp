@@ -893,8 +893,12 @@ void CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames, NVBFil
 		factor[9] = factor[1];
 
 		int line = 0;
-		while (!file.atEnd()) {
-			QList<QByteArray> pt_data = file.readLine(800).split('\t');
+		while (!file.atEnd() && line < npts) {
+//			QList<QByteArray> pt_data = file.readLine(800).split('\t');
+			QByteArray thisline = file.readLine(800);
+			QList<QByteArray> pt_data = thisline.split('\t');
+			if (pt_data.count() < 12)
+				NVBOutputError(QString("Line %1 too short : %2").arg(line).arg(QString(thisline)));
 //			xs << pt_data.first().toDouble();
 			for (int i = 0; i<12; i++)
 				datae.at(i)[npts*specix+line] = pt_data.at(i+1).toDouble()*factor.at(i);
@@ -952,7 +956,9 @@ void CreatecFileGenerator::loadAllChannelsFromLAT(QString filename, NVBFile* sou
 	int npts = sizes.at(0).toInt();
 	// The second parameter is <latmanmode>,
 	// It describes how data was taken (const. current, const height etc.)
-	int latmanmode = sizes.at(1).toInt();
+	// int latmanmode = sizes.at(1).toInt();
+
+	file.seek(0x4014);
 
 	result->addAxis("Motion", npts);
 	result->addAxisMap(
@@ -988,15 +994,20 @@ void CreatecFileGenerator::loadAllChannelsFromLAT(QString filename, NVBFile* sou
 	double xyfactor = header.value("Dacto[A]xy").toDouble()*header.value("GainX").toDouble();
 
 	int line = 0;
-	while (!file.atEnd()) {
-		QList<QByteArray> pt_data = file.readLine(800).split('\t');
-		zs[line] = pt_data.at(1).toDouble()*zfactor;
-		is[line] = pt_data.at(2).toDouble()*ifactor;
-		points << NVBPhysPoint(
-								pt_data.at(3).toDouble()*xyfactor,
-								pt_data.at(4).toDouble()*xyfactor,
-								NVBUnits("nm")
-								);
+	while (!file.atEnd() && line < npts) {
+		QString thisline = file.readLine(800);
+		QStringList pt_data = thisline.split(' ',QString::SkipEmptyParts);
+		if (pt_data.count() < 5)
+			NVBOutputError(QString("Line %1 too short : %2").arg(line).arg(thisline));
+		else {
+			zs[line] = pt_data.at(1).toDouble()*zfactor;
+			is[line] = pt_data.at(2).toDouble()*ifactor;
+			points << NVBPhysPoint(
+									pt_data.at(3).toDouble()*xyfactor,
+									pt_data.at(4).toDouble()*xyfactor,
+									NVBUnits("nm")
+									);
+			}
 		line += 1;
 		}
 
@@ -1034,9 +1045,9 @@ void CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename, NVBFile* s
 
 	CreatecHeader header = CreatecFileGenerator::getCreatecHeader(file);
 	NVBDataComments comments = commentsFromHeader(header);
-	file.seek(0x4004);
-	int nparam = file.readLine(800).split('\t').length()-3;
-	file.seek(0x4004);
+	file.seek(0x4002);
+	int nparam = file.readLine(800).split('\t').count()-3;
+	file.seek(0x4002);
 
 	int npts = header.value("FFTPoints").toInt();
 
@@ -1093,8 +1104,11 @@ void CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename, NVBFile* s
 												 header.value("ZPiezoconst").toDouble();
 
 	int line = 0;
-	while (!file.atEnd()) {
-		QList<QByteArray> pt_data = file.readLine(800).split('\t');
+	while (!file.atEnd() && line < npts) {
+		QByteArray thisline = file.readLine(800);
+		QList<QByteArray> pt_data = thisline.split('\t');
+		if (pt_data.count() < nparam/2 + 3)
+			NVBOutputError(QString("Line %1 too short : %2").arg(line).arg(QString(thisline)));
 		for (int i = 0; i<nparam/2; i++)
 			datae.at(i)[line] = pt_data.at(i+2).toDouble()*factor.at(i);
 		for (int i = nparam/2; i<nparam; i++)
