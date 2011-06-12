@@ -258,6 +258,11 @@ void NVBConstructableDataSource::filterAddComments(NVBDataComments & _cms)
 		return;
 		}
 		
+	if (comments.isEmpty()) {
+		NVBOutputPMsg("Adding first comments to a non-empty datasource. This was probably not intended.");
+		return;
+		}
+		
 	foreach (QString key, comments.keys())
 		if (_cms.contains(key) && _cms.value(key) == comments.value(key))
 				_cms.remove(key);
