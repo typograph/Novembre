@@ -38,6 +38,18 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 		NVBAxisMap::MapType t;
 	public:
 		NVBAxisPhysMap(QList<NVBPhysValue> values):NVBAxisTMap<NVBPhysValue>(values),t(NVBAxisMap::General) {;}
+		NVBAxisPhysMap(QList<double> values, NVBUnits units):NVBAxisTMap<NVBPhysValue>(),t(NVBAxisMap::General) {
+			QList<NVBPhysValue> pvalues;
+			foreach(double v, values)
+				pvalues << NVBPhysValue(v,units);
+			vs = pvalues;
+			}
+		NVBAxisPhysMap(QVector<double> values, NVBUnits units):NVBAxisTMap<NVBPhysValue>(),t(NVBAxisMap::General) {
+			QList<NVBPhysValue> pvalues;
+			foreach(double v, values)
+				pvalues << NVBPhysValue(v,units);
+			vs = pvalues;
+			}
 		NVBAxisPhysMap(NVBPhysValue origin, NVBPhysValue interval)
 			: NVBAxisTMap<NVBPhysValue>()
 			, o(origin.getValue())
