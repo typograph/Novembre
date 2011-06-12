@@ -67,6 +67,11 @@ void NVBFile::filterAddComments(NVBDataComments& newComments)
 		return;
 		}
 		
+	if (comments.isEmpty()) {
+		NVBOutputPMsg("Adding first comments to a non-empty file object. This was probably not intended.");
+		return;
+		}
+	
 	foreach (QString key, comments.keys())
 		if (newComments.contains(key) && newComments.value(key) == comments.value(key))
 			newComments.remove(key);
