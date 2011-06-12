@@ -62,6 +62,12 @@ void scaleMem(toT * dest, const NVBValueScaler<fromT,toT> & _scaler, const fromT
     dest[i] = _scaler.scale(src[i]);
 }
 
+template <typename fromT, typename toT>
+void scaleMem(toT * dest, const fromT* src, unsigned long size) {
+  for (unsigned long i = 0; i<size; i++)
+    dest[i] = (toT)src[i];
+}
+
 template<typename T>
 void flipMem(T * dest, const T * source, int width, int height, bool flw, bool flh) {
   int fi;
