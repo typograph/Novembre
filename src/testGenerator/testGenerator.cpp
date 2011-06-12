@@ -176,6 +176,7 @@ load")*/);
 //	l->setText(l->text() + "\n" + fi->files.name());
 	
 	NVBFile * fl = gen.loadFile(inf);
+	if (!fl) return;
 	
 	item = new QTreeWidgetItem(tree,QStringList("File"));
 	item->setFont(0,font);
