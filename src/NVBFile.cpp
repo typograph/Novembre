@@ -18,7 +18,7 @@ NVBFile::~NVBFile()
 {
   if (refCount)
 		NVBOutputError("Non-free file deleted. Possible negative implications for NVBFileFactory");
-	foreach(NVBDataSource * d, *this)
+	NVB_FOREACH(NVBDataSource * d, this)
 		delete d;
 }
 
