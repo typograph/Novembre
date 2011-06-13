@@ -415,8 +415,6 @@ NanonisHeader NanonisFileGenerator::getSXMHeader( QFile& file ) const
 		h.insert(key,value.join("\n"));
     }
 	
-	file.read(4); // 0x0a 0x0a 0x1a 0x04 -- Whatever that means
-
 	return h;
 }
 
@@ -533,6 +531,16 @@ void NanonisFileGenerator::loadChannelsFromSXM(QString filename, NVBFile* source
   checkHeaderParam("SCAN_PIXELS");
   checkHeaderParam("SCAN_RANGE");
   checkHeaderParam("SCAN_OFFSET");
+	
+	// Go to the data
+	
+//	file.read(4); // 0x0a 0x0a 0x1a 0x04 -- Whatever that means
+	while(!file.atEnd() && (file.read(1).at(0) != 0x1A || file.peek(1).at(0) != 0x04)) {;}
+	if (file.atEnd()) {
+		NVBOutputError("No data start marker found");
+		return;
+		}
+	file.read(1);
 
 	NVBConstructableDataSource * ds = new NVBConstructableDataSource(sources);
 
@@ -585,6 +593,7 @@ void NanonisFileGenerator::loadChannelsFromSXM(QString filename, NVBFile* source
 				delete ds;
 				return;
 				}
+			reverseByteOrder<float>(tdata,tdata,data_points);
 			flipMem<float>(tdata+data_points,tdata,resolution.width(),resolution.height(),direction,h.value("SCAN_DIR") != "down");
 
 			double * data = (double*)calloc(sizeof(double),data_points);
