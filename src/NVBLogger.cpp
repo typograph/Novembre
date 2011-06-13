@@ -20,9 +20,12 @@
 
 void NVBLogger::outputMessage(NVB::LogEntryType type, QString issuer, QString text) {
 	static QRegExp fnct = QRegExp("^([^ ]* )?([^ ]*)\\(");
-	fnct.indexIn(issuer);
-	emit message(type,fnct.cap(2),text,QTime::currentTime());
-//	emit message(type,issuer,text,QTime::currentTime());
+	if (fnct.indexIn(issuer) == 0)
+		emit message(type,fnct.cap(2),text,QTime::currentTime());
+	else {
+		NVBOutputError(QString("Regexp of function failed : investigate '%1'").arg(issuer));
+		emit message(type,issuer,text,QTime::currentTime());		
+		}
   }
 
 void NVBOutputMessage(NVB::LogEntryType type,QString issuer, QString text){
