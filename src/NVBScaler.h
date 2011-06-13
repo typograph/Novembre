@@ -29,6 +29,36 @@
 template<class fromT, class toT>
 class NVBValueScaler;
 
+template<int N>
+void reverse_byte_order(char * ptr) {
+	char t;
+	char *pe, *ps;
+	for(ps = ptr, pe = ptr + N - 1; ps < pe; ps++, pe--) {
+		t = *pe;
+		*pe = *ps;
+		*ps = t;
+		}
+}
+
+template<>
+void reverse_byte_order<1>(char*);
+template<>
+void reverse_byte_order<2>(char*);
+template<>
+void reverse_byte_order<4>(char*);
+template<>
+void reverse_byte_order<8>(char*);
+
+template<typename T>
+void reverseByteOrder(T*dest, const T*src, unsigned int count) {
+	if (dest != src)
+		memcpy(dest,src,count*sizeof(T));
+	
+	T* ptr = dest;
+	for(unsigned int i = 0; i<count; i++, ptr++)
+		reverse_byte_order<sizeof(T)>((char*)ptr);
+}
+
 template <typename T>
 void arrayCopyRowtoCol( T* dest, const T* src, unsigned int row, unsigned int col, unsigned int width, unsigned int height) {
   if ( row >= height || col >= height ) throw;
