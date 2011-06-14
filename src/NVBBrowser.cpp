@@ -106,6 +106,9 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
     }
 
+	editFolderAction = new QAction(QString("Edit folder"),this);
+	connect(editFolderAction,SIGNAL(triggered()),this,SLOT(editFolder()));
+
   refreshFoldersContentsAction = foldersToolBar->addAction(QIcon(_browser_refresh),QString("Refresh file list"));
 
   foldersToolBar->addSeparator();
@@ -202,14 +205,6 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	connect(fileList->selectionModel(),SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),this,SLOT(enableFolderActions(QModelIndex)));
 
 	foldersMenu = new QMenu("Folders",fileList->viewport());
-	foldersMenu->addAction(addFolderAction);
-	foldersMenu->addAction(removeFolderAction);
-	foldersMenu->addSeparator();
-	foldersMenu->addAction(exportFolderAction);
-	foldersMenu->addSeparator();
-	foldersMenu->addAction(showFiltersAction);
-	foldersMenu->addAction(clearFiltersAction);
-//	folderAction(fileModel->index(index.row(),0,index.parent()),folders->exec(e->globalPos()));
 
 	columnsMenu = new QMenu("Show columns",fileList->header()->viewport());
 	remColumnsMenu = new QMenu("Remove column",columnsMenu);
@@ -734,6 +729,15 @@ void NVBBrowser::addSubfolder()
     }
 }
 
+void NVBBrowser::editFolder()
+{
+	QModelIndexList ixs = fileList->selectionModel()->selectedRows();
+
+	if (!ixs.isEmpty()) {
+		QModelIndex c = ixs.at(0);
+		}
+}
+
 void NVBBrowser::removeFolder()
 {
   QModelIndexList ixs = fileList->selectionModel()->selectedRows();
@@ -788,28 +792,33 @@ void NVBBrowser::updateColumns()
 }
 
 void NVBBrowser::showFoldersMenu() {
-	QModelIndex i = fileList->indexAt(fileList->mapFromGlobal(QCursor::pos()));
-	if (!i.isValid()) {
-		addFolderAction->setEnabled(true);
-		removeFolderAction->setEnabled(false);
-		exportFolderAction->setEnabled(false);
+	QModelIndex i = fileList->indexAt(fileList->viewport()->mapFromGlobal(QCursor::pos()));
+
+	foldersMenu->clear();
+
+	if (!i.isValid()) { // Blank space
+		foldersMenu->addAction(addRootFolderAction);
 		}
-	else if (fileModel->isAFile(i)) {
-		addFolderAction->setEnabled(false);
-		removeFolderAction->setEnabled(false);
-		exportFolderAction->setEnabled(false);
+	else if (fileModel->isAFile(i)) { // File
 		}
-	else if (!(fileModel->flags(i) & Qt::ItemIsEnabled)) { // Status == error
-		addFolderAction->setEnabled(false);
-		removeFolderAction->setEnabled(true);
-		exportFolderAction->setEnabled(false);
+	else if (fileModel->flags(i) & Qt::ItemIsEnabled) { // Valid folder
+		foldersMenu->addAction(addFolderAction);
+		foldersMenu->addAction(editFolderAction);
+		foldersMenu->addAction(removeFolderAction);
+		foldersMenu->addSeparator();
+		foldersMenu->addAction(exportFolderAction);
 		}
+	else { // Status == error
+		foldersMenu->addAction(editFolderAction);
+		foldersMenu->addAction(removeFolderAction);
+		}
+
+	if (foldersMenu->actions().count())
+		foldersMenu->addSeparator();
+	foldersMenu->addAction(showFiltersAction);
+	foldersMenu->addAction(clearFiltersAction);
 
 	foldersMenu->exec(QCursor::pos());
-
-	addFolderAction->setEnabled(true);
-	removeFolderAction->setEnabled(true);
-	exportFolderAction->setEnabled(true);
 }
 
 void NVBBrowser::setViewType(bool b)

@@ -129,7 +129,8 @@ private:
 //    QAction * plusContainerAction;
   QAction * addRootFolderAction;
   QAction * addFolderAction;
-  QAction * removeFolderAction;
+	QAction * editFolderAction;
+	QAction * removeFolderAction;
   QAction * exportFolderAction;
   QAction * adjustColumnsAction;
   QAction * showFiltersAction;
@@ -186,7 +187,8 @@ private slots:
 
   void addRootFolder();
   void addSubfolder();
-  void removeFolder();
+	void editFolder();
+	void removeFolder();
 	void exportData();
 
 	void showFoldersMenu();
