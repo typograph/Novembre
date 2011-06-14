@@ -158,10 +158,10 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	clearFiltersAction = new QAction(QString("Remove filters"),this);
 	clearFiltersAction->setEnabled(false);
 	connect(clearFiltersAction,SIGNAL(triggered()),fileModel,SLOT(removeFilters()));
-	connect(clearFiltersAction,SIGNAL(triggered(bool)),clearFiltersAction,SLOT(setDisabled(bool)));
+	connect(clearFiltersAction,SIGNAL(triggered(bool)),clearFiltersAction,SLOT(setEnabled(bool)));
 
   connect(showFiltersAction,SIGNAL(triggered()),fileModel,SLOT(showFilterDialog()));
-	connect(showFiltersAction,SIGNAL(triggered(bool)),clearFiltersAction,SLOT(setEnabled(bool)));
+	connect(showFiltersAction,SIGNAL(triggered(bool)),clearFiltersAction,SLOT(setDisabled(bool)));
 
   connect(adjustColumnsAction,SIGNAL(triggered()),fileModel,SLOT(showColumnDialog()));
   connect(refreshFoldersContentsAction,SIGNAL(triggered()),fileModel,SLOT(refresh()));

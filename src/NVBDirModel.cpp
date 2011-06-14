@@ -445,6 +445,11 @@ void NVBDirModel::showFilterDialog()
   delete dialog;
 }
 
+void NVBDirModel::removeFilters() {
+	filters.clear();
+	head->filter(NVBDirModelFileInfoFilter());
+	}
+
 void NVBDirModel::showColumnDialog()
 {
 	NVBColumnDialog * dialog = new NVBColumnDialog( columns->clmnDataList() );
