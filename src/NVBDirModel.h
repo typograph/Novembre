@@ -95,9 +95,7 @@ public slots:
 	void refresh();
 	
 	void showFilterDialog();
-	void removeFilters() {
-		head->filter(NVBDirModelFileInfoFilter());
-		}
+	void removeFilters();
 	void showColumnDialog();
 	void exportData(const QModelIndex & index, NVBDirExportOptions options) const;
 	
