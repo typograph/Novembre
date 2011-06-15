@@ -177,6 +177,7 @@ void NVBPlotCurves::parentDataChanged()
 	else
 		rect = QRectF();
 	
+	rect = rect.normalized();
 	itemChanged();
 }
 
