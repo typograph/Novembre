@@ -25,6 +25,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include "NVBLogger.h"
 
 template<class fromT, class toT>
 class NVBValueScaler;
@@ -50,13 +51,31 @@ template<>
 void reverse_byte_order<8>(char*);
 
 template<typename T>
+void reverseByteOrder(T*ptr, unsigned int count) {
+	if (!ptr) {
+		NVBOutputError("NULL pointer");
+		return;
+		}
+	
+	for(unsigned int i = 0; i<count; i++, ptr++)
+		reverse_byte_order<sizeof(T)>((char*)ptr);
+}
+
+template<typename T>
 void reverseByteOrder(T*dest, const T*src, unsigned int count) {
+	if (!src) {
+		NVBOutputError("NULL source pointer");
+		return;
+		}
+	if (!dest) {
+		NVBOutputError("NULL destination pointer");
+		return;
+		}
+
 	if (dest != src)
 		memcpy(dest,src,count*sizeof(T));
 	
-	T* ptr = dest;
-	for(unsigned int i = 0; i<count; i++, ptr++)
-		reverse_byte_order<sizeof(T)>((char*)ptr);
+	reverseByteOrder<T>(dest,count);
 }
 
 template <typename T>
