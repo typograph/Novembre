@@ -132,12 +132,16 @@ void NVBSingle2DView::setDataSet(NVBDataSet* data)
 	plotData = data;
 	
 	if (plotData) {
+		/* 
+		 * NVBDataSet::dataChanged is connected to NVBColotInstace, and its slot
+		 * has to be called before regenerating the cache
+		 */
+
 		colors = plotData->colorMap()->instantiate(plotData);
 		colors->setImageAxes(0,1);
 		
-		/* NVBDataSet::dataChanged is connected to NVBColotInstace, and its slot
-		 * has to be called before regenerating the cache
-		 */
+		// Now we can connect to our slot
+		
 		connect(plotData, SIGNAL(dataChanged()), SLOT(regenerateImage()));
 		connect(plotData, SIGNAL(dataReformed()), SLOT(parentDataReformed()));
 		}
