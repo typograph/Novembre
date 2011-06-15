@@ -42,19 +42,10 @@ Q_OBJECT
 Q_INTERFACES(NVBFileGenerator);
 
 private:
-	NanonisHeader getSXMHeader(QFile & file) const;
-	NVBDataComments getCommentsFromSXMHeader(NanonisHeader h) const;
 	void loadChannelsFromSXM(QString filename, NVBFile * sources) const;
-	
-	NanonisHeader getDATHeader(QFile & file) const;
-	NVBDataComments getCommentsFromDATHeader(NanonisHeader h) const;
 	void loadChannelsFromDAT(QString filename, NVBFile * sources) const;
-
-	NanonisHeader get3DSHeader(QFile & file) const;
-	NVBDataComments getCommentsFrom3DSHeader(NanonisHeader h) const;
 	void loadChannelsFrom3DS(QString filename, NVBFile * sources) const;
-	
-	
+		
 public:
   NanonisFileGenerator():NVBFileGenerator() {;}
   virtual ~NanonisFileGenerator() {;}
