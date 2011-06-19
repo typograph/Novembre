@@ -76,9 +76,14 @@ private:
     QFileDialog * fileDialog;
     
 //     bool isDirValid;
+
+		void buildUi();
+
 public:
     NVBFolderInputDialog (QWidget * parent = 0);
-    static bool getFolder(QString & label, QString & dirname, bool & includeSubfolders);
+		NVBFolderInputDialog (QString label, QString dirname, bool includeSubfolders, QWidget * parent = 0);
+		static bool getFolder(QString & label, QString & dirname, bool & includeSubfolders);
+		static bool editFolder(QString & label, QString & dirname, bool & includeSubfolders);
 
     QString getDir();
     QString getName();
@@ -153,6 +158,8 @@ private:
 	NVBDirModel * fileModel;
 	NVBDirViewModel * dirViewModel;
 	NVBDirView * dirView;
+
+	QModelIndex folderMenuTarget;
 
 	void fillFolders( QString index, QModelIndex parent);
 

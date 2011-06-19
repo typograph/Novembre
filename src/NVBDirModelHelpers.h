@@ -108,6 +108,7 @@ public:
 			}
 		}
 	void addFolder( NVBDirEntry * folder );
+	void insertFolder( int index, NVBDirEntry * folder );
 
 	int estimatedFileCount() const;
 	int estimatedFolderCount() const;
