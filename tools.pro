@@ -14,8 +14,3 @@ SUBDIRS += nvbdviz.pro
 
 # Exports # to QtiPlot
 # SUBDIRS += nvbexport.pro
-
-# Imports anything as NVBFile
-# Currently has only MultiSpecImportView,
-# duplicated by Nanonis NNS format
-# SUBDIRS += nvbimport.pro

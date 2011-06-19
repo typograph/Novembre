@@ -146,12 +146,12 @@ void NVBMain::callBrowser()
 #endif
     connect(fileBrowser,SIGNAL(closeRequest()),this,SLOT(browserCloseRequest()));
     connect(fileBrowser,SIGNAL(destroyed(QObject*)),this,SLOT(browserDestroyed()));
-    connect(fileBrowser,SIGNAL(pageRequest(QString, int)),
-                   this,SLOT(openPage(QString, int)));
 		connect(fileBrowser,SIGNAL(pageRequest(const NVBAssociatedFilesInfo&, int)),
-									 this,SLOT(openPage(const NVBAssociatedFilesInfo&, int)));
+			this,SLOT(openPage(const NVBAssociatedFilesInfo&, int)));
 //    conf->setValue("ShowBrowserOnStart",QVariant(true));
     fileBrowser->resize(conf->value("Browser/Size", QSize(400, 300)).toSize());
+		newIcon(browsicon,_main_browse)
+		fileBrowser->setWindowIcon(browsicon);
     }
     
   fileBrowser->show();

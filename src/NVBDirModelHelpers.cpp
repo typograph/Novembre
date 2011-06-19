@@ -1,6 +1,5 @@
 #include "NVBDirModelHelpers.h"
 #include "NVBFileInfo.h"
-#include "NVBProgress.h"
 #include "NVBFileFactory.h"
 #include <QtCore/QtAlgorithms>
 #include <QtCore/QFileSystemWatcher>
@@ -81,13 +80,13 @@ bool NVBDirModelFileInfoFilter::operator()(const NVBFileInfo * fi) const {
 	}
 
 
-NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),populated(true),loaded(true),type(NoContent) {;}
+NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),status(NVBDirEntry::Loaded),type(NoContent) {;}
 
 NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label) :
-	/*QObject(),*/ parent(_parent),label(_label),populated(true),loaded(true),type(NoContent) {;}
+	/*QObject(),*/ parent(_parent),label(_label),status(NVBDirEntry::Loaded),type(NoContent) {;}
 
 NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label, QDir _dir, bool recursive) :
-	/*QObject(),*/ parent(_parent),label(_label),dir(_dir),populated(false),loaded(false),type(recursive ? AllContent : FileContent)
+	/*QObject(),*/ parent(_parent),label(_label),dir(_dir),status(NVBDirEntry::Virgin),type(recursive ? AllContent : FileContent)
 {
 
 //   if (recursive) recurseFolders();
@@ -226,7 +225,7 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 
 	qApp->setOverrideCursor(Qt::BusyCursor);
 
-	populated = true;
+	status = NVBDirEntry::Populated;
 
 	if ( dir.exists() ) {
 		if (isRecursive()) {
@@ -244,15 +243,6 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 			emit endOperation();
 			}
 
-//     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-//     QApplication::sendEvent(
-//       qApp->property("progressBar").value<QObject*>(),
-//       new NVBProgressStartEvent(
-//         QString("Processing %1").arg(dir.absolutePath()),
-//         infos.size()
-//         )
-//       );
-
 		QList<NVBAssociatedFilesInfo> associations = fileFactory->associatedFilesFromDir(dir);
 
 #if QT_VERSION < 0x040400
@@ -264,16 +254,11 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 		connect(fileLoader,SIGNAL(finished()),SLOT(setLoaded()),Qt::QueuedConnection);
 #endif
 
-
-/*    QApplication::sendEvent(
-      qApp->property("progressBar").value<QObject*>(),
-      new NVBProgressStopEvent()
-      );
-
-    QApplication::restoreOverrideCursor();*/
-    }
+	}
 	else {
 		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
+		status = NVBDirEntry::Error;
+		qApp->restoreOverrideCursor();
 		}
 }
 
@@ -281,20 +266,10 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 {
   if ( dir.exists() ) {
 
-    QFileInfoList infos = dir.entryInfoList();
-
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
     if (isRecursive()) {
       QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
-
-//      QApplication::sendEvent(
-//        qApp->property("progressBar").value<QObject*>(),
-//        new NVBProgressStartEvent(
-//          QString("Refreshing %1").arg(dir.absolutePath()),
-//          infos.size() + subfolders.size()
-//          )
-//        );
 
       QVector<bool> confirmed(folders.size());
       confirmed.fill(false);
@@ -313,10 +288,6 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 					folders.last()->sort(sorter);
           emit endOperation();
           }
-//        QApplication::sendEvent(
-//          qApp->property("progressBar").value<QObject*>(),
-//          new NVBProgressContinueEvent()
-//          );
         }
 
       for (int i=confirmed.size()-1;i>=0;i--) {
@@ -327,15 +298,6 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
           }
         }
 
-      }
-    else {
-//      QApplication::sendEvent(
-//        qApp->property("progressBar").value<QObject*>(),
-//        new NVBProgressStartEvent(
-//          QString("Refreshing %1").arg(dir.absolutePath()),
-//          infos.size()
-//          )
-//        );
       }
 
 		QList<int> ixrm;
@@ -350,11 +312,8 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 
 		qSort(ixrm.begin(),ixrm.end(),qGreater<int>());
 
-		foreach(int k, ixrm) {
-			emit beginOperation(this,k,1,FileRemove);
-			delete files.takeAt(k);
-			emit endOperation();
-			}
+		foreach(int k, ixrm)
+			removeOrigFileAt(k);
 
 #if QT_VERSION < 0x040400
 		#error "You can't compile Novembre > 0.0.4 on Qt < 4.4, sorry"
@@ -365,18 +324,14 @@ bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 		connect(fileLoader,SIGNAL(finished()),this,SLOT(setLoaded()));
 #endif
 
-//    QApplication::sendEvent(
-//      qApp->property("progressBar").value<QObject*>(),
-//      new NVBProgressStopEvent()
-//      );
-//    QApplication::restoreOverrideCursor();
-
     return true;
     }
 
   else {
 		NVBOutputError(QString("Directory %1 ceased to exist").arg(dir.absolutePath()));
-    // TODO be more user-friendly. Display an error message
+		qApp->restoreOverrideCursor();
+		status = NVBDirEntry::Error;
+		// TODO be more user-friendly. Display an error message
     return false;
     }
 }
@@ -451,6 +406,15 @@ void NVBDirEntry::addFolder(NVBDirEntry * folder)
 		folder->sort(sorter);
     emit endOperation();
     }
+}
+
+void NVBDirEntry::insertFolder(int index, NVBDirEntry *folder) {
+	if (folders.indexOf(folder) == -1 ) {
+		emit beginOperation(this,index,1,FolderInsert);
+		folders.insert(index,folder);
+		folder->sort(sorter);
+		emit endOperation();
+		}
 }
 
 void NVBDirEntry::refreshSubfolders(NVBFileFactory * fileFactory)

@@ -104,16 +104,19 @@ double NVBUnits::multFromChar(QChar c)
 
 NVBUnits::NVBUnits(const QString& s, bool scalable):mult(1)
 {
-  base = s.trimmed();
+	base = s.trimmed().simplified();
   if (scalable) {
-    if (base.left(2) == "Hz") return;
+		if (base == "hz") return;
     if (base.length() > 1 && base.at(1).isLetter()) {
       mult = multFromChar(base.at(0));
-      base = base.mid(1);
+			if (mult != 0)
+				base = base.mid(1);
+			else
+				mult = 1;
       }
     }
   else {
-    mult = 0;
+		mult = 0;
     dimstr = base;
   }
 }
@@ -145,14 +148,14 @@ QString NVBUnits::toStr() const
   return dimstr.arg(base);
 }
 
-NVBPhysValue::NVBPhysValue(const QString & s)
+NVBPhysValue::NVBPhysValue(const QString & s, bool scalableDimension)
 {
-  QString v = s.trimmed();
+	QString v = s.trimmed();
   int i;
-  if ( (i = v.indexOf(' ')) > 0) {
+	if ( (i = v.indexOf(QRegExp("[^.,0-9-eE+]"))) > 0) {
     bool ok;
     value = v.left(i).toDouble(&ok);
-    dim = NVBUnits(v.mid(i));
+    dim = NVBUnits(v.mid(i),scalableDimension);
     if (ok)
       value *= dim.purify();
     else
@@ -184,7 +187,7 @@ QString NVBPhysValue::toSIString() const
 
 QString NVBPhysValue::toString( ) const
 {
-  if (valstr.isNull()) valstr = toString(0);
+	if (valstr.isNull()) valstr = toString(0,2,3);
   return valstr;
 }
 

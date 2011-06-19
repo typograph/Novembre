@@ -54,10 +54,12 @@ public:
 	virtual ~NVBDirModel();
 	
 	QModelIndex addFolderItem( QString label, QString path = QString(), bool recursive = false, const QModelIndex & parent  = QModelIndex() );
+	void editFolderItem( QString label, QString path, bool recursive, const QModelIndex & index);
 	bool removeItem( const QModelIndex& index );
 	
 	bool isAFile( const QModelIndex& index ) const;
-	
+	bool isRecursive( const QModelIndex& index ) const;
+
 	virtual bool hasChildren ( const QModelIndex & parent = QModelIndex() ) const;
 	virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	virtual int estimatedRowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -95,9 +97,7 @@ public slots:
 	void refresh();
 	
 	void showFilterDialog();
-	void removeFilters() {
-		head->filter(NVBDirModelFileInfoFilter());
-		}
+	void removeFilters();
 	void showColumnDialog();
 	void exportData(const QModelIndex & index, NVBDirExportOptions options) const;
 	
@@ -148,10 +148,6 @@ private slots:
 	void refreshWatchedDir( QObject * o_entry );
 	void notifyFilesLoaded(const NVBDirEntry * entry, int fstart, int fend);
 
-protected slots:
-	void sortingStarted(int estimated = -1) const;
-	void sortingFinished() const;
-	
 };
 
 #endif

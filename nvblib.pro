@@ -10,7 +10,7 @@ contains(CONFIG,NVB3DView) {
 
 # Log
 
-HEADERS += NVBLogger.h
+HEADERS += src/NVBLogger.h
 
 contains(CONFIG,NVBLog){
     SOURCES += src/NVBLogger.cpp

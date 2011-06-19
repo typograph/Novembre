@@ -51,6 +51,7 @@ Q_OBJECT
 public:
 	enum ContentChangeType { FolderInsert, FolderRemove, FileInsert, FileRemove };
 	enum WatchedContentType { NoContent, FileContent, AllContent };
+	enum Status { Virgin, Populated, Loaded, Error };
 	NVBDirEntry * parent;
 	QString label;
 	QDir dir;
@@ -62,8 +63,7 @@ public:
 	void removeFileAt(int i);
 
 private:
-	bool populated;
-	bool loaded;
+	Status status;
 
 	NVBDirModelFileInfoLessThan	sorter;
 	NVBDirModelFileInfoFilter accepted;
@@ -98,8 +98,9 @@ public:
 
 	bool isContainer() const { return (type == NoContent); }
 	bool isRecursive() const { return (type == AllContent); }
-	bool isPopulated() const { return populated; }
-	bool isLoaded() const { return loaded; }
+	bool isPopulated() const { return status == NVBDirEntry::Populated || status == NVBDirEntry::Loaded; }
+	bool isLoaded() const { return status == NVBDirEntry::Loaded; }
+	Status getStatus() const { return status; }
 	void setDirWatch(bool b) {
 		if (!b) {
 			type = FileContent;
@@ -107,6 +108,7 @@ public:
 			}
 		}
 	void addFolder( NVBDirEntry * folder );
+	void insertFolder( int index, NVBDirEntry * folder );
 
 	int estimatedFileCount() const;
 	int estimatedFolderCount() const;
@@ -126,7 +128,7 @@ signals:
 	void filesLoaded(const NVBDirEntry * entry, int fstart, int fend);
 private slots:
 	void notifyLoading(int start, int end);
-	void setLoaded() { loaded = true; qApp->restoreOverrideCursor();}
+	void setLoaded() { status = NVBDirEntry::Loaded; qApp->restoreOverrideCursor();}
 public slots:
 	bool refresh(NVBFileFactory * fileFactory);
 	void refreshSubfolders(NVBFileFactory * fileFactory);
