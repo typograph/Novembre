@@ -23,8 +23,11 @@
 // #include "NVBFilterDelegate.h"
 #include "../icons/icons_FW.xpm"
 //#include "NVBListItemDelegate.h"
+
 #include <QMenu>
 #include <QPainter>
+#include <QShortcut>
+#include <QClipboard>
 
 #ifndef newIcon
 #define newIcon(var,name) \
@@ -210,6 +213,10 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, const QModelIndex & index, 
   show();
   area->addWindow(this);
   emit pageSelected(page->type());
+
+#if QT_VERSION >= 0x040300
+	new QShortcut(QKeySequence(QKeySequence::Copy),this,SLOT(copyView()));
+#endif
 }
 
 NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, NVBDataSource * page, NVB::ViewType stateMode, NVBVizUnion viz)
@@ -233,6 +240,10 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, NVBDataSource * page, NVB::
   show();
   area->addWindow(this);
   emit pageSelected(page->type());
+
+#if QT_VERSION >= 0x040300
+	new QShortcut(QKeySequence(QKeySequence::Copy),this,SLOT(copyView()));
+#endif
 }
 
 NVBFileWindow::~ NVBFileWindow()
@@ -291,12 +302,12 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
     tBar->show();
     toolBarLayout->addWidget(tBar);
 
-    QAction * pageDockAction = tBar->addAction(QIcon(_FW_PageList),"Show/hide page list");
+    pageDockAction = tBar->addAction(QIcon(_FW_PageList),"Show/hide page list");
     pageDockAction->setCheckable(true);
     connect(pageDockAction,SIGNAL(toggled(bool)),this,SLOT(setLeftVisible(bool)));
 //     connect(pageDock,SIGNAL(visibilityChanged(bool)),pageDockAction,SLOT(setChecked(bool)));
   
-    QAction * toolsDockAction = tBar->addAction(QIcon(_FW_WidgetList),"Show/hide controls list");
+    toolsDockAction = tBar->addAction(QIcon(_FW_WidgetList),"Show/hide controls list");
     toolsDockAction->setCheckable(true);
     connect(toolsDockAction,SIGNAL(toggled(bool)),this,SLOT(setRightVisible(bool)));
 //     connect(stackView,SIGNAL(visibilityChanged(bool)),toolsDockAction,SLOT(setChecked(bool)));
@@ -351,6 +362,7 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
     if (view) {
       QToolBar * t = view->generateToolbar(this);
       if (t) {
+				t->setOrientation(Qt::Vertical);
         toolBarLayout->addWidget(t);
         t->show();
         }
@@ -746,11 +758,9 @@ void NVBFileWindow::focusInEvent(QFocusEvent * event)
 #else
   QFrame::focusInEvent(event);
 #endif
-
   if (event->isAccepted())
     emit pageSelected(pageListView->selectedTopPage().data(PageTypeRole).value<NVB::PageType>());
 }
-
 
 void NVBFileWindow::setWidgetVisible(QWidget * widget, bool visible, bool shift)
 {
@@ -834,6 +844,15 @@ void NVBFileWindow::print( )
   
   p.end();
 }
-#endif
 
+void NVBFileWindow::copyView()
+{
+	QClipboard * cb = QApplication::clipboard();
+	cb->setText(windowTitle());
+	QImage i(view->w()->size(),QImage::Format_RGB32);
+	view->w()->render(&i);
+	cb->setImage(i);
+}
+
+#endif
 

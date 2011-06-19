@@ -92,6 +92,7 @@ public:
 public slots :
   void select( const QModelIndex & index);
   void setActiveVisualizer( NVBVizUnion, const QModelIndex & );
+	void setShowMarker(bool show);
 
 /// Connect to this slot to tell the view the active visualizer is not needed.
 /// Delete the visualizer afterwards

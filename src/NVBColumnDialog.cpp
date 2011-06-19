@@ -120,6 +120,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   customChoice = new QComboBox(this);
 //	customChoice->setEditable(true);
   customChoice->addItems(qApp->property("filesFactory").value<NVBFileFactory*>()->availableInfoFields());
+	customChoice->setAutoCompletion(true);
   gridLayout->addWidget(customChoice, 4, 1, 1, 1);
 	connect(customChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToCustom()));
 

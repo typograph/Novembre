@@ -23,14 +23,14 @@
 #include <QGridLayout>
 #include <QMenu>
 #include <QAction>
-#include <QDirModel>
+#include <QFileSystemModel>
 #include <QCompleter>
 #ifdef Q_WS_WIN
 #include <QMessageBox>
 #endif
-
 #include "NVBColumnDialog.h"
 #include "NVBPageRefactorModel.h"
+#include "NVBFileListView.h"
 
 #include <math.h>
 
@@ -49,8 +49,14 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 {
 
   files = qApp->property("filesFactory").value<NVBFileFactory*>();
+  if (!files) {
+	NVBCriticalError("Browser cannot access the file factory");
+	}
 
   confile = qApp->property("NVBSettings").value<QSettings*>();
+  if (!confile) {
+	NVBCriticalError("Browser cannot access the configuration file");
+	}
 
 #ifndef NVB_BROWSER_ONLY
 	setWindowTitle("Browser");
@@ -92,20 +98,23 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   if (folders) {
 
     folders->setPopupMode(QToolButton::InstantPopup);
-    QMenu * foldersMenu = new QMenu(this);
+		QMenu * foldersBtnMenu = new QMenu(this);
   
-    addRootFolderAction = foldersMenu->addAction(QIcon(_browser_rootplus),QString("Add folder"));
+		addRootFolderAction = foldersBtnMenu->addAction(QIcon(_browser_rootplus),QString("Add folder"));
     connect(addRootFolderAction,SIGNAL(triggered()),this,SLOT(addRootFolder()));
   
-    addFolderAction = foldersMenu->addAction(QIcon(_browser_plus),QString("Add subfolder"));
+		addFolderAction = foldersBtnMenu->addAction(QIcon(_browser_plus),QString("Add subfolder"));
     connect(addFolderAction,SIGNAL(triggered()),this,SLOT(addSubfolder()));
   
-    removeFolderAction = foldersMenu->addAction(QIcon(_browser_minus),QString("Remove folder"));
+		removeFolderAction = foldersBtnMenu->addAction(QIcon(_browser_minus),QString("Remove folder"));
     connect(removeFolderAction,SIGNAL(triggered()),this,SLOT(removeFolder()));
 
-    folders->setMenu(foldersMenu);
+		folders->setMenu(foldersBtnMenu);
 
     }
+
+	editFolderAction = new QAction(QString("Edit folder"),this);
+	connect(editFolderAction,SIGNAL(triggered()),this,SLOT(editFolder()));
 
   refreshFoldersContentsAction = foldersToolBar->addAction(QIcon(_browser_refresh),QString("Refresh file list"));
 
@@ -114,43 +123,56 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   adjustColumnsAction = foldersToolBar->addAction(QIcon(_browser_columns),QString("Edit columns"));
   showFiltersAction = foldersToolBar->addAction(QIcon(_browser_filters),QString("Show data filters"));
 
+	QToolButton * generators = qobject_cast<QToolButton *>(foldersToolBar->widgetForAction( foldersToolBar->addAction(QIcon(_browser_generators),QString("Select file formats"))));
+
+	if (generators) {
+
+		generators->setPopupMode(QToolButton::InstantPopup);
+		QMenu * generatorsBtnMenu = new QMenu(this);
+		if (generatorsBtnMenu) {
+			generatorsBtnMenu->addActions(files->generatorActions());
+			generators->setMenu(generatorsBtnMenu);
+			}
+		else
+			NVBOutputError("Failed to create a menu");
+
+		}
+	else
+		NVBOutputError("Toolbutton not created");
+
   foldersToolBar->addSeparator();
 
+/*
   setViewFileAction = foldersToolBar->addAction(QIcon(_browser_turnspeconoff),QString("Select view mode"));
   setViewFileAction->setCheckable(true);
   connect(setViewFileAction,SIGNAL(toggled(bool)),this,SLOT(setViewType(bool)));
-
+*/
   showPageInfoAction = foldersToolBar->addAction(QIcon(_browser_pageinfo),QString("Info"));
   showPageInfoAction->setCheckable(true);
   showPageInfoAction->setChecked(true);
-
-//// Bottom option
   
-//  progressBar = new NVBProgressBar(this);
-//  progressBar->hide();
-//  connect(progressBar,SIGNAL(wannaBeVisible(bool)),progressBar,SLOT(setVisible(bool)));
-//  qApp->setProperty("progressBar",QVariant::fromValue((QObject*)progressBar));
-
-//// Toolbar option
-
-//   progressBar = new NVBProgressBar(this);
-//   qApp->setProperty("progressBar",QVariant::fromValue((QObject*)progressBar));
-//   progressBarAction = foldersToolBar->addWidget(progressBar);
-//   progressBarAction->setVisible(false);
-//   connect(progressBar,SIGNAL(wannaBeVisible(bool)),progressBarAction,SLOT(setVisible(bool)));
-
   foldersToolBar->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 
   llayout->addWidget(foldersToolBar);
 
-  try {
-    fileModel = new NVBDirModel(files,this);
-    }
-  catch (int err) {
+	try {
+		fileModel = new NVBDirModel(files,this);
+		}
+	catch (int err) {
 		NVBCriticalError(QString("DirModel creation failed : error #%1").arg(err));
-    }
+		}
+
+	exportFolderAction = new QAction(QString("Export data"),this);
+	connect(exportFolderAction,SIGNAL(triggered()),this,SLOT(exportData()));
+
+	clearFiltersAction = new QAction(QString("Remove filters"),this);
+	clearFiltersAction->setEnabled(false);
+	connect(clearFiltersAction,SIGNAL(triggered()),fileModel,SLOT(removeFilters()));
+	connect(clearFiltersAction,SIGNAL(triggered(bool)),clearFiltersAction,SLOT(setEnabled(bool)));
 
   connect(showFiltersAction,SIGNAL(triggered()),fileModel,SLOT(showFilterDialog()));
+	connect(showFiltersAction,SIGNAL(triggered(bool)),clearFiltersAction,SLOT(setDisabled(bool)));
+
   connect(adjustColumnsAction,SIGNAL(triggered()),fileModel,SLOT(showColumnDialog()));
   connect(refreshFoldersContentsAction,SIGNAL(triggered()),fileModel,SLOT(refresh()));
 //   connect(adjustColumnsAction,SIGNAL(triggered()),this,SLOT(updateColumns()));
@@ -168,54 +190,44 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   QApplication::restoreOverrideCursor();
 
   try {
-    fileList = new QTreeView(lframe); 
-//    fileList->setMinimumSize(100,1);
+		fileList = new NVBFileListView(lframe);
     fileList->resize(confile->value("Browser/FileListSize", QSize(50, 100)).toSize());
-//    fileList->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Expanding);
-    fileList->setRootIsDecorated(true);
-    fileList->setAllColumnsShowFocus(true);
-
-    fileList->setModel(fileModel);
-    fileList->setSortingEnabled(true);
-    fileList->sortByColumn(0,Qt::AscendingOrder);
-//     fileList->header()->setMovable(false);
-    fileList->header()->setCascadingSectionResizes(true);
-    fileList->header()->setStretchLastSection(false);
-    fileList->header()->setResizeMode(QHeaderView::ResizeToContents);
-//    resizeColumns();
+		fileList->setModel(fileModel);
 
     for (int i = 1; i<=nuc; i++)
       if (!confile->value(QString("Browser/UserColumn%1v").arg(i),true).toBool())
         fileList->hideColumn(i);
 
-    fileList->viewport()->installEventFilter(this);
-    fileList->header()->viewport()->installEventFilter(this);
     }
   catch (int err) {
-		NVBCriticalError(QString("DirView creation failed : Model logic failed : error #%1").arg(err));
+		NVBCriticalError(QString("FileList creation failed : Model logic failed : error #%1").arg(err));
     }
 
   llayout->addWidget(fileList);  
-  llayout->addWidget(progressBar);
 
-  connect(fileList,SIGNAL(activated(const QModelIndex&)), this,SLOT(showItem(const QModelIndex&)));
-//   connect(fileList,SIGNAL(expanded(const QModelIndex&)), this,SLOT(resizeColumns()));
-  connect(fileList->header(),SIGNAL(sectionMoved(int,int,int)),SLOT(moveColumn(int,int,int)));
-//   resizeColumns();
-//  connect(fileList,SIGNAL(currentChanged(QModelIndex&,QModelIndex&)),this,SLOT(showItem(QModelIndex&)));
-//  connect(fileList,SIGNAL(expanded(QTreeWidgetItem*)),this,SLOT(expandItem(QTreeWidgetItem*)));
-//  connect(fileList,SIGNAL(collapsed(QTreeWidgetItem*)),this,SLOT(collapseItem(QTreeWidgetItem*)));
+	connect(fileList,SIGNAL(activated(const QModelIndex&)), this,SLOT(showItems()));
+	connect(fileList,SIGNAL(rightPressed(QModelIndex)),this,SLOT(showFoldersMenu()));
+	connect(fileList->header(),SIGNAL(sectionMoved(int,int,int)),SLOT(moveColumn(int,int,int)));
+	connect(fileList->header(),SIGNAL(sectionRightPressed(int)),this,SLOT(showColumnsMenu()));
+	connect(fileList->selectionModel(),SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),this,SLOT(enableFolderActions(QModelIndex)));
+
+	foldersMenu = new QMenu("Folders",fileList->viewport());
+
+	columnsMenu = new QMenu("Show columns",fileList->header()->viewport());
+	remColumnsMenu = new QMenu("Remove column",columnsMenu);
+	populateColumnsMenu();
+	connect(fileModel,SIGNAL(columnsInserted(const QModelIndex &, int, int)),this,SLOT(populateColumnsMenu()));
+	connect(fileModel,SIGNAL(columnsRemoved(const QModelIndex &, int, int)),this,SLOT(populateColumnsMenu()));
+	connect(fileModel,SIGNAL(modelReset()),this,SLOT(populateColumnsMenu()));
+	connect(fileModel,SIGNAL(headerDataChanged(Qt::Orientation,int,int)),this,SLOT(populateColumnsMenu()));
 
   hSplitter->setStretchFactor(0,0);
 
   QSplitter * vSplitter = new QSplitter(Qt::Vertical,hSplitter);
 
-  theFile = NULL;
-
-
-//	pageRefactor = new NVBPageRefactorModel();
-
-//  QMenu * iconSizeMenu = new QMenu(this);
+  QAction * tempAction = new QAction(this);
+  tempAction->setSeparator(true);
+//  pageList->insertAction(0,tempAction);
 
   dirView = new NVBDirView(vSplitter);
   dirView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -225,10 +237,13 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   dirView->setDragDropMode(QAbstractItemView::DragOnly);
   dirView->setGridSize(QSize(iconSize + 20, iconSize + 40));
   dirView->setIconSize(QSize(iconSize, iconSize));
-  dirView->hide();
-  dirViewModel = 0;
-
+//  dirView->hide();
+	dirViewModel = new NVBDirViewModel(files,fileModel,this);
+	dirView->setModel(dirViewModel);
+// This will make the model release files. Might not be the best solution
+//  connect(dirView,SIGNAL(dataWindow(int,int)),dirViewModel,SLOT(defineWindow(int,int)));
 	iconSizeActionGroup = new QActionGroup(this);
+
 	dirView->insertAction(0,iconSizeActionGroup->addAction("512x512"));
 	dirView->insertAction(0,iconSizeActionGroup->addAction("256x256"));
 	dirView->insertAction(0,iconSizeActionGroup->addAction("128x128"));
@@ -237,10 +252,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	dirView->insertAction(0,iconSizeActionGroup->addAction("16x16"));
 	dirView->insertAction(0,iconSizeActionGroup->addAction("Custom..."));
 
-	QAction * tempAction = new QAction(this);
-	tempAction->setSeparator(true);
-
-	dirView->insertAction(0,tempAction);
+  dirView->insertAction(0,tempAction);
 
 	foreach (QAction * a, iconSizeActionGroup->actions())
 		a->setCheckable(true);
@@ -348,51 +360,15 @@ NVBBrowser::~ NVBBrowser( )
   confile->setValue("Browser/FileListSize", fileList->size());
   confile->setValue("Browser/ShowPageInfo", piview->isVisible());
   if (fileModel) delete fileModel;
-  if (theFile) theFile->release();
 }
 
-void NVBBrowser::showItem( const QModelIndex & item ) {
-
-  if (fileModel->isAFile(item)) {
-		dirView->setModel(0);
-
-		if (dirViewModel) {
-      delete dirViewModel;
-      dirViewModel = 0;
-      }
-
-    if (theFile) {
-      theFile->release();
-      theFile = NULL;
-      pageRefactor->setModel(NULL);
-      } 
-
-		theFile = files->openFile(fileModel->getAllFiles(item));
-
-    if (theFile) {
-      theFile->use();
-      }
-    else {
-			NVBOutputError(QString("Couldn't get file %1").arg(fileModel->getAllFiles(item).name()));
-      }
-
-		dirView->setModel(theFile);
-
-    }
-  else {
-    if (dirViewModel) delete dirViewModel;
-    dirViewModel = new NVBDirViewModel(files, QPersistentModelIndex(item.sibling(item.row(),0)), fileModel, this);
-    dirView->setModel(dirViewModel);
-    connect(dirView,SIGNAL(dataWindow(int,int)),dirViewModel,SLOT(defineWindow(int,int)));
-    }
+void NVBBrowser::showItems() {
+	dirViewModel->setDisplayItems(fileList->selectionModel()->selectedRows());
 }
 
 void NVBBrowser::loadPage( const QModelIndex & item )
 {
-  if (dirView->isVisible())
-    emit pageRequest(item.parent().data(Qt::ToolTipRole).toString(),item.row());
-  else
-		emit pageRequest(theFile->sources(),item.row());
+	emit pageRequest( dirViewModel->getAllFiles(item),item.row());
 }
 
 void NVBBrowser::switchIconSize( QAction* action ) {
@@ -473,74 +449,99 @@ QDialog(parent)
 {  
   setModal(true);
   setWindowTitle("Create new folder");
-  resize(378, 109);
 
-  QGridLayout * gridLayout = new QGridLayout(this);
+	buildUi();
+}
 
-  nameLabel = new QLabel("&Label",this);
-  nameLabel->setTextFormat(Qt::PlainText);
-  nameLabel->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
-  gridLayout->addWidget(nameLabel, 0, 0, 1, 1);
+NVBFolderInputDialog::NVBFolderInputDialog(QString label, QString dirname, bool includeSubfolders, QWidget *parent)
+	: QDialog(parent)
+{
+	setModal(true);
+	setWindowTitle("Create new folder");
 
-  nameEdit = new QLineEdit(this);
-  nameLabel->setBuddy(nameEdit);
+	buildUi();
+	nameEdit->setText(label);
+	if (!dirname.isEmpty())
+		dirEdit->setText(dirname);
+	else
+		dirLabel->setChecked(false);
+
+	subfolderCheck->setChecked(includeSubfolders);
+}
+
+void NVBFolderInputDialog::buildUi() {
+	resize(378, 109);
+
+	QGridLayout * gridLayout = new QGridLayout(this);
+
+	nameLabel = new QLabel("&Label",this);
+	nameLabel->setTextFormat(Qt::PlainText);
+	nameLabel->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+	gridLayout->addWidget(nameLabel, 0, 0, 1, 1);
+
+	nameEdit = new QLineEdit(this);
+	nameLabel->setBuddy(nameEdit);
 #ifndef Q_WS_WIN
-  connect(nameEdit,SIGNAL(textChanged(QString)),this,SLOT(checkInput()));
+	connect(nameEdit,SIGNAL(textChanged(QString)),this,SLOT(checkInput()));
 #endif
-  gridLayout->addWidget(nameEdit, 0, 1, 1, 3);
+	gridLayout->addWidget(nameEdit, 0, 1, 1, 3);
 
-  dirLabel = new QCheckBox("&Path",this);
-  dirLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  dirLabel->setChecked(true);
+	dirLabel = new QCheckBox("&Path",this);
+	dirLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	dirLabel->setChecked(true);
 #ifndef Q_WS_WIN
-  connect(dirLabel,SIGNAL(toggled(bool)),this,SLOT(checkInput()));
+	connect(dirLabel,SIGNAL(toggled(bool)),this,SLOT(checkInput()));
 #endif
-  gridLayout->addWidget(dirLabel, 1, 0, 1, 1);
+	gridLayout->addWidget(dirLabel, 1, 0, 1, 1);
 
-  dirEdit = new QLineEdit(this);
-  QCompleter *completer = new QCompleter(this);
-  completer->setModel(new QDirModel(QStringList(),QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name,completer));
-  dirEdit->setCompleter(completer);
-  connect(dirLabel, SIGNAL(toggled(bool)), dirEdit, SLOT(setEnabled(bool)));
+	dirEdit = new QLineEdit(this);
+	QCompleter *completer = new QCompleter(this);
+	QFileSystemModel * fsm = new QFileSystemModel(completer);
+	fsm->setNameFilters(QStringList());
+	fsm->setFilter(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable);
+	completer->setModel(fsm);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	dirEdit->setCompleter(completer);
+	connect(dirLabel, SIGNAL(toggled(bool)), dirEdit, SLOT(setEnabled(bool)));
 #ifndef Q_WS_WIN
-  connect(dirEdit,SIGNAL(textChanged(QString)),this,SLOT(checkInput()));
+	connect(dirEdit,SIGNAL(textChanged(QString)),this,SLOT(checkInput()));
 #endif
-  gridLayout->addWidget(dirEdit, 1, 1, 1, 2);
+	gridLayout->addWidget(dirEdit, 1, 1, 1, 2);
 
 
-  folderSelectButton = new QToolButton(this);
-  folderSelectAction = new QAction(QIcon(_browser_plus),"Select folder",folderSelectButton);
-  folderSelectButton->setDefaultAction(folderSelectAction);
-  connect(dirLabel, SIGNAL(toggled(bool)), folderSelectButton, SLOT(setEnabled(bool)));
+	folderSelectButton = new QToolButton(this);
+	folderSelectAction = new QAction(QIcon(_browser_plus),"Select folder",folderSelectButton);
+	folderSelectButton->setDefaultAction(folderSelectAction);
+	connect(dirLabel, SIGNAL(toggled(bool)), folderSelectButton, SLOT(setEnabled(bool)));
 
-  fileDialog = new QFileDialog();
-  fileDialog->setFileMode(QFileDialog::Directory);
-#if QT_VERSION >= 0x040500  
-  fileDialog->setOption(QFileDialog::ShowDirsOnly,true);
+	fileDialog = new QFileDialog();
+	fileDialog->setFileMode(QFileDialog::Directory);
+#if QT_VERSION >= 0x040500
+	fileDialog->setOption(QFileDialog::ShowDirsOnly,true);
 #endif
-  connect(folderSelectAction,SIGNAL(triggered(bool)),fileDialog,SLOT(exec()));
-  connect(fileDialog,SIGNAL(accepted()),this,SLOT(dirSelected()));
+	connect(folderSelectAction,SIGNAL(triggered(bool)),fileDialog,SLOT(exec()));
+	connect(fileDialog,SIGNAL(accepted()),this,SLOT(dirSelected()));
 
-  gridLayout->addWidget(folderSelectButton, 1, 3, 1, 1);
+	gridLayout->addWidget(folderSelectButton, 1, 3, 1, 1);
 
-  subfolderCheck = new QCheckBox("&Include subfolders",this);
-  connect(dirLabel, SIGNAL(toggled(bool)), subfolderCheck, SLOT(setEnabled(bool)));
-  gridLayout->addWidget(subfolderCheck, 2, 0, 1, 2);
+	subfolderCheck = new QCheckBox("&Include subfolders",this);
+	connect(dirLabel, SIGNAL(toggled(bool)), subfolderCheck, SLOT(setEnabled(bool)));
+	gridLayout->addWidget(subfolderCheck, 2, 0, 1, 2);
 
-  buttonBox = new QDialogButtonBox(this);
-  buttonBox->setOrientation(Qt::Horizontal);
-  buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
-  QObject::connect(buttonBox, SIGNAL(accepted()), this, SLOT(tryAccept()));
-  QObject::connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+	buttonBox = new QDialogButtonBox(this);
+	buttonBox->setOrientation(Qt::Horizontal);
+	buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
+	QObject::connect(buttonBox, SIGNAL(accepted()), this, SLOT(tryAccept()));
+	QObject::connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 
-  gridLayout->addWidget(buttonBox, 2, 2, 1, 2);
-
+	gridLayout->addWidget(buttonBox, 2, 2, 1, 2);
 }
 
 bool NVBFolderInputDialog::getFolder( QString & label, QString & dirname, bool & includeSubfolders)
 {
 
   NVBFolderInputDialog * dialog = new NVBFolderInputDialog();
+	dialog->setWindowTitle("Create new folder");
 
   int result = dialog->exec();
 
@@ -555,6 +556,27 @@ bool NVBFolderInputDialog::getFolder( QString & label, QString & dirname, bool &
     delete dialog;
     return false;
     }
+}
+
+bool NVBFolderInputDialog::editFolder( QString & label, QString & dirname, bool & includeSubfolders)
+{
+
+	NVBFolderInputDialog * dialog = new NVBFolderInputDialog(label,dirname,includeSubfolders);
+	dialog->setWindowTitle("Edit folder parameters");
+
+	int result = dialog->exec();
+
+	if (result == QDialog::Accepted) {
+		dirname = dialog->getDir();
+		label = dialog->getName();
+		includeSubfolders = dialog->getIncludeSubfolders();
+		delete dialog;
+		return true;
+		}
+	else {
+		delete dialog;
+		return false;
+		}
 }
 
 void NVBFolderInputDialog::dirSelected( )
@@ -584,13 +606,8 @@ bool NVBFolderInputDialog::getIncludeSubfolders()
 
 void NVBFolderInputDialog::tryAccept( )
 {
-  bool success = checkInput();
-
-  if (success) { 
-    if (dirLabel->isChecked() && nameEdit->text().isEmpty())
-      nameEdit->setText(dirEdit->text());
+	if (checkInput())
     accept();
-    }
 }
 
 bool NVBFolderInputDialog::checkInput( )
@@ -598,15 +615,21 @@ bool NVBFolderInputDialog::checkInput( )
   bool result = true;
 
   if (nameEdit->text().isEmpty()) {
+		if (dirLabel->isChecked()) {
+			QString sdir = dirEdit->text();
+			nameEdit->setText(sdir.right(sdir.length() - sdir.lastIndexOf(QDir::separator())));
+			}
+		else {
 #ifdef Q_WS_WIN
-    QMessageBox::warning(this, QString(), QString("The label cannot be empty"), QMessageBox::Ok, QMessageBox::Ok);
+			QMessageBox::warning(this, QString(), QString("The label cannot be empty"), QMessageBox::Ok, QMessageBox::Ok);
 #else
-    QPalette p = dirEdit->palette();
-    p.setColor(QPalette::Inactive,QPalette::Base,QColor(0xDD7777));
-    p.setColor(QPalette::Active,QPalette::Base,QColor(0xDD7777));
-    nameEdit->setPalette(p);
+			QPalette p = dirEdit->palette();
+			p.setColor(QPalette::Inactive,QPalette::Base,QColor(0xDD7777));
+			p.setColor(QPalette::Active,QPalette::Base,QColor(0xDD7777));
+			nameEdit->setPalette(p);
 #endif
-    result = false;
+			result = false;
+			}
     }
   else
     nameEdit->setPalette(QApplication::palette());
@@ -636,72 +659,12 @@ bool NVBFolderInputDialog::checkInput( )
   return result;
 }
 
-void NVBBrowser::resizeColumns() {
-    int nuc = confile->value("Browser/UserColumns").toInt();
-    for (int i = 0; i<=nuc; i++)
-      fileList->resizeColumnToContents(i);
-//    fileList->setColumnWidth(1,0);
-//    fileList->resizeColumnToContents(2);
-//    fileList->resizeColumnToContents(3);
-}
-
-bool NVBBrowser::eventFilter(QObject * obj, QEvent * event) {
-//  if (fileList != qobject_cast<QTreeView*>(obj)) return false;
-  if (event->type() != QEvent::MouseButtonPress) return false;
-  QMouseEvent * e = (QMouseEvent*)(event);
-  if (!e) return false;
-  if (!(e->button() & Qt::RightButton)) return false;
-  if (fileList->header()->viewport() == dynamic_cast<void*>(obj)) {
-    QMenu * clmns = new QMenu("Show columns",fileList->header()->viewport());
-    QMenu * rm_clmns = new QMenu("Remove column",clmns);
-    QAction * a;
-    for (int i = 1; i < fileModel->columnCount(); i++) {
-      int j = fileList->header()->logicalIndex(i);
-      a = rm_clmns->addAction(fileModel->headerData(j,Qt::Horizontal,Qt::DisplayRole).toString());
-      a->setData(-j);
-      a = clmns->addAction(fileModel->headerData(j,Qt::Horizontal,Qt::DisplayRole).toString());
-      a->setCheckable(true);
-      if (!fileList->isColumnHidden(j)) a->setChecked(true);
-      a->setData(j);
-      }
-    clmns->addSeparator();
-    a = clmns->addAction("Add column");
-    clmns->addMenu(rm_clmns);
-//    connect(clmns,SIGNAL(triggered(QAction*)),SLOT(columnAction(QAction*)));
-    columnAction(clmns->exec(e->globalPos()));
-    delete clmns;
-//     resizeColumns();
-    return true;
-    }
-  else {
-    QMenu * folders = new QMenu("Folders",fileList->viewport());
-    QModelIndex index = fileList->indexAt(e->pos());
-    if (index.isValid()) {
-      if (fileModel->isAFile(index)) {
-        return false;
-        }
-      else {
-        folders->addAction(addFolderAction);
-        folders->addAction(removeFolderAction);
-        folders->addSeparator();
-        folders->addAction("Export data");
-//         folders->addAction(exportFolderAction);
-        }
-      }
-    else
-      folders->addAction(addRootFolderAction);
-    folders->addSeparator();
-    folders->addAction("Filter data");
-    folders->addAction("Remove filter");
-    folderAction(fileModel->index(index.row(),0,index.parent()),folders->exec(e->globalPos()));
-    delete folders;
-//     resizeColumns();
-    return false; // we want the selection to propagate
-    }
-}
-
-void NVBBrowser::columnAction(QAction * action) {
-  if (!action) return;
+void NVBBrowser::columnAction() {
+	QAction * action = qobject_cast<QAction *>(sender());
+	if (!action) {
+		NVBOutputError("Not called by QAction");
+		return;
+		}
   if (action->text() == "Add column") {
     QString s = NVBColumnInputDialog::getColumn();
 
@@ -753,67 +716,6 @@ void NVBBrowser::addFolder(const QModelIndex & index) {
 
 }
 
-/*
-NVBColumnDialog::NVBColumnDialog() {
-  QHBoxLayout * h = new QHBoxLayout(this);
-  QVBoxLayout * e = new QVBoxLayout();
-  QGridLayout * l = new QGridLayout();
-
-  h->addLayout(e);
-  e->addLayout(l);
-
-  l->addWidget(new QLabel("Name",this),0,0,Qt::AlignRight);
-  l->addWidget(new QLabel("Contents",this),1,0,Qt::AlignRight);
-
-  nameEdit = new QLineEdit(this);
-  l->addWidget(nameEdit,0,1,Qt::AlignHCenter);
-  cntEdit = new QLineEdit(this);
-  l->addWidget(cntEdit,1,1,Qt::AlignHCenter);
-
-  QToolButton * tb = new QToolButton(this);
-  tb->setDefaultAction(new QAction("?",tb));
-  tb->defaultAction()->setToolTip("Show help on possible field values");
-  tb->defaultAction()->setCheckable(true);
-  l->addWidget(tb,1,2,Qt::AlignLeft);
-
-  QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-  connect(buttonBox,SIGNAL(accepted()),this,SLOT(tryAccept()));
-  connect(buttonBox,SIGNAL(rejected()),this,SLOT(reject()));
-
-  e->addWidget(buttonBox);
-
-  QLabel * help = new QLabel("The \"Contents\" field may contain one of the following:<ol><li>Predefined file parameter names, i.e. <b>fileName</b>, <b>fileSize</b>, <b>fileDate</b>, <b>fileTime</b>, <b>fileDateTime</b>.</li><li>Predefined page paremeter names, i.e. <b>Name</b>, <b>Size</b>, <b>isTopo</b>, <b>isSpec</b>.</li><li>Page comment names, e.g. <b>Bias</b> or <b>Setpoint</b>. Please bear in mind that those are file format-specific.</li><li>Page selectors in the form \"?T\", \"?S\" or \"?!\", followed by any of the following:<ul><li>Free text, output as given.</li><li>Page paremeters as above, parenthesised.</li><li>One of <b>$X</b> (x size), <b>$Y</b> (y size) or <b>$$</b> for $.</li></ul></li></ol>");
-  help->hide();
-  h->addWidget(help);
-
-  connect(tb,SIGNAL(toggled(bool)),help,SLOT(setVisible(bool)));
-
-  setLayout(h);
-}
-
-QString NVBColumnDialog::getColumn()
-{
-  int result;
-  NVBColumnDialog * dialog  = new NVBColumnDialog();
-  result = dialog->exec();
-  QString clmncode = dialog->nameEdit->text()+"/"+dialog->cntEdit->text();
-  delete dialog;
-  if (result == QDialog::Accepted)
-    return clmncode;
-  return QString();
-//  if (ok) *ok = (result == QDialog::Accepted);
-}
-
-void NVBColumnDialog::tryAccept() {
-
-  // TODO One should check "contents" validity here.
-  // Unfortunately it depends greatly on NVBFileInfo, so maybe a method is needed there.
-
-  accept();
-}
-
-*/
-
 void NVBBrowser::updateColumnsVisibility() {
   int nuc = confile->value("Browser/UserColumns").toInt();
   for (int i = 1; i<=nuc; i++) {
@@ -862,38 +764,6 @@ void NVBBrowser::moveColumn( int logicalIndex, int oldVisualIndex, int newVisual
   confile->setValue(QString("Browser/UserColumn%1v").arg(newVisualIndex),true);
 }
 
-/*
-NVBDataFilterDialog::NVBDataFilterDialog(QStringList columns)
-{
-  QHBoxLayout * clmnLayout = new QHBoxLayout();
-
-  clmnLayout->addWidget(new QLabel("Column",this));
-  columnCombo = new QComboBox(this);
-  columnCombo->addItems(columns);
-  columnCombo->setCurrentIndex(1);
-  clmnLayout->addWidget(columnCombo);
-
-  QHBoxLayout * filterLayout = new QHBoxLayout();
-
-  filterLayout->addWidget(new QLabel("Filter",this));
-  filterEdit = new QLineEdit(this);
-  filterLayout->addWidget(filterEdit);
-
-  QVBoxLayout * l = new QVBoxLayout();
-
-  l->addLayout(clmnLayout);
-  l->addLayout(filterLayout);
-  
-  QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-  connect(buttonBox,SIGNAL(accepted()),this,SLOT(accept()));
-  connect(buttonBox,SIGNAL(rejected()),this,SLOT(reject()));
-
-  l->addWidget(buttonBox);
-  
-  setLayout(l);
-}
-
-*/
 void NVBBrowser::addRootFolder()
 {
   addFolder(QModelIndex());
@@ -901,6 +771,7 @@ void NVBBrowser::addRootFolder()
 
 void NVBBrowser::addSubfolder()
 {
+	/*
   QModelIndexList ixs = fileList->selectionModel()->selectedRows();
 
   if (ixs.isEmpty())
@@ -911,10 +782,43 @@ void NVBBrowser::addSubfolder()
       c = c.parent();
     addFolder(c);
     }
+	*/
+	if (fileModel->isAFile(folderMenuTarget))
+		addFolder(folderMenuTarget.parent());
+	else
+		addFolder(folderMenuTarget);
+
+
+}
+
+void NVBBrowser::editFolder()
+{
+/*
+	QModelIndexList ixs = fileList->selectionModel()->selectedRows();
+
+	if (ixs.isEmpty()) {
+		NVBOutputError("No selection");
+		return;
+		}
+
+	QModelIndex c = ixs.at(0);
+*/
+	if (fileModel->isAFile(folderMenuTarget)) {
+		NVBOutputError("File selected");
+		return;
+		}
+	QString label = folderMenuTarget.data(Qt::DisplayRole).toString();
+	QString path = folderMenuTarget.data(Qt::ToolTipRole).toString();
+	bool r = fileModel->isRecursive(folderMenuTarget);
+
+	if (NVBFolderInputDialog::editFolder(label,path,r))
+		fileModel->editFolderItem(label,path,r,folderMenuTarget);
+
 }
 
 void NVBBrowser::removeFolder()
 {
+	/*
   QModelIndexList ixs = fileList->selectionModel()->selectedRows();
 
   if (!ixs.isEmpty()) {
@@ -924,56 +828,44 @@ void NVBBrowser::removeFolder()
       updateFolders();
       }
     }
+	*/
+	if (folderMenuTarget.isValid() && !fileModel->isAFile(folderMenuTarget)) {
+		fileModel->removeItem(folderMenuTarget);
+		updateFolders();
+		}
+
 }
 
-/*
-void NVBBrowser::editColumns()
-{
+void NVBBrowser::exportData() {
+	NVBDirExportOptions o = NVBDirExportDialog::getOptions();
+	if (o.valid)
+		fileModel->exportData(fileList->selectionModel()->selectedRows().first(),o);
 }
 
-void NVBBrowser::showFilters()
-{
+void NVBBrowser::enableFolderActions(const QModelIndex & index) {
+	folderMenuTarget = index;
+	bool isAFile = fileModel->isAFile(index);
+	addFolderAction->setDisabled(isAFile);
+	removeFolderAction->setDisabled(isAFile);
+	exportFolderAction->setDisabled(isAFile);
 }
-*/
 
-void NVBBrowser::folderAction(const QModelIndex & index, QAction * action)
-{
-  if (!action) return;
-  if (action->text() == "Add folder") {
-    addFolder(QModelIndex());
-    }
-  else if (action->text() == "Add subfolder") {
-    addFolder(index);
-    }
-  else if (action->text() == "Remove folder") {
-    fileModel->removeItem(index);
-    updateFolders();
-    }
-  else if (action->text() == "Filter data") {
-    fileModel->showFilterDialog();
-/*    QStringList clmns;
-    for (int i = 0; i < fileModel->columnCount(); i++) {
-      int j = fileList->header()->logicalIndex(i);
-      clmns << fileModel->headerData(j,Qt::Horizontal,Qt::DisplayRole).toString();
-      }
-    NVBDataFilterDialog dialog(clmns);
-    int result = dialog.exec();
-    if (result == QDialog::Accepted) {
-      fileModel->setFilterKeyColumn(dialog.selectedColumn());
-      fileModel->setFilterWildcard(dialog.filterText());
-      }*/
-    }
-  else if (action->text() == "Remove filter") {
-    fileModel->removeFilters();
-//    fileModel->setFilterRegExp(QRegExp());
-    }
-  else if (action->text() == "Export data") {
-    NVBDirExportOptions o = NVBDirExportDialog::getOptions();
-    if (o.valid)
-      fileModel->exportData(index,o);
-    }
-  else
-    return;
+void NVBBrowser::populateColumnsMenu() {
+	QAction * a;
+	columnsMenu->clear();
+	remColumnsMenu->clear();
+	for (int i = 1; i < fileModel->columnCount(); i++) {
+		int j = fileList->header()->logicalIndex(i);
+		a = remColumnsMenu->addAction(fileModel->headerData(j,Qt::Horizontal,Qt::DisplayRole).toString(),this,SLOT(columnAction()));
+		a->setData(-j);
+		a = columnsMenu->addAction(fileModel->headerData(j,Qt::Horizontal,Qt::DisplayRole).toString(),this,SLOT(columnAction()));
+		a->setCheckable(true);
+		if (!fileList->isColumnHidden(j)) a->setChecked(true);
+		a->setData(j);
+		}
+	columnsMenu->addSeparator();
+	a = columnsMenu->addAction("Add column",this,SLOT(columnAction()));
+	columnsMenu->addMenu(remColumnsMenu);
 }
 
 void NVBBrowser::updateColumns()
@@ -985,9 +877,39 @@ void NVBBrowser::updateColumns()
 
 }
 
+void NVBBrowser::showFoldersMenu() {
+	folderMenuTarget = fileList->indexAt(fileList->viewport()->mapFromGlobal(QCursor::pos()));
+
+	foldersMenu->clear();
+
+	if (!folderMenuTarget.isValid()) { // Blank space
+		foldersMenu->addAction(addRootFolderAction);
+		}
+	else if (fileModel->isAFile(folderMenuTarget)) { // File
+		}
+	else if (fileModel->flags(folderMenuTarget) & Qt::ItemIsEnabled) { // Valid folder
+		foldersMenu->addAction(addFolderAction);
+		foldersMenu->addAction(editFolderAction);
+		foldersMenu->addAction(removeFolderAction);
+		foldersMenu->addSeparator();
+		foldersMenu->addAction(exportFolderAction);
+		}
+	else { // Status == error
+		foldersMenu->addAction(editFolderAction);
+		foldersMenu->addAction(removeFolderAction);
+		}
+
+	if (foldersMenu->actions().count())
+		foldersMenu->addSeparator();
+	foldersMenu->addAction(showFiltersAction);
+	foldersMenu->addAction(clearFiltersAction);
+
+	foldersMenu->exec(QCursor::pos());
+}
+
 void NVBBrowser::setViewType(bool b)
 {
-  pageRefactor->setMode(b ? NVBPageRefactorModel::MarkSpectra : NVBPageRefactorModel::None );
+//  pageRefactor->setMode(b ? NVBPageRefactorModel::MarkSpectra : NVBPageRefactorModel::None );
 }
 
 NVBDirExportDialog::NVBDirExportDialog( QWidget * parent ):QDialog(parent)

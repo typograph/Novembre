@@ -13,6 +13,8 @@
 #include <QtGui/QGraphicsSceneWheelEvent>
 #include <QtGui/QGraphicsSceneHoverEvent>
 #include <QtGui/QGraphicsSceneMouseEvent>
+#include <math.h>
+#include "NVBDimension.h"
 
 // #include <QDebug>
 
@@ -121,10 +123,41 @@ bool NVBFilteringGraphicsItem::sceneEventFilter(QGraphicsItem * watched, QEvent 
 
 void NVBFullGraphicsItem::paint(QPainter * painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-Q_UNUSED(painter);
-/*  QColor c(Qt::red);
+// Q_UNUSED(painter);
+/*	QColor c(Qt::red);
   c.setAlpha(0.5);
-  painter->fillRect(boundingRect(),QBrush(c));*/
+	painter->fillRect(boundingRect(),QBrush(c));*/
+	if (paintSizeMarker) {
+		QRectF r = boundingRect();
+		qreal ww = qMax(fabs(r.width()),fabs(r.height()))/5;
+		qreal o = exp10(floor(log10(ww)));
+		qreal w = floor(ww/o);
+		painter->save();
+
+		QPen pen(Qt::black);
+		pen.setDashPattern(QVector<qreal>() << 1 << 3);
+		pen.setDashOffset(0);
+		painter->setPen(pen);
+		QRectF marker = QRectF(r.right()-w*o*1.5,r.bottom()-w*o*1.5,w*o,w*o);
+		QRectF submarker = QRectF(marker.topLeft()-QPointF(o/2,o/2),QSizeF(o,o));
+		painter->drawRect(marker);
+		painter->drawRect(submarker);
+
+		pen.setDashOffset(2);
+		pen.setColor(Qt::white);
+		painter->setPen(pen);
+		painter->drawRect(marker);
+		painter->drawRect(submarker);
+
+		pen.setStyle(Qt::SolidLine);
+		painter->setPen(pen);
+		painter->setCompositionMode(QPainter::RasterOp_SourceXorDestination);
+		// Without the transform, the text will want to be drawn at point size 1e-9, which fails.
+		QTransform t = QTransform::fromScale(o/10,o/10);
+		painter->setTransform(t,true);
+		painter->drawText(t.inverted().mapRect(marker), Qt::AlignCenter, QString::number(w,'f',0));
+		painter->restore();
+	}
 }
 
 bool NVBFullGraphicsItem::sceneEvent(QEvent * event)
@@ -142,7 +175,7 @@ NVBFilteringGraphicsItem::NVBFilteringGraphicsItem():QGraphicsItem()
 #endif
 }
 
-NVBFullGraphicsItem::NVBFullGraphicsItem():QGraphicsItem()
+NVBFullGraphicsItem::NVBFullGraphicsItem():QGraphicsItem(),paintSizeMarker(false)
 {
 #if QT_VERSION >= 0x040400
   setAcceptHoverEvents(true);

@@ -10,8 +10,8 @@
 //
 //
 
-#ifndef NVBDIMENSION_H
-#define NVBDIMENSION_H
+#ifndef NVBUNITS_H
+#define NVBUNITS_H
 
 #include <math.h>
 #include <QtCore/QMetaType>
@@ -101,7 +101,7 @@ private:
   mutable QString valstr;
 public:
   NVBPhysValue():value(0) {;}
-  NVBPhysValue(const QString& s);
+	NVBPhysValue(const QString& s, bool scalableDimension = true);
   NVBPhysValue(const QString& s, NVBUnits d);
   NVBPhysValue(double f, NVBUnits d);
   ~NVBPhysValue() {;}

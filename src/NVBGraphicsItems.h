@@ -29,11 +29,16 @@ QTransform invertQTransform(const QTransform & t);
  */
 
 class NVBFullGraphicsItem : public QGraphicsItem {
+private :
+	bool paintSizeMarker;
 public :
   NVBFullGraphicsItem();
   virtual ~NVBFullGraphicsItem() {;}
 	virtual QRectF boundingRect () ;
 	virtual void paint ( QPainter * , const QStyleOptionGraphicsItem * , QWidget *  = 0 );
+
+	void showSizeMarker(bool show = true) { paintSizeMarker = show; }
+
 protected :
   virtual bool sceneEvent ( QEvent * event );
 };

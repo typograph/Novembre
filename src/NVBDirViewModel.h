@@ -29,7 +29,7 @@ class NVBDirViewModel : public QAbstractItemModel
 Q_OBJECT
 public:
 
-  NVBDirViewModel(NVBFileFactory * factory, QPersistentModelIndex findex, NVBDirModel * model, QObject * parent = 0);
+	NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent = 0);
   virtual ~NVBDirViewModel();
 
   virtual bool hasChildren ( const QModelIndex & parent = QModelIndex() ) const;
@@ -42,9 +42,19 @@ public:
   virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
   virtual QModelIndex parent ( const QModelIndex & index ) const;
 
+	void setDisplayItems(QModelIndexList items);
+
+	NVBAssociatedFilesInfo getAllFiles(const QModelIndex & index);
+
+	virtual QMimeData * mimeData ( const QModelIndexList & indexes ) const;
+	virtual QStringList mimeTypes () const;
+
+	virtual bool event ( QEvent * e );
+
 private:
   NVBFileFactory * fileFactory;
-  QPersistentModelIndex dirindex;
+	QList<QPersistentModelIndex> indexes;
+	QPersistentModelIndex dirindex;
   NVBDirModel * dirModel;
   mutable QVector<NVBFile*> files;
   mutable QList<int> unloadables;
@@ -54,14 +64,20 @@ private:
   void cacheRowCounts() const;
   void cacheRowCounts ( int first, int last ) const;
 
+	mutable QPixmap unavailable, loading;
+
+	QVariant unloadableData(int role) const;
+	QVariant inProgressData(int role) const;
+
 private slots:
   void parentInsertingRows( const QModelIndex & parent, int first, int last );
   void parentInsertedRows( const QModelIndex & parent, int first, int last );
   void parentRemovingRows( const QModelIndex & parent, int first, int last );
   void parentRemovedRows( const QModelIndex & parent, int first, int last );
-  void parentChangingLayout();
-  void parentChangedLayout();
+//  void parentChangingLayout();
+//  void parentChangedLayout();
   bool loadFile(int index) const;
+	void fileLoaded(QString name, NVBFile * file);
 
 public slots:
   void defineWindow(int start,int end);

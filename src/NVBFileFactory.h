@@ -18,6 +18,9 @@
 #include <QtCore/QStringList>
 #include <QtCore/QDir>
 #include <QtCore/QLibrary>
+#include <QtCore/QThread>
+#include <QtCore/QEvent>
+#include <QtCore/QSignalMapper>
 //#include <dlfcn.h>
 
 #include "NVBLogger.h"
@@ -25,7 +28,18 @@
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
 
+class QAction;
+
 // using namespace NVBErrorCodes;
+
+class NVBFileLoadEvent : public QEvent {
+public:
+	QString name;
+	NVBFile * file;
+	NVBFileLoadEvent(QString n, NVBFile * f):QEvent(QEvent::User),name(n),file(f) {;}
+};
+
+
 
 class NVBFileQueue : protected QList<NVBFile*> {
 private:
@@ -38,7 +52,7 @@ public:
 		virtual ~NVBFileQueue();
 
 	/// Add a file \a file to the queue.
-	/// If queue length goes over the limit at that point, the oldest enrty in the queue is deleted
+	/// If queue length goes over the limit at that point, the oldest entry in the queue is deleted
 		virtual void add(NVBFile* file);
 	/// If a file with \a filename is in the queue, it is removed from the queue and returned
 		virtual NVBFile * retrieve(QString filename);
@@ -48,19 +62,24 @@ public:
 		virtual NVBFile * consult(const NVBAssociatedFilesInfo & info);
 };
 
-class NVBFileLoader : public QObject {
+class NVBFileLoader : public QThread {
 Q_OBJECT
 public:
-	NVBFileLoader(QString dir);
-
+	NVBAssociatedFilesInfo info;
+	NVBFile * file;
+	QList<QObject *> customers;
+	NVBFileLoader(const NVBAssociatedFilesInfo & i, QObject * r):info(i),file(0),customers( QList<QObject*>() << r ) {;}
+	virtual void run();
 };
 
 /**
-  This class is responsible for creating NVBFile and NVBFileInfo objects.
-  It collects information about provided file plugins and creates NVBFile's.
-  To save up on disk operations, opened files go to a stack.
-*/
-class NVBFileFactory : public QObject{
+ * \class NVBFileFactory
+ *
+ * This class is responsible for creating NVBFile and NVBFileInfo objects.
+ * It collects information about provided file plugins and creates NVBFile's.
+ * To save up on disk operations, opened files go to a stack.
+ */
+class NVBFileFactory : public QObject {
 Q_OBJECT
 private:
 	/// Files that are not used by any window are cached in this structure
@@ -69,13 +88,24 @@ private:
 	/// Loaded files in use
 		QList<NVBFile *> files;
 	
+	/// Loader threads
+		QList<NVBFileLoader *> loaders;
+
+	/// Check if a loader for a file is created already
+		NVBFileLoader * getLoaderInProgress(const NVBAssociatedFilesInfo & info);
+
 	/// Find file in list by name
 		int loadedFileIndex( QString filename );
 		NVBFile * retrieveLoadedFile( QString filename );
 		NVBFile * retrieveLoadedFile( const NVBAssociatedFilesInfo & info);
 
-	/// Available generators
+	/// Available generators (selected by user)
 		QList<const NVBFileGenerator*> generators;
+	/// All available generators
+		QList<const NVBFileGenerator*> allGenerators;
+	///
+		QList<QAction*> gActions;
+		QSignalMapper actMapper;
 
 	/// Load file from \a filename. Returns NULL if file wasn't opened.
 	/// The returned file is already considered in use.
@@ -103,6 +133,7 @@ public:
 	/// @param filename Name of the file to be open
 		NVBFile* openFile( QString filename );
 		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
+		void openFile( const NVBAssociatedFilesInfo & info, const QObject * receiver );
 
 	/// Load only info from \a filename. Reuses loaded files if any
 	/// @param filename Name of the file for the info to be read from.
@@ -128,11 +159,20 @@ public:
 	/// Files in \a files will be taken into account and won't be reloaded
 		QList<NVBAssociatedFilesInfo> associatedFilesFromList(QStringList names, QList<NVBAssociatedFilesInfo> * old_files = 0, QList<int> * deleted = 0 ) const;
 
+	/// 
+		QList<QAction*> generatorActions() const { return gActions;}
+
 private slots:
 	/// Put file in the dead tree
 		void bury(NVBFile *);
 	/// Removes the file associated with \a filename from all caches
 		void release(QString filename);
+	/// Removes a finished loader
+		void removeLoader();
+	/// Enables/disables a generator. The object will be cast to NVBFileGenerator
+		void changeGenerator(QObject * go);
+	/// Updates wildcard list
+		void updateWildcards();
 };
 
 Q_DECLARE_METATYPE(NVBFileFactory*);

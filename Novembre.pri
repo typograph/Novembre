@@ -6,9 +6,9 @@ CONFIG += NVBLog
 
 # Select views to use
 CONFIG +=
-					NVB2DView \
+          NVB2DView				NVB2DView \
 #          NVBGraphView \
-#          NVB3DView \
+#          NVB3DView
 
 
 # Compile plugins as shared libraries
@@ -25,14 +25,15 @@ CONFIG -= debug
 CONFIG += release
 
 # Use qwt from these locations
-unix { 
-    INCLUDEPATH += /usr/include/qwt5
-    LIBS += -lqwt
+unix {
+    INCLUDEPATH += /usr/include/qwt6
+    LIBS += -lqwt6
 }
 win32 { 
-    INCLUDEPATH += ../qwt-5.2.0/src/
-    LIBS += -L../qwt-5.2.0/lib \
-						-lqwt
+  INCLUDEPATH += ../qwt-6.0.0/src/
+  LIBS += \
+    -L../qwt-6.0.0/lib \
+    -lqwt6
 }
 
 # Installation paths for Novembre binaries

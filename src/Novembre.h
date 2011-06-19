@@ -22,7 +22,11 @@
 #ifndef NVB_H
 #define NVB_H
 
-#define NVB_VERSION "0.0.5-"
+#ifdef NVB_DEBUG
+#define NVB_VERSION "0.0.5d [DEBUG]"
+#else
+#define NVB_VERSION "0.0.5d"
+#endif
 
 #include "NVBMain.h"
 #include "NVBLogger.h"
@@ -40,6 +44,10 @@ private:
   QStringList filesSupplied;
   QUdpSocket msgSocket;
   NVBMain * mainWindow;
+	QSettings * conf;
+
+	bool socketBusy;
+	bool firstrun;
 
   void parseArguments();
 public:
@@ -50,6 +58,10 @@ public:
   QString applicationVersion() { return NVB_VERSION; }
   Q_PROPERTY(QString applicationVersion READ applicationVersion);
 #endif
+
+	bool otherInstanceIsRunning();
+	void passParamsToOtherInstance();
+	void createFactories();
 
   void setMainWindow(NVBMain * widget);
 
