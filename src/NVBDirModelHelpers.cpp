@@ -408,6 +408,15 @@ void NVBDirEntry::addFolder(NVBDirEntry * folder)
     }
 }
 
+void NVBDirEntry::insertFolder(int index, NVBDirEntry *folder) {
+	if (folders.indexOf(folder) == -1 ) {
+		emit beginOperation(this,index,1,FolderInsert);
+		folders.insert(index,folder);
+		folder->sort(sorter);
+		emit endOperation();
+		}
+}
+
 void NVBDirEntry::refreshSubfolders(NVBFileFactory * fileFactory)
 {
   foreach (NVBDirEntry * e, folders)

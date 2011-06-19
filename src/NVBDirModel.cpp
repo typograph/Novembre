@@ -61,6 +61,23 @@ QModelIndex NVBDirModel::addFolderItem( QString label, QString path, bool recurs
   return createIndex(_parent->folders.size()-1,0,_parent);  
 }
 
+void NVBDirModel::editFolderItem(QString label, QString path, bool recursive, const QModelIndex &index) {
+	NVBDirEntry * parent = indexToParentEntry(index);
+	NVBDirEntry * entry = parent->folders.at(index.row());
+
+	// The biggest problem is to keep the entry at the same position in the list
+
+	if (path != entry->dir.path() || (recursive != entry->isRecursive() && !path.isEmpty())) {
+		removeItem(index);
+		parent->insertFolder(index.row(),new NVBDirEntry(parent,label,QDir(path, fileFactory->getDirFilter()),recursive));
+		}
+	else {
+		entry->label = label;
+		emit dataChanged(index,index);
+		}
+}
+
+
 int NVBDirModel::rowCount( const QModelIndex & parent ) const
 { 
   if (parent.column() > 0)
@@ -100,13 +117,17 @@ int NVBDirModel::columnCount( const QModelIndex & parent ) const
 
 Qt::ItemFlags NVBDirModel::flags( const QModelIndex & index ) const
 {
+
 	if (!index.isValid()) // || index.column()
     return QAbstractItemModel::flags(index);
+
+//	return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 
 	if (isAFile(index) || indexToEntry(index)->getStatus() != NVBDirEntry::Error)
 		return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 	else
 		return Qt::ItemIsSelectable; // QAbstractItemModel::flags(index)
+
 }
 
 QVariant NVBDirModel::data( const QModelIndex & index, int role ) const
@@ -135,11 +156,21 @@ QVariant NVBDirModel::data( const QModelIndex & index, int role ) const
   else {
     NVBDirEntry * entry = indexToEntry(index);
     if (index.column() != 0) return QVariant();
-    if (role == Qt::DisplayRole)
-      return entry->label;
-    else if (!entry->isContainer())
-      return entry->dir.path();
-    return QVariant();
+		switch(role) {
+			case Qt::DisplayRole:
+				return entry->label;
+			case Qt::DecorationRole:
+			case Qt::BackgroundRole:
+			case Qt::ForegroundRole:
+				return (indexToEntry(index)->getStatus() == NVBDirEntry::Error) ? QBrush(Qt::red) : QBrush(Qt::black);
+			case Qt::ToolTipRole:
+				if (!entry->isContainer())
+					return entry->dir.path();
+				else
+					return QVariant();
+			default:
+				return QVariant();
+			}
     }
   return QVariant();
 }
@@ -177,21 +208,27 @@ bool NVBDirModel::isAFile( const QModelIndex & index ) const
 {
   if (!(index.isValid()))
     return false; // it's root
-/*   
-   {
-		NVBOutputError("Invalid index : can lead to all sorts of behavior");
-    throw nvberr_invalid_input;
-    }
-*/
   NVBDirEntry * entry = indexToParentEntry(index);
     return (index.row() >= entry->folders.size());
 }
+
+bool NVBDirModel::isRecursive( const QModelIndex& index ) const {
+	if (!(index.isValid()))
+		return false; // it's root
+
+	NVBDirEntry * entry = indexToEntry(index);
+		return (entry && entry->isRecursive());
+}
+
 
 bool NVBDirModel::hasChildren( const QModelIndex & parent ) const
 {
   if (parent.column() > 0)
     return false;
-  return !isAFile(parent);
+	if (isAFile(parent))
+		return false;
+
+	return (indexToEntry(parent)->getStatus() != NVBDirEntry::Error);
 }
 
 QModelIndex NVBDirModel::index( int row, int column, const QModelIndex & parent ) const
