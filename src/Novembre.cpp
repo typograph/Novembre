@@ -27,9 +27,9 @@
 #include <stdlib.h>
 
 #include "Novembre.h"
+#include "NVBMain.h"
 #include "NVBSettings.h"
-#include <QDir>
-#include <QDebug>
+#include <QtCore/QDir>
 
 int main(int argc, char *argv[])
 {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
 		app.createFactories();
 
-    NVBMain widget;
+		NVBMain widget;
     widget.setWindowTitle( QString("Novembre") );
     widget.show();
     
@@ -56,47 +56,17 @@ int main(int argc, char *argv[])
     }
 }
 
-/*
- So, the working order is as follows:
-
-  1. Main window is loaded. Configuration options are loaded.
-  2. If browser window was not closed last time or the user presses the button:
-    2a. Main window loads the browser window, directory list and files are loaded
-  3. When the user chooses the file, page tree is loaded together with the miniatures.
-  3x. if the user chooses another file, the tree is killed and then rebuilt.
-  4. When the user chooses the data page the window receives the pointer to the corresponding tree leaf.
-  6. When the data window is closed, the modified pages get freed, however the tree doesn't, even after all the data windows are closed. Up to 5 file trees stay in memory.
-  7. When the browser is closed, the changed directory tree is written back to the configuration file.
-  8. When the main window is closed, all the trees are freed.
-
-*/
-
 NVBApplication::NVBApplication( int & argc, char ** argv )
-: QApplication(argc,argv),confile(QString("%1/.NVB").arg(QDir::homePath()))
+: NVBCoreApplication(argc,argv)
+, confile(QString("%1/.NVB").arg(QDir::homePath()))
 , conf(0)
 , socketBusy(false)
 , firstrun(false)
 { 
-#if QT_VERSION >= 0x040400
-	setApplicationVersion(NVB_VERSION);
-#endif
-
-	setQuitOnLastWindowClosed(true);
-
-#ifdef NVB_ENABLE_LOG
-// For threads, we have to do that
-	qRegisterMetaType<NVB::LogEntryType>("NVB::LogEntryType");
-	NVBLogger * l = new NVBLogger(this);
-	setProperty("Logger",QVariant::fromValue(l));
-	connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),this,SLOT(message(NVB::LogEntryType, QString, QString)));
-#endif
-//  connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),qobject_cast<NVBApplication*>(this),SLOT(message(NVB::LogEntryType, QString, QString)));
-
-  // Loading objects
-
+// Loading objects
 	parseArguments();
 
-  // Configuration
+	// Configuration
 
   // TODO system dependent config file
 
@@ -121,6 +91,7 @@ NVBApplication::NVBApplication( int & argc, char ** argv )
       }
 #endif
 
+#ifndef NVB_BROWSER_ONLY
   // Check if we are the only instance running
 
   if (!conf->contains("UDPPort") && !conf->contains("KeepSingle")) {
@@ -142,6 +113,7 @@ NVBApplication::NVBApplication( int & argc, char ** argv )
 		NVBOutputPMsg("UDP Port free. Novembre instance starting...");
 		connect(&msgSocket,SIGNAL(readyRead()),this,SLOT(openFileFrocketData()));
 		}
+#endif
 
 }
 
@@ -190,37 +162,6 @@ void NVBApplication::createFactories() {
 		}
 }
 
-bool NVBApplication::notify( QObject * receiver, QEvent * event )
-{
-  try {
-    return QApplication::notify(receiver,event);
-    }
-  catch (int err) {
-		NVBOutputError(QString("Uncaught error #%1").arg(err));
-    return false;
-    }
-  catch (...) {
-		NVBOutputError("Fatal error");
-    return false;
-    }
-/*  catch (...) {
-    qDebug() << "NVBApplication::notify" << "->" << "Fatal error. Logger malfunctioning.";
-    return false;
-    }*/
-}
-
-#ifdef NVB_ENABLE_LOG
-void NVBApplication::message(NVB::LogEntryType type, QString issuer, QString text)
-{
-  if (type == NVB::CriticalErrorEntry)
-    QMessageBox::critical(0,issuer,text);
-  else if (type == NVB::ErrorEntry)
-    qDebug() << issuer << "->" << text;
-  else if (type == NVB::DebugEntry)
-    qDebug() << text;
-}
-#endif
-
 void NVBApplication::openFileFrocketData() {
   QByteArray datagram;
   datagram.resize(msgSocket.pendingDatagramSize());
@@ -250,7 +191,4 @@ NVBApplication::~ NVBApplication()
   delete conf;
   delete property("filesFactory").value<NVBFileFactory*>();
   delete property("toolsFactory").value<NVBToolsFactory*>();
-#ifdef NVB_ENABLE_LOG
-  delete property("Logger").value<NVBLogger*>();
-#endif
 }
