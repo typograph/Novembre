@@ -24,33 +24,19 @@
 
 #define NVB_VERSION "0.1.0-"
 
-#include "NVBBrowser.h"
-#include "NVBLogger.h"
+#include "NVBCoreApplication.h"
 
-#include <QApplication>
+class NVBBrowser;
 
-// using namespace NVBErrorCodes;
-
-class NVBApplication : public QApplication {
+class NVBBrowserApplication : public NVBCoreApplication {
 Q_OBJECT
 private:
   QString confile;
 	NVBBrowser * mainWindow;
 public:
-  NVBApplication ( int & argc, char ** argv );
-  virtual ~NVBApplication();
-  virtual bool notify ( QObject * receiver, QEvent * event ) ;
-#if QT_VERSION < 0x040400
-  QString applicationVersion() { return NVB_VERSION; }
-  Q_PROPERTY(QString applicationVersion READ applicationVersion);
-#endif
-
+  NVBBrowserApplication ( int & argc, char ** argv );
+  virtual ~NVBBrowserApplication();
 	void setMainWindow(NVBBrowser * widget);
-
-#ifdef NVB_ENABLE_LOG
-private slots:
-  void message(NVB::LogEntryType type, QString issuer, QString text);
-#endif
 };
 
 #endif

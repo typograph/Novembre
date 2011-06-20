@@ -25,15 +25,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Novembre.h"
+#include "NvBrowserApp.h"
 #include "NVBSettings.h"
-#include <QDir>
-#include <QDebug>
+#include "NVBBrowser.h"
+#include "NVBFileFactory.h"
+#include <QtGui/QMessageBox>
 
 int main(int argc, char *argv[])
 {
   try {
-    NVBApplication app(argc, argv);
+    NVBBrowserApplication app(argc, argv);
     
 		NVBBrowser widget;
 		widget.setWindowTitle( QString("Novembre Browser") );
@@ -48,21 +49,10 @@ int main(int argc, char *argv[])
     }
 }
 
-NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,argv),confile(QString("%1/.NVB").arg(QDir::homePath()))
+NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
+: NVBCoreApplication(argc,argv)
+, confile(QString("%1/.NVB").arg(QDir::homePath()))
 { 
-#if QT_VERSION >= 0x040400
-  setApplicationVersion(NVB_VERSION);
-#endif
-
-  setQuitOnLastWindowClosed(true);
-
-#ifdef NVB_ENABLE_LOG
-// For threads, we have to do that
-  qRegisterMetaType<NVB::LogEntryType>("NVB::LogEntryType");
-  NVBLogger * l = new NVBLogger(this);
-  setProperty("Logger",QVariant::fromValue(l));
-  connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),this,SLOT(message(NVB::LogEntryType, QString, QString)));
-#endif
 
   // Loading objects
 
@@ -118,48 +108,14 @@ NVBApplication::NVBApplication( int & argc, char ** argv ):QApplication(argc,arg
 
 }
 
-bool NVBApplication::notify( QObject * receiver, QEvent * event )
-{
-  try {
-    return QApplication::notify(receiver,event);
-    }
-  catch (int err) {
-		NVBOutputError(QString("Uncaught error #%1").arg(err));
-    return false;
-    }
-  catch (...) {
-		NVBOutputError("Fatal error");
-    return false;
-    }
-/*  catch (...) {
-    qDebug() << "NVBApplication::notify" << "->" << "Fatal error. Logger malfunctioning.";
-    return false;
-    }*/
-}
-
-#ifdef NVB_ENABLE_LOG
-void NVBApplication::message(NVB::LogEntryType type, QString issuer, QString text)
-{
-  if (type == NVB::CriticalErrorEntry)
-    QMessageBox::critical(0,issuer,text);
-  else if (type == NVB::ErrorEntry)
-    qDebug() << issuer << "->" << text;
-  else if (type == NVB::DebugEntry)
-		qDebug() << "DEBUG : " << text;
-}
-#endif
-
-void NVBApplication::setMainWindow(NVBBrowser * widget) {
+void NVBBrowserApplication::setMainWindow(NVBBrowser * widget) {
   mainWindow = widget;
   }
 
-NVBApplication::~ NVBApplication()
+NVBBrowserApplication::~ NVBBrowserApplication()
 {
   QSettings * conf = property("NVBSettings").value<QSettings*>();
   conf->sync();
   delete conf;
-  delete property("toolsFactory").value<NVBToolsFactory*>();
-#ifdef NVB_ENABLE_LOG
-  delete property("Logger").value<NVBLogger*>();
-#endif
+  delete property("filesFactory").value<NVBFilesFactory*>();
 }
