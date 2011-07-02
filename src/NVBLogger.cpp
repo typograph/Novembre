@@ -17,6 +17,7 @@
 #include <QtCore/QVariant>
 #include <QtCore/QFile>
 #include <QtCore/QRegExp>
+#include <QtCore/QMetaObject>
 
 void NVBLogger::outputMessage(NVB::LogEntryType type, QString issuer, QString text) {
 //	static QRegExp fnct = QRegExp("^([^ ]* )?([^ ]*)\\(");
@@ -30,7 +31,14 @@ void NVBLogger::outputMessage(NVB::LogEntryType type, QString issuer, QString te
   }
 
 void NVBOutputMessage(NVB::LogEntryType type,QString issuer, QString text){
-  qApp->property("Logger").value<NVBLogger*>()->outputMessage(type,issuer,text);
+	QMetaObject::invokeMethod(
+		qApp->property("Logger").value<NVBLogger*>(),
+		"outputMessage",
+		Q_ARG(NVB::LogEntryType,type),
+		Q_ARG(QString,issuer),
+		Q_ARG(QString,text)
+		);
+//  ->outputMessage(type,issuer,text);
 }
 
 void NVBOutputFileErrorMessage(QString Issuer, const QFile * file) {
