@@ -36,7 +36,7 @@ private:
 public:
   NVBBrowserApplication ( int & argc, char ** argv );
   virtual ~NVBBrowserApplication();
-	void setMainWindow(NVBBrowser * widget);
+//	void setMainWindow(NVBBrowser * widget);
 };
 
 #endif

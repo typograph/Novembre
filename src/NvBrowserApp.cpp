@@ -30,17 +30,19 @@
 #include "NVBBrowser.h"
 #include "NVBFileFactory.h"
 #include <QtGui/QMessageBox>
+#include <QtGui/QMainWindow>
+#include "NVBMainWindow.h"
+#include "NVBLogUtils.h"
 
 int main(int argc, char *argv[])
 {
   try {
     NVBBrowserApplication app(argc, argv);
     
-		NVBBrowser widget;
-		widget.setWindowTitle( QString("Novembre Browser") );
-    widget.show();
-    
-    app.setMainWindow(&widget);
+		NVBMainWindow main;
+		main.setCentralWidget(new NVBBrowser());
+		main.setWindowTitle( QString("Novembre Browser") );
+		main.show();
     
     return app.exec();
     }
@@ -51,7 +53,7 @@ int main(int argc, char *argv[])
 
 NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 : NVBCoreApplication(argc,argv)
-, confile(QString("%1/.NVB").arg(QDir::homePath()))
+, confile(QString("%1/.NVB.0.1").arg(QDir::homePath()))
 { 
 
   // Loading objects
@@ -108,14 +110,17 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 
 }
 
+/*
 void NVBBrowserApplication::setMainWindow(NVBBrowser * widget) {
   mainWindow = widget;
+	NVBMainWindow * mw = new QMainWindow(this);
+	
   }
-
+*/
 NVBBrowserApplication::~ NVBBrowserApplication()
 {
   QSettings * conf = property("NVBSettings").value<QSettings*>();
   conf->sync();
   delete conf;
-  delete property("filesFactory").value<NVBFilesFactory*>();
+  delete property("filesFactory").value<NVBFileFactory*>();
 }
