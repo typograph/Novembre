@@ -26,6 +26,8 @@ class NVBAxisTMap : public NVBAxisMap {
 			return T();
 			}
 
+		virtual NVBAxisTMap<T> * copy() { return new NVBAxisTMap<T>(vs); }
+
 		NVBVariant value(QVector<axissize_t> indexes) {
 			return NVBVariant::fromValue<T>(value(indexes.first()));
 			}
@@ -101,6 +103,19 @@ class NVBAxisPhysMap : public NVBAxisTMap<NVBPhysValue> {
 		inline NVBPhysValue origin() const { return NVBPhysValue(o,dim); }
 		inline NVBPhysValue interval() const { return NVBPhysValue(d,dim); }
 //		NVBPhysValue end() const;
+
+		virtual NVBAxisPhysMap * copy() { 
+			switch (t) {
+				case NVBAxisMap::General :
+					return new NVBAxisPhysMap(vs);
+				case NVBAxisMap::Linear :
+					return new NVBAxisPhysMap(o,d,dim);
+				default:
+					NVBOutputError("Unrecognized map type");
+					return 0;
+				}
+			}
+	
 };
 
 class NVBAxisPointMap : public NVBAxisTMap<NVBPhysPoint> {
@@ -112,6 +127,8 @@ class NVBAxisPointMap : public NVBAxisTMap<NVBPhysPoint> {
 		NVBAxisPointMap(QList<NVBPhysPoint> points):NVBAxisTMap<NVBPhysPoint>(points) {;}
 
 		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
+		
+		virtual NVBAxisPointMap * copy() { return new NVBAxisPointMap(vs); }
 };
 
 class NVBAxes2DGridMap : public NVBAxisMap {
@@ -124,6 +141,7 @@ class NVBAxes2DGridMap : public NVBAxisMap {
 		inline NVBAxisMap::MapType mapType() const { return NVBAxisMap::Linear2D; }
 		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
 		virtual inline int dimension() const { return 2; }
+		virtual inline int valType() const { return qMetaTypeId<NVBPhysPoint>(); }
 
 		inline NVBPhysPoint value(axissize_t i, axissize_t j) const {
 			return o + t.map(QPointF(i,j));
@@ -135,6 +153,8 @@ class NVBAxes2DGridMap : public NVBAxisMap {
 
 		inline NVBPhysPoint origin() const { return o; }
 		inline QTransform transformation() const { return t; }
+		
+		virtual NVBAxes2DGridMap * copy() { return new NVBAxes2DGridMap(o,t); }
 };
 
 class NVBAxisColorMap : public NVBAxisTMap<QColor> {
@@ -142,6 +162,8 @@ class NVBAxisColorMap : public NVBAxisTMap<QColor> {
 		NVBAxisColorMap(QList<QColor> colors):NVBAxisTMap<QColor>(colors) {;}
 
 		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Color; }
+		
+		virtual NVBAxisColorMap * copy() { return new NVBAxisColorMap(vs); }
 };
 
 #endif

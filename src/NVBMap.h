@@ -12,8 +12,8 @@ class QPixmap;
 class NVBDataSet;
 
 class NVBAxisMap {
-  private:
-  public:
+	private:
+	public:
 		NVBAxisMap() {;}
 		virtual ~NVBAxisMap() {;}
 
@@ -22,7 +22,7 @@ class NVBAxisMap {
 		General = 0, /// Arbitrary mapping, any distribution.
 		Linear = 1,  /// Linear mapping, the resulting points are linearly distributed
 		Linear2D = 2 /// Bilinear mapping, the resulting points are on a regular grid (not necessarily rectangular).
-		             /// A map of this type can be cast into QTransform.
+								/// A map of this type can be cast into QTransform.
 		};
 
 	/// Defines the type of output values.
@@ -33,13 +33,15 @@ class NVBAxisMap {
 		Color = 3     /// QColor
 		};
 
-    virtual int dimension() const = 0;
+		virtual int dimension() const = 0;
 
-    virtual int valType() const = 0;
-    virtual NVBAxisMap::MapType mapType() const { return General; }
-    virtual NVBAxisMap::ValueType mappingType() const = 0;
+		virtual int valType() const = 0;
+		virtual NVBAxisMap::MapType mapType() const { return General; }
+		virtual NVBAxisMap::ValueType mappingType() const = 0;
 
 		virtual NVBVariant value(QVector<axissize_t> indexes) = 0;
+		
+		virtual NVBAxisMap * copy() = 0;
 };
 
 class NVBColorMap;
@@ -128,12 +130,14 @@ public slots:
 
 class NVBColorMap {
 	public:
-    NVBColorMap() {;}
-    virtual ~NVBColorMap() {;}
+		NVBColorMap() {;}
+		virtual ~NVBColorMap() {;}
 
-    virtual QRgb colorize(double z) const = 0;
+		virtual QRgb colorize(double z) const = 0;
 
 		NVBColorInstance * instantiate(const NVBDataSet * data) const { return new NVBColorInstance(data,this); }
+		
+		virtual NVBColorMap * copy() = 0;
 };
 
 
