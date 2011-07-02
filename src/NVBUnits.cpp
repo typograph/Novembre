@@ -99,7 +99,7 @@ double NVBUnits::multFromChar(QChar c)
   switch (c.unicode()) {
       case 0      : return 1;
       case 0x03BC : return 1e-06; // mikro- v2
-      default     : return 1;
+      default     : return 0;
       }
 }
 
@@ -234,7 +234,7 @@ QString NVBPhysValue::toString(int min1Pos, int max1Pos, int nSDig) const
     return QString("0 %1").arg(dim.unitFromOrder(0));
 
   if (!dim.isScalable())
-    return QString::number(value,'g',nSDig);
+    return QString("%1 %2").arg(QString::number(value,'g',nSDig)).arg(dim.toStr());
 
   if (max1Pos - min1Pos < 2) max1Pos = min1Pos+2;
 
@@ -249,12 +249,12 @@ QString NVBPhysValue::toString(int min1Pos, int max1Pos, int nSDig) const
     else
       p = 0;
     }
-  else {
-    p =nSDig - h - m - 1;
-    if (p < 0) p = 0;
-    }
-
-  return QString("%1 %2").arg(value*exp10(m),0,'f',p).arg(dim.unitFromOrder(-m));
+  else if (nSDig < 0)
+		p = 0;
+  else
+    p = nSDig - h - m - 1;
+ 
+  return QString("%1 %2").arg(exp10(m)*round(value*pow(10,m+p))*pow(10,-m-p),0,'f',p > 0 ? p : 0).arg(dim.unitFromOrder(-m));
 }
 
 QString NVBPhysValue::toStringWithOrder(int order) const
