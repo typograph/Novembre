@@ -12,16 +12,19 @@
 #ifndef NVBFACTORY_H
 #define NVBFACTORY_H
 
-#include <QtGui/QApplication>
+//#include <QtGui/QApplication>
 #include <QtCore/QList>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
-#include <QtCore/QDir>
-#include <QtCore/QLibrary>
-#include <QtCore/QThread>
-#include <QtCore/QEvent>
+//#include <QtCore/QDir>
+//#include <QtCore/QLibrary>
+//#include <QtCore/QThread>
+//#include <QtCore/QEvent>
 #include <QtCore/QSignalMapper>
 //#include <dlfcn.h>
+
+#include <QtCore/QFuture>
+#include <QtCore/QtConcurrentRun>
 
 #include "NVBLogger.h"
 #include "NVBFile.h"
@@ -29,17 +32,6 @@
 #include "NVBFileGenerator.h"
 
 class QAction;
-
-// using namespace NVBErrorCodes;
-
-class NVBFileLoadEvent : public QEvent {
-public:
-	QString name;
-	NVBFile * file;
-	NVBFileLoadEvent(QString n, NVBFile * f):QEvent(QEvent::User),name(n),file(f) {;}
-};
-
-
 
 class NVBFileQueue : protected QList<NVBFile*> {
 private:
@@ -62,15 +54,6 @@ public:
 		virtual NVBFile * consult(const NVBAssociatedFilesInfo & info);
 };
 
-class NVBFileLoader : public QThread {
-Q_OBJECT
-public:
-	NVBAssociatedFilesInfo info;
-	NVBFile * file;
-	QList<QObject *> customers;
-	NVBFileLoader(const NVBAssociatedFilesInfo & i, QObject * r):info(i),file(0),customers( QList<QObject*>() << r ) {;}
-	virtual void run();
-};
 
 /**
  * \class NVBFileFactory
@@ -87,13 +70,7 @@ private:
 
 	/// Loaded files in use
 		QList<NVBFile *> files;
-	
-	/// Loader threads
-		QList<NVBFileLoader *> loaders;
-
-	/// Check if a loader for a file is created already
-		NVBFileLoader * getLoaderInProgress(const NVBAssociatedFilesInfo & info);
-
+		
 	/// Find file in list by name
 		int loadedFileIndex( QString filename );
 		NVBFile * retrieveLoadedFile( QString filename );
@@ -109,12 +86,12 @@ private:
 
 	/// Load file from \a filename. Returns NULL if file wasn't opened.
 	/// The returned file is already considered in use.
-		inline NVBFile* loadFile( QString filename ) { return loadFile(associatedFiles(filename)); }
-		NVBFile* loadFile( const NVBAssociatedFilesInfo & info );
+		inline NVBFile* openFile( QString filename, bool track = true ) { return loadFile(associatedFiles(filename),track); }
+		NVBFile* openFile( const NVBAssociatedFilesInfo & info, bool track = true );
 
-	/// Load only info from \a filename. 
-		inline NVBFileInfo* loadFileInfo( QString filename ) const { return loadFileInfo(associatedFiles(filename)); }
-		inline NVBFileInfo* loadFileInfo( const NVBAssociatedFilesInfo & info ) const { return info.loadFileInfo(); }
+		NVBFileInfo* openFileInfo( QString filename ) const;
+		inline NVBFileInfo* openFileInfo( const NVBAssociatedFilesInfo & info ) const
+			{ return info.loadFileInfo(); }
 
 	/// Cache of parameters available from generators
 		QStringList commentNames;
@@ -129,18 +106,54 @@ public:
 	NVBFileFactory();
 	virtual ~NVBFileFactory();
 
-	/// Checks all caches for file \a filename, if found, returns it, if not, uses \a loadFile
-	/// @param filename Name of the file to be open
-		NVBFile* openFile( QString filename );
-		NVBFile* openFile( const NVBAssociatedFilesInfo & info );
-		void openFile( const NVBAssociatedFilesInfo & info, const QObject * receiver );
+	/**
+	 * Blocking version of loadFile
+	 * 
+	 */
+		NVBFile* getFile( QString filename, bool track = true );
+		NVBFile* getFile( const NVBAssociatedFilesInfo & info, bool track = true );
+//		void openFile( const NVBAssociatedFilesInfo & info, const QObject * receiver );
 
-	/// Load only info from \a filename. Reuses loaded files if any
-	/// @param filename Name of the file for the info to be read from.
-	/// @return info from file \a filename
+	/**
+	 * Asyncronously loads a file.
+	 * 
+	 * Checks all caches for file \a filename, if found, returns it, if not, uses \a loadFile
+	 * @param filename Name of the file to be open
+	 *
+	 */
+		QFuture<NVBFile*> loadFile( QString filename, bool track = true )
+			{ return QtConcurrent::run(this, static_cast<NVBFile * (NVBFileFactory::*)(QString, bool)>(&NVBFileFactory::getFile),filename,track); }
+	/**
+	 * \overload
+	 * 
+	 */
+		QFuture<NVBFile*> loadFile( const NVBAssociatedFilesInfo & info, bool track = true )
+			{ return QtConcurrent::run(this, static_cast<NVBFile * (NVBFileFactory::*)(const NVBAssociatedFilesInfo &, bool)>(&NVBFileFactory::getFile),info,track); }
+
+	/**
+	 * Blocking version of loadFileInfo
+	 */
+	/// Load only info from \a filename. 
 		NVBFileInfo* getFileInfo( QString filename );
 		NVBFileInfo* getFileInfo( const NVBAssociatedFilesInfo & info );
 
+	/** 
+	 * Asyncronously loads a fileInfo object
+	 * 
+	 * Load only info from \a filename. Reuses loaded files if any
+	 * @param filename Name of the file for the info to be read from.
+	 * @return info from file \a filename
+	 * 
+	 */
+		QFuture<NVBFileInfo*> loadFileInfo( QString filename )
+			{ return QtConcurrent::run(this, static_cast<NVBFileInfo * (NVBFileFactory::*)(QString)>(&NVBFileFactory::getFileInfo),filename); }
+		QFuture<NVBFileInfo*> loadFileInfo( const NVBAssociatedFilesInfo & info )
+			{ return QtConcurrent::run(this, static_cast<NVBFileInfo * (NVBFileFactory::*)(const NVBAssociatedFilesInfo &)>(&NVBFileFactory::getFileInfo),info); }
+	
+
+	/// Returns info about files associated with name \a filename
+		NVBAssociatedFilesInfo associatedFiles(QString filename) const;
+		
 	/// Generates a string of openable files in the format acceptable by \c QDir
 		QStringList getDirFilters() const;
 		inline QString getDirFilter() const { return getDirFilters().join(";"); }
@@ -150,15 +163,6 @@ public:
 	/// Returns possible comment fields
 		QStringList availableInfoFields() const { return commentNames; }
 		
-	/// Returns info about files associated with name \a filename
-		NVBAssociatedFilesInfo associatedFiles(QString filename) const;
-	/// Return the smallest possible list of all new file associations in folder.
-	/// Files in \a files will be taken into account and won't be reloaded
-		QList<NVBAssociatedFilesInfo> associatedFilesFromDir(const QDir & d, QList<NVBAssociatedFilesInfo> * old_files = 0, QList<int> * deleted = 0 ) const;
-	/// Return the smallest possible set of files loaded from the supplied list.
-	/// Files in \a files will be taken into account and won't be reloaded
-		QList<NVBAssociatedFilesInfo> associatedFilesFromList(QStringList names, QList<NVBAssociatedFilesInfo> * old_files = 0, QList<int> * deleted = 0 ) const;
-
 	/// 
 		QList<QAction*> generatorActions() const { return gActions;}
 
@@ -167,8 +171,6 @@ private slots:
 		void bury(NVBFile *);
 	/// Removes the file associated with \a filename from all caches
 		void release(QString filename);
-	/// Removes a finished loader
-		void removeLoader();
 	/// Enables/disables a generator. The object will be cast to NVBFileGenerator
 		void changeGenerator(QObject * go);
 	/// Updates wildcard list

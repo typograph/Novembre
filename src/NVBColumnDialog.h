@@ -4,11 +4,10 @@
 #ifndef NVBCOLUMNDIALOG_H
 #define NVBCOLUMNDIALOG_H
 
-#include <QDialog>
-#include <QWidget>
-#include <QStringList>
-#include <QComboBox>
-#include <QFrame>
+#include <QtGui/QDialog>
+#include <QtCore/QStringList>
+#include <QtGui/QComboBox>
+#include <QtGui/QFrame>
 
 #include "NVBColumnsModel.h"
 
@@ -19,25 +18,42 @@ class QPushButton;
 class QRadioButton;
 class QCheckBox;
 
+/**
+ * \class NVBColumnInputWidget
+ * 
+ * Used excludsively by browser, this widget provides a GUI
+ * for editing column format strings.
+ * 
+ * For column format specification \see NVBTokenList.
+ * 
+ * The user GUI is limited to a subset of possible formats,
+ * with an additional "expert" option for entering arbitrary formats.
+ * 
+ * The available fields are
+ * - file parameters
+ * - data parameters
+ * - axis parameters
+ * - comments
+ */
+
 class NVBColumnInputWidget : public QWidget
 {
 	Q_OBJECT
 
   QRadioButton *fileOption;
   QComboBox *fileChoice;
-  QRadioButton *pageOption;
-  QComboBox *pageChoice;
+  QRadioButton *dataOption;
+  QComboBox *dataChoice;
   QRadioButton *topoOption;
   QComboBox *topoChoice;
   QRadioButton *specOption;
   QComboBox *specChoice;
-  QComboBox *customChoice;
-  QRadioButton *expertOption;
-  QLineEdit *expertEdit;
-
-  QRadioButton *customOption;
+  QRadioButton *commentOption;
+  QComboBox *commentChoice;
   QCheckBox *topoCustomCheck;
   QCheckBox *specCustomCheck;
+  QRadioButton *expertOption;
+  QLineEdit *expertEdit;
 
 public:
   NVBColumnInputWidget(NVBTokens::NVBTokenList l, QWidget * parent = 0);
@@ -48,7 +64,7 @@ private:
   void tokenListToLayout(NVBTokens::NVBTokenList l);
 private slots:
 	void switchToFile();
-	void switchToPage();
+	void switchToData();
 	void switchToTopo();
 	void switchToSpec();
 	void switchToCustom();

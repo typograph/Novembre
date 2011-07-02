@@ -38,7 +38,7 @@ NVBVariant NVBFile::collectComments(const QString& key) const {
 		return comments.value(key);
 	else {
 		NVBVariantList l;
-		foreach(NVBDataSource * s, *this) {
+		NVB_FOREACH(NVBDataSource * s, this) {
 			NVBVariant v = s->collectComments(key);
 			if (v.isValid()) {
 				if (v.isAList())

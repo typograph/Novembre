@@ -24,10 +24,12 @@ void reverse_byte_order<4>(char * ptr) {
 
 template<>
 void reverse_byte_order<8>(char * ptr) {
+	// Here for some reason %%ebx is occupied
+	// g++ complains about hot it can't find BREG
 	asm(
 		"bswap %%eax;"
-		"bswap %%ebx;"
-		: "=a"(*((quint32*)ptr)), "=b"(*((quint32*)(ptr+4)))
+		"bswap %%ecx;"
+		: "=a"(*((quint32*)ptr)), "=c"(*((quint32*)(ptr+4)))
 		: "0"(*((quint32*)(ptr+4))), "1"(*((quint32*)ptr))
 		);
 }

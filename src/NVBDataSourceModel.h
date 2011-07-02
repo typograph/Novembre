@@ -72,7 +72,7 @@ private:
 	NVBDSLModelSubIndex map(int k) const;
 
 public:
-	explicit NVBDataSourceListModel(QList< NVBDataSource * > sources);
+	explicit NVBDataSourceListModel( const QList< NVBDataSource * > * sources);
 	virtual ~NVBDataSourceListModel();
 
   virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const;

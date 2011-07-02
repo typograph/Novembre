@@ -26,6 +26,8 @@
 NVBDirModel::NVBDirModel(NVBFileFactory * _fileFactory, QObject * parent)
  : QAbstractItemModel( parent ), fileFactory(_fileFactory)
 {
+	qRegisterMetaType<NVBDirEntry::ContentChangeType>();
+	
 	columns = new NVBDirModelColumns();
 	sortOrder = Qt::AscendingOrder;
 	sortColumn = 0;
@@ -89,7 +91,7 @@ int NVBDirModel::rowCount( const QModelIndex & parent ) const
   NVBDirEntry * entry;
   entry = indexToEntry(parent);
     
-	if (!entry->isPopulated()) {
+	if (entry->getStatus() == NVBDirEntry::Virgin) {
       entry->populate(fileFactory);
       connectEntry(entry);
       watcher->addPath(entry->dir.path());

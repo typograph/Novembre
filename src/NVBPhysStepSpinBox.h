@@ -3,13 +3,13 @@
 
 #include <QSpinBox>
 #include <QValidator>
-#include "NVBDimension.h"
+#include "NVBUnits.h"
 #include "NVBScaler.h"
 
 class NVBPhysStepSpinBox : public QSpinBox {
 Q_OBJECT
 private:
-  mutable NVBDimension dim;
+  mutable NVBUnits dim;
   NVBValueScaler<int,double> dataScaler;
 
 private slots:
@@ -18,7 +18,7 @@ private slots:
 protected:
   virtual QString textFromValue ( int value ) const;
 public:
-  NVBPhysStepSpinBox( NVBDimension dimension, double start, double end, int steps, QWidget * parent = 0 );
+  NVBPhysStepSpinBox( NVBUnits dimension, double start, double end, int steps, QWidget * parent = 0 );
   virtual ~NVBPhysStepSpinBox() {;}
 
   NVBPhysValue physValue() const { return NVBPhysValue(value(),dim); }

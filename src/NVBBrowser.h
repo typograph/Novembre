@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov   *
- *   Timofey.Balashov@pi.uka.de   *
+ *   Copyright (C) 2006-2011 by Timofey Balashov                           *
+ *   Timofey.Balashov@pi.uka.de                                            *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,47 +20,37 @@
 #ifndef NVB_BROWSER_H
 #define NVB_BROWSER_H
 
-// #define FULL_PATH 1
-// #define INDEX_PATH 2
+#include <QtGui/QDialog>
+#include <QtGui/QFrame>
+#include <QtCore/QAbstractItemModel>
 
-#include <QWidget>
-
-#include "NVBFile.h"
+#include "NVBFileInfo.h"
 #include "NVBDirModel.h"
-#include "NVBDirViewModel.h"
-#include "NVBDirView.h"
-#include "NVBPageInfoView.h"
-
-#include <QSettings>
-#include <QSplitter>
-#if QT_VERSION >= 0x040300
-#include <QMdiSubWindow>
-#endif
-#include <QDir>
-#include <QMenu>
-#include <QToolButton>
-#include <QComboBox>
-#include <QMessageBox>
-#include <QToolBar>
-#include <QCloseEvent>
-#include <QVBoxLayout>
-#include <QFileDialog>
-#include <QDialog>
-#include <QLineEdit>
-#include <QCheckBox>
-#include <QLabel>
-#include <QPushButton>
-#include <QFrame>
-#include <QDialogButtonBox>
-#include <QInputDialog>
-#include <QPixmap>
-#include <QListView>
-// #include <QItemDelegate>
-#include <QApplication>
-
-//#define NVB_BROWSER_ICONSIZE 64
 
 class NVBFileListView;
+
+class QAction;
+class QLabel;
+class QLineEdit;
+class QCheckBox;
+class QDialogButtonBox;
+class QToolButton;
+class QFileDialog;
+class QToolBar;
+class QActionGroup;
+class QMenu;
+class QSettings;
+class QShowEvent;
+class QCloseEvent;
+
+class NVBFileFactory;
+class NVBFileListView;
+class NVBPageInfoView;
+// class NVBPageRefactorModel;
+class NVBDirModel;
+class NVBDirViewModel;
+class NVBDirView;
+
 
 class NVBFolderInputDialog : public QDialog {
 Q_OBJECT
@@ -111,8 +101,6 @@ private slots:
   void fileSelected();
 };
 
-class NVBPageRefactorModel;
-
 /**
  * \brief Novembre browser window
  *
@@ -120,22 +108,11 @@ class NVBPageRefactorModel;
  * user select the needed file with more ease. It has thumbnails and
  * other different means of making the contents of the files clearer.
  *
- * The class shall use the isSTMFile and loadSTMFile for file lists
  */
-#if QT_VERSION >= 0x040300
-#ifndef NVB_BROWSER_ONLY
-class NVBBrowser: public QMdiSubWindow {
-#else
 class NVBBrowser: public QFrame {
-#endif
-#else
-class NVBBrowser: public QFrame {
-#endif
 Q_OBJECT
 private:
   QToolBar * foldersToolBar;
-//    QAction * plusRootAction;
-//    QAction * plusContainerAction;
   QAction * addRootFolderAction;
   QAction * addFolderAction;
 	QAction * editFolderAction;
@@ -147,7 +124,6 @@ private:
   QAction * showPageInfoAction;
   QAction * setViewFileAction;
   QAction * refreshFoldersContentsAction;
-//     QToolButton * plusButton;
   QActionGroup * iconSizeActionGroup;
 
 	QMenu * foldersMenu;
@@ -158,7 +134,6 @@ private:
 
 	NVBFileListView * fileList;
 	NVBPageInfoView * piview;
-	NVBPageRefactorModel * pageRefactor;
 	NVBDirModel * fileModel;
 	NVBDirViewModel * dirViewModel;
 	NVBDirView * dirView;
@@ -170,9 +145,9 @@ private:
 protected:
   Q_PROPERTY(unsigned short iconSize READ getIconSize());
   unsigned short iconSize;
-  QSettings* confile;
+  QSettings * confile;
 
-  void closeEvent(QCloseEvent *event);
+//  void closeEvent(QCloseEvent * event);
   void populateListLevel(int, QString = QString(), const QModelIndex& parent = QModelIndex());
 
 public:
@@ -180,9 +155,9 @@ public:
   ~NVBBrowser();
 
   virtual void populateList();
-  unsigned short getIconSize() { return iconSize;}
+  unsigned short getIconSize() { return iconSize; }
   
-  virtual QSize sizeHint () const { return confile->value("Browser/Size", QSize(400, 300)).toSize(); }
+  virtual QSize sizeHint () const;
 
 public slots:
 
@@ -212,13 +187,13 @@ private slots:
 	void moveColumn(int,int,int);
 	void columnAction();
 	void populateColumnsMenu();
-	void showColumnsMenu() {columnsMenu->exec(QCursor::pos());}
+	void showColumnsMenu();
 
-	virtual void showEvent ( QShowEvent * event ) { event->accept(); emit shown(); }
+//	virtual void showEvent ( QShowEvent * event ) { event->accept(); emit shown(); }
 
 signals:
-	void shown();
-	void closeRequest();
+//	void shown();
+//	void closeRequest();
 	void pageRequest(const NVBAssociatedFilesInfo &, int pagenum);
 };
 

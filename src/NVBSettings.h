@@ -12,10 +12,10 @@
 #ifndef NVBSETTINGS_H
 #define NVBSETTINGS_H
 
-#include <QDialog>
-#include <QLineEdit>
-#include <QLabel>
-#include <QSettings>
+#include <QtGui/QDialog>
+#include <QtGui/QLineEdit>
+#include <QtGui/QLabel>
+#include <QtCore/QSettings>
 
 Q_DECLARE_METATYPE(QSettings*);
 

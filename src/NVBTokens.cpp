@@ -18,7 +18,7 @@ QMap<NVBFileParamToken::NVBFileParam,NVBDescrPair > NVBTokenList::initFileParamN
   pnames.insert(NVBFileParamToken::FileName,NVBDescrPair("fileName","File name"));
 	pnames.insert(NVBFileParamToken::FileNames,NVBDescrPair("fileNames","Files on disk"));
 	pnames.insert(NVBFileParamToken::FileSize,NVBDescrPair("fileSize","File size"));
-  pnames.insert(NVBFileParamToken::NPages,NVBDescrPair("nPages","Number of pages"));
+  pnames.insert(NVBFileParamToken::NPages,NVBDescrPair("nPages","Number of datasets"));
    
 //   pnames.insert(NVBFileParamToken::,NVBDescrPair("",""));
 
@@ -36,32 +36,30 @@ NVBFileParamToken::NVBFileParam NVBTokenList::findFileParam( QString key )
   return fileParamNames.key(NVBDescrPair(key,QString()));
 }
 
-QMap<NVBPageParamToken::NVBPageParam,NVBDescrPair > NVBTokenList::pageParamNames = NVBTokenList::initPageParamNames();
+QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > NVBTokenList::dataParamNames = NVBTokenList::initDataParamNames();
 
-QMap<NVBPageParamToken::NVBPageParam,NVBDescrPair > NVBTokenList::initPageParamNames( )
+QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > NVBTokenList::initDataParamNames( )
 {
-  QMap<NVBPageParamToken::NVBPageParam,NVBDescrPair > fnames;
+  QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > fnames;
   
-  fnames.insert(NVBPageParamToken::Name,NVBDescrPair("pageName","Page name"));
-  fnames.insert(NVBPageParamToken::DataSize,NVBDescrPair("pageDataSize","Page dimensions"));
-  fnames.insert(NVBPageParamToken::IsSpec,NVBDescrPair("isSpec","Page is a spectroscopy page"));
-  fnames.insert(NVBPageParamToken::IsTopo,NVBDescrPair("isTopo","Page is a topography page"));
-  fnames.insert(NVBPageParamToken::Units,NVBDescrPair("Units","Data units"));
-  fnames.insert(NVBPageParamToken::NAxes,NVBDescrPair("NAxes","Number of axes"));
+  fnames.insert(NVBDataParamToken::Name,NVBDescrPair("dataName","Data name"));
+  fnames.insert(NVBDataParamToken::DataSize,NVBDescrPair("dataSize","Data dimensions"));
+  fnames.insert(NVBDataParamToken::Units,NVBDescrPair("dataUnits","Data units"));
+  fnames.insert(NVBDataParamToken::NAxes,NVBDescrPair("dataNAxes","Number of axes"));
 
-//  fnames.insert(NVBPageParamToken::,NVBDescrPair("",""));
+//  fnames.insert(NVBDataParamToken::,NVBDescrPair("",""));
 
   return fnames;
 }
 
-NVBPageParamToken::NVBPageParam NVBTokenList::findPageParam( QString key )
+NVBDataParamToken::NVBDataParam NVBTokenList::findDataParam( QString key )
 {
-  return pageParamNames.key(NVBDescrPair(key,QString()));
+  return dataParamNames.key(NVBDescrPair(key,QString()));
 }
 
-QString NVBTokenList::namePageParam( NVBPageParamToken::NVBPageParam p )
+QString NVBTokenList::nameDataParam( NVBDataParamToken::NVBDataParam p )
 {
-  return pageParamNames.value(p).verbName();
+  return dataParamNames.value(p).verbName();
 }
 
 QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > & tokens )
@@ -76,15 +74,15 @@ QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > 
         s += QString("\"%1\"").arg(static_cast<NVBVerbatimToken*>(tokens.at(i++))->sparam);
         break;
         }
-      case NVBToken::PageComment : {
+      case NVBToken::DataComment : {
         if (needsemicolon) s += ';';
         s += static_cast<NVBPCommentToken*>(tokens.at(i++))->sparam;
         needsemicolon = true;
         break;
         }
-      case NVBToken::PageParam : {
+      case NVBToken::DataParam : {
         if (needsemicolon) s += ';';
-        s += pageParamNames.value(static_cast<NVBPageParamToken*>(tokens.at(i++))->pparam).keyName();
+        s += dataParamNames.value(static_cast<NVBDataParamToken*>(tokens.at(i++))->pparam).keyName();
         needsemicolon = true;
         break;        
         }
@@ -296,10 +294,10 @@ QList< NVBToken * > NVBTokenList::tokenizeSubString( QString s, int & pos)
           pos += user.matchedLength();
           }
         else if (param.indexIn(s,pos) == pos) {
-          NVBPageParamToken::NVBPageParam k;
+          NVBDataParamToken::NVBDataParam k;
           NVBFileParamToken::NVBFileParam l;
-          if ((k = findPageParam(param.cap(0))) != NVBPageParamToken::Invalid)
-            result << new NVBPageParamToken(k);
+          if ((k = findDataParam(param.cap(0))) != NVBDataParamToken::Invalid)
+            result << new NVBDataParamToken(k);
           else if (( l = findFileParam(param.cap(0))) != NVBFileParamToken::Invalid)
             result << new NVBFileParamToken(l);
           else
@@ -393,12 +391,12 @@ QString NVBTokenList::verboseString() const
   switch (data->tokens.last()->type) {
     case NVBToken::Verbatim :
       return prefix + QString("Text: \"%1\"").arg(static_cast<NVBVerbatimToken*>(data->tokens.last())->sparam);
-    case NVBToken::PageComment :
+    case NVBToken::DataComment :
       return prefix + static_cast<NVBPCommentToken*>(data->tokens.last())->sparam;
     case NVBToken::FileParam :
       return prefix + fileParamNames.value((static_cast<NVBFileParamToken*>(last())->fparam),NVBDescrPair("","Bug!!!")).verbName();
-    case NVBToken::PageParam :
-      return prefix +  pageParamNames.value((static_cast<NVBPageParamToken*>(last())->pparam),NVBDescrPair("","Bug!!!")).verbName();
+    case NVBToken::DataParam :
+      return prefix +  dataParamNames.value((static_cast<NVBDataParamToken*>(last())->pparam),NVBDescrPair("","Bug!!!")).verbName();
     case NVBToken::Goto : {
       return QString();
       }

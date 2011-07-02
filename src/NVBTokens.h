@@ -9,10 +9,50 @@
 #include <QtCore/QMetaType>
 #include <QtCore/QSharedData>
 
+/**
+ *  \namespace NVBTokens
+ * 
+ * This namespace unites methods and classes for working with
+ * column format strings of NVBBrowser.
+ * 
+ * The string in question has the following format:
+ *
+ * format ::= expression
+ * expression ::= conditional | fileParam | dataParam | axis_param | user_text
+ * conditional ::= ? cond_char expression [: expression] '|'
+ * cond_char ::= S | T | = number | < number | > number | !
+ * user_text ::= '"' any_text '"'
+ * axis_param ::= ['(' axis_name ')'] axisParam
+ *   
+ * 1) File parameters
+ * 
+ * fileATime : File access time
+ * fileMTime : File modification time
+ * fileCTime : File creation time
+ * fileName  : File name
+ * fileNames : Files on disk
+ * fileSize  : File size
+ * nPages    : Number of datasets
+ * 
+ * 2) Dataset parameters
+ * 
+ * dataName  : Dataset name
+ * dataSize  : Data dimensions
+ * dataUnits : Data units
+ * dataNAxes : Number of axes
+ * 
+ * 3) Axis parameters
+ * 
+ * axisName   : axis name
+ * axisLength : axis length
+ * axisUnits  : axis units
+ */
+
+
 namespace NVBTokens {
 
 struct NVBToken {
-  enum NVBTokenType {Invalid = 0, Verbatim, FileParam, PageParam, PageComment, Goto} type;
+  enum NVBTokenType {Invalid = 0, Verbatim, FileParam, DataParam, DataComment, Goto} type;
   NVBToken(NVBTokenType t):type(t) {;}
 };
 
@@ -23,7 +63,7 @@ struct NVBVerbatimToken : NVBToken {
   
 struct NVBPCommentToken : NVBToken {
   QString sparam;
-  NVBPCommentToken(QString s):NVBToken( PageComment ),sparam(s) {;}
+  NVBPCommentToken(QString s):NVBToken( DataComment ),sparam(s) {;}
 };
 
 struct NVBGotoToken : NVBToken {
@@ -48,9 +88,9 @@ struct NVBFileParamToken : NVBToken {
   NVBFileParamToken(NVBFileParam f):NVBToken(FileParam),fparam(f) {;}
 };  
 
-struct NVBPageParamToken : NVBToken {
-  enum NVBPageParam {Invalid = 0, Name, DataSize, Units, NAxes, IsTopo, IsSpec} pparam;
-  NVBPageParamToken(NVBPageParam p):NVBToken(PageParam),pparam(p) {;}
+struct NVBDataParamToken : NVBToken {
+  enum NVBDataParam {Invalid = 0, Name, DataSize, Units, NAxes, IsTopo, IsSpec} pparam;
+  NVBDataParamToken(NVBDataParam p):NVBToken(DataParam),pparam(p) {;}
 };
 
 class NVBTokenListData : public QSharedData {
@@ -111,7 +151,7 @@ public:
 //   void debug();
 
   static QString nameFileParam(NVBFileParamToken::NVBFileParam);
-  static QString namePageParam(NVBPageParamToken::NVBPageParam);
+  static QString nameDataParam(NVBDataParamToken::NVBDataParam);
 
 
 private:
@@ -119,9 +159,9 @@ private:
   static QMap<NVBFileParamToken::NVBFileParam,NVBDescrPair > fileParamNames;
   static QMap<NVBFileParamToken::NVBFileParam,NVBDescrPair > initFileParamNames();
   static NVBFileParamToken::NVBFileParam findFileParam(QString key);
-  static QMap<NVBPageParamToken::NVBPageParam,NVBDescrPair > pageParamNames;
-  static QMap<NVBPageParamToken::NVBPageParam,NVBDescrPair > initPageParamNames();
-  static NVBPageParamToken::NVBPageParam findPageParam(QString key);
+  static QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > dataParamNames;
+  static QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > initDataParamNames();
+  static NVBDataParamToken::NVBDataParam findDataParam(QString key);
 
   static QString readFromTo( int start, int end, const QList< NVBToken * > & tokens);
   static QList< NVBToken * > tokenizeSubString( QString s, int & pos );
