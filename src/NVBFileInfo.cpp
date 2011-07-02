@@ -12,6 +12,7 @@
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
 #include "NVBFile.h"
+#include "NVBforeach.h"
 #include <QtCore/QDateTime>
 
 using namespace NVBTokens;
@@ -67,28 +68,28 @@ NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
 
 }
 
-NVBVariant NVBFileInfo::pageParam(NVBDataInfo pi, NVBPageParamToken::NVBPageParam p) const {
+NVBVariant NVBFileInfo::dataParam(NVBDataInfo pi, NVBDataParamToken::NVBDataParam p) const {
 
   switch (p) {
-    case NVBPageParamToken::Name : {
+    case NVBDataParamToken::Name : {
       return pi.name;
       }
-		case NVBPageParamToken::DataSize : {
+		case NVBDataParamToken::DataSize : {
 			NVBVariantList l;
 			foreach(axissize_t s, pi.sizes)
 				l << s;
 			return l;
       }
-		case NVBPageParamToken::Units : {
+		case NVBDataParamToken::Units : {
 			return pi.dimension;
       }
-		case NVBPageParamToken::NAxes : {
+		case NVBDataParamToken::NAxes : {
       return pi.sizes.count();
       }
-		case NVBPageParamToken::IsTopo : {
+		case NVBDataParamToken::IsTopo : {
       return pi.type == NVBDataSet::Topography;
       }
-		case NVBPageParamToken::IsSpec : {
+		case NVBDataParamToken::IsSpec : {
       return pi.type == NVBDataSet::Spectroscopy;
       }
     default :
@@ -115,7 +116,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 							pans << static_cast<NVBVerbatimToken*>(list.at(i++))->sparam;
 							break;
 							}
-						case NVBToken::PageComment : {
+						case NVBToken::DataComment : {
 							NVBVariant tv = pi.comments.value(static_cast<NVBVerbatimToken*>(list.at(i++))->sparam,QVariant());
 							if (tv.isValid())
 								pans << tv;
@@ -127,8 +128,8 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 							pans << fileParam(static_cast<NVBFileParamToken*>(list.at(i++))->fparam);
 							break;
 							}
-						case NVBToken::PageParam : {
-							pans << pageParam(pi,static_cast<NVBPageParamToken*>(list.at(i++))->pparam);
+						case NVBToken::DataParam : {
+							pans << dataParam(pi,static_cast<NVBDataParamToken*>(list.at(i++))->pparam);
 							break;
 							}
 						case NVBToken::Goto : {
@@ -203,7 +204,7 @@ NVBFileInfo::NVBFileInfo(const NVBFile * const file)
 {
 	files = file->sources();
 	comments = file->getAllComments();
-	foreach(NVBDataSource * source, *file)
+	NVB_FOREACH(NVBDataSource * source, file)
 		foreach(const NVBDataSet * set, source->dataSets())
 			append(NVBDataInfo(set));
 }

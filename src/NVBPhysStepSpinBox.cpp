@@ -7,7 +7,7 @@ QString NVBPhysStepSpinBox::textFromValue(int value) const
   return NVBPhysValue(dataScaler.scale(value),dim).toString(0);
 }
 
-NVBPhysStepSpinBox::NVBPhysStepSpinBox( NVBDimension dimension, double start, double end, int steps, QWidget * parent) : QSpinBox(parent), dim(dimension)
+NVBPhysStepSpinBox::NVBPhysStepSpinBox( NVBUnits dimension, double start, double end, int steps, QWidget * parent) : QSpinBox(parent), dim(dimension)
 {
   lineEdit()->setReadOnly(true);
 

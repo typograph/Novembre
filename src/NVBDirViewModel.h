@@ -12,12 +12,13 @@
 #ifndef NVBDIRVIEWMODEL_H
 #define NVBDIRVIEWMODEL_H
 
-#include <QAbstractItemModel>
-#include <QList>
-#include <QVector>
+#include <QtCore/QAbstractItemModel>
+#include <QtCore/QList>
+#include <QtCore/QVector>
 #include "NVBDirModel.h"
 
 class NVBFile;
+class NVBFileModel;
 class NVBFileFactory;
 
 /**
@@ -49,14 +50,12 @@ public:
 	virtual QMimeData * mimeData ( const QModelIndexList & indexes ) const;
 	virtual QStringList mimeTypes () const;
 
-	virtual bool event ( QEvent * e );
-
 private:
   NVBFileFactory * fileFactory;
 	QList<QPersistentModelIndex> indexes;
 	QPersistentModelIndex dirindex;
   NVBDirModel * dirModel;
-  mutable QVector<NVBFile*> files;
+  mutable QVector<NVBFileModel*> files;
   mutable QList<int> unloadables;
   mutable QVector<int> rowcounts;
   QVector<QString> * fnamecache;
@@ -77,7 +76,9 @@ private slots:
 //  void parentChangingLayout();
 //  void parentChangedLayout();
   bool loadFile(int index) const;
-	void fileLoaded(QString name, NVBFile * file);
+	void fileLoaded();
+	void fileLoaded(int index);
+	void fileLoaded(NVBFile* file);
 
 public slots:
   void defineWindow(int start,int end);

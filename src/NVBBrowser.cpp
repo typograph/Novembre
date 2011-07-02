@@ -19,33 +19,55 @@
  ***************************************************************************/
 #include "NVBBrowser.h"
 #include "NVBLogger.h"
-#include <QHeaderView>
-#include <QGridLayout>
-#include <QMenu>
-#include <QAction>
-#include <QFileSystemModel>
-#include <QCompleter>
+
+#include <QtCore/QSettings>
+#include <QtGui/QSplitter>
+// #include <QtGui/QMdiSubWindow>
+#include <QtCore/QDir>
+#include <QtGui/QMenu>
+#include <QtGui/QToolButton>
+#include <QtGui/QComboBox>
+#include <QtGui/QMessageBox>
+#include <QtGui/QToolBar>
+#include <QtGui/QCloseEvent>
+#include <QtGui/QVBoxLayout>
+#include <QtGui/QFileDialog>
+#include <QtGui/QDialog>
+#include <QtGui/QLineEdit>
+#include <QtGui/QCheckBox>
+#include <QtGui/QLabel>
+#include <QtGui/QPushButton>
+#include <QtGui/QFrame>
+#include <QtGui/QDialogButtonBox>
+#include <QtGui/QInputDialog>
+#include <QtGui/QPixmap>
+#include <QtGui/QListView>
+#include <QtGui/QApplication>
+#include <QtGui/QHeaderView>
+#include <QtGui/QGridLayout>
+#include <QtGui/QMenu>
+#include <QtGui/QAction>
+#include <QtGui/QFileSystemModel>
+#include <QtGui/QCompleter>
+
 #ifdef Q_WS_WIN
-#include <QMessageBox>
+#include <QtGui/QMessageBox>
 #endif
+
 #include "NVBColumnDialog.h"
-#include "NVBPageRefactorModel.h"
 #include "NVBFileListView.h"
+#include "NVBPageInfoView.h"
+#include "NVBDirModel.h"
+#include "NVBDirViewModel.h"
+#include "NVBDirView.h"
+#include "NVBSettings.h"
 
 #include <math.h>
 
 #include "../icons/browser.xpm"
 
 NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
-#if QT_VERSION >= 0x040300
-#ifndef NVB_BROWSER_ONLY
-    : QMdiSubWindow(parent,flags)
-#else
-		: QFrame(parent,flags)
-#endif
-#else
-    : QFrame(parent,flags)
-#endif
+: QFrame(parent,flags)
 {
 
   files = qApp->property("filesFactory").value<NVBFileFactory*>();
@@ -58,11 +80,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	NVBCriticalError("Browser cannot access the configuration file");
 	}
 
-#ifndef NVB_BROWSER_ONLY
-	setWindowTitle("Browser");
-#else
 	setWindowTitle("Novembre File Browser");
-#endif
 
   if (!(confile->contains("Browser/IconSize")))
     confile->setValue("Browser/IconSize",QVariant(64));
@@ -73,21 +91,13 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
   hSplitter->setCursor(Qt::ArrowCursor); // Without that, the cursor is undefined and keeps the entry form
 
-#if QT_VERSION >= 0x040300
-  setWidget(hSplitter);
-#else
   setLayout(new QVBoxLayout(this));
   layout()->addWidget(hSplitter);
-#endif
   
   QFrame * lframe = new QFrame(hSplitter);
   QVBoxLayout * llayout = new QVBoxLayout(lframe);
   llayout->setSpacing(0);
-#if QT_VERSION >= 0x040300
   llayout->setContentsMargins(0,0,0,0);
-#else
-  llayout->setMargin(0);
-#endif
   lframe->setLayout(llayout);
 
 
@@ -291,11 +301,13 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
 //  fileListMenu = new QPopupMenu(this,"fileListMenu");
   
-#ifndef NVB_BROWSER_ONLY
   resize(confile->value("Browser/Size", QSize(400, 300)).toSize());
   move(confile->value("Browser/Pos", QPoint(0, 0)).toPoint());
-#endif
    
+}
+
+QSize NVBBrowser::sizeHint () const {
+	return confile->value("Browser/Size", QSize(400, 300)).toSize();
 }
 
 void NVBBrowser::populateList()
@@ -342,21 +354,21 @@ void NVBBrowser::populateListLevel(int count, QString index, const QModelIndex &
     }
 }
 
+/*
 void NVBBrowser::closeEvent(QCloseEvent *event)
 {
   event->accept();
 //  event->ignore();
   emit closeRequest();
 }
+*/
 
 NVBBrowser::~ NVBBrowser( )
 {
   updateColumnsVisibility();
   updateColumns();
-#ifndef NVB_BROWSER_ONLY
 	confile->setValue("Browser/Size", size());
   confile->setValue("Browser/Pos", pos());
-#endif
   confile->setValue("Browser/FileListSize", fileList->size());
   confile->setValue("Browser/ShowPageInfo", piview->isVisible());
   if (fileModel) delete fileModel;
@@ -516,9 +528,7 @@ void NVBFolderInputDialog::buildUi() {
 
 	fileDialog = new QFileDialog();
 	fileDialog->setFileMode(QFileDialog::Directory);
-#if QT_VERSION >= 0x040500
 	fileDialog->setOption(QFileDialog::ShowDirsOnly,true);
-#endif
 	connect(folderSelectAction,SIGNAL(triggered(bool)),fileDialog,SLOT(exec()));
 	connect(fileDialog,SIGNAL(accepted()),this,SLOT(dirSelected()));
 
@@ -907,7 +917,13 @@ void NVBBrowser::showFoldersMenu() {
 	foldersMenu->exec(QCursor::pos());
 }
 
-void NVBBrowser::setViewType(bool b)
+void NVBBrowser::showColumnsMenu()
+{
+ columnsMenu->exec(QCursor::pos());
+}
+
+
+void NVBBrowser::setViewType(bool /*b*/)
 {
 //  pageRefactor->setMode(b ? NVBPageRefactorModel::MarkSpectra : NVBPageRefactorModel::None );
 }

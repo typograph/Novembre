@@ -13,7 +13,10 @@
 #include "NVBFileBundle.h"
 #include <QtCore/QStringList>
 #include <QtCore/QRegExp>
+#include <QtCore/QPluginLoader>
+
 #include <QtGui/QApplication>
+#include <QtGui/QAction>
 
 #ifdef NVB_STATIC
 Q_IMPORT_PLUGIN(rhk);
@@ -23,10 +26,11 @@ Q_IMPORT_PLUGIN(winspm);
 Q_IMPORT_PLUGIN(nanonis);
 #endif
 
+/*
 void NVBFileLoader::run() {
 	if (info.generator()) file = info.generator()->loadFile(info);
 }
-
+*/
 NVBFileFactory::NVBFileFactory()
 {
 	deadTree = new NVBFileQueue(5); // TODO Make the size of deadTree user-controllable
@@ -40,7 +44,7 @@ NVBFileFactory::NVBFileFactory()
 	tAct->setCheckable(true);
 	tAct->setChecked(true);
 	actMapper.setMapping(tAct,fbPlugin);
-	connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
+	connect(tAct,SIGNAL(triggered()),&actMapper,SLOT(map()));
 	gActions << tAct;
   
 	foreach (QObject *plugin, QPluginLoader::staticInstances()) {
@@ -54,7 +58,7 @@ NVBFileFactory::NVBFileFactory()
 			tAct->setCheckable(true);
 			tAct->setChecked(true);
 			actMapper.setMapping(tAct,plugin);
-			connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
+			connect(tAct,SIGNAL(triggered()),&actMapper,SLOT(map()));
 			
 			gActions << tAct;
 		
@@ -83,7 +87,7 @@ NVBFileFactory::NVBFileFactory()
 			tAct->setCheckable(true);
 			tAct->setChecked(true);
 			actMapper.setMapping(tAct,loader.instance());
-			connect(tAct,SIGNAL(toggled()),&actMapper,SLOT(map()));
+			connect(tAct,SIGNAL(triggered()),&actMapper,SLOT(map()));
 			gActions << tAct;
 			}
 		else NVBOutputError(loader.errorString());
@@ -153,87 +157,15 @@ NVBFileFactory::~NVBFileFactory()
 	while (not generators.isEmpty()) delete generators.takeFirst();
 }
 
-
-NVBFile * NVBFileFactory::openFile( QString filename )
-{
-	NVBOutputPMsg(QString("Requested file %1").arg(filename));
-
-	if (NVBFile * f = retrieveLoadedFile(filename)) {
-		NVBOutputVPMsg(QString("Found already loaded file."));
-		return f;
-	}
-	else if (NVBFile * f = deadTree->retrieve(filename)) {
-		NVBOutputVPMsg(QString("Restored released file."));
-		files.append(f);
-		return f;
-	}
-	else
-		return loadFile(filename);
-}
-
-NVBFile* NVBFileFactory::openFile( const NVBAssociatedFilesInfo & info )
-{
-	NVBOutputPMsg(QString("Requested file %1").arg(info.name()));
-
-	if (NVBFile * f = retrieveLoadedFile(info)) {
-		NVBOutputVPMsg(QString("Found already loaded file."));
-		return f;
-	}
-	else if (NVBFile * f = deadTree->retrieve(info)) {
-		NVBOutputVPMsg(QString("Restored released file."));
-		files.append(f);
-		return f;
-	}
-	else
-		return loadFile(info);
-}
-
-
-NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
-{
-
-	NVBOutputVPMsg(QString("Requested file info for %1").arg(filename));
-
-	if (NVBFile * f = retrieveLoadedFile(filename)) {
-		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
-		return new NVBFileInfo(f);
-	}
-	else if (NVBFile * f = deadTree->consult(filename)) {
-		NVBOutputVPMsg(QString("Constructed file info from released file"));
-		return new NVBFileInfo(f);
-	}
-	else
-		return loadFileInfo(filename);
-
-}
-
-NVBFileInfo * NVBFileFactory::getFileInfo( const NVBAssociatedFilesInfo & info)
-{
-
-	NVBOutputVPMsg(QString("Requested file info %1").arg(info.name()));
-
-	if (NVBFile * f = retrieveLoadedFile(info)) {
-		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
-		return new NVBFileInfo(f);
-	}
-	else if (NVBFile * f = deadTree->consult(info)) {
-		NVBOutputVPMsg(QString("Constructed file info from released file"));
-		return new NVBFileInfo(f);
-	}
-	else
-		return loadFileInfo(info);
-
-}
-
 QList<const NVBFileGenerator*> NVBFileFactory::getGeneratorsFromFilename(QString filename) const {
 
-	// First find a wildcard that matches (we assume there's only one)
+	// TODO 0.1 :: Wildcards should be in an additional list to avoid creating them every time 
 
 	QList<QString> wcks = wildcards.keys();
 	QListIterator<QString> wcki(wcks);
 	QList<const NVBFileGenerator*> matches;
 	while ( wcki.hasNext() ) {
-		if (QRegExp( QString("*/") + wcki.next(),Qt::CaseInsensitive,QRegExp::Wildcard).exactMatch(filename))
+		if (QRegExp( QString("*/%1").arg(wcki.next()),Qt::CaseInsensitive,QRegExp::Wildcard).exactMatch(filename))
 			matches.append(wildcards.values(wcki.peekPrevious()));
 		}
 
@@ -257,6 +189,7 @@ NVBAssociatedFilesInfo NVBFileFactory::associatedFiles(QString filename) const {
 	// Return the first generator that can load the info.
 
 	foreach (NVBAssociatedFilesInfo wcf, wcfs) {
+		if (wcf.isEmpty()) continue;
 		NVBFileInfo* fi = wcf.loadFileInfo();
 		if (fi) {
 			delete fi;
@@ -268,68 +201,109 @@ NVBAssociatedFilesInfo NVBFileFactory::associatedFiles(QString filename) const {
 	return NVBAssociatedFilesInfo(filename);
 }
 
-QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromDir(const QDir & d, QList<NVBAssociatedFilesInfo> * old_files, QList<int> * deleted) const {
-	QStringList filenames = d.entryList(getDirFilters(),QDir::Files,QDir::Name);
-	for(QStringList::iterator it = filenames.begin();it != filenames.end();it++)
-		*it = d.absolutePath() + "/" + *it;
-	return associatedFilesFromList(filenames,old_files,deleted);
+NVBFile * NVBFileFactory::getFile( QString filename, bool track )
+{
+	NVBOutputPMsg(QString("Requested file %1").arg(filename));
+
+	if (!track) return openFile(filename,track);
+	
+	if (NVBFile * f = retrieveLoadedFile(filename)) {
+		NVBOutputVPMsg(QString("Found already loaded file."));
+		return f;
+	}
+	else if (NVBFile * f = deadTree->retrieve(filename)) {
+		NVBOutputVPMsg(QString("Restored released file."));
+		files.append(f);
+		return f;
+	}
+	else
+		return openFile(filename);
 }
 
-QList<NVBAssociatedFilesInfo> NVBFileFactory::associatedFilesFromList(QStringList filenames, QList<NVBAssociatedFilesInfo> * old_files, QList<int> * deleted ) const {
+NVBFile* NVBFileFactory::getFile( const NVBAssociatedFilesInfo& info, bool track )
+{
+	NVBOutputPMsg(QString("Requested file %1").arg(info.name()));
 
-	qApp->setOverrideCursor(Qt::BusyCursor);
+	if (!track) return openFile(info,track);
+	
+	if (NVBFile * f = retrieveLoadedFile(info)) {
+		NVBOutputVPMsg(QString("Found already loaded file."));
+		return f;
+	}
+	
+	if (NVBFile * f = deadTree->retrieve(info)) {
+		NVBOutputVPMsg(QString("Restored released file."));
+		files.append(f);
+		return f;
+	}
+	
+	return openFile(info);
+}
 
-	// Remove already loaded files from the list
-	// We assume the list is OK, i.e. there're no two infos using the same file
-	if (old_files)
-		for (QList<NVBAssociatedFilesInfo>::const_iterator it = old_files->begin(); it != old_files->end(); it++)
-			for (int ni = 0; ni < it->count(); ni += 1)
-				if (!filenames.removeOne(it->at(ni))) { // backtrace
-					for (ni -= 1; ni >= 0; ni -= 1) {
-						filenames.append(it->at(ni));
-						}
-					if (deleted) deleted->append(it - old_files->begin());
-					break;
-					}
 
-	QList<NVBAssociatedFilesInfo>	files;
+NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
+{
 
-	while (filenames.count() > 0) {
-		NVBAssociatedFilesInfo info = associatedFiles(filenames.first());
-		foreach(QString filename, info) {
-//			QStringList::const_iterator j = qBinaryFind(filenames,filename);
-//			if (j != filenames.end())
-//				filenames.removeAt(j - filenames.begin());
-			int j = filenames.indexOf(filename);
-			if (j != -1)
-				filenames.removeAt(j);
-			else if (old_files) // Somebody has it already -- cross-check with list
-				for (int i = 0; i < old_files->count(); i++)
-					if (old_files->at(i).contains(filename) && (!deleted || deleted->contains(i))) {
-						if (old_files->at(i).count() >= info.count()) // There's already one good file
-							goto skip_file;	
-						else {
-							foreach(QString fname, old_files->at(i))
-								filenames << fname;
-							filenames.removeOne(filename);
-							if (deleted) deleted->append(i);
-							}
-						}
-			}
-		if (info.count() == 0)
-		  NVBOutputError(QString("Couldn't load file %1").arg(filenames.takeFirst()));
-		else
-		  files.append(info);
-// Yeah, I know goto's are evil, but how else can I solve this thing with breaking 2 loops?
-skip_file: ;
+	NVBOutputVPMsg(QString("Requested file info for %1").arg(filename));
+
+	if (NVBFile * f = retrieveLoadedFile(filename)) {
+		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
+		return new NVBFileInfo(f);
+	}
+	else if (NVBFile * f = deadTree->consult(filename)) {
+		NVBOutputVPMsg(QString("Constructed file info from released file"));
+		return new NVBFileInfo(f);
+	}
+	else
+		return openFileInfo(filename);
+
+}
+
+NVBFileInfo * NVBFileFactory::getFileInfo( const NVBAssociatedFilesInfo & info)
+{
+
+	NVBOutputVPMsg(QString("Requested file info %1").arg(info.name()));
+
+	if (NVBFile * f = retrieveLoadedFile(info)) {
+		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
+		return new NVBFileInfo(f);
+	}
+	else if (NVBFile * f = deadTree->consult(info)) {
+		NVBOutputVPMsg(QString("Constructed file info from released file"));
+		return new NVBFileInfo(f);
+	}
+	else
+		return openFileInfo(info);
+}
+
+NVBFileInfo* NVBFileFactory::openFileInfo(QString filename) const
+{
+	// Get generators, and if there's only one, rely on it
+
+	QList<const NVBFileGenerator*> wcgs = getGeneratorsFromFilename(filename);
+	if (wcgs.count() == 0) return 0;
+	if (wcgs.count() == 1) return wcgs.first()->associatedFiles(filename).loadFileInfo();
+
+	// Compare generators for the case there's more than one
+
+	QList<NVBAssociatedFilesInfo> wcfs;
+	foreach (const NVBFileGenerator * wcg, wcgs)
+		wcfs << wcg->associatedFiles(filename);
+
+	// Pick the first generator that can load the info.
+
+	foreach (NVBAssociatedFilesInfo wcf, wcfs) {
+		if (wcf.isEmpty()) continue;
+		NVBFileInfo* fi = wcf.loadFileInfo();
+		if (fi)
+			return fi;
 		}
-
-	qApp->restoreOverrideCursor();
-
-	return files;
+		
+	return 0;
 }
 
-NVBFile * NVBFileFactory::loadFile( const NVBAssociatedFilesInfo & info )
+
+NVBFile * NVBFileFactory::openFile( const NVBAssociatedFilesInfo& info, bool track )
 {
 
 	if (!info.generator()) return 0;
@@ -337,8 +311,10 @@ NVBFile * NVBFileFactory::loadFile( const NVBAssociatedFilesInfo & info )
 	NVBFile * file = info.generator()->loadFile(info);
 
 	if (file) {
-		files.append(file);
-		connect(file,SIGNAL(free(NVBFile*)),SLOT(bury(NVBFile*)));
+		if (track) {
+			files.append(file);
+			connect(file,SIGNAL(free(NVBFile*)),SLOT(bury(NVBFile*)));
+			}
 		return file;
 	}
 
@@ -346,72 +322,22 @@ NVBFile * NVBFileFactory::loadFile( const NVBAssociatedFilesInfo & info )
 
 }
 
-void NVBFileFactory::openFile( const NVBAssociatedFilesInfo & info, const QObject * receiver) {
-	NVBOutputPMsg(QString("Requested file %1").arg(info.name()));
-
-	if (NVBFileLoader * l = getLoaderInProgress(info)) {
-		if (!l->customers.contains(const_cast<QObject*>(receiver)))
-			l->customers << const_cast<QObject*>(receiver);
-		}
-	else if (NVBFile * f = retrieveLoadedFile(info)) {
-		NVBOutputVPMsg(QString("Found already loaded file."));
-		NVBFileLoadEvent event(info.name(),f);
-		qApp->sendEvent(const_cast<QObject*>(receiver),&event);
-		}
-	else if (NVBFile * f = deadTree->retrieve(info)) {
-		NVBOutputVPMsg(QString("Restored released file."));
-		files.append(f);
-		NVBFileLoadEvent event(info.name(),f);
-		qApp->sendEvent(const_cast<QObject*>(receiver),&event);
-		}
-	else if (!info.generator()) {
-		NVBFileLoadEvent event(info.name(),0);
-		qApp->sendEvent(const_cast<QObject*>(receiver),&event);
-		}
-	else {
-		NVBFileLoader * l = new NVBFileLoader(info,const_cast<QObject*>(receiver));
-		loaders << l;
-		connect(l,SIGNAL(finished()),this,SLOT(removeLoader()));
-		l->start();
-		}
-}
-
-
-NVBFileLoader * NVBFileFactory::getLoaderInProgress(const NVBAssociatedFilesInfo & info) {
-	foreach(NVBFileLoader * l, loaders)
-		if (l->info == info)
-			return l;
-	return 0;
-}
-
-
-void NVBFileFactory::removeLoader() {
-	NVBFileLoader * l = qobject_cast<NVBFileLoader*>(sender());
-	loaders.removeOne(l);
-	if (l->file) {
-		files.append(l->file);
-		connect(l->file,SIGNAL(free(NVBFile*)),SLOT(bury(NVBFile*)));
-		}
-	NVBFileLoadEvent event(l->info.name(),l->file);
-	foreach(QObject * receiver, l->customers)
-		qApp->sendEvent(receiver,&event);
-	delete l;
-}
-
 QStringList NVBFileFactory::getDirFilters( ) const
 {
+	// TODO 0.1 :: This should possibly be cached
 	QStringList s;
-	foreach(const NVBFileGenerator * g, generators)
+	foreach(const NVBFileGenerator * g, allGenerators)
 		s += g->extFilters();
 	return s;
 }
 
 QString NVBFileFactory::getDialogFilter( )
 {
-	static QString filter; // TODO make it a class mutable variable and clear on adding more generators;
+	// TODO 0.1 :: make it a class mutable variable and clear on adding more generators;
+	static QString filter;
 	if (filter.isNull()) {
 		QString s;
-		foreach(const NVBFileGenerator * g, generators) {
+		foreach(const NVBFileGenerator * g, allGenerators) {
 			s += ";;" + g->nameFilter();
 		}
 		filter = QString("All supported formats (%1);;All files (*.*)").arg(getDirFilters().join(" ")) + s;

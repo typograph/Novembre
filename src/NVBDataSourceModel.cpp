@@ -1,6 +1,7 @@
 #include "NVBDataSourceModel.h"
 #include "NVBDatasetIcons.h"
 #include "NVBMimeData.h"
+#include "NVBforeach.h"
 
 #include <QtCore/QAbstractItemModel>
 
@@ -148,11 +149,11 @@ void NVBDataSourceModel::parentReformed()	{
 
 // --------------- NVBDataSourceListModel
 
-NVBDataSourceListModel::NVBDataSourceListModel(QList<NVBDataSource*> sources)
+NVBDataSourceListModel::NVBDataSourceListModel(const QList<NVBDataSource*> * sources)
 	: QAbstractListModel(0)
 {
 	cachecounts << 0;
-	foreach(NVBDataSource * s, sources) {
+	NVB_FOREACH(NVBDataSource * s, sources) {
 		
 		NVBDataSourceModel * m = new NVBDataSourceModel(s);
 		

@@ -13,7 +13,9 @@
 #define NVBPAGEINFOVIEW_H
 
 #include "NVBPageInfoWidget.h"
-#include <QModelIndex>
+#include <QtCore/QModelIndex>
+
+#define PageRole Qt::UserRole
 
 class NVBPageInfoView : public NVBPageInfoWidget {
 Q_OBJECT
@@ -22,7 +24,9 @@ public:
   virtual ~NVBPageInfoView() {;}
 public slots:
   void clearView() { clear(); }
-  void showPage(const QModelIndex & index) { refresh(index.data(PageRole).value<NVBDataSource*>());}
+  void showPage(const QModelIndex & index) {
+		refresh(index.data(PageRole).value<NVBDataSet*>());
+		}
 };
 
 #endif

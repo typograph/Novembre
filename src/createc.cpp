@@ -700,7 +700,6 @@ void CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames, NVBFil
 				. It's a grid
 	*/
 
-	qDebug() << filenames;
 	filenames.sort();
 
 	QString reffname = filenames.last();

@@ -30,8 +30,8 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 		NVBDataComments comments;
     NVBFile();
 		NVBFile(QList<NVBDataSource*>);
+		NVBFile(const NVBFile & other):QObject(),QList< NVBDataSource* >(other) {;} // FIXME this will not work - if the original is deleted, datasources will be deleted too.
 	public:
-		NVBFile(const NVBFile & other):QObject(),QList< NVBDataSource* >(other) {;}
 		NVBFile(NVBAssociatedFilesInfo sources): QObject(), QList<NVBDataSource*>(), files(sources), refCount(0) {;}
 		NVBFile(NVBAssociatedFilesInfo sources, QList<NVBDataSource*> pages, NVBDataComments file_comments): QObject(), QList<NVBDataSource*>(pages), files(sources), refCount(0), comments(file_comments) {;}
 

@@ -13,7 +13,7 @@ double NVBPhysSpinBox::valueFromText(const QString & text) const
   return tvalue;
 }
 
-NVBPhysSpinBox::NVBPhysSpinBox(NVBDimension dimension, QWidget * parent) : QDoubleSpinBox(parent), dim(dimension)
+NVBPhysSpinBox::NVBPhysSpinBox(NVBUnits dimension, QWidget * parent) : QDoubleSpinBox(parent), dim(dimension)
 {
   setMinimumWidth(fontMetrics().boundingRect("0.000 ZM").width());
   setMinimum(-100.);
@@ -38,7 +38,7 @@ void NVBPhysSpinBox::stepBy(int steps)
     setValue(tvalue);
 }
 
-void NVBPhysSpinBox::normalizeValDim(double & value, NVBDimension & dim)
+void NVBPhysSpinBox::normalizeValDim(double & value, NVBUnits & dim)
 {
   if (value >= 100.) {
     value /= 1000;

@@ -110,7 +110,7 @@ class NVBFileInfo : public QList<NVBDataInfo> {
 		NVBAssociatedFilesInfo files;
 		NVBDataComments comments;
 
-/// Gets a comment for a given key, taking into account individual pages
+/// Gets a comment for a given key, taking into account individual datasets
 /**
  * Note, that where NVBFile has bottom-up search recursion,
  * NVBFile info does it top-down
@@ -124,7 +124,7 @@ class NVBFileInfo : public QList<NVBDataInfo> {
 
 	protected :
 		NVBVariant fileParam(NVBTokens::NVBFileParamToken::NVBFileParam p) const;
-		NVBVariant pageParam(NVBDataInfo pi, NVBTokens::NVBPageParamToken::NVBPageParam p) const;
+		NVBVariant dataParam(NVBDataInfo pi, NVBTokens::NVBDataParamToken::NVBDataParam p) const;
 };
 
 #endif

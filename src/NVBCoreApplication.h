@@ -33,8 +33,9 @@
 
 class NVBCoreApplication : public QApplication {
 Q_OBJECT
-  NVBApplication ( int & argc, char ** argv );
-  virtual ~NVBApplication();
+public:
+  NVBCoreApplication ( int & argc, char ** argv );
+  virtual ~NVBCoreApplication();
   virtual bool notify ( QObject * receiver, QEvent * event ) ;
 	
 #ifdef NVB_ENABLE_LOG

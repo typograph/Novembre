@@ -13,13 +13,27 @@
 #include "NVBFile.h"
 #include "NVBFileFactory.h"
 #include "NVBDirModel.h"
+#include "NVBMimeData.h"
+#include <QtCore/QFutureWatcher>
+#include "NVBDataSourceModel.h"
+#include <QtGui/QPainter>
+
+class NVBFileModel : public NVBDataSourceListModel {
+private:
+	NVBFile * source;
+public:
+	NVBFileModel(NVBFile * file) : NVBDataSourceListModel(file), source(file) { if (source) source->use(); }
+	~NVBFileModel() { source->release(); }
+	
+	inline NVBFile * file() { return source; }
+};
 
 
 NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent)
 	: QAbstractItemModel( parent )
 	, fileFactory(factory)
 	, dirModel(model)
-	, files(QVector<NVBFile*>())
+	, files(QVector<NVBFileModel*>())
 	, fnamecache(0)
 	, operationRunning(false)
 {
@@ -34,17 +48,17 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 
 NVBDirViewModel::~NVBDirViewModel()
 {
-	foreach(NVBFile * f, files) {
-		if (f) f->release();
+	foreach(NVBFileModel * f, files) {
+		if (f) delete f;
 		}
 }
 
 void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 	beginResetModel();
 	indexes.clear();
-	foreach(NVBFile * f, files) {
-		if (f) f->release();
-		}
+	foreach(NVBFileModel * f, files)
+		delete f;
+
 	dirindex = QPersistentModelIndex(QModelIndex());
 	if (items.count() == 1 && ! dirModel->isAFile(items.first())) { // The only folder is expanded
 		dirindex = QPersistentModelIndex(items.first());
@@ -77,39 +91,46 @@ bool NVBDirViewModel::loadFile(int index) const
 	if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 
-	fileFactory->openFile(dirModel->getAllFiles(indexes[index]),this);
+	QFutureWatcher<NVBFile * > * watcher = new QFutureWatcher<NVBFile*>();
+	connect(watcher,SIGNAL(finished()),this,SLOT(fileLoaded()));
+	watcher->setFuture(fileFactory->loadFile(dirModel->getAllFiles(indexes[index])));
+
 	return false;
-/*
-	NVBFile * f = fileFactory->openFile(dirModel->getAllFiles(indexes[index]));
-	if (f) {
-		f->use();
-		files[index] = f;
-		return true;
-		}
-	else {
-//     emit layoutAboutToBeChanged();
-		unloadables << index;
-//     emit layoutChanged();
-		return false;
-		}
-*/
 }
 
-bool NVBDirViewModel::event ( QEvent * e ) {
-	if (e->type() == QEvent::User) {
-		NVBFileLoadEvent * x = static_cast<NVBFileLoadEvent*>(e);
-		if (x) {
-			fileLoaded(x->name,x->file);
-			return true;
+void NVBDirViewModel::fileLoaded()
+{
+	// qobject_cast doesn't work for QFutureWatcher, since it's not declared with Q_OBJECT macro
+	QFutureWatcher<NVBFile*> * watcher = dynamic_cast< QFutureWatcher<NVBFile*> * >(sender());
+	if (!watcher) {
+		NVBOutputError("Sender object was not a correct QFutureWatcher");
+		return;
 		}
-	}
-	return QAbstractItemModel::event(e);
+	
+	fileLoaded(watcher->result());
+	watcher->deleteLater();
 }
 
-void NVBDirViewModel::fileLoaded(QString name, NVBFile * file)
+void NVBDirViewModel::fileLoaded(int index)
+{
+	// qobject_cast doesn't work for QFutureWatcher, since it's not declared with Q_OBJECT macro
+	QFutureWatcher<NVBFile*> * watcher = dynamic_cast< QFutureWatcher<NVBFile*> * >(sender());
+	if (!watcher) {
+		NVBOutputError("Sender object was not a correct QFutureWatcher");
+		return;
+		}
+	
+	fileLoaded(watcher->resultAt(index));
+	if (watcher->isFinished()) // TODO caution - what if the last result is available already, but not processed?
+		watcher->deleteLater();
+}
+
+void NVBDirViewModel::fileLoaded(NVBFile * file)
 {
 	int index = -1;
 
+	QString name = file->name();
+	
 	for(int i = rowCount()-1;i>=0;i-=1)
 		if (indexes.at(i).data(Qt::DisplayRole) == name) {
 			index = i;
@@ -119,10 +140,8 @@ void NVBDirViewModel::fileLoaded(QString name, NVBFile * file)
 	if (index < 0)
 		return;
 
-	if (file) {
-		file->use();
-		files[index] = file;
-		}
+	if (file)
+		files[index] = new NVBFileModel(file);
 	else
 		unloadables << index;
 
@@ -305,10 +324,10 @@ void NVBDirViewModel::parentRemovedRows(const QModelIndex & /*parent*/, int firs
 			else if (unloadables.at(i) >= first)
 				unloadables.removeAt(i--);
 			}
-		for (int i = first; i <= last; i++) {
+		for (int i = first; i <= last; i++)
 			if (files.at(i))
-				files.at(i)->release();
-			}
+				delete files.at(i);
+			
 		files.remove(first,last-first+1);
 		for (int i = first; i <= last; i += 1)
 			indexes.removeAt(i);
@@ -333,7 +352,7 @@ void NVBDirViewModel::cacheRowCounts( int first, int last ) const
 		else {
 			const NVBFileInfo * fInfo = dirModel->indexToInfo(indexes.at(i));
 			if (fInfo)
-				rowcounts[i] = fInfo->pages.size();
+				rowcounts[i] = fInfo->size();
 			else
 				rowcounts[i] = 0;
 			}
@@ -376,13 +395,13 @@ void NVBDirViewModel::defineWindow(int start, int end)
 {
 	for(int i=0;i<start;i++)
 		if (files.at(i)) {
-			files[i]->release();
+			delete files[i];
 			files[i] = 0;
 			}
 
 	for(int i=end+1;i<files.size();i++)
 		if (files.at(i)) {
-			files[i]->release();
+			delete files[i];
 			files[i] = 0;
 			}
 }
@@ -413,9 +432,16 @@ QMimeData * NVBDirViewModel::mimeData(const QModelIndexList &ixs) const {
 	QModelIndex i = ixs.first();
 	if ( i.internalId() == 0 || !loadFile(i.internalId()-1)) return 0;
 
-	return new NVBDataSourceMimeData(NVBToolsFactory::hardlinkDataSource(files.at(i.internalId()-1)->index(i.row(),0).data(PageRole).value<NVBDataSource*>()));
+	NVBDataSourceListModel * m = files.at(i.internalId()-1);
+	
+	return m->mimeData(QModelIndexList() << m->index(i.row()));
 }
 
 QStringList NVBDirViewModel::mimeTypes () const {
-	return QStringList() << NVBDataSourceMimeData::dataSourceMimeType();
+  return QStringList()
+		<< NVBDataSourceMimeData::dataSetMimeType()
+		<< NVBDataSourceMimeData::dataSourceMimeType()
+		<< "text/plain"
+		<< "image/x-qt-image"
+		;
 }
