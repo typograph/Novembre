@@ -24,11 +24,7 @@ class NVBDirPopulationThread : public QThread {
 #endif
 
 bool NVBDirModelFileInfoLessThan::operator()(const NVBFileInfo* fi1, const NVBFileInfo* fi2) const {
-	if (!fi1) {
-		NVBOutputError("Got NULL NVBFileInfo");
-		return false;
-		}
-	if (!fi2) {
+	if (!fi1 || !fi2) {
 		NVBOutputError("Got NULL NVBFileInfo");
 		return true;
 		}
@@ -80,10 +76,147 @@ bool NVBDirModelFileInfoFilter::operator()(const NVBFileInfo * fi) const {
 	}
 
 
-NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),status(NVBDirEntry::Loaded),type(NoContent) {;}
+NVBDirEntryLoader::NVBDirEntryLoader(NVBDirEntry* entry): QRunnable(), e(entry)
+{
+	setAutoDelete(true);
+	fileFactory = qApp->property("filesFactory").value<NVBFileFactory*>();
+}
+
+NVBDirEntryLoader::~NVBDirEntryLoader()
+{
+
+}
+
+void NVBDirEntryLoader::run()
+{
+	NVBOutputPMsg("Hi!");
+	
+	if (!e) return;
+	
+	if (e->type == NVBDirEntry::NoContent) {
+		QMetaObject::invokeMethod(e,"setLoaded",Qt::AutoConnection);
+		return;
+		}
+
+	QDir dir = e->dir;
+	
+	if (!dir.exists()) {
+		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
+		QMetaObject::invokeMethod(e,"errorOnLoad",Qt::AutoConnection);
+		return;
+		}
+
+	bool wasEmpty = e->status == NVBDirEntry::Virgin;
+
+	e->status = NVBDirEntry::Loading;
+
+// 	QApplication::setOverrideCursor(Qt::BusyCursor);
+
+	if (e->isRecursive()) {
+		QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
+
+		int index;
+		QList<NVBDirEntry * > newentries;
+		
+		foreach(QFileInfo folder, subfolders) {
+			if (e->folderCount() && (index = e->indexOf(folder.fileName())) >= 0)
+				e->removeFolderAt(index);
+			else {
+				QDir rdir(dir);
+				rdir.setPath(folder.absoluteFilePath());
+				newentries << new NVBDirEntry(e,folder.fileName(),rdir,true);
+				newentries.last()->moveToThread(QCoreApplication::instance()->thread());
+				}
+			}
+		
+		e->addFolders(newentries);
+		}
+
+	if (!fileFactory) {
+		NVBOutputError("Cannot access the file factory");
+		QMetaObject::invokeMethod(e,"errorOnLoad",Qt::AutoConnection);
+		return;
+		}
+
+	QStringList filenames = dir.entryList(fileFactory->getDirFilters(),QDir::Files,QDir::Name);
+	
+	if (filenames.isEmpty()) {
+		QMetaObject::invokeMethod(e,"setLoaded",Qt::AutoConnection);
+		return;
+		}
+	
+	QString dirStr = QString("%1/%2").arg(e->dir.absolutePath());
+	
+	for(QStringList::iterator it = filenames.begin(); it != filenames.end(); it++)
+		*it = dirStr.arg(*it);
+
+	// Remove already loaded files from the list
+	// We assume the list is OK, i.e. there're no two infos using the same file
+	bool deleted; // Not the most elegant solution, I admit.
+	for (QList<NVBFileInfo*>::const_iterator it = e->files.constBegin(); it != e->files.constEnd(); ) {
+		deleted = false;
+		for (int ni = 0; ni < (*it)->files.count(); ni += 1)
+			if (!filenames.removeOne((*it)->files.at(ni))) { // backtrace
+				for (ni -= 1; ni >= 0; ni -= 1)
+					filenames.append((*it)->files.at(ni));
+				e->removeOrigFileAt(it - e->files.constBegin());
+				deleted = true;
+				break;
+				}
+		if (!deleted)
+			it++;
+		}
+
+	QList<NVBAssociatedFilesInfo>	files;
+
+	while (filenames.count() > 0) {
+		NVBAssociatedFilesInfo info = fileFactory->associatedFiles(filenames.first());
+		if (info.isEmpty()) {
+			NVBOutputError(QString("Couldn't load associated files for %1").arg(filenames.takeFirst()));
+			continue;
+			}
+		foreach(QString filename, info) {
+//			QStringList::const_iterator j = qBinaryFind(filenames,filename);
+//			if (j != filenames.end())
+//				filenames.removeAt(j - filenames.begin());
+			int j = filenames.indexOf(filename);
+			if (j != -1)
+				filenames.removeAt(j);
+			else // Somebody has it already -- cross-check with list
+				for(int i=0; i<e->files.count(); i++)
+					if (e->files.at(i)->files.contains(filename)) {
+						if (e->files.at(i)->files.count() >= info.count()) // There's already one good file
+							goto skip_file;	
+						else {
+							foreach(QString fname, e->files.at(i)->files)
+								filenames.prepend(fname);
+							filenames.removeOne(filename);
+							e->removeOrigFileAt(i);
+							break;
+							}
+						}
+			}
+		files.append(info);
+// Yeah, I know goto's are evil, but how else can I solve this thing with breaking 2 loops?
+skip_file: ;
+		}
+		
+	NVBOutputPMsg(QString("Loading started : %1 files to load").arg(files.count()));
+	QFutureWatcher<NVBFileInfo*> fileLoader(0);
+	fileLoader.connect(&fileLoader,SIGNAL(resultsReadyAt(int,int)),e,SLOT(notifyLoading(int,int)));
+	fileLoader.connect(&fileLoader,SIGNAL(finished()),e,SLOT(setLoaded()));
+	fileLoader.setFuture(QtConcurrent::mapped(files,&NVBAssociatedFilesInfo::loadFileInfo));
+
+	fileLoader.waitForFinished();
+	
+	NVBOutputPMsg("Loading finished");
+}
+
+
+NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),status(NVBDirEntry::Populated),type(NoContent) {;}
 
 NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label) :
-	/*QObject(),*/ parent(_parent),label(_label),status(NVBDirEntry::Loaded),type(NoContent) {;}
+	/*QObject(),*/ parent(_parent),label(_label),status(NVBDirEntry::Populated),type(NoContent) {;}
 
 NVBDirEntry::NVBDirEntry(NVBDirEntry * _parent, QString _label, QDir _dir, bool recursive) :
 	/*QObject(),*/ parent(_parent),label(_label),dir(_dir),status(NVBDirEntry::Virgin),type(recursive ? AllContent : FileContent)
@@ -182,14 +315,34 @@ void NVBDirEntry::removeOrigFileAt(int i) {
 	 }
 }
 
+void NVBDirEntry::removeFolderAt(int i)
+{
+		emit beginOperation(this,i,1,NVBDirEntry::FolderRemove);
+		delete folders.takeAt(i);
+		emit endOperation();
+}
+
+void NVBDirEntry::addFolders(QList< NVBDirEntry* > es)
+{
+	emit beginOperation(this,folders.count(),es.count(),NVBDirEntry::FolderInsert);
+	foreach(NVBDirEntry * e, es) {
+		folders << e;
+		e->sort(sorter);
+		}
+	emit endOperation();	
+}
+
 void NVBDirEntry::notifyLoading(int start, int end)
 {
+	qDebug() << start << end;
 	for (int i=start; i<end; i++)
 	   insertFile(fileLoader->future().resultAt(i));
 }
 
 void NVBDirEntry::insertFile(NVBFileInfo* file)
 {
+	qDebug() << file << file->files.name();
+	
 	if (file) {
 		QList<NVBFileInfo*>::iterator newpos = qLowerBound(files.begin(),files.end(),file,sorter);
 		int ix = newpos - files.begin();
@@ -215,125 +368,25 @@ void NVBDirEntry::insertFile(NVBFileInfo* file)
 
 void NVBDirEntry::populate(NVBFileFactory * fileFactory)
 {
-	if (type == NoContent)
-		return;
-
-	if (isPopulated()) {
-		refresh(fileFactory);
-		return;
+	if (status != Loading) {
+		QApplication::setOverrideCursor(Qt::BusyCursor);
+		QThreadPool::globalInstance()->start(new NVBDirEntryLoader(this));
 		}
-
-	qApp->setOverrideCursor(Qt::BusyCursor);
-
-	status = NVBDirEntry::Populated;
-
-	if ( dir.exists() ) {
-		if (isRecursive()) {
-			QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
-
-			emit beginOperation(this,0,subfolders.size(),FolderInsert);
-
-			foreach(QFileInfo folder, subfolders) {
-				QDir rdir(dir);
-				rdir.setPath(folder.absoluteFilePath());
-				folders << new NVBDirEntry(this,folder.fileName(),rdir,true);
-				folders.last()->sort(sorter);
-				}
-
-			emit endOperation();
-			}
-
-		QList<NVBAssociatedFilesInfo> associations = fileFactory->associatedFilesFromDir(dir);
-
-#if QT_VERSION < 0x040400
-		#error "You can't compile Novembre > 0.0.4 on Qt < 4.4, sorry"
-#else
-		fileLoader = new QFutureWatcher<NVBFileInfo*>(this);
-		fileLoader->setFuture(QtConcurrent::mapped(associations,&NVBAssociatedFilesInfo::loadFileInfo));
-		connect(fileLoader,SIGNAL(resultsReadyAt(int,int)),SLOT(notifyLoading(int,int)),Qt::QueuedConnection);
-		connect(fileLoader,SIGNAL(finished()),SLOT(setLoaded()),Qt::QueuedConnection);
-#endif
-
-	}
-	else {
-		NVBOutputError(QString("Directory %1 does not exist").arg(dir.absolutePath()));
-		status = NVBDirEntry::Error;
-		qApp->restoreOverrideCursor();
-		}
+	else
+		NVBOutputError("populate called while populating");
 }
 
 bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
 {
-  if ( dir.exists() ) {
-
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-
-    if (isRecursive()) {
-      QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
-
-      QVector<bool> confirmed(folders.size());
-      confirmed.fill(false);
-
-
-      foreach(QFileInfo folder, subfolders) {
-        int index = indexOf(folder.fileName()); // The labels in recursive are created this way
-        if (index >= 0) {
-          confirmed[index] = true;
-          }
-        else {
-          QDir rdir(dir);
-          rdir.setPath(folder.absoluteFilePath());
-          emit beginOperation(this,folders.size(),1,FolderInsert);
-					folders << new NVBDirEntry(this,folder.fileName(),rdir,true);
-					folders.last()->sort(sorter);
-          emit endOperation();
-          }
-        }
-
-      for (int i=confirmed.size()-1;i>=0;i--) {
-        if (!confirmed.at(i)) {
-          emit beginOperation(this,i,1,FolderRemove);
-          delete folders.takeAt(i);
-          emit endOperation();
-          }
-        }
-
-      }
-
-		QList<int> ixrm;
-
-		QList<NVBAssociatedFilesInfo> * old_associations = new QList<NVBAssociatedFilesInfo>();
-		foreach(NVBFileInfo * fi, files)
-			old_associations->append(fi->files);
-
-		QList<NVBAssociatedFilesInfo> associations = fileFactory->associatedFilesFromDir(dir,old_associations,&ixrm);
-
-		delete old_associations;
-
-		qSort(ixrm.begin(),ixrm.end(),qGreater<int>());
-
-		foreach(int k, ixrm)
-			removeOrigFileAt(k);
-
-#if QT_VERSION < 0x040400
-		#error "You can't compile Novembre > 0.0.4 on Qt < 4.4, sorry"
-#else
-		fileLoader = new QFutureWatcher<NVBFileInfo*>(this);
-		fileLoader->setFuture(QtConcurrent::mapped(associations,&NVBAssociatedFilesInfo::loadFileInfo));
-		connect(fileLoader,SIGNAL(resultsReadyAt(int,int)),this,SLOT(notifyLoading(int,int)));
-		connect(fileLoader,SIGNAL(finished()),this,SLOT(setLoaded()));
-#endif
-
-    return true;
-    }
-
-  else {
-		NVBOutputError(QString("Directory %1 ceased to exist").arg(dir.absolutePath()));
-		qApp->restoreOverrideCursor();
-		status = NVBDirEntry::Error;
-		// TODO be more user-friendly. Display an error message
-    return false;
-    }
+	if (status != Loading) {
+		QApplication::setOverrideCursor(Qt::BusyCursor);
+		QThreadPool::globalInstance()->start(new NVBDirEntryLoader(this));
+		return true;
+		}
+	else {
+		NVBOutputError("refresh called while populating");
+		return false;
+		}
 }
 
 void NVBDirEntry::sort(const NVBDirModelFileInfoLessThan & lessThan) {

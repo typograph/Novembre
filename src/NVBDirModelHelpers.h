@@ -46,12 +46,39 @@ public:
 	bool operator()(const NVBFileInfo * fi) const;
 };
 
+class NVBDirEntry;
+
+/**
+ * \class NVBDirEntryLoader
+ * 
+ * This class handles the task of populating / refreshing
+ * the contents of a NVBDirEntry
+ * 
+ */
+class NVBDirEntryLoader : public QRunnable {
+private:
+	NVBDirEntry * e;
+	NVBFileFactory * fileFactory;
+public:
+	NVBDirEntryLoader(NVBDirEntry * entry);
+	virtual ~NVBDirEntryLoader();
+	
+	void run();
+};
+
 class NVBDirEntry : public QObject {
 Q_OBJECT
+friend class NVBDirEntryLoader;
 public:
 	enum ContentChangeType { FolderInsert, FolderRemove, FileInsert, FileRemove };
 	enum WatchedContentType { NoContent, FileContent, AllContent };
-	enum Status { Virgin, Populated, Loaded, Error };
+	enum Status {
+		Virgin, /// nothing was done with this entry after it's been created
+		Loading, /// NVBDirEntryLoader working
+		Populated, /// All operations finished, data available
+		Error /// Some error occured during loading
+		
+	};
 	NVBDirEntry * parent;
 	QString label;
 	QDir dir;
@@ -61,6 +88,11 @@ public:
 	inline int fileCount() const { return indexMap.count(); }
 	/// Removes a file from the full list using mapped index
 	void removeFileAt(int i);
+	void removeFolderAt(int i);
+//	void insertFolder(int i, NVBDirEntry* e);
+	void addFolders(QList<NVBDirEntry*> es);
+
+	QMutex mutex;
 
 private:
 	Status status;
@@ -98,8 +130,7 @@ public:
 
 	bool isContainer() const { return (type == NoContent); }
 	bool isRecursive() const { return (type == AllContent); }
-	bool isPopulated() const { return status == NVBDirEntry::Populated || status == NVBDirEntry::Loaded; }
-	bool isLoaded() const { return status == NVBDirEntry::Loaded; }
+	bool isPopulated() const { return status == NVBDirEntry::Populated || status == NVBDirEntry::Loading; }
 	Status getStatus() const { return status; }
 	void setDirWatch(bool b) {
 		if (!b) {
@@ -128,12 +159,15 @@ signals:
 	void filesLoaded(const NVBDirEntry * entry, int fstart, int fend);
 private slots:
 	void notifyLoading(int start, int end);
-	void setLoaded() { status = NVBDirEntry::Loaded; qApp->restoreOverrideCursor();}
+	void setLoaded() { status = NVBDirEntry::Populated; qApp->restoreOverrideCursor();}
+	void errorOnLoad() { status = NVBDirEntry::Error; qApp->restoreOverrideCursor();}
 public slots:
 	bool refresh(NVBFileFactory * fileFactory);
 	void refreshSubfolders(NVBFileFactory * fileFactory);
 	void sort(const NVBDirModelFileInfoLessThan & lessThan);
 	void filter(const NVBDirModelFileInfoFilter & acceptFile);
 };
+
+Q_DECLARE_METATYPE(NVBDirEntry::ContentChangeType);
 
 #endif
