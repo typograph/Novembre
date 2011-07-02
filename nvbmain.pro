@@ -13,11 +13,9 @@ contains(CONFIG,NVBLog){
 
 # STMFile tools
 HEADERS += \
-           src/NVBJointFile.h \
            src/NVBFileBundle.h \
            src/NVBFileFactory.h
 SOURCES += \
-           src/NVBJointFile.cpp \
            src/NVBFileBundle.cpp \
            src/NVBFileFactory.cpp
 
