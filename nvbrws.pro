@@ -4,65 +4,61 @@ include(nvb.pri)
 HEADERS += src/NVBLogger.h
 
 contains(CONFIG,NVBLog){
-		HEADERS += \
-						src/NVBLogUtils.h
-		SOURCES += \
-						src/NVBLogger.cpp \
-						src/NVBLogUtils.cpp
+  HEADERS += \
+    src/NVBLogUtils.h
+  SOURCES += \
+    src/NVBLogger.cpp \
+    src/NVBLogUtils.cpp
 }
 
 # STMFile tools
 HEADERS += \
-					 src/NVBJointFile.h \
-					 src/NVBFileBundle.h \
-					 src/NVBFileFactory.h
+  src/NVBFileBundle.h \
+  src/NVBFileFactory.h
 SOURCES += \
-					 src/NVBJointFile.cpp \
-					 src/NVBFileBundle.cpp \
-					 src/NVBFileFactory.cpp
-
+  src/NVBFileBundle.cpp \
+  src/NVBFileFactory.cpp
 
 # FileBrowser
 HEADERS += \
-					 src/NVBPageRefactorModel.h \
-					 src/NVBListItemDelegate.h \
-					 src/NVBPageInfoWidget.h \
-					 src/NVBPageInfoView.h \
-					 src/NVBProgress.h \
-					 src/NVBColumnsModel.h \
-					 src/NVBColumnDialog.h \
-					 src/NVBFileFilterDialog.h \
-					 src/NVBDirModelHelpers.h \
-					 src/NVBDirModel.h \
-					 src/NVBDirView.h \
-					 src/NVBDirViewModel.h \
-					 src/NVBBrowser.h
+  src/NVBPageInfoWidget.h \
+  src/NVBPageInfoView.h \
+  src/NVBFileListView.h \
+  src/NVBColumnsModel.h \
+  src/NVBColumnDialog.h \
+  src/NVBFileFilterDialog.h \
+  src/NVBDirModelHelpers.h \
+  src/NVBDirModel.h \
+  src/NVBDirView.h \
+  src/NVBDirViewModel.h \
+  src/NVBBrowser.h
 
 SOURCES += \
-					 src/NVBPageRefactorModel.cpp \
-					 src/NVBListItemDelegate.cpp \
-					 src/NVBPageInfoWidget.cpp \
-					 src/NVBColumnsModel.cpp \
-					 src/NVBColumnDialog.cpp \
-					 src/NVBFileFilterDialog.cpp \
-					 src/NVBDirModelHelpers.cpp \
-					 src/NVBDirModel.cpp \
-					 src/NVBDirView.cpp \
-					 src/NVBDirViewModel.cpp \
-					 src/NVBBrowser.cpp
+  src/NVBPageInfoWidget.cpp \
+  src/NVBFileListView.cpp \
+  src/NVBColumnsModel.cpp \
+  src/NVBColumnDialog.cpp \
+  src/NVBFileFilterDialog.cpp \
+  src/NVBDirModelHelpers.cpp \
+  src/NVBDirModel.cpp \
+  src/NVBDirView.cpp \
+  src/NVBDirViewModel.cpp \
+  src/NVBBrowser.cpp
 
 # Application headers
 HEADERS += \
-					 src/NVBSettings.h \
-					 src/NVBMain.h \
-					 src/NvBrowserApp.h
+  src/NVBSettings.h \
+  src/NVBMainWindow.h \
+  src/NVBMainDocks.h \
+  src/NVBCoreApplication.h \
+  src/NvBrowserApp.h
 
 SOURCES += \
-					 src/NVBSettings.cpp \
-					 src/NVBMain.cpp \
-					 src/NvBrowserApp.cpp
-
-DEFINES += NVB_BROWSER_ONLY
+  src/NVBSettings.cpp \
+  src/NVBMainWindow.cpp \
+  src/NVBMainDocks.cpp \
+  src/NVBCoreApplication.cpp \
+  src/NvBrowserApp.cpp
 
 CONFIG += qt
 unix : CONFIG += x11

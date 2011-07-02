@@ -13,67 +13,64 @@ contains(CONFIG,NVB3DView) {
 HEADERS += src/NVBLogger.h
 
 contains(CONFIG,NVBLog){
-    SOURCES += src/NVBLogger.cpp
+  SOURCES += src/NVBLogger.cpp
 }
 
 
 contains(CONFIG,NVB2DView) {
 HEADERS += \
-           src/NVBGraphicsItems.h
+  src/NVBGraphicsItems.h
 SOURCES += \
-           src/NVBGraphicsItems.cpp
+  src/NVBGraphicsItems.cpp
 }
 
 # Basic data structures
 
 HEADERS += \
-					 src/NVBScaler.h \
-           src/NVBUnits.h \
-           src/NVBVariant.h \
-					 src/NVBMap.h \
-					 src/NVBDataCore.h \
-					 src/NVBDataTransform.h \
-           src/NVBDataSource.h \
-					 src/NVBAxisSelector.h \
-           src/NVBGeneralDelegate.h \
-           src/NVBViewController.h \
-           src/NVBFilterDelegate.h \
-           src/NVBDelegateProvider.h \
-           src/NVBPageToolbar.h \
-           src/NVBTokens.h \
-           src/NVBFileInfo.h \
-           src/NVBMimeData.h \
-           src/NVBPageViewModel.h \
-           src/NVBFile.h \
+  src/NVBScaler.h \
+  src/NVBUnits.h \
+  src/NVBVariant.h \
+  src/NVBMap.h \
+  src/NVBDataCore.h \
+  src/NVBAxis.h \
+  src/NVBDataTransforms.h \
+  src/NVBDatasetIcons.h \
+  src/NVBDataSource.h \
+  src/NVBDataSourceModel.h \
+  src/NVBAxisSelector.h \
+  src/NVBTokens.h \
+  src/NVBFileInfo.h \
+  src/NVBMimeData.h \
+  src/NVBFile.h \
 
 SOURCES += \
-           src/NVBUnits.cpp \
-           src/NVBVariant.cpp \
-					 src/NVBMap.cpp \
-					 src/NVBDataCore.cpp \
-					 src/NVBDataTransform.cpp \
-					 src/NVBDataSource.cpp \
-					 src/NVBAxisSelector.cpp \
-					 src/NVBPageToolbar.cpp \
-           src/NVBPages.cpp \
-           src/NVBTokens.cpp \
-           src/NVBFileInfo.cpp \
-           src/NVBMimeData.cpp \
-           src/NVBPageViewModel.cpp \
-					 src/NVBFile.cpp
+  src/NVBScaler.cpp \
+  src/NVBUnits.cpp \
+  src/NVBVariant.cpp \
+  src/NVBMap.cpp \
+  src/NVBDataCore.cpp \
+  src/NVBDataTransforms.cpp \
+  src/NVBDatasetIcons.cpp \
+  src/NVBDataSource.cpp \
+  src/NVBDataSourceModel.cpp \
+  src/NVBAxisSelector.cpp \
+  src/NVBTokens.cpp \
+  src/NVBFileInfo.cpp \
+  src/NVBMimeData.cpp \
+  src/NVBFile.cpp
 
 # Helpful objects for plugins
 
 HEADERS += \
-					 src/NVBAxisMaps.h \
-					 src/NVBColorMaps.h \
-					 src/NVBPhysSpinBox.h \
-					 src/NVBPhysStepSpinBox.h
+  src/NVBAxisMaps.h \
+  src/NVBColorMaps.h \
+  src/NVBPhysSpinBox.h \
+  src/NVBPhysStepSpinBox.h
 
 SOURCES += \
-					 src/NVBColorMaps.cpp \
-					 src/NVBPhysSpinBox.cpp \
-					 src/NVBPhysStepSpinBox.cpp
+  src/NVBColorMaps.cpp \
+  src/NVBPhysSpinBox.cpp \
+  src/NVBPhysStepSpinBox.cpp
 
 CONFIG += qt
 
@@ -90,7 +87,7 @@ OBJECTS_DIR = objPIC
 TEMPLATE = lib
 DESTDIR = .
 
-VERSION = 0.0.5
+VERSION = 0.1.0
 
 QT += core gui
 

@@ -5,10 +5,10 @@ CONFIG += NVBLog
 # CONFIG += NVBVerboseLog
 
 # Select views to use
-CONFIG +=
-          NVB2DView				NVB2DView \
-#          NVBGraphView \
-#          NVB3DView
+# CONFIG += \
+#  NVB2DView \
+#  NVBGraphView \
+#  NVB3DView
 
 
 # Compile plugins as shared libraries
