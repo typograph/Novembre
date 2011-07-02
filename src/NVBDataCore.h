@@ -64,6 +64,9 @@ double * transformNArray(const double * data, axisindex_t n, const axissize_t * 
 axissize_t prod(axisindex_t n, const axissize_t * numbers);
 axissize_t subprod(const axissize_t * numbers, axisindex_t m, const axisindex_t * ixs);
 
+inline axissize_t prod(QVector<axissize_t> numbers) { return prod(numbers.count(),numbers.constData()); }
+
+
 QVector<axisindex_t> targetaxes(axisindex_t n, QVector<axisindex_t> sliceaxes);
 QVector<axissize_t> subvector(QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes);
 
