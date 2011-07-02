@@ -31,6 +31,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QString>
 #include <QtGui/QMessageBox>
+#include <QtCore/QVariant>
 
 NVBCoreApplication::NVBCoreApplication( int & argc, char ** argv )
 : QApplication(argc,argv)
@@ -68,10 +69,14 @@ void NVBCoreApplication::message(NVB::LogEntryType type, QString issuer, QString
 {
   if (type == NVB::CriticalErrorEntry)
     QMessageBox::critical(0,issuer,text);
-  else if (type == NVB::ErrorEntry)
-    qDebug() << issuer << " -> " << text;
+#ifdef NVB_DEBUG
+	else
+#else
   else if (type == NVB::DebugEntry)
     qDebug() << issuer << " :: " << text;
+  else if (type == NVB::ErrorEntry)
+#endif
+    qDebug() << issuer << " -> " << text;
 }
 #endif
 
