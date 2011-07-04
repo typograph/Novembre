@@ -46,8 +46,10 @@ public :
 #else
   NVBIconVizDelegate(NVBDataSource* source):QIconEngine(),cache(0) {
 #endif
-    if (!source) throw;
-    connectSource(source);
+		if (!source)
+			NVBOutputError("NULL page");
+		else
+			connectSource(source);
     }
   virtual ~NVBIconVizDelegate() { if (cache) delete (cache);}
 

@@ -107,7 +107,6 @@ QRgb NVBHSVWheelContColorModel::colorize( double z ) const
       case 5:
         return 0xFF000000 + (v << 16) + (p << 8) + q; 
       default: {
-        // throw nvberr_unexpected_value;
 				NVBOutputError("Color conversion error");
 				NVBOutputError(QString("%1 (%2,%3)\nwas converted to\n(%4->%5) -- your computer is crazy!").arg(z,6).arg(cInfo.z_min).arg(cInfo.z_max).arg(hf,3).arg(i));
         return 0xFF000000;
@@ -250,25 +249,16 @@ QRgb NVBRGBRampContColorModel::colorize( double z ) const
   else
     return 0xFF000000;
 }
-/*
-QImage * NVBRGBRampContColorModel::colorize( double * zs, QSize wxh )
-{
-  QImage * result = new QImage(wxh,QImage::Format_ARGB32);
-  if (!result) throw nvberr_not_enough_memory;
-  for (int i = 0; i<wxh.width(); i++)
-    for (int j = 0; j<wxh.height(); j++) {
-        result->setPixel(i,j,colorize(zs[i*wxh.width()+j]));
-      }
-  return result;
-}
-*/
 
 
 NVBRescaleColorModel::NVBRescaleColorModel(const NVBContColorModel * model):NVBContColorModel(),source(0)
 {
-  if (!model) throw;
-  zmin = model->zMin();
-  zmax = model->zMax();
+	if (!model)
+		NVBOutputError("NULL model supplied");
+	else {
+		zmin = model->zMin();
+		zmax = model->zMax();
+		}
   setModel(model);
 }
 
@@ -319,8 +309,10 @@ QRgb NVBRescaleColorModel::colorize(double z) const
 
 void NVBRescaleColorModel::parentAdjusted()
 {
-  zscaler = scaler<double,double>(zmin,zmax,source->zMin(),source->zMax());
-  emit adjusted();
+	if (source) {
+		zscaler = scaler<double,double>(zmin,zmax,source->zMin(),source->zMax());
+		emit adjusted();
+		}
 }
 
 }

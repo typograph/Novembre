@@ -81,7 +81,8 @@ public :
 
 NVBSpecSubstractorWidget::NVBSpecSubstractorWidget(NVBSpecDataSource * source):QWidget()
 {
-  if (!source) throw;
+	if (!source)
+		NVBOutputError("NULL source");
 
   setLayout(new QVBoxLayout(this));
   QHBoxLayout * l = new QHBoxLayout();

@@ -588,7 +588,7 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
 				scaleMem<double,double>(data,DACscaler,bulk_data,data_points);
 			else {
 				NVBOutputError("Memory allocation failed");
-				throw;
+				return;
 				}
       free(bulk_data);
       break;
@@ -605,7 +605,7 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
 				scaleMem<double,double>(data,DACscaler,bulk_data,data_points);
 			else {
 				NVBOutputError("Memory allocation failed");
-				throw;
+				return;
 				}
 
       free(bulk_data);

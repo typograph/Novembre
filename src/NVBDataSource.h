@@ -88,6 +88,7 @@ private:
   unsigned int refCount;
   friend void useDataSource(NVBDataSource* source);
   friend void releaseDataSource(NVBDataSource* source);
+	NVBDataSource( const NVBDataSource& );
 protected:
   /// Minimal and maximal values for the z axis
   double zMin, zMax;
@@ -96,7 +97,6 @@ protected:
 public:
   /// Creates a used source
 	NVBDataSource():QObject(),refCount(1),owner(0) {;}
-	NVBDataSource( const NVBDataSource& ):QObject() { NVBOutputError("Copying not allowed"); throw; }
   /// Destructor checks for stale references and prints a warning. Such a warning means something might be really wrong in the plugins used
   virtual ~NVBDataSource() {
     if (refCount)

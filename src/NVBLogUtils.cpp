@@ -134,6 +134,8 @@ NVBLogWidget::NVBLogWidget(QString title, QWidget * parent):QFrame(parent)
 
 void NVBLogFile::addMessage(NVB::LogEntryType type, QString issuer, QString message)
 {
+	if (!isOpen()) return;
+
   QString typeStr;
   switch (type) {
     case NVB::ErrorEntry : { typeStr = "EE";  break; }
@@ -158,8 +160,9 @@ NVBLogFile::NVBLogFile(QString filename, QObject * parent):QFile(filename, paren
 {
 	if (!open(QIODevice::Append)) {
 		NVBOutputFileError(this);
-		throw;
+		return;
 		}
+
   write(QString("-----< %1 >-----\n").arg(QDateTime::currentDateTime().toString()).toUtf8());
   flush();
 

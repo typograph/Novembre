@@ -32,7 +32,7 @@
 #ifndef uint
 typedef unsigned int uint;
 #endif
-// #include "NVBLogger.h"
+#include "NVBLogger.h"
 
 /*
 typedef char dimension;
@@ -167,7 +167,10 @@ for (uint row = 0; row<height; row++)
 
 template <typename T>
 void arrayCopyRowtoCol( T* dest, const T* src, unsigned int row, unsigned int col, unsigned int width, unsigned int height) {
-  if ( row >= height || col >= height ) throw;
+	if ( row >= height || col >= height ) {
+		NVBOutputError("Row/Column out of bounds");
+		return;
+		}
   for (unsigned int i = 0; i < width; i++) 
     dest[col + i*height] = src[row*width + i];
 }

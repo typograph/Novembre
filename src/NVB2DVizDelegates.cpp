@@ -134,9 +134,10 @@ void NVB2DMapVizDelegate::setSource(NVBDataSource * source)
 
 NVB2DPtsVizDelegate::NVB2DPtsVizDelegate(NVBDataSource * source):QObject(),NVBFilteringGraphicsItem(),page(0),radius(0)
 {
-  if (source->type() != NVB::SpecPage) throw;
+	if (source->type() != NVB::SpecPage)
+		NVBOutputError("Not a spectroscopy page");
 
-  setSource(source);
+	setSource(source); // will react correctly to topography
 }
 
 NVB2DPtsVizDelegate::~ NVB2DPtsVizDelegate()
@@ -156,6 +157,8 @@ QRectF NVB2DPtsVizDelegate::boundingRect() const
 
 void NVB2DPtsVizDelegate::initEllipses()
 {
+	if (!page) return;
+
   prepareGeometryChange();
 
   QList<uint> r,g,b,cnt;
@@ -201,6 +204,8 @@ void NVB2DPtsVizDelegate::initEllipses()
 
 void NVB2DPtsVizDelegate::paint(QPainter * painter, const QStyleOptionGraphicsItem * , QWidget * )
 {
+	if (!page) return;
+
   painter->save();
   painter->setPen(QPen(Qt::NoPen));
   for(int i = positions.size()-1; i>=0; i--) {

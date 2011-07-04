@@ -81,7 +81,9 @@ public :
 
 NVBSpecExcluderWidget::NVBSpecExcluderWidget( NVBSpecDataSource * source ):QWidget()
 {
-  if (!source) throw;
+	if (!source)
+		NVBOutputError("NULL source");
+
   setWindowTitle("Exclude curves");
 
   setLayout(new QVBoxLayout(this));

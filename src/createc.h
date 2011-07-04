@@ -95,8 +95,8 @@ class CreatecDatPage : public NVB3DPage {
 Q_OBJECT
 private:
   CreatecHeader header;
-  CreatecDatPage() { throw; }
-  CreatecDatPage(const CreatecDatPage & other) { throw; }
+	CreatecDatPage();
+	CreatecDatPage(const CreatecDatPage & other);
   CreatecDatPage( CreatecHeader file_header, int channel, double * bulk_data);
   static QStringList channelNames;
 public:
@@ -124,7 +124,7 @@ Q_OBJECT
 protected:
 //	CreatecHeader header;
 	CreatecVertPage();
-  CreatecVertPage(const CreatecVertPage & other) { throw; }
+	CreatecVertPage(const CreatecVertPage & other);
 	CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data );
 public:
   virtual ~CreatecVertPage() {;}

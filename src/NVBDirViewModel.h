@@ -29,6 +29,12 @@ class NVBDirViewModel : public QAbstractItemModel
 Q_OBJECT
 public:
 
+	enum Mode {
+		Normal = 0,
+		SpectroscopyOverlay
+//
+	};
+
 	NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent = 0);
   virtual ~NVBDirViewModel();
 
@@ -64,6 +70,8 @@ private:
   void cacheRowCounts() const;
   void cacheRowCounts ( int first, int last ) const;
 
+	Mode mode;
+
 	mutable QPixmap unavailable, loading;
 
 	QVariant unloadableData(int role) const;
@@ -81,6 +89,7 @@ private slots:
 
 public slots:
   void defineWindow(int start,int end);
+	void setMode(Mode m);
 };
 
 

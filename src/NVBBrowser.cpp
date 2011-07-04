@@ -148,12 +148,10 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
   llayout->addWidget(foldersToolBar);
 
-	try {
-		fileModel = new NVBDirModel(files,this);
-		}
-	catch (int err) {
-		NVBCriticalError(QString("DirModel creation failed : error #%1").arg(err));
-		}
+	fileModel = new NVBDirModel(files,this);
+
+	if (!fileModel)
+		NVBCriticalError(QString("DirModel creation failed"));
 
 	exportFolderAction = new QAction(QString("Export data"),this);
 	connect(exportFolderAction,SIGNAL(triggered()),this,SLOT(exportData()));
@@ -182,19 +180,15 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   populateList();
   QApplication::restoreOverrideCursor();
 
-  try {
-		fileList = new NVBFileListView(lframe);
-    fileList->resize(confile->value("Browser/FileListSize", QSize(50, 100)).toSize());
-		fileList->setModel(fileModel);
+	fileList = new NVBFileListView(lframe);
+	if (!fileList)
+		NVBCriticalError(QString("FileList creation failed : Model logic failed"));
+	fileList->resize(confile->value("Browser/FileListSize", QSize(50, 100)).toSize());
+	fileList->setModel(fileModel);
 
-    for (int i = 1; i<=nuc; i++)
-      if (!confile->value(QString("Browser/UserColumn%1v").arg(i),true).toBool())
-        fileList->hideColumn(i);
-
-    }
-  catch (int err) {
-		NVBCriticalError(QString("FileList creation failed : Model logic failed : error #%1").arg(err));
-    }
+	for (int i = 1; i<=nuc; i++)
+		if (!confile->value(QString("Browser/UserColumn%1v").arg(i),true).toBool())
+			fileList->hideColumn(i);
 
   llayout->addWidget(fileList);  
 
@@ -491,7 +485,7 @@ void NVBFolderInputDialog::buildUi() {
 	QCompleter *completer = new QCompleter(this);
 	QFileSystemModel * fsm = new QFileSystemModel(completer);
 	fsm->setNameFilters(QStringList());
-	fsm->setFilter(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable);
+	fsm->setFilter(QDir::Dirs | QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable | QDir::Executable);
 	completer->setModel(fsm);
 	completer->setCaseSensitivity(Qt::CaseInsensitive);
 	dirEdit->setCompleter(completer);

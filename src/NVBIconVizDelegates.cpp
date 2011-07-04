@@ -50,16 +50,17 @@ QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page) {
 	return i;
 }
 
-NVBTopoIconDelegate::NVBTopoIconDelegate(NVBDataSource * source):NVBIconVizDelegate(source)
+NVBTopoIconDelegate::NVBTopoIconDelegate(NVBDataSource * source):NVBIconVizDelegate(source),page(0)
 {
-  if (source->type() != NVB::TopoPage) throw;
-  page = (NVB3DDataSource*)(source);
-//  if (!page) throw nvberr_no_sense;
-  redrawCache();
+	if (source->type() != NVB::TopoPage)
+		NVBOutputError("Not a topography page");
+
+	setSource(source);
 }
 
 void NVBTopoIconDelegate::redrawCache()
 {
+	if (!page) return;
   if (cache) delete cache;
 	cache = colorizeWithPlaneSubtraction(page);
 }
@@ -82,16 +83,19 @@ void NVBTopoIconDelegate::setSource(NVBDataSource * source)
 
 NVBSpecIconDelegate::NVBSpecIconDelegate(NVBDataSource * source):NVBIconVizDelegate(source)
 {
-  if (source->type() != NVB::SpecPage) throw;
-  page = (NVBSpecDataSource *)source;
-
-  cache = new QImage();
+	if (source->type() != NVB::SpecPage)
+		NVBOutputError("Not a spectroscopy page");
+	else {
+		page = (NVBSpecDataSource *)source;
+		cache = new QImage();
+	}
 }
 
 void NVBSpecIconDelegate::paint(QPainter * painter, const QRect & rect, QIcon::Mode mode, QIcon::State state)
 {
-  if (rect.size().width() > cache->size().width() || rect.size().height() > cache->size().height())
-    redrawCache(rect.size());
+	if (cache)
+		if (rect.size().width() > cache->size().width() || rect.size().height() > cache->size().height())
+			redrawCache(rect.size());
   NVBIconVizDelegate::paint(painter, rect, mode, state);
 }
 
