@@ -175,5 +175,5 @@ void NVBFileWindowLayout::setView(NVBDataView * view)
 {
   centralView = view;
   active = centralView->hasWidthForHeight();
-  insertWidget(2,view->w());
+	insertWidget(2,view->w(),1);
 }
