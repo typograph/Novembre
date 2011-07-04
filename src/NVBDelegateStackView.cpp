@@ -44,7 +44,7 @@ NVBDelegateStackView::NVBDelegateStackView(NVBWidgetStackModel * widgets):QScrol
 {
 //  setWidgetResizable(true);
   QVBoxLayout * l = new QVBoxLayout();
-  l->setSizeConstraint(QLayout::SetMinimumSize);
+//  l->setSizeConstraint(QLayout::SetMinimumSize);
 #if QT_VERSION >= 0x040300
   l->setContentsMargins(0,0,0,0);
 #else
