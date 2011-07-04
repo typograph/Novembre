@@ -251,19 +251,25 @@ NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStri
 
   // size
 
-  if (!header.contains("SCAN_PIXELS") && header.value("SCAN_PIXELS").isEmpty())
-		throw;
+	if (!header.contains("SCAN_PIXELS") && header.value("SCAN_PIXELS").isEmpty()) {
+		NVBOutputError("No scan dimensions available");
+		return;
+		}
 
   QStringList s_size = header.value("SCAN_PIXELS").first().split(' ',QString::SkipEmptyParts);
   _resolution = QSize(s_size.at(0).toInt(), s_size.at(1).toInt());
 
-  if (!header.contains("SCAN_RANGE") && header.value("SCAN_RANGE").isEmpty())
-		throw;
+	if (!header.contains("SCAN_RANGE") && header.value("SCAN_RANGE").isEmpty()) {
+		NVBOutputError("No scan size available");
+		return;
+		}
 
   QStringList s_range = header.value("SCAN_RANGE").first().split(' ',QString::SkipEmptyParts);
 
-  if (!header.contains("SCAN_OFFSET") && header.value("SCAN_OFFSET").isEmpty())
-		throw;
+	if (!header.contains("SCAN_OFFSET") && header.value("SCAN_OFFSET").isEmpty()) {
+		NVBOutputError("No scan offset available");
+		return;
+		}
 
   QStringList s_offset = header.value("SCAN_OFFSET").first().split(' ',QString::SkipEmptyParts);
 

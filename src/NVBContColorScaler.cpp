@@ -149,14 +149,6 @@ void NVBContColorScaler::paintModel(QPainter * painter, double zmin, double zmax
 void NVBContColorScaler::paintHistogram(QPainter * painter, int w, int h)
 {
 
-//   if (histogram) delete histogram;
-// 
-//   histogram = new QImage(QSize(histw(),histh()),QImage::Format_ARGB32);
-// //   if (!cache) throw nvberr_not_enough_memory;
-//   histogram->fill(Qt::transparent);
-
-//  scaler<double,int> h(page->getZMax(),page->getZMin(),0,npoints-1);
-
   QVector<uint> hdata(abs(w)+1,0);
   const double * pdata = provider->getData();
   if (!pdata) return;

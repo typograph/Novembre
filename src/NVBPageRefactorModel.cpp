@@ -26,13 +26,28 @@ public :
   NVBMixTSIcon(NVB3DDataSource* topo, NVBSpecDataSource* spec):QIconEngine(),
 #endif
   cache(0),stopo(topo),sspec(spec) { 
-    if (!stopo || !sspec) throw;
+		if (!stopo || !sspec) {
+			NVBOutputError("A topography page and a spectroscopy page are needed");
+			return;
+			}
     cache = stopo->getColorModel()->colorize( stopo->getData(), stopo->resolution() );
-    if (!cache) throw;
+		if (!cache)  {
+			NVBOutputError("pixmap allocation failed");
+			return;
+			}
     }
   virtual ~NVBMixTSIcon() { if (cache) delete (cache);}
 
   virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode, QIcon::State) {
+		if (!cache) {
+			painter->save();
+			painter->setPen(QPen(Qt::blue));
+			painter->setBrush(Qt::blue);
+			painter->drawLine(rect.topLeft(),rect.bottomRight());
+			painter->drawLine(rect.topRight(),rect.bottomLeft());
+			painter->restore();
+			return;
+			}
     painter->drawImage(rect,*cache);
     // Paint dots
 

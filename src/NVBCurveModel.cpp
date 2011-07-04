@@ -14,12 +14,13 @@
 int NVBCurveModel::rowCount(const QModelIndex & parent) const
 {
   Q_UNUSED(parent);
+	if (!provider) return 0;
   return provider->datasize().height();
 }
 
 QVariant NVBCurveModel::data(const QModelIndex & index, int role) const
 {
-  if (!index.isValid()) return QVariant();
+	if (!provider || !index.isValid()) return QVariant();
   switch (role) {
     case Qt::DisplayRole : return QString("Curve %1").arg(index.row());
     case Qt::DecorationRole : return QColor(provider->getColorModel()->colorize(index.row()));
@@ -30,7 +31,10 @@ QVariant NVBCurveModel::data(const QModelIndex & index, int role) const
 NVBCurveModel::NVBCurveModel(NVBSpecDataSource * source):QAbstractListModel(),provider(source)
 {
 
-  if (!provider) throw;
+	if (!provider) {
+		NVBOutputError("NULL page supplied");
+		return;
+		}
 
   connect(provider,SIGNAL(dataChanged()),SLOT(resetModel()));
   connect(provider,SIGNAL(colorsChanged()),SLOT(updateModel()));

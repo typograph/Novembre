@@ -33,27 +33,22 @@
 
 int main(int argc, char *argv[])
 {
-  try {
-    NVBApplication app(argc, argv);
-    
-		if (app.otherInstanceIsRunning()) {
-			app.passParamsToOtherInstance();
-			return 0;
-			}
+	NVBApplication app(argc, argv);
 
-		app.createFactories();
+	if (app.otherInstanceIsRunning()) {
+		app.passParamsToOtherInstance();
+		return 0;
+		}
 
-    NVBMain widget;
-    widget.setWindowTitle( QString("Novembre") );
-    widget.show();
-    
-    app.setMainWindow(&widget);
-    
-    return app.exec();
-    }
-  catch (...) {
-    return 1;
-    }
+	app.createFactories();
+
+	NVBMain widget;
+	widget.setWindowTitle( QString("Novembre") );
+	widget.show();
+
+	app.setMainWindow(&widget);
+
+	return app.exec();
 }
 
 /*
@@ -110,14 +105,12 @@ NVBApplication::NVBApplication( int & argc, char ** argv )
 #ifdef NVB_ENABLE_LOG
   if (conf->contains("LogFile"))
     while (true) {
-      try {
-        new NVBLogFile(conf->value("LogFile").toString(),this);
-        break;
-        }
-			catch (...) {
+			NVBLogFile * f = new NVBLogFile(conf->value("LogFile").toString(),this);
+			if (!f) {
 				QMessageBox::critical(0,"Log error","Cannot access the logfile. Please check the settings");
 				if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
         }
+			else break;
       }
 #endif
 
@@ -165,48 +158,30 @@ void NVBApplication::createFactories() {
 		conf->setValue("PluginPath",NVB_PLUGINS);
 	if (!QFile::exists(conf->value("PluginPath").toString()))
 		if (NVBSettings::showGeneralSettings() == QDialog::Rejected)
-			throw;
+			NVBCriticalError("Cannot find plugins - cannot continue");
 #endif
 
 	while (true) {
-		try {
 #ifndef NVB_STATIC
-			setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
+		setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
 #endif
-			NVBFileFactory * ff = new NVBFileFactory();
-			if (!ff) NVBCriticalError("Filefactory failed to initialize.");
-			qApp->setProperty("filesFactory",QVariant::fromValue(ff));
+		NVBFileFactory * ff = new NVBFileFactory();
+		if (!ff) NVBCriticalError("Filefactory failed to initialize.");
+		qApp->setProperty("filesFactory",QVariant::fromValue(ff));
 
-			NVBToolsFactory * tf = new NVBToolsFactory;
-			if (!tf) NVBCriticalError("Tools factory failed to initialize");
-			qApp->setProperty("toolsFactory",QVariant::fromValue(tf));
+		NVBToolsFactory * tf = new NVBToolsFactory;
+		if (!tf) NVBCriticalError("Tools factory failed to initialize");
+		qApp->setProperty("toolsFactory",QVariant::fromValue(tf));
 
-			break;
-			}
-		catch (int err) {
-			QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
-			if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
-			}
+		break;
+//	QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
+//	if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
 		}
 }
 
 bool NVBApplication::notify( QObject * receiver, QEvent * event )
 {
-  try {
-    return QApplication::notify(receiver,event);
-    }
-  catch (int err) {
-		NVBOutputError(QString("Uncaught error #%1").arg(err));
-    return false;
-    }
-  catch (...) {
-		NVBOutputError("Fatal error");
-    return false;
-    }
-/*  catch (...) {
-    qDebug() << "NVBApplication::notify" << "->" << "Fatal error. Logger malfunctioning.";
-    return false;
-    }*/
+	return QApplication::notify(receiver,event);
 }
 
 #ifdef NVB_ENABLE_LOG

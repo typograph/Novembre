@@ -14,6 +14,65 @@
 #include "NVBFileFactory.h"
 #include "NVBDirModel.h"
 
+#if QT_VERSION >= 0x040300
+#include <QIconEngineV2>
+class NVBMixTSIcon : public QObject, public QIconEngineV2 {
+public :
+	NVBMixTSIcon(NVB3DDataSource* topo, NVBSpecDataSource* spec):QIconEngineV2(),
+#else
+#include <QIconEngine>
+class NVBMixTSIcon : public QObject, public QIconEngine {
+public :
+	NVBMixTSIcon(NVB3DDataSource* topo, NVBSpecDataSource* spec):QIconEngine(),
+#endif
+	cache(0),stopo(topo),sspec(spec) {
+		if (!stopo || !sspec) {
+			NVBOutputError("A topography page and a spectroscopy page are needed");
+			return;
+			}
+		cache = stopo->getColorModel()->colorize( stopo->getData(), stopo->resolution() );
+		if (!cache)  {
+			NVBOutputError("pixmap allocation failed");
+			return;
+			}
+		}
+	virtual ~NVBMixTSIcon() { if (cache) delete (cache);}
+
+	virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode, QIcon::State) {
+		if (!cache) {
+			painter->save();
+			painter->setPen(QPen(Qt::blue));
+			painter->setBrush(Qt::blue);
+			painter->drawLine(rect.topLeft(),rect.bottomRight());
+			painter->drawLine(rect.topRight(),rect.bottomLeft());
+			painter->restore();
+			return;
+			}
+
+		painter->drawImage(rect,*cache);
+		// Paint dots
+
+		painter->save();
+		painter->setPen(QPen(Qt::blue));
+		painter->setBrush(Qt::blue);
+
+		scaler<double,int> w(stopo->position().left(),stopo->position().right(),rect.left(),rect.right());
+		scaler<double,int> h(stopo->position().top(),stopo->position().bottom(),rect.top(),rect.bottom());
+
+		foreach( QPointF p,sspec->positions()) {
+			painter->drawEllipse(w.scale(p.x())-1,h.scale(p.y())-1,2,2);
+			}
+
+		painter->restore();
+
+		}
+
+protected:
+//  NVBDataSource * provider;
+	QImage* cache;
+	NVB3DDataSource* stopo;
+	NVBSpecDataSource* sspec;
+};
 
 NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent)
 	: QAbstractItemModel( parent )
@@ -418,4 +477,9 @@ QMimeData * NVBDirViewModel::mimeData(const QModelIndexList &ixs) const {
 
 QStringList NVBDirViewModel::mimeTypes () const {
 	return QStringList() << NVBDataSourceMimeData::dataSourceMimeType();
+}
+
+
+void NVBDirViewModel::setMode(Mode m) {
+	mode = m;
 }
