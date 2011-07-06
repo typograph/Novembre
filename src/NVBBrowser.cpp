@@ -1012,6 +1012,10 @@ void NVBBrowser::populateColumnsMenu() {
 	remColumnsMenu->clear();
 	for (int i = 1; i < fileModel->columnCount(); i++) {
 		int j = fileList->header()->logicalIndex(i);
+		if (j<0) {
+			NVBOutputError(QString("Column %1 not found").arg(i));
+			continue;
+			}
 		a = remColumnsMenu->addAction(fileModel->headerData(j,Qt::Horizontal,Qt::DisplayRole).toString(),this,SLOT(columnAction()));
 		a->setData(-j);
 		a = columnsMenu->addAction(fileModel->headerData(j,Qt::Horizontal,Qt::DisplayRole).toString(),this,SLOT(columnAction()));
