@@ -23,11 +23,10 @@
 #include <QGridLayout>
 #include <QMenu>
 #include <QAction>
-#include <QFileSystemModel>
 #include <QCompleter>
-#ifdef Q_WS_WIN
-#include <QMessageBox>
-#endif
+#include <QValidator>
+#include <QDesktopServices>
+#include <QFileIconProvider>
 #include "NVBColumnDialog.h"
 #include "NVBPageRefactorModel.h"
 #include "NVBFileListView.h"
@@ -35,6 +34,204 @@
 #include <math.h>
 
 #include "../icons/browser.xpm"
+/*
+class NVBCompleterValidator : public QValidator {
+	QCompleter * c;
+public:
+	NVBCompleterValidator(QCompleter * completer)
+	: QValidator()
+	, c(completer)
+	{;}
+
+	QValidator::State validate(QString & s, int & pos) const {
+		switch (c->completionCount()) {
+			case 0:
+				return QValidator::Invalid;
+			case 1:
+				s = c->currentCompletion();
+				return QValidator::Acceptable;
+			default:
+				return QValidator::Intermediate;
+			}
+		}
+};
+*/
+
+struct NVBFileSystemDirEntry {
+	QString path;
+	QString name;
+	NVBFileSystemDirEntry * parent;
+	bool populated;
+	QFileInfo finfo;
+	QList<NVBFileSystemDirEntry*> subs;
+	NVBFileSystemDirEntry():parent(0),populated(true) {;}
+	NVBFileSystemDirEntry(NVBFileSystemDirEntry * _parent, QString nname)
+		: name(nname)
+		, parent(_parent)
+		, populated(false)
+	{
+		if (!parent || parent->name.isNull())
+			path = nname + QDir::separator();
+		else
+			path = parent->path + nname + QDir::separator();
+
+		finfo = QFileInfo(path);
+
+	}
+
+	~NVBFileSystemDirEntry() {
+		foreach(NVBFileSystemDirEntry * e, subs)
+			delete e;
+		}
+
+	void populate() {
+		if (populated) return;
+
+		QDir d(path);
+
+		foreach(QString s, d.entryList(QStringList(),QDir::Dirs | QDir::NoDotAndDotDot | QDir::Readable ,QDir::Name)) {
+			subs.append(new NVBFileSystemDirEntry(this,s));
+		}
+
+		populated = true;
+		}
+};
+
+class NVBFileSystemDirModel : public QAbstractItemModel {
+
+// Here we could add an icon factory, but there seem to be no reason for that
+	QFileIconProvider iconFactory;
+	NVBFileSystemDirEntry rootEntry;
+
+public:
+	NVBFileSystemDirModel(QObject * parent = 0)
+	: QAbstractItemModel(parent)
+//	, iconFactory(new QFileIconProvider())
+	{
+		QFileInfoList drives = QDir::drives();
+
+#ifdef Q_WS_WIN
+		foreach(QFileInfo drive, drives) {
+			QString s = drive.filePath();
+			s.chop(1);
+			rootEntry.subs.append(new NVBFileSystemDirEntry(&rootEntry,s));
+			}
+#else
+		rootEntry.path = QString("");
+#endif
+	}
+
+	QVariant data(const QModelIndex &index, int role) const {
+		if (!index.isValid()) {
+#ifndef Q_WS_WIN
+			if (role == Qt::ToolTipRole)
+				return QString("/");
+			if (role == Qt::DecorationRole)
+				return iconFactory.icon(rootEntry.finfo);
+#endif
+			return QVariant();
+			}
+		switch(role) {
+			case Qt::DisplayRole:
+			case Qt::EditRole:
+				return static_cast<NVBFileSystemDirEntry*>(index.internalPointer())->subs.at(index.row())->name;
+			case Qt::ToolTipRole :
+				return static_cast<NVBFileSystemDirEntry*>(index.internalPointer())->subs.at(index.row())->path;
+			case Qt::DecorationRole :
+				return iconFactory.icon(static_cast<NVBFileSystemDirEntry*>(index.internalPointer())->subs.at(index.row())->finfo);
+			default:
+				return QVariant();
+			}
+	}
+
+	QModelIndex index(int row, int column, const QModelIndex &parent) const {
+		if (column > 0) return QModelIndex();
+		if (!parent.isValid()) return createIndex(row,0,(void*)(&rootEntry));
+		NVBFileSystemDirEntry * e = static_cast<NVBFileSystemDirEntry*>(parent.internalPointer());
+		return createIndex(row,column,(void*)(e->subs[parent.row()]));
+		}
+
+	QModelIndex parent(const QModelIndex &index) const {
+		if (!index.isValid()) return QModelIndex();
+		NVBFileSystemDirEntry * e = static_cast<NVBFileSystemDirEntry*>(index.internalPointer());
+		if (!e->parent)
+			return QModelIndex();
+		return createIndex(e->parent->subs.indexOf(e->parent),0,(void*)(e->parent));
+	}
+
+	Qt::ItemFlags flags(const QModelIndex &index) const
+	{
+		if (!index.isValid())
+			return 0;
+
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+	}
+
+	int columnCount(const QModelIndex & /* parent */) const { return 1; }
+
+	int rowCount(const QModelIndex &parent) const {
+		if (!parent.isValid()) return rootEntry.subs.count();
+		NVBFileSystemDirEntry * e = static_cast<NVBFileSystemDirEntry*>(parent.internalPointer())->subs[parent.row()];
+		if (!e->populated)
+			e->populate();
+		return e->subs.count();
+	}
+
+	bool hasChildren(const QModelIndex &parent) const {
+		if (!parent.isValid()) return true;
+		NVBFileSystemDirEntry * e = static_cast<NVBFileSystemDirEntry*>(parent.internalPointer())->subs[parent.row()];
+		return !e->populated || e->subs.count() > 0;
+	}
+
+};
+
+class NVBDirCompleter : public QCompleter {
+	public:
+	NVBDirCompleter(QObject * parent = 0) : QCompleter(parent) {
+		setModel(new NVBFileSystemDirModel(this));
+		setModelSorting(QCompleter::CaseSensitivelySortedModel);
+		setCaseSensitivity(Qt::CaseInsensitive);
+	}
+
+	QString pathFromIndex(const QModelIndex &index) const {
+		QString s = index.data(Qt::ToolTipRole).toString();
+		s.chop(1); // separator
+		return s;
+	}
+
+	QStringList splitPath(const QString &path) const {
+		QStringList l = path.split(QDir::separator());
+#ifndef Q_WS_WIN
+		l.removeFirst();
+#endif
+		return l;
+	}
+};
+
+class NVBPathValidator : public QValidator {
+private:
+	QDir d;
+public:
+	NVBPathValidator(QObject * parent = 0)
+	: QValidator(parent)
+	, d(QDir::root())
+	{;}
+
+	QValidator::State validate(QString & s, int &) const {
+		if (s.isEmpty())
+			return QValidator::Intermediate;
+
+		if (d.exists(s))
+			return QValidator::Acceptable;
+
+		int i = s.lastIndexOf(d.separator());
+
+		if (d.exists(s.left(i)));
+			return QValidator::Intermediate;
+
+		return QValidator::Invalid;
+		}
+};
 
 NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 #if QT_VERSION >= 0x040300
@@ -468,31 +665,34 @@ void NVBFolderInputDialog::buildUi() {
 
 	nameEdit = new QLineEdit(this);
 	nameLabel->setBuddy(nameEdit);
-#ifndef Q_WS_WIN
 	connect(nameEdit,SIGNAL(textChanged(QString)),this,SLOT(checkInput()));
-#endif
 	gridLayout->addWidget(nameEdit, 0, 1, 1, 3);
 
 	dirLabel = new QCheckBox("&Path",this);
 	dirLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	dirLabel->setChecked(true);
-#ifndef Q_WS_WIN
 	connect(dirLabel,SIGNAL(toggled(bool)),this,SLOT(checkInput()));
-#endif
 	gridLayout->addWidget(dirLabel, 1, 0, 1, 1);
 
 	dirEdit = new QLineEdit(this);
-	QCompleter *completer = new QCompleter(this);
+//	QCompleter *completer = new QCompleter(this);
+/*
 	QFileSystemModel * fsm = new QFileSystemModel(completer);
-	fsm->setNameFilters(QStringList());
-	fsm->setFilter(QDir::Dirs | QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable | QDir::Executable);
-	completer->setModel(fsm);
-	completer->setCaseSensitivity(Qt::CaseInsensitive);
-	dirEdit->setCompleter(completer);
-	connect(dirLabel, SIGNAL(toggled(bool)), dirEdit, SLOT(setEnabled(bool)));
-#ifndef Q_WS_WIN
-	connect(dirEdit,SIGNAL(textChanged(QString)),this,SLOT(checkInput()));
+//	fsm->setNameFilters(QStringList());
+#ifdef Q_WS_WIN
+	fsm->setFilter(QDir::Dirs | QDir::NoDotAndDotDot );
+#else
+	fsm->setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Readable | QDir::Executable);
 #endif
+	fsm->sort(0);
+	fsm->setRootPath(QString());
+	completer->setModel(fsm);
+*/
+
+	dirEdit->setCompleter(new NVBDirCompleter(dirEdit));
+	dirEdit->setValidator(new NVBPathValidator(this));
+	connect(dirLabel, SIGNAL(toggled(bool)), dirEdit, SLOT(setEnabled(bool)));
+	connect(dirEdit,SIGNAL(editingFinished()),this,SLOT(checkInput()));
 	gridLayout->addWidget(dirEdit, 1, 1, 1, 2);
 
 
@@ -518,8 +718,9 @@ void NVBFolderInputDialog::buildUi() {
 	buttonBox = new QDialogButtonBox(this);
 	buttonBox->setOrientation(Qt::Horizontal);
 	buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
-	QObject::connect(buttonBox, SIGNAL(accepted()), this, SLOT(tryAccept()));
+	QObject::connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	QObject::connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+	buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
 	gridLayout->addWidget(buttonBox, 2, 2, 1, 2);
 }
@@ -568,9 +769,8 @@ bool NVBFolderInputDialog::editFolder( QString & label, QString & dirname, bool 
 
 void NVBFolderInputDialog::dirSelected( )
 {
-  if (dirEdit && fileDialog) {
+	if (dirEdit && fileDialog)
     dirEdit->setText(fileDialog->selectedFiles().first());
-    }
 }
 
 QString NVBFolderInputDialog::getDir( )
@@ -591,59 +791,26 @@ bool NVBFolderInputDialog::getIncludeSubfolders()
   return subfolderCheck->isEnabled() && subfolderCheck->isChecked();
 }
 
-void NVBFolderInputDialog::tryAccept( )
-{
-	if (checkInput())
-    accept();
-}
-
-bool NVBFolderInputDialog::checkInput( )
+void NVBFolderInputDialog::checkInput( )
 {
   bool result = true;
 
   if (nameEdit->text().isEmpty()) {
 		if (dirLabel->isChecked()) {
 			QString sdir = dirEdit->text();
-			nameEdit->setText(sdir.right(sdir.length() - sdir.lastIndexOf(QDir::separator())));
+			nameEdit->setText(sdir.right(sdir.length() - sdir.lastIndexOf(QDir::separator()) - 1));
 			}
 		else {
-#ifdef Q_WS_WIN
-			QMessageBox::warning(this, QString(), QString("The label cannot be empty"), QMessageBox::Ok, QMessageBox::Ok);
-#else
-			QPalette p = dirEdit->palette();
-			p.setColor(QPalette::Inactive,QPalette::Base,QColor(0xDD7777));
-			p.setColor(QPalette::Active,QPalette::Base,QColor(0xDD7777));
-			nameEdit->setPalette(p);
-#endif
 			result = false;
 			}
     }
-  else
-    nameEdit->setPalette(QApplication::palette());
 
   if (dirLabel->isChecked()) {
     QString dir = dirEdit->text();
-    if (!(QDir(dir).exists())) {
-#ifdef Q_WS_WIN
-      QMessageBox::warning(this, QString(), QString("The folder %1 does not exist").arg(dir), QMessageBox::Ok, QMessageBox::Ok);
-#else
-      QPalette p = dirEdit->palette();
-      p.setColor(QPalette::Inactive,QPalette::Base,QColor(0xDD7777));
-      p.setColor(QPalette::Active,QPalette::Base,QColor(0xDD7777));
-      dirEdit->setPalette(p);
-#endif
-      result = false;
-      }
-    else {
-#ifndef Q_WS_WIN
-      nameEdit->setPalette(QApplication::palette());
-      dirEdit->setPalette(QApplication::palette());
-#endif
-      result = true;
-      }
+		result = QDir(dir).exists();
     }
 
-  return result;
+	buttonBox->button(QDialogButtonBox::Ok)->setEnabled(result);
 }
 
 void NVBBrowser::columnAction() {
