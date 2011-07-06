@@ -90,8 +90,7 @@ public:
     bool getIncludeSubfolders();
 private slots:
     void dirSelected();
-    bool checkInput(  );
-    void tryAccept();
+		void checkInput();
 };
 
 class NVBDirExportDialog : public QDialog {
