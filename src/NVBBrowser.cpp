@@ -965,8 +965,10 @@ void NVBBrowser::editFolder()
 	QString path = folderMenuTarget.data(Qt::ToolTipRole).toString();
 	bool r = fileModel->isRecursive(folderMenuTarget);
 
-	if (NVBFolderInputDialog::editFolder(label,path,r))
+	if (NVBFolderInputDialog::editFolder(label,path,r)) {
 		fileModel->editFolderItem(label,path,r,folderMenuTarget);
+		updateFolders();
+		}
 
 }
 
