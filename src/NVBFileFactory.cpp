@@ -83,7 +83,7 @@ NVBFileFactory::NVBFileFactory()
 			tAct->setCheckable(true);
 			tAct->setChecked(true);
 			actMapper.setMapping(tAct,loader.instance());
-			connect(tAct,SIGNAL(toggled()),&actMapper,SLOT(map()));
+                        connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
 			gActions << tAct;
 			}
 		else NVBOutputError(loader.errorString());
