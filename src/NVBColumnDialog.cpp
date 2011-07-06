@@ -137,26 +137,32 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 
 void NVBColumnInputWidget::switchToFile() {
 	fileOption->setChecked(true);
+	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToPage() {
 	pageOption->setChecked(true);
+	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToTopo() {
 	topoOption->setChecked(true);
+	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToSpec() {
 	specOption->setChecked(true);
+	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToCustom() {
 	customOption->setChecked(true);
+	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToExpert() {
 	expertOption->setChecked(true);
+	emit stateChanged();
 }
 
 NVBTokenList NVBColumnInputWidget::getState()
@@ -227,8 +233,17 @@ NVBColumnInputDialog::NVBColumnInputDialog(QWidget * parent):QDialog(parent)
   QDialogButtonBox * buttonBox;
   gridLayout->addWidget(buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,Qt::Horizontal,this),2,0,1,2);
 #endif
+//	connect(iw,SIGNAL())
+
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+
+	connect(iw,SIGNAL(stateChanged()),this,SLOT(autoName()));
+}
+
+void NVBColumnInputDialog::autoName() {
+	if (clmnName->text().isEmpty())
+		clmnName->setText(iw->getState().verboseString());
 }
 
 NVBColumnDescriptor NVBColumnInputDialog::getState()
