@@ -220,11 +220,11 @@ void NVBApplication::parseArguments() {
 NVBApplication::~ NVBApplication()
 {
   msgSocket.disconnectFromHost();
-  QSettings * conf = property("NVBSettings").value<QSettings*>();
+	delete property("filesFactory").value<NVBFileFactory*>();
+	delete property("toolsFactory").value<NVBToolsFactory*>();
+	QSettings * conf = property("NVBSettings").value<QSettings*>();
   conf->sync();
-  delete conf;
-  delete property("filesFactory").value<NVBFileFactory*>();
-  delete property("toolsFactory").value<NVBToolsFactory*>();
+	delete conf;
 #ifdef NVB_ENABLE_LOG
   delete property("Logger").value<NVBLogger*>();
 #endif
