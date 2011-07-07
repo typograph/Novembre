@@ -125,6 +125,7 @@ HEADERS += \
 	src/NVBFileListView.h \
 	src/NVBDirView.h \
 	src/NVBDirViewModel.h \
+	src/NVBBrowserHelpers.h \
 	src/NVBBrowser.h
 
 SOURCES += \
@@ -139,6 +140,7 @@ SOURCES += \
 	src/NVBFileListView.cpp \
 	src/NVBDirView.cpp \
 	src/NVBDirViewModel.cpp \
+	src/NVBBrowserHelpers.cpp \
 	src/NVBBrowser.cpp
 
 contains(CONFIG,NVBGlobalDocs) {
