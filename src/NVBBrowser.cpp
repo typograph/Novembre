@@ -132,11 +132,11 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
   foldersToolBar->addSeparator();
 
-/*
+
   setViewFileAction = foldersToolBar->addAction(QIcon(_browser_turnspeconoff),QString("Select view mode"));
   setViewFileAction->setCheckable(true);
   connect(setViewFileAction,SIGNAL(toggled(bool)),this,SLOT(setViewType(bool)));
-*/
+
   showPageInfoAction = foldersToolBar->addAction(QIcon(_browser_pageinfo),QString("Info"));
   showPageInfoAction->setCheckable(true);
   showPageInfoAction->setChecked(true);
@@ -684,6 +684,6 @@ void NVBBrowser::showFoldersMenu() {
 
 void NVBBrowser::setViewType(bool b)
 {
-//  pageRefactor->setMode(b ? NVBPageRefactorModel::MarkSpectra : NVBPageRefactorModel::None );
+	dirViewModel->setMode(b ? NVBDirViewModel::SpectroscopyOverlay : NVBDirViewModel::Normal );
 }
 
