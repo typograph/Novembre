@@ -13,6 +13,9 @@
 #include "NVBFile.h"
 #include "NVBFileFactory.h"
 #include "NVBDirModel.h"
+#include "NVBContColoring.h"
+
+#include <QHash>
 
 #if QT_VERSION >= 0x040300
 #include <QIconEngineV2>
@@ -30,13 +33,50 @@ public :
 			NVBOutputError("A topography page and a spectroscopy page are needed");
 			return;
 			}
-		cache = stopo->getColorModel()->colorize( stopo->getData(), stopo->resolution() );
+		cache = colorizeWithPlaneSubtraction(stopo);
 		if (!cache)  {
 			NVBOutputError("pixmap allocation failed");
 			return;
 			}
 		}
 	virtual ~NVBMixTSIcon() { if (cache) delete (cache);}
+
+	static QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page) {
+		const double * pdata = page->getData();
+
+		double xnorm = 0, ynorm = 0;
+
+		int iw = page->resolution().width();
+		int ih = page->resolution().height();
+		int sz = iw*ih;
+
+		for(int i=0; i < sz; i += iw)
+			xnorm += pdata[i] - pdata[i+iw-1];
+		for(int i=0; i < iw; i += 1)
+			ynorm += pdata[i] - pdata[i+sz-ih];
+
+		xnorm /= (iw-1)*ih;
+		ynorm /= iw*iw*(ih-1);
+
+		double * ndata = (double *) malloc(sz*sizeof(double));
+
+		double zmin = pdata[0], zmax = pdata[0];
+
+		for(int i=0; i < iw; i += 1)
+			for(int j=0; j < sz; j += iw) {
+				ndata[i+j] = pdata[i+j] + xnorm*i + ynorm*j;
+				zmin = qMin(zmin,ndata[i+j]);
+				zmax = qMax(zmax,ndata[i+j]);
+				}
+
+		NVBRescaleColorModel * rm = new NVBRescaleColorModel(page->getColorModel());
+		rm->setLimits(zmin,zmax);
+
+		QImage * i = dynamic_cast<NVBContColorModel*>(rm)->colorize( ndata , page->resolution() );
+		delete rm;
+		free(ndata);
+		return i;
+	}
 
 	virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode, QIcon::State) {
 		if (!cache) {
@@ -74,6 +114,43 @@ protected:
 	NVBSpecDataSource* sspec;
 };
 
+class NVBSpecOverlayIconProvider {
+private:
+	QHash< NVBFile *, QList<QIcon> > cache;
+
+	QHash< NVBFile *, QList<QIcon> >::iterator createIcons(NVBFile * file) {
+		NVBSpecDataSource * specnote = 0;	
+		QList<QIcon> icons;
+		
+		for (int i=0; i < file->rowCount(QModelIndex()); i++) {
+			if (file->data(file->index(i),PageTypeRole).value<NVB::PageType>() == NVB::SpecPage) {
+				specnote = (NVBSpecDataSource*)(file->data(file->index(i),PageRole).value<NVBDataSource*>());
+				break;
+				}
+		  }
+
+		for (int i=0; i < file->rowCount(QModelIndex()); i++) {
+			if (specnote && file->data(file->index(i),PageTypeRole).value<NVB::PageType>() == NVB::TopoPage)
+				icons << QIcon(new NVBMixTSIcon((NVB3DDataSource*)(file->data(file->index(i),PageRole).value<NVBDataSource*>()),specnote));
+			else
+				icons << file->data(file->index(i),Qt::DecorationRole).value<QIcon>();
+		  }
+		  
+		return cache.insert(file,icons);
+		}
+
+public:
+
+	QIcon icon(NVBFile* file, int index) {
+		QHash< NVBFile *, QList<QIcon> >::iterator i = cache.find(file);
+		if (i == cache.end())
+			i = createIcons(file);
+		return i->at(index);
+		}
+	
+	void reset() { cache.clear(); }
+};
+
 NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent)
 	: QAbstractItemModel( parent )
 	, fileFactory(factory)
@@ -82,6 +159,8 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 	, fnamecache(0)
 	, operationRunning(false)
 {
+	overlay = new NVBSpecOverlayIconProvider();
+
 //  cacheRowCounts();
 	connect(dirModel,SIGNAL(rowsAboutToBeInserted(const QModelIndex &,int,int)), this, SLOT(parentInsertingRows(const QModelIndex &,int,int)));
 	connect(dirModel,SIGNAL(rowsInserted (const QModelIndex &,int,int)), this, SLOT(parentInsertedRows(const QModelIndex &,int,int)));
@@ -93,6 +172,7 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 
 NVBDirViewModel::~NVBDirViewModel()
 {
+	delete overlay;
 	foreach(NVBFile * f, files) {
 		if (f) f->release();
 		}
@@ -211,8 +291,11 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 		return indexes.at(index.row()).data(role);
 		}
 	else {
-		if (files.at(index.internalId()-1))
+		if (files.at(index.internalId()-1)) {
+			if (mode == SpectroscopyOverlay && role == Qt::DecorationRole)
+				return overlay->icon(files.at(index.internalId()-1),index.row());
 			return files.at(index.internalId()-1)->index(index.row(),0).data(role);
+			}
 		else if (unloadables.contains(index.internalId()-1))
 			return unloadableData(role);
 		else {
@@ -482,4 +565,6 @@ QStringList NVBDirViewModel::mimeTypes () const {
 
 void NVBDirViewModel::setMode(Mode m) {
 	mode = m;
+	overlay->reset();
+	emit dataChanged(index(0,0),index(rowCount()-1,0));
 }
