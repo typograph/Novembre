@@ -157,7 +157,7 @@ if (d.exists(s))
 int i = s.lastIndexOf(d.separator());
 
 #ifdef Q_WS_WIN
-	if (d.exists(s.left(i)))
+	if (i==-1 || d.exists(s.left(i)))
 #else
 	if (i==0 || d.exists(s.left(i)))
 #endif
