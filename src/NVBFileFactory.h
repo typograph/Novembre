@@ -29,6 +29,7 @@
 #include "NVBFileGenerator.h"
 
 class QAction;
+class QSettings;
 
 // using namespace NVBErrorCodes;
 
@@ -106,6 +107,8 @@ private:
 	///
 		QList<QAction*> gActions;
 		QSignalMapper actMapper;
+
+		QSettings * confile;
 
 	/// Load file from \a filename. Returns NULL if file wasn't opened.
 	/// The returned file is already considered in use.

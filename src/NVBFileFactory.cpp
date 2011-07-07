@@ -11,16 +11,17 @@
 //
 #include "NVBFileFactory.h"
 #include "NVBFileBundle.h"
+#include "NVBSettings.h"
 #include <QtCore/QStringList>
 #include <QtCore/QRegExp>
 #include <QtGui/QApplication>
 
 #ifdef NVB_STATIC
-Q_IMPORT_PLUGIN(rhk);
-Q_IMPORT_PLUGIN(createc);
-Q_IMPORT_PLUGIN(winspm);
+Q_IMPORT_PLUGIN(rhk)
+Q_IMPORT_PLUGIN(createc)
+Q_IMPORT_PLUGIN(winspm)
 // Q_IMPORT_PLUGIN(textSTM);
-Q_IMPORT_PLUGIN(nanonis);
+Q_IMPORT_PLUGIN(nanonis)
 #endif
 
 void NVBFileLoader::run() {
@@ -30,10 +31,15 @@ void NVBFileLoader::run() {
 NVBFileFactory::NVBFileFactory()
 {
 	deadTree = new NVBFileQueue(5); // TODO Make the size of deadTree user-controllable
+
+// Since QSignalMapper needs QObject to map to,
+// and NVBFileGenerator is not an object, but
+// QPluginLoader::instance is, the actions are
+// created on load
 	
 	NVBFileBundle * fbPlugin = new NVBFileBundle(this);
 	allGenerators << fbPlugin;
-	
+
 	QAction * tAct;
 	tAct = new QAction(fbPlugin->moduleName(),this);
 	tAct->setToolTip(fbPlugin->moduleDesc());
@@ -42,7 +48,7 @@ NVBFileFactory::NVBFileFactory()
 	actMapper.setMapping(tAct,fbPlugin);
 	connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
 	gActions << tAct;
-  
+
 	foreach (QObject *plugin, QPluginLoader::staticInstances()) {
 		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(plugin);
 		if (generator) {
@@ -55,9 +61,9 @@ NVBFileFactory::NVBFileFactory()
 			tAct->setChecked(true);
 			actMapper.setMapping(tAct,plugin);
 			connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
-			
+
 			gActions << tAct;
-		
+
 		}
 	}
 
@@ -83,15 +89,29 @@ NVBFileFactory::NVBFileFactory()
 			tAct->setCheckable(true);
 			tAct->setChecked(true);
 			actMapper.setMapping(tAct,loader.instance());
-                        connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
+												connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
 			gActions << tAct;
 			}
 		else NVBOutputError(loader.errorString());
 	}
 #endif
 
-	generators = allGenerators;
-	// TODO Disable generators as saved in confile
+	confile = qApp->property("NVBSettings").value<QSettings*>();
+	if (!confile) {
+		NVBOutputError("FileFactory cannot access the configuration file");
+		generators = allGenerators;
+		}
+	else {
+		confile->beginGroup("Plugins");
+		for(int i = 0; i < allGenerators.count(); i++) {
+			if (confile->value(allGenerators.at(i)->moduleName(),true).toBool())
+				generators << allGenerators.at(i);
+			else
+				gActions[i]->setChecked(false);
+			}
+		confile->endGroup();
+		}
+
 	connect(&actMapper,SIGNAL(mapped(QObject*)),this,SLOT(changeGenerator(QObject*)));
 
 	if (generators.size() < 2)
@@ -142,6 +162,12 @@ void NVBFileFactory::changeGenerator(QObject * go) {
 		generators.removeAt(gi);
 	else
 		generators << generator;
+
+	if (confile) {
+		confile->beginGroup("Plugins");
+		confile->setValue(generator->moduleName(),gi < 0);
+		confile->endGroup();
+		}
 	
 	updateWildcards();
 }
