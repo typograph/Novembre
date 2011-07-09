@@ -536,7 +536,7 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 
 // There are always only 2 axes : X & Y
 
-	NVBConstructableDataSource* result = new NVBConstructableDataSource();
+	NVBConstructableDataSource* result = new NVBConstructableDataSource(sources);
 
 	result->addAxis("X",file_header.value("Num.X",0).toInt());
 	result->addAxisMap(
@@ -923,7 +923,7 @@ void CreatecFileGenerator::loadAllChannelsFromLAT(QString filename, NVBFile* sou
 
 	NVBConstructableDataSource * result;
 	try {
-		result = new NVBConstructableDataSource();
+		result = new NVBConstructableDataSource(sources);
 		}
 	catch (...) {
 		NVBOutputError("NVBDataSource allocation failed");
@@ -1035,7 +1035,7 @@ void CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename, NVBFile* s
 
 	NVBConstructableDataSource * result;
 	try {
-		result = new NVBConstructableDataSource();
+		result = new NVBConstructableDataSource(sources);
 		}
 	catch (...) {
 		NVBOutputError("NVBDataSource allocation failed");
