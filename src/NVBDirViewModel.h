@@ -15,11 +15,39 @@
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QList>
 #include <QtCore/QVector>
+#include <QtCore/QThread>
+#include <QtCore/QQueue>
+#include <QtCore/QMutex>
+#include <QtCore/QMutexLocker>
+#include <QtCore/QWaitCondition>
 #include "NVBDirModel.h"
 
 class NVBFile;
 class NVBFileModel;
 class NVBFileFactory;
+
+class NVBDirViewModelLoader : public QThread {
+Q_OBJECT
+private:
+	QQueue<NVBAssociatedFilesInfo> queue;
+	QQueue<QString> names;
+	QMutex mutex;
+	QWaitCondition condition;
+	NVBFileFactory * factory;
+public:
+
+	NVBDirViewModelLoader(NVBFileFactory * ff) : QThread(), factory(ff) {;}
+	
+	void run();
+	
+	void loadFile(const NVBAssociatedFilesInfo& info);
+	void reset();
+	bool loadingFinished();
+		
+signals:
+	void fileReady(NVBFile *, QString);
+};
+
 
 /**
 This class provides a list of files in the folder with pages. Loads on demand.
@@ -59,6 +87,8 @@ private:
   mutable QList<int> unloadables;
   mutable QVector<int> rowcounts;
   QVector<QString> * fnamecache;
+	mutable NVBDirViewModelLoader	loader;
+	
   bool operationRunning;
   void cacheRowCounts() const;
   void cacheRowCounts ( int first, int last ) const;
@@ -76,9 +106,9 @@ private slots:
 //  void parentChangingLayout();
 //  void parentChangedLayout();
   bool loadFile(int index) const;
-	void fileLoaded();
-	void fileLoaded(int index);
-	void fileLoaded(NVBFile* file);
+//	void fileLoaded();
+//	void fileLoaded(int index);
+	void fileLoaded(NVBFile* file, QString name);
 
 public slots:
   void defineWindow(int start,int end);

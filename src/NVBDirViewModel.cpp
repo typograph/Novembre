@@ -17,6 +17,8 @@
 #include <QtCore/QFutureWatcher>
 #include "NVBDataSourceModel.h"
 #include <QtGui/QPainter>
+#include <QtCore/QThreadPool>
+#include <QtCore/QRunnable>
 
 class NVBFileModel : public NVBDataSourceListModel {
 private:
@@ -28,6 +30,49 @@ public:
 	inline NVBFile * file() { return source; }
 };
 
+void NVBDirViewModelLoader::run() {
+	forever {
+		mutex.lock();
+		if (queue.isEmpty())
+			condition.wait(&mutex);
+		NVBAssociatedFilesInfo files = queue.dequeue();
+		mutex.unlock();
+		
+		NVBFile* file = factory->getFile(files);
+		if (file)
+			file->moveToThread(QCoreApplication::instance()->thread());
+		mutex.lock();
+		emit fileReady(file,names.dequeue());
+		mutex.unlock();
+		}
+	}
+		
+bool NVBDirViewModelLoader::loadingFinished() { // TODO it would be better to make a waitForTermination func
+	QMutexLocker locker(&mutex);
+	return names.isEmpty();
+	}
+	
+void NVBDirViewModelLoader::loadFile(const NVBAssociatedFilesInfo & info) {
+	QMutexLocker locker(&mutex);
+	
+	if (names.contains(info.name()))
+		return;
+	
+	queue.enqueue(info);
+	names.enqueue(info.name());
+	if (queue.count() == 1) {
+		if (isRunning())
+			condition.wakeOne();
+		else
+			start();
+		}
+	}
+	
+void NVBDirViewModelLoader::reset() {
+		QMutexLocker locker(&mutex);
+		queue.clear();
+		}
+
 
 NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent)
 	: QAbstractItemModel( parent )
@@ -35,8 +80,11 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 	, dirModel(model)
 	, files(QVector<NVBFileModel*>())
 	, fnamecache(0)
+	, loader(factory)
 	, operationRunning(false)
 {
+	
+	connect(&loader,SIGNAL(fileReady(NVBFile*,QString)),this,SLOT(fileLoaded(NVBFile*,QString)));
 //  cacheRowCounts();
 	connect(dirModel,SIGNAL(rowsAboutToBeInserted(const QModelIndex &,int,int)), this, SLOT(parentInsertingRows(const QModelIndex &,int,int)));
 	connect(dirModel,SIGNAL(rowsInserted (const QModelIndex &,int,int)), this, SLOT(parentInsertedRows(const QModelIndex &,int,int)));
@@ -48,6 +96,7 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 
 NVBDirViewModel::~NVBDirViewModel()
 {
+	loader.reset(); // waitUntilFinished();
 	foreach(NVBFileModel * f, files) {
 		if (f) delete f;
 		}
@@ -55,6 +104,7 @@ NVBDirViewModel::~NVBDirViewModel()
 
 void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 	beginResetModel();
+	loader.reset();
 	indexes.clear();
 	foreach(NVBFileModel * f, files)
 		delete f;
@@ -90,55 +140,26 @@ bool NVBDirViewModel::loadFile(int index) const
 {
 	if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
-
-	QFutureWatcher<NVBFile * > * watcher = new QFutureWatcher<NVBFile*>();
-	connect(watcher,SIGNAL(finished()),this,SLOT(fileLoaded()));
-	watcher->setFuture(fileFactory->loadFile(dirModel->getAllFiles(indexes[index])));
+	
+	loader.loadFile(dirModel->getAllFiles(indexes[index]));
 
 	return false;
 }
 
-void NVBDirViewModel::fileLoaded()
-{
-	// qobject_cast doesn't work for QFutureWatcher, since it's not declared with Q_OBJECT macro
-	QFutureWatcher<NVBFile*> * watcher = dynamic_cast< QFutureWatcher<NVBFile*> * >(sender());
-	if (!watcher) {
-		NVBOutputError("Sender object was not a correct QFutureWatcher");
-		return;
-		}
-	
-	fileLoaded(watcher->result());
-	watcher->deleteLater();
-}
-
-void NVBDirViewModel::fileLoaded(int index)
-{
-	// qobject_cast doesn't work for QFutureWatcher, since it's not declared with Q_OBJECT macro
-	QFutureWatcher<NVBFile*> * watcher = dynamic_cast< QFutureWatcher<NVBFile*> * >(sender());
-	if (!watcher) {
-		NVBOutputError("Sender object was not a correct QFutureWatcher");
-		return;
-		}
-	
-	fileLoaded(watcher->resultAt(index));
-	if (watcher->isFinished()) // TODO caution - what if the last result is available already, but not processed?
-		watcher->deleteLater();
-}
-
-void NVBDirViewModel::fileLoaded(NVBFile * file)
+void NVBDirViewModel::fileLoaded(NVBFile* file, QString name)
 {
 	int index = -1;
 
-	QString name = file->name();
-	
 	for(int i = rowCount()-1;i>=0;i-=1)
 		if (indexes.at(i).data(Qt::DisplayRole) == name) {
 			index = i;
 			break;
 			}
 
-	if (index < 0)
+	if (index < 0) {
+		if (file) file->release();
 		return;
+		}
 
 	if (file)
 		files[index] = new NVBFileModel(file);
@@ -265,38 +286,38 @@ QModelIndex NVBDirViewModel::parent( const QModelIndex & index ) const
 
 void NVBDirViewModel::parentInsertingRows(const QModelIndex & parent, int first, int last)
 {
-    Q_UNUSED(first)
-    Q_UNUSED(last)
-    if (dirindex.isValid() && parent == dirindex)
-        operationRunning = true;
+		Q_UNUSED(first)
+		Q_UNUSED(last)
+		if (dirindex.isValid() && parent == dirindex)
+				operationRunning = true;
 }
 
 void NVBDirViewModel::parentInsertedRows(const QModelIndex & /*parent*/, int first, int last)
 {
 	if (operationRunning) {
 		int fc = dirModel->folderCount(dirindex);
-                first -= fc;
-                last -= fc;
-                first = qMax(first,0);
+		first -= fc;
+		last -= fc;
+		first = qMax(first,0);
 		if (last >= first) {
-                        beginInsertRows(QModelIndex(),first, last);
+			beginInsertRows(QModelIndex(),first, last);
 /*
-                        if (last >= rowcounts.count()) {
-                            rowcounts.resize(last+1);
-                            files.resize(last+1);
-                            unloadables.resize(last+1);
-                            }
+			if (last >= rowcounts.count()) {
+					rowcounts.resize(last+1);
+					files.resize(last+1);
+					unloadables.resize(last+1);
+					}
 */
-                        rowcounts.insert(first,last-first+1,0);
-                        for (int i = first; i <= last; i += 1)
-                                indexes.insert(i,QPersistentModelIndex(dirModel->index(fc+i,0,dirindex)));
+			rowcounts.insert(first,last-first+1,0);
+			for (int i = first; i <= last; i += 1)
+				indexes.insert(i,QPersistentModelIndex(dirModel->index(fc+i,0,dirindex)));
 			for(int i = 0; i < unloadables.size(); i++) {
 				if (unloadables.at(i) >= first)
 					unloadables[i] += last-first+1;
 				}
 			files.insert(first,last-first+1,0);
-                        cacheRowCounts(first,last);
-                        endInsertRows();
+			cacheRowCounts(first,last);
+			endInsertRows();
 			}
 		operationRunning = false;
 		}
@@ -438,7 +459,7 @@ QMimeData * NVBDirViewModel::mimeData(const QModelIndexList &ixs) const {
 }
 
 QStringList NVBDirViewModel::mimeTypes () const {
-  return QStringList()
+	return QStringList()
 		<< NVBDataSourceMimeData::dataSetMimeType()
 		<< NVBDataSourceMimeData::dataSourceMimeType()
 		<< "text/plain"
