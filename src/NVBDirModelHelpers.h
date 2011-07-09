@@ -8,16 +8,12 @@
 #include <QtCore/QDir>
 #include <QtCore/QSignalMapper>
 #include <QtGui/QApplication>
+#include <QtCore/QRunnable>
 
 #include "NVBFile.h"
 #include "NVBFileFactory.h"
 #include "NVBFileFilterDialog.h"
 #include "NVBColumnsModel.h"
-
-#if QT_VERSION >= 0x040400
-template <class T>
-	class QFutureWatcher;
-#endif
 
 class NVBFileInfo;
 
@@ -46,6 +42,7 @@ public:
 	bool operator()(const NVBFileInfo * fi) const;
 };
 
+
 class NVBDirEntry;
 
 /**
@@ -55,13 +52,18 @@ class NVBDirEntry;
  * the contents of a NVBDirEntry
  * 
  */
+
 class NVBDirEntryLoader : public QRunnable {
 private:
 	NVBDirEntry * e;
 	NVBFileFactory * fileFactory;
+	
+	QList<int> indexesOf(const QStringList & items, const QStringList & list);
 public:
 	NVBDirEntryLoader(NVBDirEntry * entry);
 	virtual ~NVBDirEntryLoader();
+	
+	int locateFile(QString file, QList<NVBFileInfo*> list);
 	
 	void run();
 };
@@ -70,6 +72,7 @@ class NVBDirEntry : public QObject {
 Q_OBJECT
 friend class NVBDirEntryLoader;
 public:
+	enum eventType { FolderListEvent = QEvent::User+1, FileListEvent = QEvent::User+2 };
 	enum ContentChangeType { FolderInsert, FolderRemove, FileInsert, FileRemove };
 	enum WatchedContentType { NoContent, FileContent, AllContent };
 	enum Status {
@@ -89,10 +92,6 @@ public:
 	/// Removes a file from the full list using mapped index
 	void removeFileAt(int i);
 	void removeFolderAt(int i);
-//	void insertFolder(int i, NVBDirEntry* e);
-	void addFolders(QList<NVBDirEntry*> es);
-
-	QMutex mutex;
 
 private:
 	Status status;
@@ -112,9 +111,6 @@ private:
 	QList<NVBFileInfo*> files;
 	QList<int> indexMap;
 
-#if QT_VERSION >= 0x040400
-	QFutureWatcher<NVBFileInfo*> * fileLoader;
-#endif
 	WatchedContentType type;
 	NVBDirEntry(); // private constructor... Checking
 	NVBDirEntry(const NVBDirEntry & ):QObject() {;} // private copy constructor... Checking
@@ -126,7 +122,7 @@ public:
 
 	int indexOf( QString name );
 
-	void populate(NVBFileFactory * fileFactory);
+	void populate();
 
 	bool isContainer() const { return (type == NoContent); }
 	bool isRecursive() const { return (type == AllContent); }
@@ -153,17 +149,20 @@ private:
 	void removeOrigFileAt(int i);
 	/// Does a non-recursive filtering of the list, not notifying the model (it is in LayoutChanged mode)
 	void refilter();
+
+protected:
+	virtual bool event(QEvent *);
+	
 signals:
 	void beginOperation(const NVBDirEntry * entry, int row, int count, NVBDirEntry::ContentChangeType type);
 	void endOperation();
 	void filesLoaded(const NVBDirEntry * entry, int fstart, int fend);
 private slots:
-	void notifyLoading(int start, int end);
-	void setLoaded() { status = NVBDirEntry::Populated; qApp->restoreOverrideCursor();}
-	void errorOnLoad() { status = NVBDirEntry::Error; qApp->restoreOverrideCursor();}
+	void setLoaded() { status = NVBDirEntry::Populated; }
+	void errorOnLoad() { status = NVBDirEntry::Error; }
 public slots:
-	bool refresh(NVBFileFactory * fileFactory);
-	void refreshSubfolders(NVBFileFactory * fileFactory);
+	bool refresh();
+	void refreshSubfolders();
 	void sort(const NVBDirModelFileInfoLessThan & lessThan);
 	void filter(const NVBDirModelFileInfoFilter & acceptFile);
 };

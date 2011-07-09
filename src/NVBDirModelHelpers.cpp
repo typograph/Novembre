@@ -6,22 +6,29 @@
 #include <QtCore/QFile>
 #include <QtCore/QTextStream>
 #include <QtCore/QTimer>
+#include <QtCore/QThreadPool>
 
-#if QT_VERSION < 0x040400
-#include <QThread>
-class NVBDirPopulationThread : public QThread {
-  Q_OBJECT
-  private:
-  public:
-    NVBDirPopulationThread(NVBDirEntry e);
-  protected:
-    void run();
+class NVBFolderListEvent : public QEvent {
+public:
+	QList<NVBDirEntry*> deleted, added;
+	
+	NVBFolderListEvent(QList<NVBDirEntry*> toadd, QList<NVBDirEntry*> toremove)
+	: QEvent((QEvent::Type)(NVBDirEntry::FolderListEvent))
+	, deleted(toremove)
+	, added(toadd) 
+	{;}
 };
-#else
-#include <QtCore/QFuture>
-#include <QtCore/QFutureWatcher>
-#include <QtCore/QtConcurrentMap>
-#endif
+
+class NVBFileListEvent : public QEvent {
+public:
+	QList<NVBFileInfo*> deleted, added;
+	
+	NVBFileListEvent(QList<NVBFileInfo*> toadd, QList<NVBFileInfo*> toremove)
+	: QEvent((QEvent::Type)(NVBDirEntry::FileListEvent))
+	, deleted(toremove)
+	, added(toadd) 
+	{;}
+};
 
 bool NVBDirModelFileInfoLessThan::operator()(const NVBFileInfo* fi1, const NVBFileInfo* fi2) const {
 	if (!fi1 || !fi2) {
@@ -75,6 +82,12 @@ bool NVBDirModelFileInfoFilter::operator()(const NVBFileInfo * fi) const {
 	return accept;
 	}
 
+/*
+ * We cannot remove folders and/or add files in another thread
+ * since otherwise QModelIndex's created by the model may become invalid. 
+ * 
+ * Thus we would do better by posting events to NVBDirEntry
+ */
 
 NVBDirEntryLoader::NVBDirEntryLoader(NVBDirEntry* entry): QRunnable(), e(entry)
 {
@@ -87,10 +100,17 @@ NVBDirEntryLoader::~NVBDirEntryLoader()
 
 }
 
+QList< int > NVBDirEntryLoader::indexesOf(const QStringList& items, const QStringList& list)
+{
+	QList<int> result;
+	foreach(QString s, items)
+		result << list.indexOf(s);
+	return result;
+}
+
+
 void NVBDirEntryLoader::run()
 {
-	NVBOutputPMsg("Hi!");
-	
 	if (!e) return;
 	
 	if (e->type == NVBDirEntry::NoContent) {
@@ -106,30 +126,23 @@ void NVBDirEntryLoader::run()
 		return;
 		}
 
-	bool wasEmpty = e->status == NVBDirEntry::Virgin;
-
-	e->status = NVBDirEntry::Loading;
-
-// 	QApplication::setOverrideCursor(Qt::BusyCursor);
-
 	if (e->isRecursive()) {
-		QFileInfoList subfolders = dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
+		QStringList foldernames = dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Readable |  QDir::Executable, QDir::Name);
 
-		int index;
 		QList<NVBDirEntry * > newentries;
+		QList<NVBDirEntry * > oldentries;
+				
+		foreach(NVBDirEntry * ee, e->folders)
+			if (!foldernames.removeOne(ee->dir.dirName()))
+				oldentries << ee;
 		
-		foreach(QFileInfo folder, subfolders) {
-			if (e->folderCount() && (index = e->indexOf(folder.fileName())) >= 0)
-				e->removeFolderAt(index);
-			else {
-				QDir rdir(dir);
-				rdir.setPath(folder.absoluteFilePath());
-				newentries << new NVBDirEntry(e,folder.fileName(),rdir,true);
-				newentries.last()->moveToThread(QCoreApplication::instance()->thread());
-				}
+		foreach(QString name, foldernames) {
+			QDir rdir(dir.filePath(name));
+			newentries << new NVBDirEntry(e,name,rdir,true);
+			newentries.last()->moveToThread(QCoreApplication::instance()->thread());
 			}
 		
-		e->addFolders(newentries);
+		qApp->postEvent(e,new NVBFolderListEvent(newentries,oldentries));
 		}
 
 	if (!fileFactory) {
@@ -140,77 +153,131 @@ void NVBDirEntryLoader::run()
 
 	QStringList filenames = dir.entryList(fileFactory->getDirFilters(),QDir::Files,QDir::Name);
 	
-	if (filenames.isEmpty()) {
-		QMetaObject::invokeMethod(e,"setLoaded",Qt::AutoConnection);
-		return;
-		}
+//	if (filenames.isEmpty()) {
+//		QMetaObject::invokeMethod(e,"setLoaded",Qt::AutoConnection);
+//		return;
+//		}
 	
-	QString dirStr = QString("%1/%2").arg(e->dir.absolutePath());
+	QString dirStr = QString("%1/%2").arg(dir.absolutePath());
 	
 	for(QStringList::iterator it = filenames.begin(); it != filenames.end(); it++)
 		*it = dirStr.arg(*it);
 
 	// Remove already loaded files from the list
 	// We assume the list is OK, i.e. there're no two infos using the same file
-	bool deleted; // Not the most elegant solution, I admit.
-	for (QList<NVBFileInfo*>::const_iterator it = e->files.constBegin(); it != e->files.constEnd(); ) {
-		deleted = false;
-		for (int ni = 0; ni < (*it)->files.count(); ni += 1)
-			if (!filenames.removeOne((*it)->files.at(ni))) { // backtrace
-				for (ni -= 1; ni >= 0; ni -= 1)
-					filenames.append((*it)->files.at(ni));
-				e->removeOrigFileAt(it - e->files.constBegin());
-				deleted = true;
-				break;
+
+	// Also, we should create a local copy of e->files
+	// Qt says this is reentrant...
+	QList<NVBFileInfo*> efiles = e->files;
+
+	QList<NVBFileInfo*> oldentries;
+	QList<NVBFileInfo*>	newentries;
+			
+	for (int i = 0; i < efiles.count(); i++) {
+		QList<int> rixs = indexesOf(efiles.at(i)->files, filenames);
+		if (rixs.count(-1) > 0){
+			NVBFileInfo * nfi = efiles.at(i)->files.loadFileInfo();
+			if (!nfi) { // OK, something happened, a file was deleted, we should reverse
+				oldentries << efiles.takeAt(i);
+				i--; // step back to step forward 
+				continue; // next fileinfo
 				}
-		if (!deleted)
-			it++;
+			else if (efiles.at(i)->files != nfi->files) {
+				oldentries << efiles.takeAt(i);
+				newentries << nfi;
+				efiles << nfi;
+				i--;
+				}
+			else
+				delete nfi;
+			}
+		qSort(rixs.begin(),rixs.end(),qGreater<int>());
+		foreach(int k, rixs)
+			filenames.removeAt(k);
 		}
 
-	QList<NVBAssociatedFilesInfo>	files;
+	qApp->postEvent(e,new NVBFileListEvent(newentries, oldentries));
+	oldentries.clear();
+	newentries.clear();
 
+	// Loading NVBFileInfo is faster than loading associatedFilesInfo
+	
 	while (filenames.count() > 0) {
-		NVBAssociatedFilesInfo info = fileFactory->associatedFiles(filenames.first());
-		if (info.isEmpty()) {
-			NVBOutputError(QString("Couldn't load associated files for %1").arg(filenames.takeFirst()));
+		NVBFileInfo * info = fileFactory->getFileInfo(filenames.first());
+		if (!info) {
+			NVBOutputError(QString("Couldn't load file info for %1").arg(filenames.takeFirst()));
 			continue;
 			}
-		foreach(QString filename, info) {
-//			QStringList::const_iterator j = qBinaryFind(filenames,filename);
-//			if (j != filenames.end())
-//				filenames.removeAt(j - filenames.begin());
-			int j = filenames.indexOf(filename);
-			if (j != -1)
-				filenames.removeAt(j);
-			else // Somebody has it already -- cross-check with list
-				for(int i=0; i<e->files.count(); i++)
-					if (e->files.at(i)->files.contains(filename)) {
-						if (e->files.at(i)->files.count() >= info.count()) // There's already one good file
-							goto skip_file;	
-						else {
-							foreach(QString fname, e->files.at(i)->files)
-								filenames.prepend(fname);
-							filenames.removeOne(filename);
-							e->removeOrigFileAt(i);
-							break;
-							}
-						}
-			}
-		files.append(info);
-// Yeah, I know goto's are evil, but how else can I solve this thing with breaking 2 loops?
-skip_file: ;
-		}
-		
-	NVBOutputPMsg(QString("Loading started : %1 files to load").arg(files.count()));
-	QFutureWatcher<NVBFileInfo*> fileLoader(0);
-	fileLoader.connect(&fileLoader,SIGNAL(resultsReadyAt(int,int)),e,SLOT(notifyLoading(int,int)));
-	fileLoader.connect(&fileLoader,SIGNAL(finished()),e,SLOT(setLoaded()));
-	fileLoader.setFuture(QtConcurrent::mapped(files,&NVBAssociatedFilesInfo::loadFileInfo));
 
-	fileLoader.waitForFinished();
-	
-	NVBOutputPMsg("Loading finished");
+		// Remove associated files from list
+		QList<int> rixs = indexesOf(info->files,filenames);
+		if (rixs.count(-1) > 0) {
+			// Somebody may have it already -- cross-check with list
+			// If this file is intersecting with another, we can leave the other be,
+			// but if the other is contained within, we should remove it
+			// The case when the older one is the container should be impossible
+			
+			/*
+			 * 1) find the file
+			 * 2) if exists and is contained within -> remove it completely
+			 * 3) if exists and is bigger/comparable/not contained -> leave it be and forget about these files
+			 * 4) if exists and contains -> luckily, this is impossible.
+			 */
+			
+			QStringList inames = info->files; // a copy so that we can forget things
+			
+			for(int k = rixs.indexOf(-1); k >= 0; k = rixs.indexOf(-1,k)) {
+				int i = locateFile(inames.at(k),efiles);
+				if (i >= 0) {
+					QList<int> nixs = indexesOf(efiles.at(i)->files,inames);
+					if (nixs.count(-1) == 0) // Contained within
+						oldentries << efiles.takeAt(i);
+					else
+						nixs.removeAll(-1);
+					
+					qSort(nixs.begin(),nixs.end(),qGreater<int>());
+					foreach(int m, nixs) {
+						rixs.removeAt(m);
+						inames.removeAt(m);
+						if (m < k) k -= 1; // so that indexOf in <for> works
+						}
+					}
+				else { // somehow it's not in the list
+					rixs.removeAt(k);
+					inames.removeAt(k);
+					}
+				}
+			}
+		// rixs contains no (-1) now
+		
+		qSort(rixs.begin(),rixs.end(),qGreater<int>());
+		foreach(int r, rixs)
+			filenames.removeAt(r);
+
+		// add
+		newentries << info;
+		efiles << info;
+		if (newentries.count() >= 10) {
+			qApp->postEvent(e,new NVBFileListEvent(newentries, oldentries));
+			newentries.clear();
+			oldentries.clear();
+			}
+			
+		}
+
+	qApp->postEvent(e,new NVBFileListEvent(newentries, oldentries));
+	QMetaObject::invokeMethod(e,"setLoaded",Qt::AutoConnection);
 }
+
+int NVBDirEntryLoader::locateFile(QString file, QList< NVBFileInfo* > list)
+{
+	for(int i = 0; i < list.count(); i++)
+		if (list.at(i)->files.contains(file))
+			return i;
+		
+	return -1;
+}
+
 
 
 NVBDirEntry::NVBDirEntry( ):QObject(),parent(0),status(NVBDirEntry::Populated),type(NoContent) {;}
@@ -229,6 +296,51 @@ NVBDirEntry::~ NVBDirEntry( )
 {
 	while (!files.isEmpty()) delete files.takeFirst();
   while (!folders.isEmpty()) delete folders.takeFirst();
+}
+
+bool NVBDirEntry::event(QEvent* e)
+{
+	switch (e->type()) {
+		case (QEvent::Type)FileListEvent : {
+			NVBFileListEvent * fe = dynamic_cast<NVBFileListEvent*>(e);
+			if (fe) {
+				fe->accept();
+				foreach(NVBFileInfo * i, fe->deleted) {
+					int k = files.indexOf(i);
+					if (k < 0) {
+						NVBOutputError(QString("Trying to remove a non-existing file %1").arg( i ? i->files.name() : "0"));
+						continue;
+						}
+					removeOrigFileAt(k);
+					}
+				foreach(NVBFileInfo * i, fe->added)
+					insertFile(i);
+				return true;
+				}
+			}
+		case (QEvent::Type)FolderListEvent : {
+			NVBFolderListEvent * fe = dynamic_cast<NVBFolderListEvent*>(e);
+			if (fe) {
+				foreach(NVBDirEntry* e, fe->deleted) {
+					int i = folders.indexOf(e);
+					if (i < 0) {
+						NVBOutputError(QString("Trying to remove a non-existing folder %1").arg( e ? e->dir.dirName() : "0"));
+						continue;
+						}
+					removeFolderAt(i);
+					}
+				emit beginOperation(this,folders.count(),fe->added.count(),NVBDirEntry::FolderInsert);
+				foreach(NVBDirEntry * e, fe->added) {
+					folders << e;
+					e->sort(sorter);
+					}
+				emit endOperation();	
+				return true;
+				}
+			}
+		default:
+			return QObject::event(e);
+		}
 }
 
 int NVBDirEntry::folderCount( ) const
@@ -322,27 +434,8 @@ void NVBDirEntry::removeFolderAt(int i)
 		emit endOperation();
 }
 
-void NVBDirEntry::addFolders(QList< NVBDirEntry* > es)
-{
-	emit beginOperation(this,folders.count(),es.count(),NVBDirEntry::FolderInsert);
-	foreach(NVBDirEntry * e, es) {
-		folders << e;
-		e->sort(sorter);
-		}
-	emit endOperation();	
-}
-
-void NVBDirEntry::notifyLoading(int start, int end)
-{
-	qDebug() << start << end;
-	for (int i=start; i<end; i++)
-	   insertFile(fileLoader->future().resultAt(i));
-}
-
 void NVBDirEntry::insertFile(NVBFileInfo* file)
 {
-	qDebug() << file << file->files.name();
-	
 	if (file) {
 		QList<NVBFileInfo*>::iterator newpos = qLowerBound(files.begin(),files.end(),file,sorter);
 		int ix = newpos - files.begin();
@@ -366,20 +459,22 @@ void NVBDirEntry::insertFile(NVBFileInfo* file)
 }
 
 
-void NVBDirEntry::populate(NVBFileFactory * fileFactory)
+void NVBDirEntry::populate()
 {
 	if (status != Loading) {
-		QApplication::setOverrideCursor(Qt::BusyCursor);
+		status = NVBDirEntry::Loading;
+//		QApplication::setOverrideCursor(Qt::BusyCursor);
 		QThreadPool::globalInstance()->start(new NVBDirEntryLoader(this));
 		}
 	else
 		NVBOutputError("populate called while populating");
 }
 
-bool NVBDirEntry::refresh(NVBFileFactory * fileFactory)
+bool NVBDirEntry::refresh()
 {
 	if (status != Loading) {
-		QApplication::setOverrideCursor(Qt::BusyCursor);
+//		QApplication::setOverrideCursor(Qt::BusyCursor);
+		status = NVBDirEntry::Loading;
 		QThreadPool::globalInstance()->start(new NVBDirEntryLoader(this));
 		return true;
 		}
@@ -470,12 +565,12 @@ void NVBDirEntry::insertFolder(int index, NVBDirEntry *folder) {
 		}
 }
 
-void NVBDirEntry::refreshSubfolders(NVBFileFactory * fileFactory)
+void NVBDirEntry::refreshSubfolders()
 {
   foreach (NVBDirEntry * e, folders)
     if (e->isPopulated()) {
-      e->refresh(fileFactory);
-      e->refreshSubfolders(fileFactory);
+      e->refresh();
+      e->refreshSubfolders();
       }
 }
 
