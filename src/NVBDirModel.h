@@ -105,10 +105,10 @@ private:
 	
 	struct NVBDirEntryOperation {
 		NVBDirEntryOperation():e(0),r(0),c(0),t(NVBDirEntry::FolderRemove) {;}
-		NVBDirEntryOperation(const NVBDirEntry * _e, int _r, int _c, NVBDirEntry::ContentChangeType _t):e(const_cast<NVBDirEntry*>(_e)),r(_r),c(_c),t(_t) {;}
+		NVBDirEntryOperation(const NVBDirEntry * _e, int _r, int _c, NVBDirEntry::ContentChangeType _t):e(_e),r(_r),c(_c),t(_t) {;}
 	//     NVBDirEntryOperation(const NVBDirEntryOperation & o):e(o.e),r(o.r),c(o.c),t(o.t) {;}
 	//     NVBDirEntryOperation& operator=(const NVBDirEntryOperation & o);
-		NVBDirEntry * e;
+		const NVBDirEntry * e;
 		int r,c;
 		NVBDirEntry::ContentChangeType t;
 		};
@@ -124,7 +124,7 @@ private:
 	int sortColumn;
 	Qt::SortOrder sortOrder;
 
-	NVBDirEntry* head;
+	NVBDirEntry * head;
 	NVBDirEntry * indexToEntry( const QModelIndex & index ) const;
 	QModelIndex entryToIndex( const NVBDirEntry * entry ) const;
 	NVBDirEntry * indexToParentEntry( const QModelIndex & index ) const;
