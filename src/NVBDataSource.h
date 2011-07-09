@@ -237,8 +237,10 @@ class NVBConstructableDataSource : public NVBDataSource {
 		/// Parent file
 		NVBFile * o;
 		
+		// Should never be constructed without source (or pass 0)
+		NVBConstructableDataSource();
 	public:
-		NVBConstructableDataSource(NVBFile * orig = 0);
+		NVBConstructableDataSource(NVBFile * orig);
 		virtual ~NVBConstructableDataSource();
 
 		virtual inline const NVBAxis & axis(axisindex_t i) const { return axs.at(i); }
