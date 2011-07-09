@@ -108,6 +108,9 @@ public:
 	explicit NVBSingleView(const NVBDataSet * dataSet, QWidget* parent = 0);
 	virtual ~NVBSingleView();
 
+signals:
+	void dismissed();
+	
 public slots:
 	void setDataSet(const NVBDataSet * ds);
 	void show3DView() { NVBOutputPMsg("3D view not implemented"); }

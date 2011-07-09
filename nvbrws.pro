@@ -31,6 +31,12 @@ HEADERS += \
   src/NVBDirModel.h \
   src/NVBDirView.h \
   src/NVBDirViewModel.h \
+  src/NVBPosLabel.h \
+  src/NVBSingle2DView.h \
+  src/NVBPlotCurves.h \
+  src/NVBPhysScaleDraw.h \
+  src/NVBSingleGraphView.h \
+  src/NVBSingleView.h \
   src/NVBBrowser.h
 
 SOURCES += \
@@ -43,6 +49,12 @@ SOURCES += \
   src/NVBDirModel.cpp \
   src/NVBDirView.cpp \
   src/NVBDirViewModel.cpp \
+  src/NVBPosLabel.cpp \
+  src/NVBSingle2DView.cpp \
+  src/NVBPlotCurves.cpp \
+  src/NVBPhysScaleDraw.cpp \
+  src/NVBSingleGraphView.cpp \
+  src/NVBSingleView.cpp \
   src/NVBBrowser.cpp
 
 # Application headers

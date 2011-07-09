@@ -50,7 +50,7 @@ class NVBPageInfoView;
 class NVBDirModel;
 class NVBDirViewModel;
 class NVBDirView;
-
+class NVBSingleView;
 
 class NVBFolderInputDialog : public QDialog {
 Q_OBJECT
@@ -137,8 +137,11 @@ private:
 	NVBDirModel * fileModel;
 	NVBDirViewModel * dirViewModel;
 	NVBDirView * dirView;
+	NVBSingleView * pageView;
 
 	QModelIndex folderMenuTarget;
+	
+	bool showPagesInBrowser;
 
 	void fillFolders( QString index, QModelIndex parent);
 
@@ -163,10 +166,12 @@ public slots:
 
 	void showItems();
   void loadPage(const QModelIndex & item);
+	void showPageView(NVBDataSet*);
+	void hidePageView();
 
   void addFolder(const QModelIndex & index);
   void switchIconSize(QAction*);
-
+	
 private slots:
 
   void setViewType(bool);
