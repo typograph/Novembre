@@ -92,7 +92,7 @@ int NVBDirModel::rowCount( const QModelIndex & parent ) const
   entry = indexToEntry(parent);
     
 	if (entry->getStatus() == NVBDirEntry::Virgin) {
-      entry->populate(fileFactory);
+      entry->populate();
       connectEntry(entry);
       watcher->addPath(entry->dir.path());
       }
@@ -264,14 +264,14 @@ QModelIndex NVBDirModel::parent( const QModelIndex & index ) const
     return QModelIndex();
 }
 
-const NVBFileInfo * NVBDirModel::indexToInfo( const QModelIndex & index ) const
+const NVBFileInfo* NVBDirModel::indexToInfo( const QModelIndex& index ) const
 {
 	if (!isAFile(index)) return 0;
 
   NVBDirEntry* entry = indexToParentEntry(index);
 
 	if (!entry->isPopulated()) {
-		entry->populate(fileFactory);
+		entry->populate();
 		connectEntry(entry);
 		watcher->addPath(entry->dir.path());
 		}
@@ -340,7 +340,7 @@ int NVBDirModel::fileCount( const QModelIndex & parent ) const
   if (isAFile(parent)) return 0;
   NVBDirEntry * entry = indexToEntry(parent);
 	if (!entry->isPopulated()) {
-		entry->populate(fileFactory);
+		entry->populate();
 		connectEntry(entry);
 		watcher->addPath(entry->dir.path());
 		}
@@ -536,7 +536,7 @@ void NVBDirModel::updateColumn(int index, NVBColumnDescriptor column)
 
 void NVBDirModel::refresh()
 {
-  head->refreshSubfolders(fileFactory);
+  head->refreshSubfolders();
 }
 
 void NVBDirModel::watchedDirChanged(const QString & path)
@@ -559,7 +559,7 @@ void NVBDirModel::refreshWatchedDir( QObject * o_entry )
 {
   NVBDirEntry * entry = qobject_cast<NVBDirEntry*>(o_entry);
   if (!entry) return;
-  bool exists = entry->refresh(fileFactory);
+  bool exists = entry->refresh();
   if (!exists) {
     int row = entry->parent->folders.indexOf(entry);
     if (entry->parent->isPopulated())
