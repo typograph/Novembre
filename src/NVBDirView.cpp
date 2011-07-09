@@ -12,20 +12,17 @@
 
 #include "NVBLogger.h"
 #include "NVBDirView.h"
-#include <QPaintEvent>
-#include <QRegion>
-#include <QRect>
-#include <QPoint>
-#include <QWidget>
-#include <QPainter>
-#if QT_VERSION < 0x040300
-#include <QStyleOptionViewItemV2>
-#elif QT_VERSION < 0x040400
-#include <QStyleOptionViewItemV3>
-#else
-#include <QStyleOptionViewItemV4>
-#endif
-#include <QScrollBar>
+#include <QtGui/QPaintEvent>
+#include <QtGui/QRegion>
+#include <QtCore/QRect>
+#include <QtCore/QPoint>
+#include <QtGui/QWidget>
+#include <QtGui/QPainter>
+#include <QtGui/QStyleOptionViewItemV4>
+#include <QtGui/QScrollBar>
+#include <QtGui/QStyleOptionTitleBar>
+#include <QtGui/QFont>
+
 
 NVBDirView::NVBDirView(QWidget * parent):QAbstractItemView(parent)
 {
@@ -394,9 +391,6 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 #endif
 }
 
-#include <QStyleOptionTitleBar>
-#include <QFont>
-
 void NVBDirView::drawHeader(int index, int y, QPainter * painter) const
 {
 	Q_ASSERT(model());
@@ -430,22 +424,13 @@ void NVBDirView::drawItems(int index, int y, QPainter * painter) const
 	int nitems = model()->rowCount(fi);
 
 // Use maximum QStyleOption we can
-#if QT_VERSION < 0x040300
-	QStyleOptionViewItemV2
-#elif QT_VERSION < 0x040400
-	QStyleOptionViewItemV3
-#else
-	QStyleOptionViewItemV4
-#endif
-		option = viewOptions();
+	QStyleOptionViewItemV4 option = viewOptions();
 
 	option.features |= QStyleOptionViewItemV2::WrapText; // | QStyleOptionViewItemV2::HasDisplay | QStyleOptionViewItemV2::HasDecoration;
 	
-#if QT_VERSION >= 0x040300
 	option.locale = locale();
 	option.locale.setNumberOptions(QLocale::OmitGroupSeparator);
 	option.widget = this;
-#endif	
 	
 	option.decorationPosition = QStyleOptionViewItem::Top;
 	option.displayAlignment = Qt::AlignCenter;

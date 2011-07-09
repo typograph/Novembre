@@ -14,14 +14,14 @@
 
 #ifdef NVB_ENABLE_LOG
 
-#include <QFrame>
-#include <QAbstractItemModel>
-#include <QTreeView>
-#include <QFile>
-#include <QCloseEvent>
-#include <QIcon>
-#include <QAction>
-#include <QSortFilterProxyModel>
+#include <QtGui/QFrame>
+#include <QtCore/QAbstractItemModel>
+#include <QtGui/QTreeView>
+#include <QtCore/QFile>
+#include <QtGui/QCloseEvent>
+#include <QtGui/QIcon>
+#include <QtGui/QAction>
+#include <QtGui/QSortFilterProxyModel>
 
 #include "NVBLogger.h"
 
@@ -77,11 +77,7 @@ public:
   
   inline void setLogLevel(NVB::LogEntryType new_loglevel) {
     loglevel = new_loglevel;
-#if QT_VERSION >= 0x040300
     invalidateFilter();
-#else
-    filterChanged();
-#endif
     }
 
 };

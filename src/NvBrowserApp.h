@@ -22,8 +22,6 @@
 #ifndef NVBrowserAPP_H
 #define NVBrowserAPP_H
 
-#define NVB_VERSION "0.1.0-"
-
 #include "NVBCoreApplication.h"
 
 class NVBBrowser;

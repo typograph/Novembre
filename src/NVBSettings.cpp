@@ -11,15 +11,15 @@
 //
 #include "NVBLogger.h"
 #include "NVBSettings.h"
-#include <QGridLayout>
-#include <QString>
-#include <QDialogButtonBox>
-#include <QApplication>
-#include <QMetaType>
-#include <QFile>
-#include <QDir>
-#include <QFileInfo>
-#include <QMessageBox>
+#include <QtGui/QGridLayout>
+#include <QtCore/QString>
+#include <QtGui/QDialogButtonBox>
+#include <QtGui/QApplication>
+#include <QtCore/QMetaType>
+#include <QtCore/QFile>
+#include <QtCore/QDir>
+#include <QtCore/QFileInfo>
+#include <QtGui/QMessageBox>
 
 NVBSettings::NVBSettings():QDialog()
 {

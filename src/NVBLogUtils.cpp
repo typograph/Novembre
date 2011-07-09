@@ -12,12 +12,12 @@
 #ifdef NVB_ENABLE_LOG
 
 #include "NVBLogUtils.h"
-#include <QApplication>
-#include <QDateTime>
-#include <QTreeView>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QToolBar>
+#include <QtGui/QApplication>
+#include <QtCore/QDateTime>
+#include <QtGui/QTreeView>
+#include <QtGui/QHBoxLayout>
+#include <QtGui/QVBoxLayout>
+#include <QtGui/QToolBar>
 #include "../icons/icons_log.xpm"
 #include "NVBLogger.h"
 
@@ -86,11 +86,7 @@ NVBLogWidget::NVBLogWidget(QString title, QWidget * parent):QFrame(parent)
   setWindowTitle(title);
 
   QHBoxLayout * l = new QHBoxLayout(this);
-#if QT_VERSION >= 0x040300
   l->setContentsMargins(1,1,1,1);
-#else
-  l->setMargin(1);
-#endif
   setLayout(l);
 
   QToolBar * tb = new QToolBar(this);

@@ -1,8 +1,8 @@
 #ifndef NVBFILELISTVIEW_H
 #define NVBFILELISTVIEW_H
 
-#include <QTreeView>
-#include <QHeaderView>
+#include <QtGui/QTreeView>
+#include <QtGui/QHeaderView>
 
 class NVBFileListView : public QTreeView {
 Q_OBJECT

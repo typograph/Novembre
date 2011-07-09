@@ -1,6 +1,6 @@
 
 #include "NVBPhysStepSpinBox.h"
-#include <QLineEdit>
+#include <QtGui/QLineEdit>
 
 QString NVBPhysStepSpinBox::textFromValue(int value) const
 {

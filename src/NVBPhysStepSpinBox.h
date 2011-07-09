@@ -1,8 +1,7 @@
 #ifndef NVBPHYSSPINBOX_H
 #define NVBPHYSSPINBOX_H
 
-#include <QSpinBox>
-#include <QValidator>
+#include <QtGui/QSpinBox>
 #include "NVBUnits.h"
 #include "NVBScaler.h"
 

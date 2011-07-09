@@ -1,8 +1,8 @@
 #ifndef NVBPHYSSPINBOX_H
 #define NVBPHYSSPINBOX_H
 
-#include <QDoubleSpinBox>
-#include <QValidator>
+#include <QtGui/QDoubleSpinBox>
+#include <QtGui/QValidator>
 #include "NVBUnits.h"
 
 class NVBPhysSpinBox : public QDoubleSpinBox {

@@ -38,11 +38,7 @@ QIcon createDatasetIcon(const NVBDataSet * set) {
 
 NVB2DIconEngine::NVB2DIconEngine(const NVBDataSet* dataset)
 	: QObject()
-#if QT_VERSION >= 0x040300
   , QIconEngineV2()
-#else
-  , QIconEngine()
-#endif
 	, dset(0)
 {
 	cache << QPixmap() << QPixmap() << QPixmap() << QPixmap();
@@ -116,11 +112,7 @@ void NVB2DIconEngine::redrawCache()
 
 NVB1DIconEngine::NVB1DIconEngine(const NVBDataSet* dataset)
 	: QObject()
-#if QT_VERSION >= 0x040300
   , QIconEngineV2()
-#else
-  , QIconEngine()
-#endif
 	, dset(0)
 {
 	selector.addAxis();

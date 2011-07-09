@@ -13,9 +13,9 @@
 #ifndef NVBMAINDOCKS_H
 #define NVBMAINDOCKS_H
 
-#include <QDockWidget>
-#include <QCloseEvent>
-#include <QVariant>
+#include <QtGui/QDockWidget>
+#include <QtGui/QCloseEvent>
+#include <QtCore/QVariant>
 
 #include "NVBLogUtils.h"
 
@@ -26,18 +26,6 @@ public:
 
 protected:
   virtual void closeEvent ( QCloseEvent * event ) { event->ignore(); hide(); }
-#if QT_VERSION < 0x040300
-  virtual void hideEvent ( QHideEvent * event ) {
-    emit visibilityChanged(false);
-    QDockWidget::hideEvent(event);
-    }
-  virtual void showEvent ( QShowEvent * event ) {
-    emit visibilityChanged(true);
-    QDockWidget::showEvent(event);
-    }
-signals:
-  void visibilityChanged(bool);
-#endif
 
 };
 

@@ -10,29 +10,22 @@
 //
 //
 #include "NVBVariant.h"
-#include <QStringList>
-#include <QDate>
-#include <QTime>
-#include <QDateTime>
+#include <QtCore/QStringList>
+#include <QtCore/QDate>
+#include <QtCore/QTime>
+#include <QtCore/QDateTime>
 
 QString NVBVariant::toString(const QString & separator) const
 {
   switch (userType()) {
-#if QT_VERSION >= 0x040400
     case QVariant::Date : { return toDate().toString(Qt::SystemLocaleShortDate); }
     case QVariant::Time : { return toTime().toString(Qt::SystemLocaleShortDate); }
     case QVariant::DateTime : { return toDateTime().toString(Qt::SystemLocaleShortDate); }
-#else
-    case QVariant::Date : { return toDate().toString(Qt::SystemLocaleDate); }
-    case QVariant::Time : { return toTime().toString(Qt::SystemLocaleDate); }
-    case QVariant::DateTime : { return toDateTime().toString(Qt::SystemLocaleDate); }
-#endif
     case QVariant::Bool : { return toBool() ? QString("+") : QString(); }
     case QVariant::List : { // should never ever happen
       NVBOutputError("A QVariantList seems to be contained inside this NVBVariant object. Please use NVBVariantList instead.");
-//       return QString();
       QStringList l;
-      foreach (NVBVariant subv, toList()) {
+      foreach( NVBVariant subv, toList() ) {
         if (!subv.toString().isEmpty())
           l << subv;
         }
