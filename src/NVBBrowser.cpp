@@ -54,6 +54,8 @@
 #include <QtGui/QMessageBox>
 #endif
 
+#include <QtCore/QPropertyAnimation>
+
 #include "NVBColumnDialog.h"
 #include "NVBFileListView.h"
 #include "NVBPageInfoView.h"
@@ -61,6 +63,7 @@
 #include "NVBDirViewModel.h"
 #include "NVBDirView.h"
 #include "NVBSettings.h"
+#include "NVBSingleView.h"
 
 #include <math.h>
 
@@ -219,7 +222,8 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	connect(fileList,SIGNAL(rightPressed(QModelIndex)),this,SLOT(showFoldersMenu()));
 	connect(fileList->header(),SIGNAL(sectionMoved(int,int,int)),SLOT(moveColumn(int,int,int)));
 	connect(fileList->header(),SIGNAL(sectionRightPressed(int)),this,SLOT(showColumnsMenu()));
-	connect(fileList->selectionModel(),SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),this,SLOT(enableFolderActions(QModelIndex)));
+	connect(fileList->selectionModel(),SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
+	        this,SLOT(enableFolderActions(QModelIndex)));
 
 	foldersMenu = new QMenu("Folders",fileList->viewport());
 
@@ -287,6 +291,10 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
   connect(dirView,SIGNAL(activated(const QModelIndex&)), this,SLOT(loadPage(const QModelIndex&)));
 
+	pageView = new NVBSingleView(0,this);
+	pageView->hide();
+	connect(pageView,SIGNAL(dismissed()),this,SLOT(hidePageView()));
+	
   piview = new NVBPageInfoView(vSplitter);
   connect(fileList,SIGNAL(activated(const QModelIndex&)), piview, SLOT(clearView()));
   connect(dirView,SIGNAL(clicked(const QModelIndex &)),piview,SLOT(showPage(const QModelIndex &)));
@@ -380,7 +388,37 @@ void NVBBrowser::showItems() {
 
 void NVBBrowser::loadPage( const QModelIndex & item )
 {
-	emit pageRequest( dirViewModel->getAllFiles(item),item.row());
+	if (showPagesInBrowser)
+		showPageView(item.data(PageRole).value<NVBDataSet*>());
+	else
+		emit pageRequest( dirViewModel->getAllFiles(item),item.row());
+}
+
+void NVBBrowser::showPageView(NVBDataSet* dset)
+{
+		pageView->setDataSet(dset);
+		
+		dirView->setEnabled(false);
+		
+		QPropertyAnimation animation(pageView, "geometry");
+		animation.setDuration(1000);
+		
+		QRect dvr;
+		dvr.setTopLeft(dirView->mapTo(this,QPoint(0,0)));
+		dvr.setBottomRight(dirView->mapTo(this,dirView->rect().bottomRight()));
+		
+		animation.setStartValue(dvr.adjusted(100,100,-100,-100));
+		animation.setEndValue(dvr.adjusted(20,20,-20,-20));
+
+		pageView->show();
+		animation.start();
+
+}
+
+void NVBBrowser::hidePageView()
+{
+		pageView->hide();
+		dirView->setEnabled(true);
 }
 
 void NVBBrowser::switchIconSize( QAction* action ) {
