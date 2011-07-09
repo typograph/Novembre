@@ -4,27 +4,20 @@
 // Description: 
 //
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2007
+// Author: Timofey <timoty@pi-balashov>, (C) 2007-2011
 //
 // Copyright: See COPYING file that comes with this distribution
 //
 //
+
 #ifndef NVBFACTORY_H
 #define NVBFACTORY_H
 
-//#include <QtGui/QApplication>
 #include <QtCore/QList>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
-//#include <QtCore/QDir>
-//#include <QtCore/QLibrary>
-//#include <QtCore/QThread>
-//#include <QtCore/QEvent>
 #include <QtCore/QSignalMapper>
-//#include <dlfcn.h>
-
-#include <QtCore/QFuture>
-#include <QtCore/QtConcurrentRun>
+#include <QtCore/QMutex>
 
 #include "NVBLogger.h"
 #include "NVBFile.h"
@@ -71,6 +64,9 @@ private:
 	/// Loaded files in use
 		QList<NVBFile *> files;
 		
+	/// Mutex to protect file lists
+		QMutex mutex;
+		
 	/// Find file in list by name
 		int loadedFileIndex( QString filename );
 		NVBFile * retrieveLoadedFile( QString filename );
@@ -86,7 +82,8 @@ private:
 
 	/// Load file from \a filename. Returns NULL if file wasn't opened.
 	/// The returned file is already considered in use.
-		inline NVBFile* openFile( QString filename, bool track = true ) { return loadFile(associatedFiles(filename),track); }
+		inline NVBFile* openFile( QString filename, bool track = true ) 
+			{ return openFile(associatedFiles(filename),track); }
 		NVBFile* openFile( const NVBAssociatedFilesInfo & info, bool track = true );
 
 		NVBFileInfo* openFileInfo( QString filename ) const;
@@ -107,49 +104,25 @@ public:
 	virtual ~NVBFileFactory();
 
 	/**
-	 * Blocking version of loadFile
-	 * 
-	 */
-		NVBFile* getFile( QString filename, bool track = true );
-		NVBFile* getFile( const NVBAssociatedFilesInfo & info, bool track = true );
-//		void openFile( const NVBAssociatedFilesInfo & info, const QObject * receiver );
-
-	/**
-	 * Asyncronously loads a file.
+	 * Loads a file. This function is thread-safe.
 	 * 
 	 * Checks all caches for file \a filename, if found, returns it, if not, uses \a loadFile
 	 * @param filename Name of the file to be open
 	 *
 	 */
-		QFuture<NVBFile*> loadFile( QString filename, bool track = true )
-			{ return QtConcurrent::run(this, static_cast<NVBFile * (NVBFileFactory::*)(QString, bool)>(&NVBFileFactory::getFile),filename,track); }
-	/**
-	 * \overload
-	 * 
-	 */
-		QFuture<NVBFile*> loadFile( const NVBAssociatedFilesInfo & info, bool track = true )
-			{ return QtConcurrent::run(this, static_cast<NVBFile * (NVBFileFactory::*)(const NVBAssociatedFilesInfo &, bool)>(&NVBFileFactory::getFile),info,track); }
-
-	/**
-	 * Blocking version of loadFileInfo
-	 */
-	/// Load only info from \a filename. 
-		NVBFileInfo* getFileInfo( QString filename );
-		NVBFileInfo* getFileInfo( const NVBAssociatedFilesInfo & info );
-
+		NVBFile* getFile( QString filename, bool track = true );
+		NVBFile* getFile( const NVBAssociatedFilesInfo & info, bool track = true );
+	
 	/** 
-	 * Asyncronously loads a fileInfo object
+	 * Loads a fileInfo object. This function is thread-safe.
 	 * 
 	 * Load only info from \a filename. Reuses loaded files if any
 	 * @param filename Name of the file for the info to be read from.
 	 * @return info from file \a filename
 	 * 
 	 */
-		QFuture<NVBFileInfo*> loadFileInfo( QString filename )
-			{ return QtConcurrent::run(this, static_cast<NVBFileInfo * (NVBFileFactory::*)(QString)>(&NVBFileFactory::getFileInfo),filename); }
-		QFuture<NVBFileInfo*> loadFileInfo( const NVBAssociatedFilesInfo & info )
-			{ return QtConcurrent::run(this, static_cast<NVBFileInfo * (NVBFileFactory::*)(const NVBAssociatedFilesInfo &)>(&NVBFileFactory::getFileInfo),info); }
-	
+		NVBFileInfo* getFileInfo( QString filename );
+		NVBFileInfo* getFileInfo( const NVBAssociatedFilesInfo & info );	
 
 	/// Returns info about files associated with name \a filename
 		NVBAssociatedFilesInfo associatedFiles(QString filename) const;
@@ -157,6 +130,7 @@ public:
 	/// Generates a string of openable files in the format acceptable by \c QDir
 		QStringList getDirFilters() const;
 		inline QString getDirFilter() const { return getDirFilters().join(";"); }
+		
 	/// Generates a string of openable files in the format acceptable by \c QFileDialog
 		QString getDialogFilter();
 
