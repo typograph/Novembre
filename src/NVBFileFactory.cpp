@@ -205,27 +205,34 @@ NVBFile * NVBFileFactory::getFile( QString filename, bool track )
 {
 	NVBOutputPMsg(QString("Requested file %1").arg(filename));
 
-	if (!track) return openFile(filename,track);
+	if (!track) return openFile(filename,false);
+	
+	QMutexLocker lock(&mutex);
 	
 	if (NVBFile * f = retrieveLoadedFile(filename)) {
 		NVBOutputVPMsg(QString("Found already loaded file."));
 		return f;
 	}
-	else if (NVBFile * f = deadTree->retrieve(filename)) {
+	
+	if (NVBFile * f = deadTree->retrieve(filename)) {
 		NVBOutputVPMsg(QString("Restored released file."));
 		files.append(f);
 		return f;
 	}
-	else
-		return openFile(filename);
+
+	lock.unlock(); // Otherwise the time spent in the generator is not used efficiently
+	
+	return openFile(filename);
 }
 
 NVBFile* NVBFileFactory::getFile( const NVBAssociatedFilesInfo& info, bool track )
 {
 	NVBOutputPMsg(QString("Requested file %1").arg(info.name()));
 
-	if (!track) return openFile(info,track);
+	if (!track) return openFile(info,false);
 	
+	QMutexLocker lock(&mutex);
+
 	if (NVBFile * f = retrieveLoadedFile(info)) {
 		NVBOutputVPMsg(QString("Found already loaded file."));
 		return f;
@@ -237,6 +244,8 @@ NVBFile* NVBFileFactory::getFile( const NVBAssociatedFilesInfo& info, bool track
 		return f;
 	}
 	
+	lock.unlock(); // Otherwise the time spent in the generator is not used efficiently
+	
 	return openFile(info);
 }
 
@@ -246,6 +255,8 @@ NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
 
 	NVBOutputVPMsg(QString("Requested file info for %1").arg(filename));
 
+	QMutexLocker lock(&mutex);
+
 	if (NVBFile * f = retrieveLoadedFile(filename)) {
 		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
 		return new NVBFileInfo(f);
@@ -254,8 +265,10 @@ NVBFileInfo * NVBFileFactory::getFileInfo( QString filename )
 		NVBOutputVPMsg(QString("Constructed file info from released file"));
 		return new NVBFileInfo(f);
 	}
-	else
-		return openFileInfo(filename);
+
+	lock.unlock();
+
+	return openFileInfo(filename);
 
 }
 
@@ -263,6 +276,8 @@ NVBFileInfo * NVBFileFactory::getFileInfo( const NVBAssociatedFilesInfo & info)
 {
 
 	NVBOutputVPMsg(QString("Requested file info %1").arg(info.name()));
+
+	QMutexLocker lock(&mutex);
 
 	if (NVBFile * f = retrieveLoadedFile(info)) {
 		NVBOutputVPMsg(QString("Constructed file info from loaded file."));
@@ -272,8 +287,10 @@ NVBFileInfo * NVBFileFactory::getFileInfo( const NVBAssociatedFilesInfo & info)
 		NVBOutputVPMsg(QString("Constructed file info from released file"));
 		return new NVBFileInfo(f);
 	}
-	else
-		return openFileInfo(info);
+	
+	lock.unlock();
+
+	return openFileInfo(info);
 }
 
 NVBFileInfo* NVBFileFactory::openFileInfo(QString filename) const
@@ -312,6 +329,7 @@ NVBFile * NVBFileFactory::openFile( const NVBAssociatedFilesInfo& info, bool tra
 
 	if (file) {
 		if (track) {
+			QMutexLocker lock(&mutex);
 			files.append(file);
 			connect(file,SIGNAL(free(NVBFile*)),SLOT(bury(NVBFile*)));
 			}
