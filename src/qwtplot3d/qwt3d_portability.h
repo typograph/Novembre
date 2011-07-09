@@ -3,10 +3,8 @@
 
 //! Portability classes providing transparent Qt3/4 support
 
-#include <qnamespace.h>
 #include "qwt3d_global.h"
-
-#include <QMouseEvent>
+#include <QtGui/QMouseEvent>
 
 namespace Qwt3D
 {

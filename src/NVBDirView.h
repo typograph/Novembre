@@ -13,9 +13,9 @@
 #ifndef NVBDIRVIEW_H
 #define NVBDIRVIEW_H
 
-#include <QAbstractItemView>
-#include <QRect>
-#include <QVector>
+#include <QtGui/QAbstractItemView>
+#include <QtCore/QRect>
+#include <QtCore/QVector>
 
 class QPaintEvent;
 class QResizeEvent;

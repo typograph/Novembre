@@ -15,11 +15,7 @@ class NVBColorInstance;
  */
 QIcon createDatasetIcon(const NVBDataSet * set);
 
-#if QT_VERSION >= 0x040300
 class NVB2DIconEngine : public QObject, public QIconEngineV2 {
-#else
-class NVB2DIconEngine : public QObject, public QIconEngine {
-#endif
 	Q_OBJECT
 	protected:
 		const NVBDataSet * dset;
@@ -40,11 +36,7 @@ class NVB2DIconEngine : public QObject, public QIconEngine {
 };
 
 
-#if QT_VERSION >= 0x040300
 class NVB1DIconEngine : public QObject, public QIconEngineV2 {
-#else
-class NVB1DIconEngine : public QObject, public QIconEngine {
-#endif
 	Q_OBJECT
 	private:
 		const NVBDataSet* dset;

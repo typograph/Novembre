@@ -3,7 +3,7 @@
 #include "qwt3d_plot.h"
 #include "qwt3d_io_gl2ps.h"
 #include "qwt3d_io_reader.h"
-#include <QImageWriter>
+#include <QtGui/QImageWriter>
 
 using namespace Qwt3D;
 

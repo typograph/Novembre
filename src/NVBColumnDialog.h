@@ -115,9 +115,6 @@ public:
 
   NVBCCCBox(const NVBTokens::NVBTokenList & l, QWidget * parent = 0):
     QComboBox(parent),tokens(l),dropdown(0) {
-#if QT_VERSION < 0x040300
-    addItem(tokens.verboseString());
-#endif
     }
   ~NVBCCCBox() {;}
   

@@ -208,21 +208,11 @@ NVBColumnInputDialog::NVBColumnInputDialog(QWidget * parent):QDialog(parent)
 {
   setWindowTitle("New column");
 
-#if QT_VERSION >= 0x040400
   QFormLayout * formLayout = new QFormLayout(this);
   formLayout->addRow("Name",clmnName = new QLineEdit(this));
   formLayout->addRow("Contents",iw = new NVBColumnInputWidget(NVBTokenList(QString()),this));
   QDialogButtonBox * buttonBox;
   formLayout->addRow(buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,Qt::Horizontal,this));
-#else
-  QGridLayout * gridLayout = new QGridLayout(this);
-  gridLayout->addWidget(new QLabel("Name",this),0,0);
-  gridLayout->addWidget(clmnName = new QLineEdit(this),0,1);
-  gridLayout->addWidget(new QLabel("Contents",this),1,0);
-  gridLayout->addWidget(iw = new NVBColumnInputWidget(NVBTokenList(QString()),this));
-  QDialogButtonBox * buttonBox;
-  gridLayout->addWidget(buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,Qt::Horizontal,this),2,0,1,2);
-#endif
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 }
@@ -263,11 +253,7 @@ NVBColumnDialogWidget::NVBColumnDialogWidget(int ix, NVBColumnDescriptor clmn, Q
   resize(554, 45);
 
   horizontalLayout = new QHBoxLayout(this);
-#if QT_VERSION >= 0x040300
   horizontalLayout->setContentsMargins(0,0,0,0);
-#else
-  horizontalLayout->setMargin(0);
-#endif
 
   clmnName = new QLineEdit(clmn.name,this);
   horizontalLayout->addWidget(clmnName,2);
@@ -444,7 +430,6 @@ void NVBColumnDialog::disableEntry(int entry)
 
 void NVBCCCBox::paintEvent( QPaintEvent * e)
 {
-#if QT_VERSION >= 0x040300
   QStylePainter painter(this);
   painter.setPen(palette().color(QPalette::Text));
 
@@ -457,9 +442,6 @@ void NVBCCCBox::paintEvent( QPaintEvent * e)
   // draw the icon and text
   painter.drawControl(QStyle::CE_ComboBoxLabel, opt);
   Q_UNUSED(e);
-#else
-  QComboBox::paintEvent(e);
-#endif
 }
 
 void NVBCCCBox::showPopup( )
@@ -490,9 +472,6 @@ void NVBCCCBox::hidePopup( )
 void NVBCCCBox::setValue( )
 {
   tokens = dropdown->input()->getState();
-#if QT_VERSION < 0x040300
-  QComboBox::setItemText(0,tokens.verboseString());
-#endif
   update();
   hidePopup();
 	emit contentChanged();

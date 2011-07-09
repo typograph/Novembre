@@ -2,8 +2,8 @@
 #define NVBCOLUMNSMODEL_H
 
 #include "NVBTokens.h"
-#include <QAbstractTableModel>
-#include <QStringList>
+#include <QtCore/QAbstractTableModel>
+#include <QtCore/QStringList>
 
 struct NVBColumnDescriptor {
   QString name;

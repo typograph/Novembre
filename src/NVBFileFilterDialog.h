@@ -6,7 +6,7 @@
 #ifndef NVBFILEFILTERDIALOG_H
 #define NVBFILEFILTERDIALOG_H
 
-#include <QDialog>
+#include <QtGui/QDialog>
 
 class QVBoxLayout;
 class QHBoxLayout;

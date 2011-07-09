@@ -12,14 +12,14 @@
 
 #include "NVBFileFilterDialog.h"
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QPushButton>
-#include <QToolButton>
-#include <QSpacerItem>
-#include <QComboBox>
-#include <QLineEdit>
+#include <QtGui/QHBoxLayout>
+#include <QtGui/QVBoxLayout>
+#include <QtGui/QLabel>
+#include <QtGui/QPushButton>
+#include <QtGui/QToolButton>
+#include <QtGui/QSpacerItem>
+#include <QtGui/QComboBox>
+#include <QtGui/QLineEdit>
 
 #include "NVBLogger.h"
 
@@ -29,11 +29,7 @@ NVBFileFilterWidget::NVBFileFilterWidget( int w_index, QAbstractItemModel * colu
   setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
   
   horizontalLayout = new QHBoxLayout(this);
-#if QT_VERSION >= 0x040300
   horizontalLayout->setContentsMargins(0,0,0,0);
-#else
-  horizontalLayout->setMargin(0);
-#endif
   
   logic_box = new QComboBox(this);
   logic_box->clear();
