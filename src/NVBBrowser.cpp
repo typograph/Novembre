@@ -90,7 +90,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
   iconSize = confile->value("Browser/IconSize").toInt();
 
-  QSplitter * hSplitter = new QSplitter(Qt::Horizontal);
+  hSplitter = new QSplitter(Qt::Horizontal,this);
 
   hSplitter->setCursor(Qt::ArrowCursor); // Without that, the cursor is undefined and keeps the entry form
 
@@ -311,7 +311,14 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   
   resize(confile->value("Browser/Size", QSize(400, 300)).toSize());
   move(confile->value("Browser/Pos", QPoint(0, 0)).toPoint());
-   
+
+	float ratio = confile->value("Browser/Split", 1).toFloat(); 
+	if (ratio == 0)
+		hSplitter->setSizes(QList<int>() << 0 << width());
+	else {
+		ratio = tan(ratio);
+		hSplitter->setSizes(QList<int>() << int(width()/(1+1/ratio)) << (int)(width()/(1+ratio)));
+		}
 }
 
 QSize NVBBrowser::sizeHint () const {
@@ -377,7 +384,9 @@ NVBBrowser::~ NVBBrowser( )
   updateColumns();
 	confile->setValue("Browser/Size", size());
   confile->setValue("Browser/Pos", pos());
-  confile->setValue("Browser/FileListSize", fileList->size());
+	// TODO maybe it's better to save the absolute width of the dir tree
+	confile->setValue("Browser/Split", atan2(hSplitter->sizes().at(0),hSplitter->sizes().at(1)));
+	confile->setValue("Browser/FileListSize", fileList->size());
   confile->setValue("Browser/ShowPageInfo", piview->isVisible());
   if (fileModel) delete fileModel;
 }
