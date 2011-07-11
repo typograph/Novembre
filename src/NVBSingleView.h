@@ -20,13 +20,14 @@
 #define NVBSINGLEVIEW_H
 
 #include "NVBDataSource.h"
-#include <QtGui/QWidget>
+#include <QtGui/QFrame>
 #include <QtCore/QVector>
 #include <QtCore/QSignalMapper>
 
 class QToolBar;
 class NVBSingle2DView;
 class NVBSingleGraphView;
+class QHideEvent;
 
 /*
 class NVBOverridenDataSet : public NVBDataSet
@@ -80,7 +81,7 @@ public slots:
 };
 
 
-class NVBSingleView : public QWidget 
+class NVBSingleView : public QFrame 
 {
 	Q_OBJECT;
 public:	
@@ -102,6 +103,7 @@ private:
 	// -------------------------
 
 	void createView(NVBSingleView::Type type);
+	void hideEvent(QHideEvent * e);
 	
 public:	
 

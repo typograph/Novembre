@@ -408,7 +408,7 @@ void NVBSingleViewSliders::updateWidgets()
 
 
 NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
-: QWidget(parent)
+: QFrame(parent)
 , ds(0)
 , ods(0)
 , view2D(0)
@@ -512,6 +512,14 @@ NVBSingleView::~NVBSingleView()
 	if (ods)
 		delete ods;
 }
+
+void NVBSingleView::hideEvent(QHideEvent* e)
+{
+	QWidget::hideEvent(e);
+
+	emit dismissed();
+}
+
 
 void NVBSingleView::sliceChanged(QVector< axissize_t > indexes)
 {
