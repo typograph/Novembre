@@ -13,13 +13,26 @@
 #define NVBVARIANT_H
 
 #include <QtCore/QVariant>
+#include <QtCore/QStringList>
 #include "NVBUnits.h"
 
 class NVBVariant;
 Q_DECLARE_METATYPE(NVBVariant);
 
-typedef QList<NVBVariant> NVBVariantList;
+class NVBVariantList;
 Q_DECLARE_METATYPE(NVBVariantList);
+
+class NVBVariantList : public QList<NVBVariant> {
+
+private:
+	QString _separator;
+public:
+	QString separator() const { return _separator; }
+	void setSeparator(const QString & separator) { _separator = separator; }
+
+	QString toString(QString separator = QString()) const;
+	QStringList toStringList() const;
+};
 
 class NVBVariant: public QVariant {
 private:
@@ -69,7 +82,7 @@ template <>
   virtual ~NVBVariant () {;}
 
 //   QVariant toVariant () const ;
-  QString toString (const QString & separator = QString("")) const ;
+  QString toString () const ;
   NVBUnits toDimension () const;
   NVBPhysValue toPhysValue () const;
   NVBVariantList toList() const;

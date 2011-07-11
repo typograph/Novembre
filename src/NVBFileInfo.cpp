@@ -78,6 +78,7 @@ NVBVariant NVBFileInfo::dataParam(NVBDataInfo pi, NVBDataParamToken::NVBDataPara
 			NVBVariantList l;
 			foreach(axissize_t s, pi.sizes)
 				l << s;
+			l.setSeparator(" x ");
 			return l;
       }
 		case NVBDataParamToken::Units : {
@@ -105,7 +106,8 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 			}
 		else {   
 			NVBVariantList ans, pans;
-			
+			ans.setSeparator(" : ");
+			pans.setSeparator(" : ");
 			foreach(NVBDataInfo pi, *this) {
 				
 				pans.clear();
@@ -197,7 +199,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 
 QString NVBFileInfo::getInfoAsString(const NVBTokenList & list) const
 {
-  return getInfo(list).toString(" : ");
+  return getInfo(list).toString();
 }
 
 NVBFileInfo::NVBFileInfo(const NVBFile * const file)
