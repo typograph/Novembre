@@ -42,6 +42,7 @@ class QMenu;
 class QSettings;
 class QShowEvent;
 class QCloseEvent;
+class QSplitter;
 
 class NVBFileFactory;
 class NVBFileListView;
@@ -132,6 +133,7 @@ private:
 
   NVBFileFactory * files;
 
+  QSplitter* hSplitter;
 	NVBFileListView * fileList;
 	NVBPageInfoView * piview;
 	NVBDirModel * fileModel;
