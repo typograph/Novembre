@@ -136,6 +136,7 @@ class NVBDataSource : public QObject {
 		mutable unsigned int refCount;
 		friend void useDataSource(const NVBDataSource* source);
 		friend void releaseDataSource(const NVBDataSource* source);
+	NVBDataSource( const NVBDataSource& );
 
 	protected:
 		NVBAxesProps outputAxesProps;

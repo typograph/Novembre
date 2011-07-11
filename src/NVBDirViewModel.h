@@ -25,6 +25,7 @@
 class NVBFile;
 class NVBFileModel;
 class NVBFileFactory;
+class NVBSpecOverlayIconProvider;
 
 class NVBDirViewModelLoader : public QThread {
 Q_OBJECT
@@ -58,18 +59,24 @@ class NVBDirViewModel : public QAbstractItemModel
 Q_OBJECT
 public:
 
+	enum Mode {
+		Normal = 0,
+		SpectroscopyOverlay
+//
+	};
+
 	NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, QObject * parent = 0);
-  virtual ~NVBDirViewModel();
+	virtual ~NVBDirViewModel();
 
-  virtual bool hasChildren ( const QModelIndex & parent = QModelIndex() ) const;
-  virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
-  virtual int columnCount(const QModelIndex &parent = QModelIndex()) const;
-  virtual Qt::ItemFlags flags(const QModelIndex &index) const;
-  virtual QVariant data(const QModelIndex &index, int role) const;
-  virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+	virtual bool hasChildren ( const QModelIndex & parent = QModelIndex() ) const;
+	virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+	virtual int columnCount(const QModelIndex &parent = QModelIndex()) const;
+	virtual Qt::ItemFlags flags(const QModelIndex &index) const;
+	virtual QVariant data(const QModelIndex &index, int role) const;
+	virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 
-  virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
-  virtual QModelIndex parent ( const QModelIndex & index ) const;
+	virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
+	virtual QModelIndex parent ( const QModelIndex & index ) const;
 
 	void setDisplayItems(QModelIndexList items);
 
@@ -79,19 +86,24 @@ public:
 	virtual QStringList mimeTypes () const;
 
 private:
-  NVBFileFactory * fileFactory;
+	NVBFileFactory * fileFactory;
 	QList<QPersistentModelIndex> indexes;
 	QPersistentModelIndex dirindex;
-  NVBDirModel * dirModel;
+	NVBDirModel * dirModel;
   mutable QVector<NVBFileModel*> files;
-  mutable QList<int> unloadables;
-  mutable QVector<int> rowcounts;
-  QVector<QString> * fnamecache;
+	mutable QList<int> unloadables;
+	mutable QVector<int> rowcounts;
+	QVector<QString> * fnamecache;
 	mutable NVBDirViewModelLoader	loader;
 	
-  bool operationRunning;
-  void cacheRowCounts() const;
-  void cacheRowCounts ( int first, int last ) const;
+
+	NVBSpecOverlayIconProvider * overlay;
+
+	bool operationRunning;
+	void cacheRowCounts() const;
+	void cacheRowCounts ( int first, int last ) const;
+
+	Mode mode;
 
 	mutable QPixmap unavailable, loading;
 
@@ -99,19 +111,20 @@ private:
 	QVariant inProgressData(int role) const;
 
 private slots:
-  void parentInsertingRows( const QModelIndex & parent, int first, int last );
-  void parentInsertedRows( const QModelIndex & parent, int first, int last );
-  void parentRemovingRows( const QModelIndex & parent, int first, int last );
-  void parentRemovedRows( const QModelIndex & parent, int first, int last );
-//  void parentChangingLayout();
-//  void parentChangedLayout();
-  bool loadFile(int index) const;
+	void parentInsertingRows( const QModelIndex & parent, int first, int last );
+	void parentInsertedRows( const QModelIndex & parent, int first, int last );
+	void parentRemovingRows( const QModelIndex & parent, int first, int last );
+	void parentRemovedRows( const QModelIndex & parent, int first, int last );
+//	void parentChangingLayout();
+//	void parentChangedLayout();
+	bool loadFile(int index) const;
 //	void fileLoaded();
 //	void fileLoaded(int index);
 	void fileLoaded(NVBFile* file, QString name);
 
 public slots:
-  void defineWindow(int start,int end);
+	void defineWindow(int start,int end);
+	void setMode(Mode m);
 };
 
 

@@ -53,54 +53,6 @@ class NVBDirViewModel;
 class NVBDirView;
 class NVBSingleView;
 
-class NVBFolderInputDialog : public QDialog {
-Q_OBJECT
-private:
-    QLabel * nameLabel;
-    QLineEdit * nameEdit;
-    QCheckBox * dirLabel;
-    QLineEdit * dirEdit;
-    QCheckBox * subfolderCheck;
-    QDialogButtonBox * buttonBox;
-    QToolButton * folderSelectButton;
-    QAction * folderSelectAction;
-    QFileDialog * fileDialog;
-    
-//     bool isDirValid;
-
-		void buildUi();
-
-public:
-    NVBFolderInputDialog (QWidget * parent = 0);
-		NVBFolderInputDialog (QString label, QString dirname, bool includeSubfolders, QWidget * parent = 0);
-		static bool getFolder(QString & label, QString & dirname, bool & includeSubfolders);
-		static bool editFolder(QString & label, QString & dirname, bool & includeSubfolders);
-
-    QString getDir();
-    QString getName();
-    bool getIncludeSubfolders();
-private slots:
-    void dirSelected();
-    bool checkInput(  );
-    void tryAccept();
-};
-
-class NVBDirExportDialog : public QDialog {
-Q_OBJECT
-private:
-  QLineEdit * fileNameEdit;
-  QCheckBox * recursiveOpt;
-  QCheckBox * loadOpt;
-  QCheckBox * fullnamesOpt; 
-  QDialogButtonBox * buttonBox;
-  QFileDialog * fileDialog;
-public:
-  NVBDirExportDialog (QWidget * parent = 0);
-  static NVBDirExportOptions getOptions(QWidget * parent = 0);
-  NVBDirExportOptions options() const;
-private slots:
-  void fileSelected();
-};
 
 /**
  * \brief Novembre browser window
