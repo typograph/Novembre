@@ -25,6 +25,7 @@
 #include "NVBFileGenerator.h"
 
 class QAction;
+class QSettings;
 
 class NVBFileQueue : protected QList<NVBFile*> {
 private:
@@ -79,6 +80,8 @@ private:
 	///
 		QList<QAction*> gActions;
 		QSignalMapper actMapper;
+
+		QSettings * confile;
 
 	/// Load file from \a filename. Returns NULL if file wasn't opened.
 	/// The returned file is already considered in use.

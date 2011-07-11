@@ -69,10 +69,14 @@ private slots:
 	void switchToSpec();
 	void switchToCustom();
 	void switchToExpert();
+signals:
+	void stateChanged();
 };
 
 class NVBColumnInputDialog : public QDialog
 {
+Q_OBJECT
+private:
   NVBColumnInputWidget * iw;
   QLineEdit * clmnName;
 
@@ -81,7 +85,8 @@ public:
 
   NVBColumnDescriptor getState();
   static QString getColumn();
-
+public slots:
+	void autoName();
 };
 
 class NVBCCDropDown : public QFrame {
