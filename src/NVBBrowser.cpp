@@ -293,6 +293,11 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 
 	pageView = new NVBSingleView(0,this);
 	pageView->hide();
+//	pageView->setWindowModality(Qt::WindowModal);
+	pageView->setFrameShape(QFrame::StyledPanel);
+	pageView->setFrameShadow(QFrame::Plain);
+	pageView->setWindowFlags(Qt::Popup);
+// 	pageView->setForegroundRole(QPalette::Light);
 	connect(pageView,SIGNAL(dismissed()),this,SLOT(hidePageView()));
 	
   piview = new NVBPageInfoView(vSplitter);
