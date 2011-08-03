@@ -68,7 +68,7 @@ public:
 	*/
 	static QChar charFromOrder(int order, int * neworder = 0);
 	/// Converts SI multiplier letter into powers of 10. E.g. "k" gives 1000 and "m" gives 0.001.
-	static double multFromChar(QChar c);
+	static double multFromChar(const QChar & c);
 
 	/** \brief Returns a string representation of the unit
 	*  Converts the unit into string, following the SI standard.
@@ -108,7 +108,7 @@ public:
 		}
 
 	/// Returns a factor that one should multiply this units to get \p target.
-	double scaleTo(NVBUnits target) const {
+	double scaleTo(const NVBUnits & target) const {
 		if (isComparableWith(target)) {
 			if (isScalable())
 				return target.mult/mult;
@@ -135,12 +135,12 @@ private:
 public:
 	NVBPhysValue():value(0) {;}
 	NVBPhysValue(const QString& s, bool scalableDimension = true);
-	NVBPhysValue(const QString& s, NVBUnits d);
-	NVBPhysValue(double f, NVBUnits d);
+	NVBPhysValue(const QString& s, const NVBUnits & d);
+	NVBPhysValue(double f, const NVBUnits & d);
 	~NVBPhysValue() {;}
 
 	double getValue( ) const { return value; }
-	double getValue( NVBUnits dim ) const;
+	double getValue( const NVBUnits & dim ) const;
 	
 	NVBUnits getDimension() const { return dim; }
 
@@ -219,9 +219,9 @@ class NVBPhysPoint {
 		NVBUnits d;
 	public:
 		NVBPhysPoint() {;}
-		NVBPhysPoint(double x, double y, NVBUnits dimension);
-		NVBPhysPoint(NVBPhysValue,NVBPhysValue);
-		NVBPhysPoint(QPointF point, NVBUnits dimension):p(point),d(dimension) {;}
+		NVBPhysPoint(double x, double y, const NVBUnits & dimension);
+		NVBPhysPoint(const NVBPhysValue & x, const NVBPhysValue & y);
+		NVBPhysPoint(const QPointF & point, const NVBUnits & dimension):p(point),d(dimension) {;}
 
 		NVBPhysPoint(const NVBPhysPoint & other):p(other.p),d(other.d) {;}
 
@@ -229,8 +229,9 @@ class NVBPhysPoint {
 		
 		inline NVBPhysValue x() const { return NVBPhysValue(p.x(),d); }
 		inline NVBPhysValue y() const { return NVBPhysValue(p.y(),d); }
-		QPointF point(NVBUnits targetDimension) const;
-		QPointF vectorTo(const NVBPhysPoint& other, NVBUnits targetDimension = NVBUnits()) const;
+		QPointF point(const NVBUnits & targetDimension) const;
+		QPointF vectorTo(const NVBPhysPoint& other) const { return vectorTo(other,d); }
+		QPointF vectorTo(const NVBPhysPoint& other, const NVBUnits & targetDimension) const;
 		
 		NVBPhysValue distance(const NVBPhysPoint& other);
 
