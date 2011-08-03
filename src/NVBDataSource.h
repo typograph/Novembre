@@ -1,6 +1,7 @@
 #ifndef NVBDATASOURCE_H
 #define NVBDATASOURCE_H
 
+class NVBColorInstance;
 class NVBFile;
 class NVBDataSet;
 class NVBAxisMap;
@@ -14,14 +15,14 @@ class NVBAxisPhysMap;
 #include "NVBAxis.h"
 #include "NVBUnits.h"
 #include "NVBVariant.h"
-#include "NVBAxisSelector.h"
+//#include "NVBAxisSelector.h"
 
 typedef QMap<QString,NVBVariant> NVBDataComments;
 
 class NVBDataSet : public QObject {
 	Q_OBJECT
 	friend class NVBConstructableDataSource;
-	friend class NVBSelectorInstance;
+	friend class NVBSelectorDataInstance;
 	public:
 		/// Initial type of the data
 		enum Type {
@@ -83,6 +84,7 @@ class NVBDataSet : public QObject {
 
 		const NVBColorMap * colorMap() const ;
 		inline void setColorMap(NVBColorMap * m) { clr = m; }
+		NVBColorInstance* colorInstance() const;
 
 		inline NVBDataSource * dataSource() const { return p; }
 
@@ -124,6 +126,8 @@ Q_DECLARE_METATYPE(NVBDataSet*)
 void useDataSource(const NVBDataSource* source);
 /// Decreases the reference count for the source \a source
 void releaseDataSource(const NVBDataSource* source);
+
+typedef int NVBAxesProps; // FIXME This is here to make compilation times faster
 
 class NVBDataSource : public QObject {
 	

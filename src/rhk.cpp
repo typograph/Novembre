@@ -294,7 +294,7 @@ void RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 	s.addAxisByLength(header.x_size).byUnits(NVBUnits(strings.at(7)));
 	s.addAxisByLength(header.y_size).byUnits(NVBUnits(strings.at(8)));
 
-	NVBSelectorInstance inst = s.instantiate(*sources);
+	NVBSelectorDataInstance inst = s.instantiate(*sources);
 	NVBConstructableDataSource * ds;
 	QVector<axisindex_t> ia(2);
 	
@@ -573,7 +573,7 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 		s.addAxisByLength(header.y_size / np);
 		}
 	
-	NVBSelectorInstance inst = s.instantiate(*sources);
+	NVBSelectorDataInstance inst = s.instantiate(*sources);
 	NVBConstructableDataSource * ds = 0;
 	QVector<axisindex_t> ia(((!status) & 2 >> 1) + status + 1); // 0 -> 2, 1-> 3, 2-> 3, 3-> 4
 	
