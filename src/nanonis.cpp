@@ -380,7 +380,7 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 			}
 		
 		QList< QPair<QString, NVBUnits> > channels;
-		QRegExp chName("^(.*) \\(([^\\)]*)\\)$");
+		QRegExp chName("^(.*)(?: \\((.*)\\))?$");
 		
 		foreach(QString channel, QString(file.readLine(500)).trimmed().split('\t',QString::SkipEmptyParts)) {
 			if (chName.exactMatch(channel))
