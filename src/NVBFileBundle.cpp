@@ -256,6 +256,16 @@ NVBFile * NVBFileBundle::loadFile(const NVBAssociatedFilesInfo & info) const thr
 			double * datafref = ndata;
 			
 			foreach(NVBFile * ofile, allFiles) {
+				if (ofile->count() <= i_dsource || !ofile->at(i_dsource)) {
+					NVBOutputError(QString("Not enough datasources in %1").arg(ofile->name()));
+					continue;
+					}
+				if (ofile->at(i_dsource)->dataSets().count() <= i_dset || !ofile->at(i_dsource)->dataSets().at(i_dset)) {
+					NVBOutputError(QString("Not enough datasets in %1 [%2]").arg(ofile->name()).arg(i_dsource));
+					continue;
+					}
+				if (!ofile->at(i_dsource)->dataSets().at(i_dset)->data())
+					continue;
 				memcpy(datafref,ofile->at(i_dsource)->dataSets().at(i_dset)->data(),sizeof(double)*ex_data_size);
 				datafref += ex_data_size;
 				}
@@ -349,7 +359,7 @@ NVBFileInfo * NVBFileBundle::loadFileInfo( const NVBAssociatedFilesInfo & info )
 			}
 		}
 	
-	NVBFileInfo * finfo = fileFactory->getFileInfo(QString(file.readLine(1024).trimmed()));
+	NVBFileInfo * finfo = fileFactory->getFileInfo(info.last());
 	
 	if (!finfo) {
 		NVBOutputError("Couldn't load file info for component files");
