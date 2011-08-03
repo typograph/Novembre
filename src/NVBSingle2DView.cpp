@@ -326,7 +326,7 @@ bool NVBSingle2DView::map(int x_widget, int y_widget, axissize_t& x_data, axissi
 
 /*
  * 	// TODO this code should be moved first to the dataset averaging,
-	// and then to NVBSelectorInstance
+	// and then to NVBSelectorDataInstance
 	
 	foreach(NVBAxisMapping mp, ax.maps()) {
 		if (mp.axes.count() == 1) {

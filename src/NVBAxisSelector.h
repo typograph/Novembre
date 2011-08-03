@@ -22,11 +22,15 @@
 #include "NVBUnits.h"
 #include "NVBAxis.h"
 #include "NVBDataGlobals.h"
+#include <QtCore/QMap>
+#include "NVBDataSource.h"
 
 class NVBDataSet;
 class NVBDataSource;
 struct NVBSelectorAxisPrivate;
-class NVBSelectorInstance;
+class NVBSelectorDataInstance;
+class NVBSelectorSourceInstance;
+class NVBSelectorFileInstance;
 
 struct NVBSelectorAxis {
 	NVBSelectorAxisPrivate * p;
@@ -34,6 +38,7 @@ struct NVBSelectorAxis {
 	enum NVBAxisPropertyType {
 		Invalid = 0,
 		Index,
+		Name,
 		MinLength,
 		MaxLength,
 		Length,
@@ -46,6 +51,7 @@ struct NVBSelectorAxis {
 	NVBSelectorAxis(const NVBSelectorAxis & other);
 	~NVBSelectorAxis();
 	
+	NVBSelectorAxis & byName(QString name);
 	NVBSelectorAxis & byIndex(int index);
 	NVBSelectorAxis & byMinLength(int length);
 	NVBSelectorAxis & byMaxLength(int length);
@@ -54,6 +60,8 @@ struct NVBSelectorAxis {
 	NVBSelectorAxis & byUnits(NVBUnits dimension);
 	NVBSelectorAxis & byMapDimensions(int dimension);
 	NVBSelectorAxis & byTypeId(int typeId);
+	
+	bool hasRuleFor(NVBAxisPropertyType type);
 	
 	template <class T>
 	inline NVBSelectorAxis & byType() { return byTypeId(qMetaTypeId<T>()); }
@@ -69,19 +77,27 @@ struct NVBSelectorCase {
 	enum Type { Undefined, AND, OR };
 	int id;
 	Type t;
+	NVBDataSet::Type target;
 	QList<NVBSelectorCase> cases;
 	QList<NVBSelectorAxis> axes;
 
+	bool optimal; // to save on optimize() calls
+	
 	NVBSelectorCase(int caseId = 0, Type caseType = Undefined)
 	: id(caseId)
 	, t(caseType)
+	, optimal(true)
 	{;}
 
 	NVBSelectorCase(const NVBSelectorCase & other) ;
 
+	NVBSelectorCase & setType(NVBDataSet::Type type);
+	
 	NVBSelectorCase & addCase(int caseId = 0, Type caseType = Undefined);
+	inline NVBSelectorCase & lastCase() { return (t == OR) ? cases.last() : *this; }
 
 	NVBSelectorAxis & addAxis();
+	inline NVBSelectorAxis & addAxisByName(QString name) { return addAxis().byName(name); }
 	inline NVBSelectorAxis & addAxisByIndex(int index) { return addAxis().byIndex(index); }
 	inline NVBSelectorAxis & addAxisByMinLength(int length) { return addAxis().byMinLength(length); }
 	inline NVBSelectorAxis & addAxisByMaxLength(int length) { return addAxis().byMaxLength(length); }
@@ -96,73 +112,205 @@ template <class T>
 
 	bool matches(const NVBDataSet * dataSet);
 
-	NVBSelectorInstance instantiate(const NVBDataSet * dataSet);
-	NVBSelectorInstance instantiate(QList<NVBDataSource *> dataSources);
+	/// Returns an instance, that reports all datasources that have matching datasets
+	NVBSelectorFileInstance instantiate(const QList<NVBDataSource *> * dataSources);
+	/// Returns an instance, that reports one datasource from the list that has matching datasets
+	NVBSelectorSourceInstance instantiateOneSource(const QList<NVBDataSource *> * dataSources);
+	/// Returns an instance, that reports the first matching dataset from the list
+	NVBSelectorDataInstance instantiateOneDataset(const QList<NVBDataSource *> * dataSources);
+	
+	/// Returns an instance, that reports all matching datasets (may be none)
+	NVBSelectorSourceInstance instantiate(const NVBDataSource * dataSource);
+	/// Returns an instance, that reports the first matching dataset from the list
+	NVBSelectorDataInstance instantiateOneDataset(const NVBDataSource * dataSource);
+
+	/// Returns an instance, that has info on all matching axes from the selector (may be invalid if no match)
+	NVBSelectorDataInstance instantiate(const NVBDataSet * dataSet);
 
 	void optimize();
 //	NVBSelectorAxis & addDependentAxis();
 };
 
 typedef NVBSelectorCase NVBAxisSelector;
-typedef NVBSelectorCase NVBAxesProps;
+// typedef NVBSelectorCase NVBAxesProps;
 
-class NVBSelectorInstance {
+struct NVBSelectorAxisInstance {
+	int additionalAxes;
+	QList<axisindex_t> axes;
+// 	QList<NVBAxisMapping> maps;
+	
+	NVBSelectorAxisInstance(int addA = 0) : additionalAxes(addA) {;} // the list is empty anyway
+	NVBSelectorAxisInstance(int addA, QList<axisindex_t> list) : additionalAxes(addA) , axes(list) {;}
+};
+
+typedef QList< NVBSelectorAxisInstance > NVBSelectorAxisInstanceList;
+
+class NVBSelectorDataInstance {
+	friend class NVBSelectorSourceInstance;
 	private:
 		bool valid;
-		const NVBSelectorCase * s;
-		const NVBDataSource * dataSource;
 		const NVBDataSet * dataSet;
+	NVBSelectorCase s;
 		QVector<axisindex_t> matchedaxes;
-		QVector<axisindex_t> otheraxes;
+		mutable QVector<axisindex_t> otheraxes;
 
-	private:
-		bool matchAxes(axisindex_t start, bool skipUnmatched);
-		NVBAxis sourceAxis(axisindex_t i) ;
+	NVBSelectorDataInstance(const NVBSelectorCase& selector, const NVBDataSet* dataset, NVBSelectorAxisInstanceList matched);
 		
-		/// Constructs a new selector instance on the given \a dataset, using predetermined axis sets
-		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSet * dataset, QVector<axisindex_t> mas, QVector<axisindex_t> oas);
+	void initAxes(NVBSelectorAxisInstanceList matched);
+	
 	public:
-		NVBSelectorInstance(const NVBSelectorCase * selector = 0);
-		/// Constructs a new selector instance on the given \a dataset, using \a selector rules
-		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSet * dataset);
-		/// Constructs a new selector instance on the given \a datasource, using \a selector rules
-		NVBSelectorInstance(const NVBSelectorCase * selector, const NVBDataSource * datasource);
+	NVBSelectorDataInstance() : valid(false), dataSet(0) {;}
+	NVBSelectorDataInstance( const NVBSelectorCase& selector, const NVBDataSet* dataset = 0);
 
-		/// Sub-instantiates this instance on \a dataset.
-		NVBSelectorInstance matchDataset(const NVBDataSet * dataset);
-		/// Sub-instantiates this instance on dataset number \a i of the datasource.
-		NVBSelectorInstance matchDataset(axisindex_t i);
+	/// Returns the dataset this instance was constructed for
+	inline const NVBDataSet * matchingData() const { return dataSet; }
 
+	int matchedCase() const;
+	/// The instance is valid when all rules in one case matched
 		inline bool isValid() const { return valid; }
+	/// Make the instance invalid
 		inline void reset() { valid = false; }
 
-		inline const NVBDataSet * matchedDataset() const { return dataSet; }
-		inline NVBDataSource * matchedDatasource() const { return const_cast<NVBDataSource*>(dataSource); }
-		inline int matchedCase() const { return s ? s->id : -1; }
+//	/// Returns the datasource this instance was constructed for
+//	NVBDataSource * matchingSource();
 
-		NVBAxis matchedAxis(axisindex_t i) ;
-		NVBAxis otherAxis(axisindex_t i) ;
+	/// Returns the axes that matched the rules. The axes are returned in rule order
+	inline const QVector<axisindex_t> & matchedAxes() const { return matchedaxes; }
+	/// Returns the axes that complement the matched ones. The axes are returned in dataset order
+	inline const QVector<axisindex_t> & otherAxes() const { return otheraxes; }
+	/// Returns the maps that were required by the rules in rule order. Axis indexes are in dataset axes.
+// 	inline const QList<NVBAxisMapping> & matchedMaps() const { return matchedmaps; }
 
-		inline QVector<axisindex_t> matchedAxes() { return matchedaxes; }
-		inline QVector<axisindex_t> otherAxes() { return otheraxes; }
+	NVBAxis matchedAxis(axisindex_t i) const ;
+	NVBAxis otherAxis(axisindex_t i) const ;
+	
+};
+
+class NVBSelectorSourceInstance {
+private:
+	NVBSelectorCase s;
+
+	QMap< int, QList<NVBSelectorDataInstance> > instances;
+	QList<NVBSelectorDataInstance> allInstances;
+	QMap< int, QList<int> > indexes;
+	QList<int> allIndexes;
+	QMap< int, QList<NVBDataSet*> > sets;
+	QList<NVBDataSet*> allSets;
+	
+	const NVBDataSource * source;
+	
+public:
+	NVBSelectorSourceInstance(const NVBSelectorCase & selector, const NVBDataSource * source);
+	void fillInstances(const NVBSelectorCase & selector, const NVBDataSource* source);
+
+	const NVBDataSource * matchingSource() const { return source;}
+//	QVector<axisindex_t> matchedAxes();
+
+	inline bool isValid() const { return !instances.isEmpty(); }
+	inline void reset() { instances.clear(); }	
+	
+	const QList<NVBDataSet *> & matchedDatasets(int selectorCase) const
+		{
+			static QList<NVBDataSet*> empty;
+			if (sets.contains(selectorCase))
+				return sets.find(selectorCase).value();
+			else
+				return empty;
+		}
+	inline const QList<NVBDataSet *> & matchedDatasets() const { return allSets; }
+
+	const QList<NVBSelectorDataInstance> & matchedInstances(int selectorCase) const
+		{
+			static QList<NVBSelectorDataInstance> empty;
+			if (instances.contains(selectorCase))
+				return instances.find(selectorCase).value();
+			else
+				return empty;
+		}
+	inline const QList<NVBSelectorDataInstance> & matchedInstances() const { return allInstances; }
+
+	const QList<int> & matchedIndexes(int selectorCase) const
+		{
+			static QList<int> empty;
+			if (indexes.contains(selectorCase))
+				return indexes.find(selectorCase).value();
+			else
+				return empty;
+		}
+	inline const QList<int> & matchedIndexes() const { return allIndexes; }
+};
+
+class NVBSelectorFileInstance {
+private:
+	NVBSelectorCase s;
+	
+	QMap< int, QList<NVBSelectorSourceInstance> > instances;
+	QList<NVBSelectorSourceInstance> allInstances;
+	QMap< int, QList<int> > indexes;
+	QList<int> allIndexes;
+	QMap< int, QList<NVBDataSource*> > sources;
+	QList<NVBDataSource*> allSources;
+	
+	void fillInstances(const NVBSelectorCase & selector, const QList<NVBDataSource *> & sources);
+	void fillLists();
+
+	const NVBSelectorSourceInstance & instFromDatasource(const QList<NVBSelectorSourceInstance> & list, const NVBDataSource * source) const;
+	
+public:
+	NVBSelectorFileInstance(const NVBSelectorCase & selector, const QList<NVBDataSource *> & sources =  QList<NVBDataSource *>());
+
+	const QList<NVBDataSource *> & matchedDatasources(int selectorCase) const
+		{ 
+			static QList<NVBDataSource*> empty;
+			if (sources.contains(selectorCase))
+				return sources.find(selectorCase).value();
+			else
+				return empty;
+		}
+	inline const QList<NVBDataSource *> & matchedDatasources() const { return allSources; }
+
+	const QList<NVBSelectorSourceInstance> & matchedInstances(int selectorCase) const
+		{
+			static QList<NVBSelectorSourceInstance> empty;
+			if (instances.contains(selectorCase))
+				return instances.find(selectorCase).value();
+			else
+				return empty;
+		}
+	inline const QList<NVBSelectorSourceInstance> & matchedInstances() const { return allInstances; }
+	
+	inline const NVBSelectorSourceInstance & matchedInstance(const NVBDataSource * source) const
+		{ return NVBSelectorFileInstance::instFromDatasource(allInstances,source); }
+	inline const NVBSelectorSourceInstance & matchedInstance(const NVBDataSource * source, int selectorCase) const
+		{ return NVBSelectorFileInstance::instFromDatasource(matchedInstances(selectorCase),source); }
+
+	const QList<int> & matchedIndexes(int selectorCase) const
+		{
+			static QList<int> empty;
+			if (indexes.contains(selectorCase))
+				return indexes.find(selectorCase).value();
+			else
+				return empty;
+		}
+	inline const QList<int> & matchedIndexes() const { return allIndexes; }
 };
 
 #define forEachSliceAcross(instance) \
-	forEachSlice(instance.matchedDataset(), instance.matchedAxes(), instance.otherAxes())
+	forEachSlice(instance.matchingData(), instance.matchedAxes(), instance.otherAxes())
 
 #define forEachSliceAlong(instance) \
-	forEachSlice(instance.matchedDataset(), instance.otherAxes(), instance.matchedAxes())
+	forEachSlice(instance.matchingData(), instance.otherAxes(), instance.matchedAxes())
 
 #define forNSlicesAcross(instance,N) \
-	forNSlices(instance.matchedDataset(), N, instance.matchedAxes(), instance.otherAxes())
+	forNSlices(instance.matchingData(), N, instance.matchedAxes(), instance.otherAxes())
 
 #define forNSlicesAlong(instance,N) \
-	forNSlices(instance.matchedDataset(), N, instance.otherAxes(), instance.matchedAxes())
+	forNSlices(instance.matchingData(), N, instance.otherAxes(), instance.matchedAxes())
 
 #define forSingleSliceAcross(instance) \
-	forSingleSlice(instance.matchedDataset(), instance.matchedAxes(), instance.otherAxes())
+	forSingleSlice(instance.matchingData(), instance.matchedAxes(), instance.otherAxes())
 
 #define forSingleSliceAlong(instance) \
-	forSingleSlice(instance.matchedDataset(), instance.otherAxes(), instance.matchedAxes())
+	forSingleSlice(instance.matchingData(), instance.otherAxes(), instance.matchedAxes())
 
 #endif // NVBAXISSELECTOR_H

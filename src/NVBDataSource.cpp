@@ -80,6 +80,14 @@ const NVBColorMap* NVBDataSet::colorMap() const {
 	return dataSource()->defaultColorMap();
 }
 
+NVBColorInstance* NVBDataSet::colorInstance() const
+{
+	if (const NVBColorMap * m = colorMap())
+		return m->instantiate(this);
+	return 0;
+}
+
+
 void useDataSource(const NVBDataSource* source) {
   if (!source) return;
   source->refCount++;
