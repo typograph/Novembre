@@ -23,6 +23,7 @@
 #include <QtGui/QDialog>
 #include <QtGui/QFrame>
 #include <QtCore/QAbstractItemModel>
+#include <QtCore/QPropertyAnimation>
 
 #include "NVBFileInfo.h"
 #include "NVBDirModel.h"
@@ -94,6 +95,8 @@ private:
 	NVBSingleView * pageView;
 
 	QModelIndex folderMenuTarget;
+	
+//	QPropertyAnimation pageViewShowAnimation;
 	
 	bool showPagesInBrowser;
 

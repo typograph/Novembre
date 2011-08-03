@@ -52,8 +52,6 @@
 #include <QtGui/QCompleter>
 
 
-#include <QtCore/QPropertyAnimation>
-
 #include "NVBColumnDialog.h"
 #include "NVBFileListView.h"
 #include "NVBPageInfoView.h"
@@ -69,7 +67,7 @@
 #include "../icons/browser.xpm"
 
 NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
-: QFrame(parent,flags)
+: QFrame(parent,flags), showPagesInBrowser(true)
 {
 
   files = qApp->property("filesFactory").value<NVBFileFactory*>();
@@ -231,6 +229,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   hSplitter->setStretchFactor(0,0);
 
   QSplitter * vSplitter = new QSplitter(Qt::Vertical,hSplitter);
+  hSplitter->setStretchFactor(1,1);
 
   QAction * tempAction = new QAction(this);
   tempAction->setSeparator(true);
@@ -285,14 +284,27 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   connect(dirView,SIGNAL(activated(const QModelIndex&)), this,SLOT(loadPage(const QModelIndex&)));
 
 	pageView = new NVBSingleView(0,this);
-	pageView->hide();
 //	pageView->setWindowModality(Qt::WindowModal);
 	pageView->setFrameShape(QFrame::StyledPanel);
 	pageView->setFrameShadow(QFrame::Plain);
 	pageView->setWindowFlags(Qt::Popup);
+	pageView->setLineWidth(2);
 // 	pageView->setForegroundRole(QPalette::Light);
 	connect(pageView,SIGNAL(dismissed()),this,SLOT(hidePageView()));
+//	connect(pageView,SIGNAL(dismissed()),vSplitter,SLOT(show()));
 	
+//	hSplitter->addWidget(pageView);
+	QPalette p = pageView->palette();
+	p.setColor(QPalette::All,QPalette::Window,Qt::white);
+	pageView->setPalette(p);
+	
+	pageView->hide();
+	
+	/*
+	pageViewShowAnimation.setTargetObject(pageView);
+	pageViewShowAnimation.setPropertyName("geometry");
+	pageViewShowAnimation.setDuration(1000);
+	*/
   piview = new NVBPageInfoView(vSplitter);
   connect(fileList,SIGNAL(activated(const QModelIndex&)), piview, SLOT(clearView()));
   connect(dirView,SIGNAL(clicked(const QModelIndex &)),piview,SLOT(showPage(const QModelIndex &)));
@@ -386,6 +398,7 @@ NVBBrowser::~ NVBBrowser( )
 	confile->setValue("Browser/Split", atan2(hSplitter->sizes().at(0),hSplitter->sizes().at(1)));
 	confile->setValue("Browser/FileListSize", fileList->size());
   confile->setValue("Browser/ShowPageInfo", piview->isVisible());
+	if (dirView) delete dirView;
   if (fileModel) delete fileModel;
 }
 
@@ -407,24 +420,25 @@ void NVBBrowser::showPageView(NVBDataSet* dset)
 		
 		dirView->setEnabled(false);
 		
-		QPropertyAnimation animation(pageView, "geometry");
-		animation.setDuration(1000);
-		
 		QRect dvr;
-		dvr.setTopLeft(dirView->mapTo(this,QPoint(0,0)));
-		dvr.setBottomRight(dirView->mapTo(this,dirView->rect().bottomRight()));
+//		dvr.setTopLeft(dirView->mapTo(this,QPoint(0,0)));
+		dvr.setTopLeft(dirView->mapToGlobal(QPoint(0,0)));
+		dvr.setBottomRight(dirView->mapToGlobal(dirView->rect().bottomRight()));
 		
-		animation.setStartValue(dvr.adjusted(100,100,-100,-100));
-		animation.setEndValue(dvr.adjusted(20,20,-20,-20));
-
+//		pageViewShowAnimation.setStartValue(dvr.adjusted(100,100,-100,-100));
+//		pageViewShowAnimation.setEndValue(dvr.adjusted(20,20,-20,-20));
+		
+//		pageViewShowAnimation.start();
 		pageView->show();
-		animation.start();
+		pageView->setGeometry(dvr.adjusted(20,20,-20,-20));
+//		dirView->parentWidget()->hide();
 
 }
 
 void NVBBrowser::hidePageView()
 {
 		pageView->hide();
+//	dirView->parentWidget()->show();
 		dirView->setEnabled(true);
 }
 
