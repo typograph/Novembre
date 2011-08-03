@@ -2,7 +2,7 @@
 #include "NVBUnits.h"
 #include "NVBAxisMaps.h"
 
-NVBFuncDataSource::NVBFuncDataSource() : NVBConstructableDataSource()
+NVBFuncDataSource::NVBFuncDataSource() : NVBConstructableDataSource(0)
 {
 
 }
