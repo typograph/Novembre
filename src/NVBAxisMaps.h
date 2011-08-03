@@ -137,6 +137,11 @@ class NVBAxes2DGridMap : public NVBAxisMap {
 		QTransform t;
 	public:
 		NVBAxes2DGridMap(NVBPhysPoint origin, QTransform transform):NVBAxisMap(),o(origin),t(transform) {;}
+		NVBAxes2DGridMap(const NVBAxisPhysMap * x, const NVBAxisPhysMap * y):NVBAxisMap()
+		{
+			o = NVBPhysPoint(x->value(0),y->value(0));
+			t = QTransform::fromScale((x->value(1) - o.x()).getValue(),(y->value(1) - o.y()).getValue());
+		}
 
 		inline NVBAxisMap::MapType mapType() const { return NVBAxisMap::Linear2D; }
 		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Point; }
