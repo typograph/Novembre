@@ -73,7 +73,7 @@ QChar NVBUnits::charFromOrder(int order, int * neworder)
     }
 }
 
-double NVBUnits::multFromChar(QChar c)
+double NVBUnits::multFromChar(const QChar& c)
 {
     switch(c.toAscii()) { // Greek
       case 'Y'    : return 1e+24; // yotta-
@@ -202,7 +202,7 @@ NVBPhysValue::NVBPhysValue(const QString & s, bool scalableDimension)
 		NVBOutputError(QString("Converting string \"%1\" to number and dimension failed").arg(s));
 }
 
-NVBPhysValue::NVBPhysValue(const QString & s, NVBUnits d):dim(d)
+NVBPhysValue::NVBPhysValue(const QString& s, const NVBUnits& d):dim(d)
 {
   bool ok;
   value = s.toDouble(&ok);
@@ -212,7 +212,7 @@ NVBPhysValue::NVBPhysValue(const QString & s, NVBUnits d):dim(d)
 		NVBOutputError(QString("Converting string \"%1\" to double failed").arg(s));
 }
 
-NVBPhysValue::NVBPhysValue(double f, NVBUnits d):dim(d),value(f)
+NVBPhysValue::NVBPhysValue(double f, const NVBUnits& d):dim(d),value(f)
 {
   value *= dim.purify();
 }
@@ -289,14 +289,14 @@ int NVBPhysValue::getPosMult(double nvalue, int minSignPos, int maxSignPos)
   return m;
 }
 
-double NVBPhysValue::getValue( NVBUnits dim ) const
+double NVBPhysValue::getValue( const NVBUnits & dim ) const
 {
-  return value / dim.purify();
+  return value / dim.mult;
 }
 
 // --------------
 
-NVBPhysPoint::NVBPhysPoint(NVBPhysValue x, NVBPhysValue y)
+NVBPhysPoint::NVBPhysPoint(const NVBPhysValue& x, const NVBPhysValue& y)
 {
 	if (!x.getDimension().isComparableWith(y.getDimension())) {
 		NVBOutputError("Trying to construct NVBPhysPoint from NVBPhysValues with different units");
@@ -307,23 +307,23 @@ NVBPhysPoint::NVBPhysPoint(NVBPhysValue x, NVBPhysValue y)
 	p = QPointF(x.getValue(d),y.getValue(d));
 }
 
-NVBPhysPoint::NVBPhysPoint(double x, double y, NVBUnits dimension)
+NVBPhysPoint::NVBPhysPoint(double x, double y, const NVBUnits & dimension)
 {
 	p = QPointF(x,y);
 	d = dimension;
 }
 
-QPointF NVBPhysPoint::point(NVBUnits targetDimension) const
+QPointF NVBPhysPoint::point(const NVBUnits & targetDimension) const
 {
 	if (!d.isComparableWith(targetDimension))
 		return QPointF();
 	return p * d.scaleTo(targetDimension);
 }
 
-QPointF NVBPhysPoint::vectorTo(const NVBPhysPoint & other, NVBUnits targetDimension) const
+QPointF NVBPhysPoint::vectorTo(const NVBPhysPoint& other, const NVBUnits& targetDimension) const
 {
-	if (!targetDimension.isValid())
-		targetDimension = d;
+	if (!targetDimension.isValid() && d.isValid())
+		return vectorTo(other,d);
 	return point(targetDimension) - other.point(targetDimension);
 }
 
