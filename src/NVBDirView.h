@@ -36,6 +36,9 @@ private:
 /// cached vertical offset
 	int voffset;
 
+/// Single mode on/off
+	bool oneItemPerFile;
+
 /// The view will try to keep current visible items in the viewport if rows are inserted or removed above
 /**
  * If true, the view will keep the top row in the view on any model change (except deleting this row)
@@ -95,6 +98,11 @@ private:
 /// Draws all visible items of file at \a index
   void drawItems(int index, int y, QPainter* painter) const;
 
+/// Draws all visible items in grid
+	void gridPaintEvent(QPaintEvent * e);
+/// Draws all visible files from \a start to \a end (not inclusive)
+	void drawGridItems(int start, int end, int y, QPainter* painter) const;
+
 /// Height of the header (equal to text height)
 	inline int headerHeight() const { return style()->pixelMetric(QStyle::PM_TitleBarHeight); }
 /// Distance between the header and the first grid line (items)
@@ -116,6 +124,10 @@ private slots:
 	virtual void	rowsRemoved ( const QModelIndex & parent, int start, int end );
 //	virtual void	rowsAboutToBeInserted ( const QModelIndex & parent, int start, int end );
 	virtual void	rowsInserted ( const QModelIndex & parent, int start, int end );
+
+public slots:
+	void switchToNormalMode();
+	void switchToGridMode();
 	
 //signals:
 //  void dataWindow(int start, int end);

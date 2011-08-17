@@ -61,10 +61,43 @@
 #include "NVBDirView.h"
 #include "NVBSettings.h"
 #include "NVBSingleView.h"
+#include "NVBDataCore.h"
+#include "NVBMap.h"
+#include "NVBDataTransforms.h"
 
 #include <math.h>
 
 #include "../icons/browser.xpm"
+
+class NVBDataSet34Substractor : public NVBFile2ImageConverter {
+private:
+	virtual QPixmap convertToImage(NVBFile * file) const {
+		if (file->isEmpty() || file->first()->dataSets().isEmpty())
+			return QPixmap();
+		if (file->first()->dataSets().count() != 8 ||
+				file->first()->dataSets().at(2)->type() != NVBDataSet::Topography ||
+				file->first()->dataSets().at(3)->type() != NVBDataSet::Topography)
+			return NVBDataColorInstance::colorize(file->first()->dataSets().first());
+		NVBDataSet * d3 = file->first()->dataSets().at(2);
+		NVBDataSet * d4 = file->first()->dataSets().at(3);
+		NVBColorInstance * ci = new NVBColorInstance(d3->colorMap());
+		axissize_t sz = prod(d3->sizes());
+		double * data = (double*) malloc(sz*sizeof(double));
+		QSize isize = QSize(d3->sizeAt(0),d3->sizeAt(1));
+		memcpy(data,d3->data(),sz*sizeof(double));
+		axissize_t w = d3->sizeAt(0);
+		axissize_t mi = NVBMaxMinTransform::max_index(d4->data(), 1, &w);
+		double factor = (d3->data()[mi] - d3->data()[mi-10])/(d4->data()[mi] - d4->data()[mi-10]);
+
+		for(axissize_t i = 0; i<sz;i++)
+			data[i] -= factor*d4->data()[i];
+		ci->autoscale(data,sz);
+		QPixmap result = ci->colorize(data,isize,isize);
+		free(data);
+		delete(ci);
+		return result;
+	}
+};
 
 NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 : QFrame(parent,flags), showPagesInBrowser(true)
@@ -161,6 +194,9 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   showPageInfoAction->setCheckable(true);
   showPageInfoAction->setChecked(true);
   
+	miscModeAction = foldersToolBar->addAction(QIcon(_browser_magic),"Switch to magical mode",this,SLOT(switchMode(bool)));
+	miscModeAction->setCheckable(true);
+
   foldersToolBar->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 
   llayout->addWidget(foldersToolBar);
@@ -776,3 +812,14 @@ void NVBBrowser::setViewType(bool b)
 	dirViewModel->setMode(b ? NVBDirViewModel::SpectroscopyOverlay : NVBDirViewModel::Normal );
 }
 
+void NVBBrowser::switchMode(bool b) {
+	if (b) {
+		dirViewModel->setSingleImageProvider(new NVBDataSet34Substractor());
+		dirView->switchToGridMode();
+//		dirViewModel->setMode(NVBDirViewModel::SingleImage);
+		}
+	else {
+		dirViewModel->setMode(NVBDirViewModel::Normal);
+		dirView->switchToNormalMode();
+		}
+}

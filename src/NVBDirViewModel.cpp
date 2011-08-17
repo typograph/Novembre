@@ -34,6 +34,15 @@ public:
 	inline NVBFile * file() { return source; }
 };
 
+class NVBShowFirstPageConverter : public NVBFile2ImageConverter {
+private:
+	virtual QPixmap convertToImage(NVBFile * file) const {
+		if (file->isEmpty() || file->first()->dataSets().isEmpty())
+			return QPixmap();
+		return NVBDataColorInstance::colorize(file->first()->dataSets().first());
+	}
+};
+
 void NVBDirViewModelLoader::run() {
 	forever {
 		mutex.lock();
@@ -109,6 +118,7 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 	
 	connect(&loader,SIGNAL(fileReady(NVBFile*,QString)),this,SLOT(fileLoaded(NVBFile*,QString)));
 	overlay = new NVBSpecOverlayIconProvider();
+	imgConverter = new NVBShowFirstPageConverter();
 
 //  cacheRowCounts();
 	connect(dirModel,SIGNAL(rowsAboutToBeInserted(const QModelIndex &,int,int)), this, SLOT(parentInsertingRows(const QModelIndex &,int,int)));
@@ -123,6 +133,7 @@ NVBDirViewModel::~NVBDirViewModel()
 {
 	loader.reset(); // waitUntilFinished();
 	delete overlay;
+	delete imgConverter;
 	foreach(NVBFileModel * f, files) {
 		if (f) delete f;
 		}
@@ -132,6 +143,8 @@ void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 	beginResetModel();
 	loader.reset();
 	indexes.clear();
+	overlay->reset();
+	imgConverter->reset();
 	foreach(NVBFileModel * f, files)
 		delete f;
 
@@ -158,6 +171,8 @@ int NVBDirViewModel::rowCount( const QModelIndex & parent ) const
 {
 	if (!parent.isValid()) // how many files?
 		return rowcounts.size();
+	else if (mode == SingleImage)
+		return 0;
 	else
 		return rowcounts.at(parent.row());
 }
@@ -215,6 +230,12 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 	if (!index.isValid()) return QVariant();
 
 	if (index.internalId() == 0) {
+		if (mode == SingleImage && role == Qt::DecorationRole) {
+			if (files.at(index.row()))
+				return imgConverter->iconFromFile(files.at(index.row())->file());
+			else
+				return extraDataAt(index.row(),role);
+			}
 		return indexes.at(index.row()).data(role);
 		}
 	else {
@@ -223,15 +244,20 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 				return overlay->icon(files.at(index.internalId()-1)->file(),index.row());
 			return files.at(index.internalId()-1)->index(index.row(),0).data(role);
 			}
-		else if (unloadables.contains(index.internalId()-1))
-			return unloadableData(role);
-		else {
-			loadFile(index.internalId()-1);
-			return inProgressData(role);
-			}
+		else
+			return extraDataAt(index.internalId()-1,role);
 		}
 
 	return QVariant();
+}
+
+QVariant NVBDirViewModel::extraDataAt(int index, int role) const {
+	if (unloadables.contains(index))
+		return unloadableData(role);
+	else {
+		loadFile(index);
+		return inProgressData(role);
+		}
 }
 
 QVariant NVBDirViewModel::unloadableData(int role) const {
@@ -287,7 +313,10 @@ bool NVBDirViewModel::hasChildren( const QModelIndex & parent ) const
 {
 	if (!parent.isValid()) return true;
 
-	return not unloadables.contains(parent.row());
+	if (mode == SingleImage)
+		return false;
+
+	return !unloadables.contains(parent.row());
 }
 
 QModelIndex NVBDirViewModel::index( int row, int column, const QModelIndex & parent ) const
@@ -480,6 +509,13 @@ QMimeData * NVBDirViewModel::mimeData(const QModelIndexList &ixs) const {
 	if (ixs.isEmpty()) return 0;
 
 	QModelIndex i = ixs.first();
+
+	if (mode == SingleImage) {
+		QMimeData * md = new QMimeData();
+		md->setImageData(i.data(Qt::DecorationRole));
+		return md;
+	}
+
 	if ( i.internalId() == 0 || !loadFile(i.internalId()-1)) return 0;
 
 	NVBDataSourceListModel * m = files.at(i.internalId()-1);
@@ -501,4 +537,18 @@ void NVBDirViewModel::setMode(Mode m) {
 	mode = m;
 	overlay->reset();
 	emit dataChanged(index(0,0),index(rowCount()-1,0));
+}
+
+void NVBDirViewModel::setSingleImageProvider(NVBFile2ImageConverter * provider) {
+	if (!provider) {
+//		mode = Normal;
+//		return;
+		provider = new NVBShowFirstPageConverter();
+		}
+
+	if (imgConverter)
+		delete imgConverter;
+	imgConverter = provider;
+
+	mode = SingleImage;
 }
