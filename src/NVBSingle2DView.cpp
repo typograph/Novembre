@@ -137,7 +137,7 @@ void NVBSingle2DView::setDataSet(NVBDataSet* data)
 		 * has to be called before regenerating the cache
 		 */
 
-		colors = plotData->colorMap()->instantiate(plotData);
+		colors = plotData->colorInstance();
 		colors->setImageAxes(0,1);
 		
 		// Now we can connect to our slot
@@ -156,7 +156,7 @@ void NVBSingle2DView::parentDataReformed()
 		colors = 0;
 		}
 	if (plotData) {
-		colors = plotData->colorMap()->instantiate(plotData);
+		colors = plotData->colorInstance();
 		colors->setImageAxes(0,1);
 		}
 //	slice.clear();

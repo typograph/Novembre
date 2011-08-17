@@ -1,7 +1,7 @@
 #ifndef NVBDATASOURCE_H
 #define NVBDATASOURCE_H
 
-class NVBColorInstance;
+class NVBDataColorInstance;
 class NVBFile;
 class NVBDataSet;
 class NVBAxisMap;
@@ -84,7 +84,7 @@ class NVBDataSet : public QObject {
 
 		const NVBColorMap * colorMap() const ;
 		inline void setColorMap(NVBColorMap * m) { clr = m; }
-		NVBColorInstance* colorInstance() const;
+		NVBDataColorInstance* colorInstance() const;
 
 		inline NVBDataSource * dataSource() const { return p; }
 

@@ -8,7 +8,7 @@
 #include "NVBAxisSelector.h"
 
 class NVBDataSet;
-class NVBColorInstance;
+class NVBDataColorInstance;
 class NVBAxisPointMap;
 class NVBAxes2DGridMap;
 class NVBFile;
@@ -24,7 +24,7 @@ class NVB2DIconEngine : public QObject, public QIconEngineV2 {
 	Q_OBJECT
 	protected:
 		const NVBDataSet * dset;
-		NVBColorInstance * ci;
+		NVBDataColorInstance * ci;
 		QList<QPixmap> cache;
 		NVBAxisSelector selector;
 		NVBSelectorDataInstance si;

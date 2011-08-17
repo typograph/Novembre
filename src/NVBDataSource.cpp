@@ -80,7 +80,7 @@ const NVBColorMap* NVBDataSet::colorMap() const {
 	return dataSource()->defaultColorMap();
 }
 
-NVBColorInstance* NVBDataSet::colorInstance() const
+NVBDataColorInstance* NVBDataSet::colorInstance() const
 {
 	if (const NVBColorMap * m = colorMap())
 		return m->instantiate(this);

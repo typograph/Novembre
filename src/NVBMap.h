@@ -46,35 +46,21 @@ class NVBAxisMap {
 
 class NVBColorMap;
 
-/**
-	\class NVBColorInstance
-
-	A color map with a built-in scaling.
-	A color instance is attached to a dataset and might follow its changes.
-	A color instance can produce full images using a given color map
-*/
-
-class NVBColorInstance : public QObject {
-	Q_OBJECT
-	private:
+class NVBColorInstance {
+	protected:
 		const NVBColorMap * source;
-		const NVBDataSet * data;
 		double zmin,zmax;
 		NVBValueScaler<double,double> zscaler;
-		QVector<axisindex_t> sliceAxes;
-		QVector<axisindex_t> xyAxes;
-		void calculateSliceAxes();
-		bool rescaleOnDataChange;
-	private slots:
-		void parentDataReformed();
-		void parentDataChanged();
 	public:
-		NVBColorInstance(const NVBDataSet * data, const NVBColorMap * map);
+		NVBColorInstance(const NVBColorMap * map);
 		~NVBColorInstance() {;}
 		virtual QRgb colorize(double z) const;
 
 		virtual inline double zMin() const { return zmin; }
 		virtual inline double zMax() const { return zmax; }
+
+		void autoscale(const double * zs, axissize_t size);
+		void autoscale(const double * zs, QSize d_wxh);
 
 	/**
 		\fn void setLimits(double zmin, double zmax)
@@ -99,6 +85,31 @@ class NVBColorInstance : public QObject {
 		*/
 		void overrideLimits(double zmin, double zmax);
 
+		QPixmap colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
+};
+
+/**
+	\class NVBColorInstance
+
+	A color map with a built-in scaling.
+	A color instance is attached to a dataset and might follow its changes.
+	A color instance can produce full images using a given color map
+*/
+
+class NVBDataColorInstance : public QObject, public NVBColorInstance {
+	Q_OBJECT
+	private:
+		const NVBDataSet * data;
+		QVector<axisindex_t> sliceAxes;
+		QVector<axisindex_t> xyAxes;
+		void calculateSliceAxes();
+		bool rescaleOnDataChange;
+	private slots:
+		void parentDataReformed();
+		void parentDataChanged();
+	public:
+		NVBDataColorInstance(const NVBDataSet * data, const NVBColorMap * map);
+		~NVBDataColorInstance() {;}
 	/**
 		\fn void setImageAxes(axisindex_t x, axisindex_t y)
 
@@ -111,7 +122,6 @@ class NVBColorInstance : public QObject {
 		QVector<axisindex_t> getSliceAxes();
 
 		QPixmap colorize(QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize()) const;
-		QPixmap colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
 
 		static QPixmap colorize(NVBDataSet * dset, QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize());
 
@@ -137,7 +147,8 @@ class NVBColorMap {
 
 		virtual QRgb colorize(double z) const = 0;
 
-		NVBColorInstance * instantiate(const NVBDataSet * data) const { return new NVBColorInstance(data,this); }
+		NVBColorInstance * instantiate() const { return new NVBColorInstance(this); }
+		NVBDataColorInstance * instantiate(const NVBDataSet * data) const { return new NVBDataColorInstance(data,this); }
 		
 		virtual NVBColorMap * copy() = 0;
 };
