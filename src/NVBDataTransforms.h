@@ -27,11 +27,17 @@ class NVBMaxMinTransform : public NVBDataTransform {
 */
 
 namespace NVBMaxMinTransform {
-double min (const double * data, axisindex_t n, const axissize_t * sizes);
-double max (const double * data, axisindex_t n, const axissize_t * sizes);
-void minmax (const double * data, axisindex_t n, const axissize_t * sizes, double & dmin, double & dmax);
-double findMinimum(const NVBDataSet * data);
-double findMaximum(const NVBDataSet * data);
-void findLimits(const NVBDataSet * data, double & dmin, double & dmax);
+	double min (const double * data, axisindex_t n, const axissize_t * sizes);
+	double max (const double * data, axisindex_t n, const axissize_t * sizes);
+	axissize_t min_index (const double * data, axisindex_t n, const axissize_t * sizes);
+	axissize_t max_index (const double * data, axisindex_t n, const axissize_t * sizes);
+	void minmax (const double * data, axisindex_t n, const axissize_t * sizes, double & dmin, double & dmax);
+	double findMinimum(const NVBDataSet * data);
+	double findMaximum(const NVBDataSet * data);
+	void findLimits(const NVBDataSet * data, double & dmin, double & dmax);
+}
+
+namespace NVBAverageTransform {
+	double average (const double * data, axisindex_t n, const axissize_t * sizes);
 }
 #endif // NVBDATATRANSFORMS_H

@@ -34,6 +34,26 @@ double NVBMaxMinTransform::max (const double * data, axisindex_t n, const axissi
 	return max;
 }
 
+axissize_t NVBMaxMinTransform::min_index (const double * data, axisindex_t n, const axissize_t * sizes) {
+	if (!data) return 0;
+	axissize_t szd = prod(n,sizes);
+	axissize_t min = 0;
+	for (axissize_t i = 1; i<szd; i++)
+		if (data[i] < data[min])
+			min = i;
+	return min;
+}
+
+axissize_t NVBMaxMinTransform::max_index (const double * data, axisindex_t n, const axissize_t * sizes) {
+	if (!data) return 0;
+	axissize_t szd = prod(n,sizes);
+	axissize_t max = 0;
+	for (axissize_t i = 1; i<szd; i++)
+		if (data[i] > data[max])
+			max = i;
+	return max;
+}
+
 void NVBMaxMinTransform::minmax (const double * data, axisindex_t n, const axissize_t * sizes, double & dmin, double & dmax) {
 	if (!data) return;
 	axissize_t szd = prod(n,sizes);
@@ -84,3 +104,13 @@ static double * NVBMaxMinTransform::findMinima(const NVBDataSet * data, QVector<
 static double * NVBMaxMinTransform::findMaxima(const NVBDataSet * data, QVector<axisindex_t> sliceaxes) {
 }
 */
+
+
+double NVBAverageTransform::average(const double *data, axisindex_t n, const axissize_t *sizes) {
+	if (!data) return 0;
+	axissize_t szd = prod(n,sizes);
+	double avg = 0;
+	for (axissize_t i = 0; i<szd; i++)
+		avg += data[i];
+	return avg/szd;
+}
