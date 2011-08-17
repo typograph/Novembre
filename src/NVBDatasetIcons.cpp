@@ -231,7 +231,7 @@ void NVB2DIconEngine::redrawCache()
 	if (dset && ci) {
 		// get slice at (0,0) and draw it
 		forSingleSliceAlong(si) {
-			cache[QIcon::Normal] = ci->colorize(SLICE.data,QSize(si.matchedAxis(0).length(),si.matchedAxis(1).length()));
+			cache[QIcon::Normal] = ((NVBColorInstance*)ci)->colorize(SLICE.data,QSize(si.matchedAxis(0).length(),si.matchedAxis(1).length()));
 			}
 		}
 }
@@ -418,7 +418,7 @@ QPixmap NVB2DIconEngine::colorizeWithPlaneSubtraction(NVBDataSet * page) {
 			zmax = qMax(zmax,ndata[i+j]);
 			}
 
-	NVBColorInstance * rm = page->colorMap()->instantiate(page);
+	NVBColorInstance * rm = new NVBColorInstance(page->colorMap());
 	rm->setLimits(zmin,zmax);
 
 	QPixmap i = rm->colorize( ndata , QSize() );

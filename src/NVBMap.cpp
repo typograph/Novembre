@@ -2,87 +2,28 @@
 #include "NVBDataCore.h"
 #include <QtGui/QImage>
 #include <QtGui/QPixmap>
+#include "NVBDataTransforms.h"
 
-NVBColorInstance::NVBColorInstance ( const NVBDataSet* _data, const NVBColorMap* _map )
+NVBColorInstance::NVBColorInstance ( const NVBColorMap* _map )
 	: source(_map)
-	, data(_data)
 	, zmin(0)
 	, zmax(1)
 	, zscaler(NVBValueScaler<double,double>(0,1,0,1))
-	, rescaleOnDataChange(true)
 {
-	xyAxes << 0 << 1;
-
 	if (!_map) NVBOutputError("No map supplied");
-	if (!data) NVBOutputError("No data supplied");
-	else {
-		setLimits(data->min(),data->max());
-		
-		if (data->nAxes() < 2)
-			NVBOutputError("Trying to color a 1D-strip is not really meaningful");
-		
-		connect(data,SIGNAL(dataChanged()),this,SLOT(parentDataChanged()));
-		connect(data,SIGNAL(dataReformed()),this,SLOT(parentDataReformed()));
-		
-		calculateSliceAxes();
-		}
 }
 
-void NVBColorInstance::setImageAxes(QVector< axisindex_t > xy)
-{
-	if (xy.size() != 2) {
-		NVBOutputError(QString("XY has incorrect length - %1").arg(xy.size()));
-		return;
-		}
-		
-	if (xy.first() == xy.last()) {
-		NVBOutputError(QString("Cannot set %1 as both X and Y").arg(xy.first()));
-		return;		
-		}
-		
-	xyAxes = xy;
-	calculateSliceAxes();
+void NVBColorInstance::autoscale(const double * zs, axissize_t size) {
+	double dmin, dmax;
+	NVBMaxMinTransform::minmax(zs, 1, &size, dmin, dmax);
+	setLimits(dmin,dmax);
 }
 
-
-void NVBColorInstance::setImageAxes(axisindex_t x, axisindex_t y) {
-	xyAxes[0] = x;
-	xyAxes[1] = y;
-	calculateSliceAxes();
-	}
-
-QVector<axisindex_t> NVBColorInstance::getSliceAxes() {
-	return sliceAxes;
-	}
-
-void NVBColorInstance::setXAxis(axisindex_t x) {
-	if (xyAxes.last() != x) {
-		xyAxes[0] = x;
-		calculateSliceAxes();
-		}
-	else
-		NVBOutputError(QString("Axis %1 already used as Y").arg(x));
-	}
-
-void NVBColorInstance::setYAxis(axisindex_t y) {
-	if (xyAxes.first() != y) {
-		xyAxes[1] = y;
-		calculateSliceAxes();
-		}
-	else
-		NVBOutputError(QString("Axis %1 already used as X").arg(y));
-	}
-
-QPixmap NVBColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh) const {
-	if (!data) return QPixmap();
-	if (slice.isEmpty())
-		slice.fill(0,data->nAxes()-2);
-	if (i_wxh.isEmpty())
-		i_wxh = QSize(data->sizeAt(xyAxes.first()),data->sizeAt(xyAxes.last()));
-	double * tdata = sliceDataSet(data,sliceAxes,slice,xyAxes);
-	QPixmap timg = colorize(tdata,QSize(data->sizeAt(xyAxes.first()),data->sizeAt(xyAxes.last())),i_wxh);
-	free(tdata);
-	return timg;
+void NVBColorInstance::autoscale(const double * zs, QSize d_wxh) {
+	double dmin, dmax;
+	axissize_t size = d_wxh.width() * d_wxh.height();
+	NVBMaxMinTransform::minmax(zs, 1, &size, dmin, dmax);
+	setLimits(dmin,dmax);
 }
 
 QPixmap NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) const {
@@ -109,25 +50,6 @@ QPixmap NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) 
 	return QPixmap::fromImage(result);
 }
 
-QPixmap NVBColorInstance::colorize(NVBDataSet * dset, QVector<axissize_t> slice, QSize i_wxh)
-{
-	if (!dset) return QPixmap();
-	NVBColorInstance * i = dset->colorInstance();
-	if (!i) return QPixmap();
-	QPixmap pm = i->colorize(slice,i_wxh);
-	delete i;
-	return pm;
-}
-
-
-void NVBColorInstance::calculateSliceAxes() {
-	sliceAxes.clear();
-	if (!data) return;
-	for(axisindex_t i = 0; i < data->nAxes(); i++)
-		if ( !xyAxes.contains(i) )
-			sliceAxes << i;
-}
-
 void NVBColorInstance::setLimits ( double vmin, double vmax ) {
 	// It is impossible to set reasonable values if vmin == vmax
 	if (vmin != vmax) {
@@ -143,8 +65,8 @@ void NVBColorInstance::setLimits ( double vmin, double vmax ) {
 }
 
 void NVBColorInstance::overrideLimits ( double vmin, double vmax ) {
-  zmin = vmin;
-  zmax = vmax;
+	zmin = vmin;
+	zmax = vmax;
 }
 
 QRgb NVBColorInstance::colorize ( double z ) const {
@@ -156,13 +78,110 @@ QRgb NVBColorInstance::colorize ( double z ) const {
 	return source->colorize(zn);
 }
 
-void NVBColorInstance::parentDataChanged()
+NVBDataColorInstance::NVBDataColorInstance ( const NVBDataSet* _data, const NVBColorMap* _map )
+	: NVBColorInstance(_map)
+	, data(_data)
+	, rescaleOnDataChange(true)
+{
+	xyAxes << 0 << 1;
+
+	if (!data) NVBOutputError("No data supplied");
+	else {
+		setLimits(data->min(),data->max());
+		
+		if (data->nAxes() < 2)
+			NVBOutputError("Trying to color a 1D-strip is not really meaningful");
+		
+		connect(data,SIGNAL(dataChanged()),this,SLOT(parentDataChanged()));
+		connect(data,SIGNAL(dataReformed()),this,SLOT(parentDataReformed()));
+		
+		calculateSliceAxes();
+		}
+}
+
+void NVBDataColorInstance::setImageAxes(QVector< axisindex_t > xy)
+{
+	if (xy.size() != 2) {
+		NVBOutputError(QString("XY has incorrect length - %1").arg(xy.size()));
+		return;
+		}
+		
+	if (xy.first() == xy.last()) {
+		NVBOutputError(QString("Cannot set %1 as both X and Y").arg(xy.first()));
+		return;		
+		}
+		
+	xyAxes = xy;
+	calculateSliceAxes();
+}
+
+
+void NVBDataColorInstance::setImageAxes(axisindex_t x, axisindex_t y) {
+	xyAxes[0] = x;
+	xyAxes[1] = y;
+	calculateSliceAxes();
+	}
+
+QVector<axisindex_t> NVBDataColorInstance::getSliceAxes() {
+	return sliceAxes;
+	}
+
+void NVBDataColorInstance::setXAxis(axisindex_t x) {
+	if (xyAxes.last() != x) {
+		xyAxes[0] = x;
+		calculateSliceAxes();
+		}
+	else
+		NVBOutputError(QString("Axis %1 already used as Y").arg(x));
+	}
+
+void NVBDataColorInstance::setYAxis(axisindex_t y) {
+	if (xyAxes.first() != y) {
+		xyAxes[1] = y;
+		calculateSliceAxes();
+		}
+	else
+		NVBOutputError(QString("Axis %1 already used as X").arg(y));
+	}
+
+QPixmap NVBDataColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh) const {
+	if (!data) return QPixmap();
+	if (slice.isEmpty())
+		slice.fill(0,data->nAxes()-2);
+	if (i_wxh.isEmpty())
+		i_wxh = QSize(data->sizeAt(xyAxes.first()),data->sizeAt(xyAxes.last()));
+	double * tdata = sliceDataSet(data,sliceAxes,slice,xyAxes);
+	QPixmap timg = NVBColorInstance::colorize(tdata,QSize(data->sizeAt(xyAxes.first()),data->sizeAt(xyAxes.last())),i_wxh);
+	free(tdata);
+	return timg;
+}
+
+QPixmap NVBDataColorInstance::colorize(NVBDataSet * dset, QVector<axissize_t> slice, QSize i_wxh)
+{
+	if (!dset) return QPixmap();
+	NVBDataColorInstance * i = dset->colorInstance();
+	if (!i) return QPixmap();
+	QPixmap pm = i->colorize(slice,i_wxh);
+	delete i;
+	return pm;
+}
+
+
+void NVBDataColorInstance::calculateSliceAxes() {
+	sliceAxes.clear();
+	if (!data) return;
+	for(axisindex_t i = 0; i < data->nAxes(); i++)
+		if ( !xyAxes.contains(i) )
+			sliceAxes << i;
+}
+
+void NVBDataColorInstance::parentDataChanged()
 {
 	if (rescaleOnDataChange)
 		setLimits(data->min(), data->max());
 }
 
-void NVBColorInstance::parentDataReformed()
+void NVBDataColorInstance::parentDataReformed()
 {
 	if (xyAxes.first() >= data->nAxes() || xyAxes.last() >= data->nAxes())
 		setImageAxes(0,1);

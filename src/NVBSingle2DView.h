@@ -5,7 +5,7 @@
 #include <QtGui/QPixmap>
 #include "NVBDataGlobals.h"
 
-class NVBColorInstance;
+class NVBDataColorInstance;
 class NVBDataSet;
 class QPaintEvent;
 class QResizeEvent;
@@ -25,7 +25,7 @@ class NVBSingle2DView : public QFrame {
 Q_OBJECT
 private:
 	NVBDataSet * plotData;
-	NVBColorInstance * colors;
+	NVBDataColorInstance * colors;
 	QTransform transform;
 	QPixmap cache;
 	

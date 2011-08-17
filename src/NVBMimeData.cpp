@@ -59,7 +59,7 @@ QVariant NVBDataSourceMimeData::retrieveData(const QString & mimeType, QVariant:
 		if (mimeType == "text/plain")
 			return dset->name();
 		if (mimeType == "application/x-qt-image")
-			return QVariant::fromValue(NVBColorInstance::colorize(dset));
+			return QVariant::fromValue(NVBDataColorInstance::colorize(dset));
 		}
   return QMimeData::retrieveData(mimeType,type);
 }
