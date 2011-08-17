@@ -20,8 +20,9 @@ private:
   NVBDataSource * internal;
 	NVBDataSet * dset;
 public :
-  NVBDataSourceMimeData(NVBDataSource * source, NVBDataSet * dataset = 0);
-  ~NVBDataSourceMimeData();
+	NVBDataSourceMimeData(NVBDataSource * source);
+	NVBDataSourceMimeData(NVBDataSet * dataset);
+	~NVBDataSourceMimeData();
 
   virtual QStringList formats () const;
   virtual bool hasFormat ( const QString & mimeType ) const;

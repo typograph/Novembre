@@ -81,7 +81,7 @@ QMimeData* NVBDataSourceModel::mimeData(const QModelIndexList& indexes) const
 
 QMimeData* NVBDataSourceModel::mimeData(const QModelIndex& index) const
 {
-  return new NVBDataSourceMimeData(index.data(PageRole).value<NVBDataSource*>());
+	return new NVBDataSourceMimeData(index.data(PageRole).value<NVBDataSet*>());
 }
 
 
