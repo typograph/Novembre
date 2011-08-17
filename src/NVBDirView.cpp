@@ -22,6 +22,9 @@
 #include <QtGui/QScrollBar>
 #include <QtGui/QStyleOptionTitleBar>
 #include <QtGui/QFont>
+#include <QtGui/QKeyEvent>
+#include <QtGui/QApplication>
+#include <QtGui/QClipboard>
 
 
 NVBDirView::NVBDirView(QWidget * parent):QAbstractItemView(parent)
@@ -576,6 +579,15 @@ void NVBDirView::rowsInserted(const QModelIndex& parent, int start, int end)
 	verticalScrollBar()->setValue(voffset); //workaround scrollContentsBy()
 }
 
+void NVBDirView::keyPressEvent(QKeyEvent * event)
+{
+	if (event == QKeySequence::Copy && model()) {
+		QApplication::clipboard()->setMimeData(model()->mimeData(selectedIndexes()));
+		event->accept();
+		}
+	else
+		QAbstractItemView::keyPressEvent(event);
+}
 
 void NVBDirView::resizeEvent(QResizeEvent * event)
 {

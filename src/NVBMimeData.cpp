@@ -10,14 +10,24 @@
 //
 //
 #include "NVBMimeData.h"
+#include "NVBMap.h"
+#include <QtGui/QPixmap>
 #include <QtCore/QStringList>
 
-NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSource * source, NVBDataSet * dataset)
+NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSource * source)
  : QMimeData()
  , internal(source)
- , dset(dataset)
+ , dset(0)
 {
   // Think about setHtml and stuff
+}
+
+NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSet * dataset)
+ : QMimeData()
+ , internal(dataset->dataSource())
+ , dset(dataset)
+{
+	// Think about setHtml and stuff
 }
 
 NVBDataSourceMimeData::~ NVBDataSourceMimeData()
@@ -28,7 +38,7 @@ QStringList NVBDataSourceMimeData::formats() const
 {
 	QStringList result = QMimeData::formats();
 	if (dset) {
-		result << dataSetMimeType() << "application/x-qt-image" << "text/plain";
+		result << dataSetMimeType() << "application/x-qt-image";// << "text/plain";
 		}
 	result << dataSourceMimeType();
   return result;
@@ -48,8 +58,8 @@ QVariant NVBDataSourceMimeData::retrieveData(const QString & mimeType, QVariant:
 			return QVariant::fromValue(dset);
 		if (mimeType == "text/plain")
 			return dset->name();
-//		if (mimeType == "application/x-qt-image")
-//			return 
+		if (mimeType == "application/x-qt-image")
+			return QVariant::fromValue(NVBColorInstance::colorize(dset));
 		}
   return QMimeData::retrieveData(mimeType,type);
 }
