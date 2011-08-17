@@ -22,6 +22,8 @@
 #include <QtCore/QWaitCondition>
 #include "NVBDirModel.h"
 
+#include <QtGui/QIcon>
+
 class NVBFile;
 class NVBFileModel;
 class NVBFileFactory;
@@ -49,6 +51,19 @@ signals:
 	void fileReady(NVBFile *, QString);
 };
 
+class NVBFile2ImageConverter {
+private:
+	mutable QHash<NVBFile*, QIcon> icons;
+protected:
+	virtual QPixmap convertToImage(NVBFile * file) const = 0;
+public:
+	QIcon iconFromFile(NVBFile * file) const {
+		if (!icons.contains(file))
+			icons.insert(file,QIcon(convertToImage(file)));
+		return icons.value(file);
+	}
+	void reset() { icons.clear(); }
+};
 
 /**
 This class provides a list of files in the folder with pages. Loads on demand.
@@ -61,7 +76,8 @@ public:
 
 	enum Mode {
 		Normal = 0,
-		SpectroscopyOverlay
+		SpectroscopyOverlay,
+		SingleImage
 //
 	};
 
@@ -96,8 +112,8 @@ private:
 	QVector<QString> * fnamecache;
 	mutable NVBDirViewModelLoader	loader;
 	
-
 	NVBSpecOverlayIconProvider * overlay;
+	NVBFile2ImageConverter * imgConverter;
 
 	bool operationRunning;
 	void cacheRowCounts() const;
@@ -109,6 +125,7 @@ private:
 
 	QVariant unloadableData(int role) const;
 	QVariant inProgressData(int role) const;
+	QVariant extraDataAt(int index, int role) const;
 
 private slots:
 	void parentInsertingRows( const QModelIndex & parent, int first, int last );
@@ -125,6 +142,7 @@ private slots:
 public slots:
 	void defineWindow(int start,int end);
 	void setMode(Mode m);
+	void setSingleImageProvider(NVBFile2ImageConverter * provider);
 };
 
 

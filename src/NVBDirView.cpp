@@ -30,6 +30,7 @@
 NVBDirView::NVBDirView(QWidget * parent):QAbstractItemView(parent)
 {
 	keepItemsOnModelChanges = false;
+	oneItemPerFile = false;
 	top_row = 0;
 	pages_per_row = 0;
 	soft_shift = 0;
@@ -53,6 +54,14 @@ QModelIndex NVBDirView::indexAt(const QPoint & point) const
 	if (py < 0) // Between items
 		return QModelIndex();
 	
+	if (oneItemPerFile) {
+		return model()->index(
+					top_row + // Start index
+					(int)((point.x() - leftMargin())/gridSize.width()) + // x shift
+					pages_per_row * (int)(py/gridSize.height()) // y shift
+					,0);
+	}
+
 	int row = top_row;
 
 	// find the row below
@@ -250,19 +259,32 @@ QRect NVBDirView::visualRect(const QModelIndex & index) const
 
 QRect NVBDirView::visualRect(int index) const
 {
+	if (oneItemPerFile)
+		return QRect(QPoint(
+										leftMargin()+gridSize.width()*(index%pages_per_row),
+										fileDistance(top_row,index) + midMargin() - soft_shift
+									 ),gridSize);
 	return QRect(leftMargin(),fileDistance(top_row,index) + midMargin() - soft_shift, viewport()->width() - rightMargin() - leftMargin(), headerHeight());
 }
 
 QModelIndex NVBDirView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifiers /*modifiers*/)
 {
-	if (!currentIndex().isValid())
+	if (!currentIndex().isValid()) {
+		if (oneItemPerFile)
+			return model()->index(0,0);
 		return model()->index(0,0,model()->index(0,0));
+		}
 
 	QModelIndex cindex = currentIndex();
 	QModelIndex pindex = cindex.parent();
 
 	switch (cursorAction) {
 		case QAbstractItemView::MoveUp : {
+			if (oneItemPerFile) {
+				if (cindex.row() < pages_per_row)
+					return cindex;
+				return model()->index(cindex.row() - pages_per_row,0);
+				}
 			if ( cindex.row() < pages_per_row ) {
 				if (pindex.row() == 0)
 					return cindex;
@@ -279,6 +301,11 @@ QModelIndex NVBDirView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
 				return model()->index(cindex.row() - pages_per_row,0,pindex);
 			}
 		case QAbstractItemView::MoveDown : {
+			if (oneItemPerFile) {
+				if (cindex.row() + pages_per_row >= model()->rowCount())
+					return cindex;
+				return model()->index(cindex.row() + pages_per_row,0);
+				}
 			if ( cindex.row() + pages_per_row >= model()->rowCount(pindex) ) {
 				if (pindex.row() == model()->rowCount()-1)
 					return cindex;
@@ -297,32 +324,55 @@ QModelIndex NVBDirView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
 		case QAbstractItemView::MoveLeft : {
 			if (cindex.row() == 0)
 				return cindex;
+			if (oneItemPerFile && (cindex.row() % pages_per_row) == 0)
+				return cindex;
 			return model()->index(cindex.row()-1,0,pindex);
 			}
 		case QAbstractItemView::MoveRight : {
 			if (cindex.row() == model()->rowCount(pindex)-1)
 				return cindex;
+			if (oneItemPerFile && ((cindex.row()+1) % pages_per_row) == 0)
+				return cindex;
 			return model()->index(cindex.row()+1,0,pindex);
 			}
 		case QAbstractItemView::MoveHome : {
+			if (oneItemPerFile) return model()->index(0,0);
 			return model()->index(0,0,model()->index(0,0));
 			}
 		case QAbstractItemView::MoveEnd : {
+			if (oneItemPerFile) return model()->index(model()->rowCount()-1,0);
 			return model()->index(0,0,model()->index(model()->rowCount()-1,0));
 			}
 		case QAbstractItemView::MovePageUp : {
+			if (oneItemPerFile) {
+				int pages_per_page = pages_per_row*(viewport()->height()/gridSize.height());
+				if (cindex.row() < pages_per_page)
+					return model()->index(0,0);
+				return model()->index(cindex.row()-pages_per_page,0);
+				}
 			if (pindex.row() == 0)
 				return cindex;
 			return model()->index(0,0,model()->index(pindex.row()-1,0));
 			break;
 			}
 		case QAbstractItemView::MovePageDown : {
+			if (oneItemPerFile) {
+				int pages_per_page = pages_per_row*(viewport()->height()/gridSize.height());
+				if (cindex.row() + pages_per_page >= model()->rowCount())
+					return model()->index(model()->rowCount()-1,0);
+				return model()->index(cindex.row() + pages_per_page,0);
+				}
 			if (pindex.row() == model()->rowCount() - 1)
 				return cindex;
 			return model()->index(0,0,model()->index(pindex.row()+1,0));
 			break;
 			}
 		case QAbstractItemView::MoveNext : {
+			if (oneItemPerFile) {
+				if (cindex.row() == model()->rowCount()-1)
+					return cindex;
+				return model()->index(cindex.row()+1,0,pindex);
+				}
 			if (cindex.row() == model()->rowCount(pindex)-1) {
 				if (pindex.row() == model()->rowCount()-1)
 					return cindex;
@@ -332,6 +382,11 @@ QModelIndex NVBDirView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
 			return model()->index(cindex.row()+1,0,pindex);
 			}
 		case QAbstractItemView::MovePrevious : {
+			if (oneItemPerFile) {
+				if (cindex.row() == 0)
+					return cindex;
+				return model()->index(cindex.row()-1,0,pindex);
+				}
 			if (cindex.row() == 0) {
 				if (pindex.row() == 0)
 					return cindex;
@@ -360,6 +415,11 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 {
 	if (!model() || !model()->rowCount())
 		return;
+
+	if (oneItemPerFile) {
+		gridPaintEvent(e);
+		return;
+		}
 
 	QPainter painter(viewport());
 
@@ -452,6 +512,69 @@ void NVBDirView::drawItems(int index, int y, QPainter * painter) const
 		}
 }
 
+void NVBDirView::gridPaintEvent(QPaintEvent * e) {
+
+	if (!pages_per_row) return;
+
+	QPainter painter(viewport());
+
+	int rendered_row = top_row;
+	int row_top = -soft_shift;
+
+// Render down to the last visible row that intersects with e->rect()
+
+	while (rendered_row < model()->rowCount() && row_top < e->rect().bottom()) {
+		// TODO Draw alternating background
+		drawGridItems(rendered_row,qMin(rendered_row+pages_per_row,model()->rowCount()),row_top + midMargin(), &painter);
+		row_top += midMargin() + gridSize.height();
+		rendered_row += pages_per_row;
+	}
+
+
+#ifdef NVB_DEBUG
+	// DEBUG
+	painter.setBrush(QBrush(Qt::black));
+	painter.setPen(Qt::black);
+
+	painter.drawText(0,20,QString("TOP : %1 | SOFT : %2 | VOFF : %3 | TOTAL : %4 | STEP : %5 | MAX : %6") \
+	.arg(top_row,3).arg(soft_shift,4).arg(voffset,6).arg(totalHeight(),6).arg(verticalScrollBar()->pageStep(),6).arg(verticalScrollBar()->maximum(),6));
+	// debug
+#endif
+
+}
+
+void NVBDirView::drawGridItems(int start, int end, int y, QPainter *painter) const {
+	Q_ASSERT(model());
+	Q_ASSERT(pages_per_row);
+	Q_ASSERT(start >= 0);
+	Q_ASSERT(end > start);
+
+// Use maximum QStyleOption we can
+	QStyleOptionViewItemV4 option = viewOptions();
+
+	option.features |= QStyleOptionViewItemV2::WrapText; // | QStyleOptionViewItemV2::HasDisplay | QStyleOptionViewItemV2::HasDecoration;
+
+	option.locale = locale();
+	option.locale.setNumberOptions(QLocale::OmitGroupSeparator);
+	option.widget = this;
+
+	option.decorationPosition = QStyleOptionViewItem::Top;
+	option.displayAlignment = Qt::AlignCenter;
+	option.showDecorationSelected = false;
+
+	for (int index = start; index < end; index++) {
+		QModelIndex dindex = model()->index(index,0);
+		option.rect = QRect(QPoint(leftMargin()+(index-start)*gridSize.width(),y),gridSize);
+
+		if (dindex == currentIndex())
+			option.state |= QStyle::State_Selected | QStyle::State_HasFocus | QStyle::State_Active;
+		else
+			option.state &= ~( QStyle::State_Selected | QStyle::State_HasFocus | QStyle::State_Active );
+
+		itemDelegate()->paint(painter, option, dindex);
+		}
+}
+
 void NVBDirView::setModel(QAbstractItemModel * m)
 {
 	scrollToTop();
@@ -471,14 +594,19 @@ void NVBDirView::setModel(QAbstractItemModel * m)
 int NVBDirView::totalHeight()
 {
 	if (!model()) return 0;
+
 	int tHeight;
-	tHeight = (headerHeight() + headerMargin() + midMargin())*model()->rowCount();
-	
-	if (pages_per_row)
-		for(int j = 1; j <= (counts_total.size()-1)/pages_per_row + 1 ; j++) // rows per item
-			for(int i = qMin(j*pages_per_row,counts_total.size()-1);i > (j-1)*pages_per_row;i--)
-				tHeight += gridSize.height()*j*counts_total.at(i);
-		
+
+	if (oneItemPerFile)
+		tHeight = (gridSize.height()+midMargin())*((model()->rowCount()+pages_per_row-1)/pages_per_row);
+	else {
+		tHeight = (headerHeight() + headerMargin() + midMargin())*model()->rowCount();
+
+		if (pages_per_row)
+			for(int j = 1; j <= (counts_total.size()-1)/pages_per_row + 1 ; j++) // rows per item
+				for(int i = qMin(j*pages_per_row,counts_total.size()-1);i > (j-1)*pages_per_row;i--)
+					tHeight += gridSize.height()*j*counts_total.at(i);
+		}
 	return qMax(0,tHeight - midMargin());
 }
 
@@ -619,12 +747,15 @@ void NVBDirView::scrollContentsBy(int dx, int dy) {
 		soft_shift -= dy;
 		voffset -= dy;
 		if (soft_shift < 0) {
-			updateTopRow(top_row,top_row-1);
+			if (oneItemPerFile)
+				top_row -= pages_per_row;
+			else
+				updateTopRow(top_row,top_row-1);
 			soft_shift += fileHeight(top_row) + midMargin();
 			}
 		else if (soft_shift > fileHeight(top_row) + midMargin()) {
 			soft_shift -= fileHeight(top_row) + midMargin();
-			top_row += 1;
+			top_row += oneItemPerFile ? pages_per_row : 1;
 			}
 			setDirtyRegion(viewport()->rect());
 		}
@@ -634,6 +765,8 @@ void NVBDirView::scrollContentsBy(int dx, int dy) {
 
 int NVBDirView::fileHeight(int index) const
 {
+	if (oneItemPerFile) return gridSize.height();
+
 	Q_ASSERT(model());
 	int rc = model()->rowCount(model()->index(index,0));
 	return headerHeight() + headerMargin() + (pages_per_row ? gridSize.height()*(1+(rc-1)/pages_per_row) : 0);
@@ -645,13 +778,16 @@ void NVBDirView::calculateVOffset() {
 
 	if (top_row) {
 
-		voffset = (headerHeight() + headerMargin() + midMargin())*top_row;
-		
-		if (pages_per_row)
-			for(int j = 1; j <= (counts_above.size()-1)/pages_per_row + 1 ; j++) // rows per item
-				for(int i = qMin(j*pages_per_row,counts_above.size()-1);i > (j-1)*pages_per_row;i--)
-					voffset += gridSize.height()*j*counts_above.at(i);
-		
+		if (oneItemPerFile)
+			voffset = (gridSize.height()+midMargin())*(top_row/pages_per_row);
+		else {
+			voffset = (headerHeight() + headerMargin() + midMargin())*top_row;
+
+			if (pages_per_row)
+				for(int j = 1; j <= (counts_above.size()-1)/pages_per_row + 1 ; j++) // rows per item
+					for(int i = qMin(j*pages_per_row,counts_above.size()-1);i > (j-1)*pages_per_row;i--)
+						voffset += gridSize.height()*j*counts_above.at(i);
+			}
 		voffset -= midMargin();
 		}
 
@@ -707,6 +843,9 @@ void NVBDirView::updateScrollBars()
 
 int NVBDirView::fileDistance( int index1, int index2 ) const
 {
+	if (oneItemPerFile)
+		return (index2/pages_per_row - index1/pages_per_row)*(midMargin() + gridSize.height());
+
 	int i0 = qMin(index1,index2);
 	int in = qMax(index1,index2);
 	int dst = 0;
@@ -715,3 +854,18 @@ int NVBDirView::fileDistance( int index1, int index2 ) const
 	return dst*(index1 > index2 ? -1 : 1);
 }
 
+void NVBDirView::switchToNormalMode() {
+	oneItemPerFile = false;
+	int ctr = top_row;
+	invalidateCache();
+	setDirtyRegion(viewport()->rect());
+	scrollTo(model()->index(ctr,0));
+}
+
+void NVBDirView::switchToGridMode() {
+	oneItemPerFile = true;
+	// TOP means the index of top-left viewport corner
+	top_row = pages_per_row*(top_row/pages_per_row);
+	updateScrollBars();
+	setDirtyRegion(viewport()->rect());
+}

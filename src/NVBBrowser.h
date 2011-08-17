@@ -78,6 +78,9 @@ private:
   QAction * showPageInfoAction;
   QAction * setViewFileAction;
   QAction * refreshFoldersContentsAction;
+
+	QAction * miscModeAction;
+
   QActionGroup * iconSizeActionGroup;
 
 	QMenu * foldersMenu;
@@ -150,6 +153,8 @@ private slots:
 	void columnAction();
 	void populateColumnsMenu();
 	void showColumnsMenu();
+
+	void switchMode(bool);
 
 //	virtual void showEvent ( QShowEvent * event ) { event->accept(); emit shown(); }
 
