@@ -771,7 +771,7 @@ void NVBBrowser::showColumnsMenu()
 }
 
 
-void NVBBrowser::setViewType(bool /*b*/)
+void NVBBrowser::setViewType(bool b)
 {
 	dirViewModel->setMode(b ? NVBDirViewModel::SpectroscopyOverlay : NVBDirViewModel::Normal );
 }

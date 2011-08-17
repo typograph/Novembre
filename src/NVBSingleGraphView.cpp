@@ -20,9 +20,9 @@
 #include "NVBSingleGraphView.h"
 #include "NVBPlotCurves.h"
 #include "NVBPhysScaleDraw.h"
-#include "qwt6/qwt_scale_engine.h"
-#include "qwt6/qwt_plot_zoomer.h"
-#include "qwt6/qwt_scale_widget.h"
+#include "qwt_scale_engine.h"
+#include "qwt_plot_zoomer.h"
+#include "qwt_scale_widget.h"
 #include "NVBAxisMaps.h"
 
 QwtPlotZoomer * zoomer;

@@ -22,7 +22,7 @@
 #define NVBPHYSSCALEDRAW_H
 
 #include <QtCore/QObject>
-#include <qwt6/qwt_scale_draw.h>
+#include <qwt_scale_draw.h>
 #include "NVBUnits.h"
 
 class QwtScaleWidget;

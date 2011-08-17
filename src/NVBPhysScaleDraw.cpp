@@ -19,7 +19,7 @@
 
 
 #include "NVBPhysScaleDraw.h"
-#include "qwt6/qwt_scale_widget.h"
+#include "qwt_scale_widget.h"
 
 void NVBPhysScaleDraw::updateMultiplier()
 {

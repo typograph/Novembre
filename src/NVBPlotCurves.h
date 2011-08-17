@@ -22,9 +22,9 @@
 #define NVBPLOTCURVES_H
 
 #include "NVBDataSource.h"
-#include <qwt6/qwt_plot_item.h>
-#include <qwt6/qwt_plot_curve.h>
-#include <qwt6/qwt_compat.h>
+#include <qwt_plot_item.h>
+#include <qwt_plot_curve.h>
+#include <qwt_compat.h>
 
 class NVBPlotCurves : public QObject, public QwtPlotItem
 {

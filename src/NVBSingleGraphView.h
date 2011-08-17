@@ -21,7 +21,7 @@
 #ifndef NVBSINGLEGRAPHVIEW_H
 #define NVBSINGLEGRAPHVIEW_H
 
-#include <qwt6/qwt_plot.h>
+#include <qwt_plot.h>
 #include "NVBDataGlobals.h"
 
 class NVBPlotCurves;

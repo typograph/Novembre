@@ -24,6 +24,7 @@
 #include "NVBLogger.h"
 #include "NVBAxisMaps.h"
 #include "NVBColorMaps.h"
+#include "NVBAxisSelector.h"
 #include "rhk.h"
 #include <stdlib.h>
 
@@ -294,7 +295,7 @@ void RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 	s.addAxisByLength(header.x_size).byUnits(NVBUnits(strings.at(7)));
 	s.addAxisByLength(header.y_size).byUnits(NVBUnits(strings.at(8)));
 
-	NVBSelectorDataInstance inst = s.instantiate(*sources);
+	NVBSelectorDataInstance inst = s.instantiateOneDataset(sources);
 	NVBConstructableDataSource * ds;
 	QVector<axisindex_t> ia(2);
 	
@@ -317,7 +318,7 @@ void RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 	//	ds->addAxisMap(new NVBAxes2DGridMap(NVBPhysPoint(header.x_offset,header.y_offset,NVBUnits(strings.at(7))),QTransform().rotate(header.angle)),ia);
 		}
 	else {
-		ds = qobject_cast<NVBConstructableDataSource*>(inst.matchedDatasource());
+		ds = qobject_cast<NVBConstructableDataSource*>(inst.matchingData()->dataSource());
 		ia = inst.matchedAxes();
 		NVBOutputDMsg(QString("Found a datasource with matching axes at %1 and %2").arg(ia.at(0)).arg(ia.at(1)));
 		if (ia.at(0) == -1) {
@@ -573,7 +574,7 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 		s.addAxisByLength(header.y_size / np);
 		}
 	
-	NVBSelectorDataInstance inst = s.instantiate(*sources);
+	NVBSelectorDataInstance inst = s.instantiateOneDataset(sources);
 	NVBConstructableDataSource * ds = 0;
 	QVector<axisindex_t> ia(((!status) & 2 >> 1) + status + 1); // 0 -> 2, 1-> 3, 2-> 3, 3-> 4
 	
@@ -598,7 +599,7 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 			ia[i] = i;
 		}
 	else {
-		ds = qobject_cast< NVBConstructableDataSource* >( inst.matchedDatasource() );
+		ds = qobject_cast< NVBConstructableDataSource* >( inst.matchingData()->dataSource() );
 		ia = inst.matchedAxes();
 		if (ia.at(0) == -1) {
 			ds->addAxis(strings.at(10).isEmpty() ? "t" : strings.at(10),header.x_size);

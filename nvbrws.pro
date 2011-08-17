@@ -37,7 +37,8 @@ HEADERS += \
   src/NVBPhysScaleDraw.h \
   src/NVBSingleGraphView.h \
   src/NVBSingleView.h \
-  src/NVBBrowser.h
+	src/NVBBrowserHelpers.h \
+	src/NVBBrowser.h
 
 SOURCES += \
   src/NVBPageInfoWidget.cpp \
@@ -55,7 +56,8 @@ SOURCES += \
   src/NVBPhysScaleDraw.cpp \
   src/NVBSingleGraphView.cpp \
   src/NVBSingleView.cpp \
-  src/NVBBrowser.cpp
+	src/NVBBrowserHelpers.cpp \
+	src/NVBBrowser.cpp
 
 # Application headers
 HEADERS += \

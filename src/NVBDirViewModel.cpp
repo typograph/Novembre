@@ -220,7 +220,7 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 	else {
 		if (files.at(index.internalId()-1)) {
 			if (mode == SpectroscopyOverlay && role == Qt::DecorationRole)
-				return overlay->icon(files.at(index.internalId()-1),index.row());
+				return overlay->icon(files.at(index.internalId()-1)->file(),index.row());
 			return files.at(index.internalId()-1)->index(index.row(),0).data(role);
 			}
 		else if (unloadables.contains(index.internalId()-1))
