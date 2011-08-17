@@ -109,6 +109,17 @@ QPixmap NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) 
 	return QPixmap::fromImage(result);
 }
 
+QPixmap NVBColorInstance::colorize(NVBDataSet * dset, QVector<axissize_t> slice, QSize i_wxh)
+{
+	if (!dset) return QPixmap();
+	NVBColorInstance * i = dset->colorInstance();
+	if (!i) return QPixmap();
+	QPixmap pm = i->colorize(slice,i_wxh);
+	delete i;
+	return pm;
+}
+
+
 void NVBColorInstance::calculateSliceAxes() {
 	sliceAxes.clear();
 	if (!data) return;
