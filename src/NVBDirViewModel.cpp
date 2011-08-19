@@ -230,11 +230,25 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 	if (!index.isValid()) return QVariant();
 
 	if (index.internalId() == 0) {
-		if (mode == SingleImage && role == Qt::DecorationRole) {
-			if (files.at(index.row()))
-				return imgConverter->iconFromFile(files.at(index.row())->file());
-			else
-				return extraDataAt(index.row(),role);
+		if (mode == SingleImage) {
+			if (role == Qt::DecorationRole) {
+				if (files.at(index.row()))
+					return QIcon(imgConverter->pixmapFromFile(files.at(index.row())->file()));
+				else
+					return extraDataAt(index.row(),role);
+				}
+			else if (role == Qt::DisplayRole) {
+				const QAbstractItemModel * m = indexes.at(index.row()).model();
+				QModelIndex pi = indexes.at(index.row()).parent();
+				int row = indexes.at(index.row()).row();
+				int c = m->columnCount(pi);
+				QStringList texts;
+				for(int i=0;i<c;i++) {
+					texts << m->index(row,i,pi).data(Qt::DisplayRole).toString();
+					if (texts.last().isEmpty()) texts.removeLast();
+					}
+				return texts.join("\n");
+				}
 			}
 		return indexes.at(index.row()).data(role);
 		}

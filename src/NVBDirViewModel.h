@@ -53,16 +53,16 @@ signals:
 
 class NVBFile2ImageConverter {
 private:
-	mutable QHash<NVBFile*, QIcon> icons;
+	mutable QHash<NVBFile*, QPixmap> pixmaps;
 protected:
 	virtual QPixmap convertToImage(NVBFile * file) const = 0;
 public:
-	QIcon iconFromFile(NVBFile * file) const {
-		if (!icons.contains(file))
-			icons.insert(file,QIcon(convertToImage(file)));
-		return icons.value(file);
+	QPixmap pixmapFromFile(NVBFile * file) const {
+		if (!pixmaps.contains(file))
+			pixmaps.insert(file,convertToImage(file));
+		return pixmaps.value(file);
 	}
-	void reset() { icons.clear(); }
+	void reset() { pixmaps.clear(); }
 };
 
 /**
