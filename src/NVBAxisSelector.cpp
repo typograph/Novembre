@@ -568,6 +568,11 @@ NVBSelectorSourceInstance NVBSelectorCase::instantiateOneSource(const QList< NVB
 {
 	optimize();
 
+	NVBSelectorFileInstance i = NVBSelectorFileInstance(*this,*dataSources);
+
+	if (i.matchedInstances().isEmpty())
+		return NVBSelectorSourceInstance(*this,0);
+
 	return NVBSelectorFileInstance(*this,*dataSources).matchedInstances().first();
 }
 
@@ -576,7 +581,12 @@ NVBSelectorDataInstance NVBSelectorCase::instantiateOneDataset(const QList< NVBD
 {
 	optimize();
 
-	return NVBSelectorFileInstance(*this,*dataSources).matchedInstances().first().matchedInstances().first();	
+	NVBSelectorFileInstance i = NVBSelectorFileInstance(*this,*dataSources);
+
+	if (i.matchedInstances().isEmpty())
+		return NVBSelectorDataInstance(*this);
+
+	return i.matchedInstances().first().matchedInstances().first();
 }
 
 NVBSelectorSourceInstance NVBSelectorCase::instantiate(const NVBDataSource* dataSource)
