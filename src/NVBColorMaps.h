@@ -37,7 +37,7 @@ class NVBHSVWheelColorMap : public NVBColorMap{
 };
 
 /**
-This class makes a simple gray gradient from start to end
+This class makes a simple gray gradient from 0 to 1
 */
 class NVBGrayRampColorMap : public NVBColorMap{
 	public:
@@ -48,6 +48,43 @@ class NVBGrayRampColorMap : public NVBColorMap{
 		virtual QRgb colorize(double z) const;
 
 		virtual NVBGrayRampColorMap * copy() { return new NVBGrayRampColorMap(); }
+
+};
+
+/**
+This class makes a gray gradient with multiple steps
+*/
+class NVBGrayStepColorMap : public NVBColorMap{
+	private:
+		QList<double> steps;
+		QList< NVBValueScaler<double,double> > scales;
+
+		NVBGrayStepColorMap(const QList<double> & xs, const QList< NVBValueScaler<double,double> > & scalers)
+			: steps(xs)
+			, scales(scalers)
+			{;}
+	public:
+		//
+		NVBGrayStepColorMap(double start, double end)	{
+			steps.append(0);
+			steps.append(1);
+			scales.append(NVBValueScaler<double,double>(0,1,start,end));
+			}
+
+		NVBGrayStepColorMap(const QList<double> & xs, const QList<double> & values)
+			: steps(xs)
+			{
+			for (int i=1; i<values.count(); i++)
+				scales.append(NVBValueScaler<double,double>(xs.at(i-1),xs.at(i),values.at(i-1),values.at(i)));
+			}
+
+		virtual ~NVBGrayStepColorMap() {;}
+
+		void addStep(double x, double value);
+
+		virtual QRgb colorize(double z) const;
+
+		virtual NVBGrayStepColorMap * copy() { return new NVBGrayStepColorMap(steps,scales); }
 
 };
 
@@ -68,6 +105,44 @@ class NVBRGBRampColorMap : public NVBColorMap {
 		virtual QRgb colorize(double z) const { return rgb.scale(z); }
 		
 		virtual NVBRGBRampColorMap * copy() { return new NVBRGBRampColorMap(rgb.scale(0),rgb.scale(1));}
+};
+
+/**
+	This class mixes three channels into rgb
+	*/
+class NVBRGBMixColorMap : public NVBColorMap {
+	private:
+		NVBColorMap *r, *g, *b;
+	public:
+		NVBRGBMixColorMap(NVBColorMap *red, NVBColorMap *green, NVBColorMap *blue)
+			: r(red)
+			, g(green)
+			, b(blue)
+		{
+			if (!r) {
+				NVBOutputError("No red");
+				r = new NVBGrayRampColorMap();
+			}
+			if (!g) {
+				NVBOutputError("No green");
+				g = new NVBGrayRampColorMap();
+			}
+			if (!b) {
+				NVBOutputError("No blue");
+				b = new NVBGrayRampColorMap();
+			}
+		}
+		virtual ~NVBRGBMixColorMap() {
+			delete r;
+			delete g;
+			delete b;
+			}
+
+		virtual QRgb colorize(double z) const {
+			return (r->colorize(z) & 0xFF) + (g->colorize(z) & 0xFF00) + (b->colorize(z) & 0xFF0000) + 0xFF000000;
+		}
+
+		virtual NVBRGBMixColorMap * copy() { return new NVBRGBMixColorMap(r->copy(),g->copy(),b->copy()); }
 };
 
 /**
