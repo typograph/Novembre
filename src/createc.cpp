@@ -32,12 +32,67 @@
 #include "NVBFile.h"
 #include "NVBAxisMaps.h"
 
-QStringList DATchannelNames = QStringList() << "Topography" << "Current" << "ADC1" << "ADC2";
+QStringList DATchannelNames = QStringList()
+																		<< "Topography"
+																		<< "Current"
+																		<< "ADC1"
+																		<< "ADC2"
+																		<< "ADC3"
+																		<< "dI/dV"
+																		<< "d2I/dV2"
+																		<< "df"
+																		<< "Damping"
+																		<< "Amplitude"
+																		<< "CP"
+																		<< "AUX1"
+																		;
 QList<NVBUnits> DATchannelDims = QList<NVBUnits>()
                                     << NVBUnits("nm")
                                     << NVBUnits("A")
-                                    << NVBUnits("DAC",false)
-                                    << NVBUnits("DAC",false);
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		;
+
+QStringList VERT3channelNames = QStringList()
+																		<< "Current"
+																		<< "dI/dV"
+																		<< "d2I/dV2"
+																		<< "ADC0"
+																		<< "ADC1"
+																		<< "ADC2"
+																		<< "ADC3"
+																		<< "df"
+																		<< "Damping"
+																		<< "Amplitude"
+																		<< "dI_q"
+																		<< "dI2_q"
+																		<< "Topography"
+																		<< "CP"
+																		;
+QList<NVBUnits> VERT3channelDims = QList<NVBUnits>()
+																		<< NVBUnits("A")
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("DAC",false)
+																		<< NVBUnits("nm")
+																		;
 
 
 
@@ -82,7 +137,7 @@ QStringList CreatecFileGenerator::availableInfoFields() const {
 // RepeatXoffset / RepeatXoffset=0
 // RepeatYoffset / RepeatYoffset=0
 // Scantype / Scantype=1
-// Scanmode / Scanmode=2
+// Scanmode / Scanmode=2 // Forward / Fwd+Bck scans
 // Scancoarse / Scancoarse=0
 // CHMode / CHMode=0
 // Channels / Channels=2
@@ -364,6 +419,15 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 	return f;
 }
 
+void addDataInfoFB(bool fandb, NVBFileInfo * fi, QString name, const NVBUnits & u, const QVector<axissize_t> & sz) {
+	if (fandb) {
+		fi->append(NVBDataInfo(name + " (forward)", u,sz,NVBDataComments(),NVBDataSet::Topography));
+		fi->append(NVBDataInfo(name + " (backward)",u,sz,NVBDataComments(),NVBDataSet::Topography));
+		}
+	else
+		fi->append(NVBDataInfo(name, u, sz, NVBDataComments(),NVBDataSet::Topography));
+}
+
 NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo & info ) const throw()
 {
 	if (info.generator() != this) {
@@ -383,7 +447,16 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 		return 0;
 		}
 
-	if (!QString(file.readLine(100)).contains("[param",Qt::CaseInsensitive))
+	/*
+		Possible first strings
+		[Paramet32] - raw topography
+		[Paramco32] - compressed topography
+		[Parameter] - spectroscopy
+		[ParVERT30] - spectroscopy version 3.0
+	 */
+
+
+	if (!QString(file.readLine(100)).contains(QRegExp("\[Par(VERT30|am(et32|co32|eter))]",Qt::CaseInsensitive)))
 		return 0;
 
 	CreatecHeader header = getCreatecHeader(file);
@@ -399,30 +472,32 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	if (ext == "dat") {
 		QVector<axissize_t> sz;
 		sz << header.value("Num.X").toInt() << header.value("Num.Y").toInt();
-		
-		fi->append(NVBDataInfo("Topography (forward)", NVBUnits("m"),sz,NVBDataComments(),NVBDataSet::Topography));
-		fi->append(NVBDataInfo("Topography (backward)",NVBUnits("m"),sz,NVBDataComments(),NVBDataSet::Topography));
-		if (header.value("Channels").toInt() > 2) {
-			fi->append(NVBDataInfo("Current (forward)", NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Topography));
-			fi->append(NVBDataInfo("Current (backward)",NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Topography));
-			if (header.value("Channels").toInt() > 4) {
-				fi->append(NVBDataInfo("ADC1 (forward)", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
-				fi->append(NVBDataInfo("ADC1 (backward)",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
-				fi->append(NVBDataInfo("ADC2 (forward)", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
-				fi->append(NVBDataInfo("ADC2 (backward)",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Topography));
-				}
+
+		bool backward = (header.value("Scanmode").toInt() == 2); // 1 means only forward
+		int chanSelect = header.value("Channelselectval",0).toInt();
+		if (chanSelect == 0)
+			switch(header.value("Chan(1,2,4)").toInt()) {
+				case 1 : chanSelect = 0x1; break;
+				case 2 : chanSelect = 0x3; break;
+				case 4 : chanSelect = 0x15; break;
+				default : chanSelect = 0x1; NVBOutputError("Weird number of channels");
 			}
+		
+		for (int i = 0; i < DATchannelNames.count(); i++)
+			if (chanSelect & (1 << i))
+				addDataInfoFB(backward, fi, DATchannelNames.at(i), DATchannelDims.at(i),sz);
 		}
 	else if (ext == "vert") {
 
 		file.seek(0x4006);
-		int npts = QString(file.readLine(200)).split(' ',QString::SkipEmptyParts).first().toInt();
+		QStringList dataParams = QString(file.readLine(200)).split(' ',QString::SkipEmptyParts);
+		int npts = dataParams.first().toInt();
 
 		QString reffname = info.last();
 		int nx=0, ny=0, np=0, nr=0;
 
-		if (reffname.length() > 19) {
-			int nameX = reffname.lastIndexOf("/");
+		int nameX = reffname.lastIndexOf("/");
+		if (reffname.length() - nameX > 20) {
 			QStringList tokens = reffname.mid(nameX+16,reffname.length()-nameX-21).split('.');
 			foreach (QString token, tokens) {
 				bool ok = false;
@@ -465,19 +540,54 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 		if (np != 0)
 			sz << np; // "Point"
 
+		if (dataParams.count() < 4) { // No channel select parameter - ver 2
+			fi->append(NVBDataInfo("I",    NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI",   NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("U",    NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("z",    NVBUnits("nm"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD0",  NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD1",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD3",  NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("Dac0", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			}
+		else { // ver 3
+			int chanSelect = dataParams.at(3).toInt();
 
-		fi->append(NVBDataInfo("I",    NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("dI",   NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("U",    NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("z",    NVBUnits("nm"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("dI2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("AD0",  NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("AD1",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("AD2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("AD3",  NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-		fi->append(NVBDataInfo("Dac0", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("U",    NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("z",    NVBUnits("nm"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x1)
+				fi->append(NVBDataInfo("I",    NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x2)
+				fi->append(NVBDataInfo("dI/dV",   NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x4)
+				fi->append(NVBDataInfo("d2I/dV2",  NVBUnits("A/V^2"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x8)
+				fi->append(NVBDataInfo("ADC0",  NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x10)
+				fi->append(NVBDataInfo("ADC1",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x20)
+				fi->append(NVBDataInfo("ADC2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x40)
+				fi->append(NVBDataInfo("ADC3",  NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x80)
+				fi->append(NVBDataInfo("df", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x100)
+				fi->append(NVBDataInfo("Damping", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x200)
+				fi->append(NVBDataInfo("Amplitude", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x400)
+				fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x800)
+				fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x1000)
+				fi->append(NVBDataInfo("Topography", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (chanSelect & 0x2000)
+				fi->append(NVBDataInfo("CP", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			}
 		}
 	else if (ext == "lat")
 		fi->append(NVBDataInfo("I",NVBUnits("A"),QVector<axissize_t>(1,1024),NVBDataComments(),NVBDataSet::Spectroscopy));
@@ -519,20 +629,65 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 		return;
 		}
 
+	bool backward = (file_header.value("Scanmode").toInt() == 2); // 1 means only forward
+	int chanSelect = file_header.value("Channelselectval",0).toInt();
+	if (chanSelect == 0)
+		switch(file_header.value("Chan(1,2,4)").toInt()) {
+			case 1 : chanSelect = 0x1; break;
+			case 2 : chanSelect = 0x3; break;
+			case 4 : chanSelect = 0x15; break;
+			default : chanSelect = 0x1; NVBOutputError("Weird number of channels");
+		}
+
 // Fill in Z factors
 
 	QList<double> factors;
 
  // Topography. Scale by Dacto[A]z, taking into account that they are nanometers.
-	factors << file_header.value("Dacto[A]z").toDouble();
+	if (chanSelect & 0x1)
+		factors << file_header.value("Dacto[A]z").toDouble();
 
  // Current. Scale by piezo constant, Dacto[A]z, taking into account that they are Angstroems now.
+	if (chanSelect & 0x2)
 	factors << file_header.value("Dacto[A]z").toDouble()*
 						 pow(10,-file_header.value("Gainpreamp").toInt())/
 						 file_header.value("ZPiezoconst").toDouble();
- // ADC1 & ADC2 -> STM dependent, rely on NVBScript.
-	factors << 1 << 1;
+ // ADC1 -> STM dependent, rely on NVBScript.
+	if (chanSelect & 0x4)
+		factors << 1;
+ // ADC2
+	if (chanSelect & 0x8)
+		factors << 1;
+ // ADC3
+	if (chanSelect & 0x10)
+		factors << 1;
+ // dI/dV ?
+	if (chanSelect & 0x20)
+		factors << 1;
+ // d2I/dV2
+	if (chanSelect & 0x40)
+		factors << 1;
+ // df
+	if (chanSelect & 0x80)
+		factors << 1;
+ // Damping - FIXME AFM (should be possible to convert to physical units)
+	if (chanSelect & 0x100)
+		factors << 1;
+ // Amplitude - FIXME AFM (should be possible to convert to physical units)
+	if (chanSelect & 0x200)
+		factors << 1;
+ // CP
+	if (chanSelect & 0x400)
+		factors << 1;
+ // AUX1
+	if (chanSelect & 0x800)
+		factors << 1;
 
+	QList<int> invIndexes;
+
+	for (int i = 0; i < DATchannelNames.count(); i++)
+		if (chanSelect & (1 << i))
+			invIndexes << i;
 
 // There are always only 2 axes : X & Y
 
@@ -565,7 +720,7 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 							10e-9,NVBUnits("m"))
 					));
 
-	int magic = file_header.value("Chan(1,2,4)").toInt();
+	int magic = backward ? nchannels/2 : nchannels;
 
   file.seek(0);
 
@@ -589,6 +744,10 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 			}
 
 		NVBValueScaler<quint32,double> intscaler;
+		NVBDataComments emptyComments;
+		QVector<axisindex_t> axes;
+		axes << 0 << 1;
+		axes.squeeze();
 
 		for (int channel = 0; channel < nchannels; channel++) {
       file.read((char*)idata,data_points*4);
@@ -602,11 +761,13 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 			intscaler.change_output(0,1,0,factors.at(channel%magic));
 			intscaler.scaleMem(data,idata,data_points);
 			result->addDataSet(
-				DATchannelNames.at(channel%magic) + ((channel/magic == 0) ? " (forward)" : " (backward)"),
+				backward ?
+							( DATchannelNames.at(invIndexes.at(channel%magic)) + ((channel < magic) ? " (forward)" : " (backward)"))
+							: DATchannelNames.at(invIndexes.at(channel)),
 				data,
-				DATchannelDims.at(channel%magic),
-				NVBDataComments(),
-				QVector<axisindex_t>() << 0 << 1,
+				DATchannelDims.at(invIndexes.at(channel%magic)),
+				emptyComments,
+				axes,
 				NVBDataSet::Topography
 				);
     }
@@ -644,6 +805,10 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
     free(zbuf);
 
 		NVBValueScaler<float,double> intscaler;
+		NVBDataComments emptyComments;
+		QVector<axisindex_t> axes;
+		axes << 0 << 1;
+		axes.squeeze();
 
 		for (int channel = 0; channel < nchannels; channel++) {
 			double * data = (double*) malloc(data_points*8);
@@ -656,11 +821,13 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 			intscaler.change_output(0,1,0,factors.at(channel%magic));
 			intscaler.scaleMem(data,buf+1+data_points*channel,data_points);
 			result->addDataSet(
-				DATchannelNames.at(channel%magic) + ((channel/magic == 0) ? " (forward)" : " (backward)"),
+				backward ?
+							( DATchannelNames.at(invIndexes.at(channel%magic)) + ((channel < magic) ? " (forward)" : " (backward)"))
+							: DATchannelNames.at(invIndexes.at(channel)),
 				data,
-				DATchannelDims.at(channel%magic),
-				NVBDataComments(),
-				QVector<axisindex_t>() << 0 << 1,
+				DATchannelDims.at(invIndexes.at(channel%magic)),
+				emptyComments,
+				axes,
 				NVBDataSet::Topography
 				);
     }
@@ -814,23 +981,43 @@ void CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames, NVBFil
 	//        << Qt::red << Qt::green << Qt::green << Qt::gray
 	//        << Qt::gray << Qt::darkRed << Qt::green << Qt::green << Qt::green
 
-	QVector<double*> datae(12);
+	int chanSelect = 0;
+	int nChannels = 12;
+	if (sizes.count() > 3) {
+		nChannels = 2;
+		chanSelect = sizes.at(3).toInt();
+		for (int k = 0; k < 16; k++)
+			if (chanSelect & (1 << k))
+				nChannels += 1;
+		}
 
-	for (int i = 0; i<12; i++)
+	QVector<double*> datae(nChannels);
+
+	for (int i = 0; i<nChannels; i++)
 		datae[i] = (double*)malloc(datasize*sizeof(double));
 
-	result->addDataSet("I",    datae.at(0), NVBUnits("A"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("dI",   datae.at(1), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("U",    datae.at(2), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("z",    datae.at(3), NVBUnits("nm"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("dI2",  datae.at(4), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("dI_q", datae.at(5), NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("dI2_q",datae.at(6), NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("ADC0",  datae.at(7), NVBUnits("A"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("ADC1",  datae.at(8), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("ADC2",  datae.at(9), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("ADC3",  datae.at(10),NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
-	result->addDataSet("Dac0", datae.at(11),NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+	if (!chanSelect) {
+		result->addDataSet("I",    datae.at(0), NVBUnits("A"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("dI",   datae.at(1), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("U",    datae.at(2), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("z",    datae.at(3), NVBUnits("nm"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("dI2",  datae.at(4), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("dI_q", datae.at(5), NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("dI2_q",datae.at(6), NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("ADC0",  datae.at(7), NVBUnits("A"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("ADC1",  datae.at(8), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("ADC2",  datae.at(9), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("ADC3",  datae.at(10),NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("Dac0", datae.at(11),NVBUnits("DAC",false), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		}
+	else {
+		result->addDataSet("U",    datae.at(0), NVBUnits("V"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		result->addDataSet("z",    datae.at(1), NVBUnits("nm"), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		int nextChannel = 2;
+		for (int k = 0; k < 16; k++)
+			if (chanSelect & (1 << k))
+				result->addDataSet(VERT3channelNames.at(k), datae.at(nextChannel++), VERT3channelDims.at(k), NVBDataComments(), QVector<axisindex_t>(), NVBDataSet::Spectroscopy);
+		}
 
 	// Positions
 
@@ -853,7 +1040,7 @@ void CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames, NVBFil
 		QString format(file.readLine(20));
 		format.chop(2);
 
-		if (format != "[Parameter]") {
+		if (format != "[Parameter]" && format != "[ParVERT30]") {
 			NVBOutputError(QString("Don't know how to deal with format %1").arg(format));
 			return;
 		}
@@ -871,35 +1058,76 @@ void CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames, NVBFil
 
 		NVBOutputDMsg(QString("X: %1, Y: %2 : DAC %3 -> Point %4 x %5").arg(Xdac).arg(Ydac).arg(dacFactor,8).arg(points.last().x().getValue(),8).arg(points.last().y().getValue(),8));
 
-		QVector<double> factor(12,1);
+		QVector<double> factor(nChannels,1);
 
 		//-// DAC factors
-		// Current
-		factor[0] = file_header.value("Dacto[A]z").toDouble()*
-								pow(10,-file_header.value("Gainpreamp").toInt())/
-								file_header.value("ZPiezoconst").toDouble();
-		factor[7] = factor[0];
+		if (chanSelect == 0) {
+			// Current
+			factor[0] = file_header.value("Dacto[A]z").toDouble()*
+									pow(10,-file_header.value("Gainpreamp").toInt())/
+									file_header.value("ZPiezoconst").toDouble();
+			factor[7] = factor[0];
 
-		// Z
-		factor[3] = file_header.value("Dacto[A]z").toDouble();
+			// Z
+			factor[3] = file_header.value("Dacto[A]z").toDouble();
 
-		// V
-		factor[1] = file_header.value("Dacto[A]z").toDouble()*0.1/
-								file_header.value("ZPiezoconst").toDouble();
-		factor[2] = factor[1];
-		factor[4] = factor[1];
-		factor[8] = factor[1];
-		factor[9] = factor[1];
+			// V
+			factor[1] = file_header.value("Dacto[A]z").toDouble()*0.1/
+									file_header.value("ZPiezoconst").toDouble();
+			factor[2] = factor[1];
+			factor[4] = factor[1];
+			factor[8] = factor[1];
+			factor[9] = factor[1];
+			}
+		else {
+			// V
+			factor[0] = file_header.value("Dacto[A]z").toDouble()*0.1/
+									file_header.value("ZPiezoconst").toDouble();
+			// Z
+			factor[1] = file_header.value("Dacto[A]z").toDouble();
+			int nextFactor = 2;
+			if (chanSelect & 0x1)
+				factor[nextFactor++] =
+					file_header.value("Dacto[A]z").toDouble()*
+					pow(10,-file_header.value("Gainpreamp").toInt())/
+					file_header.value("ZPiezoconst").toDouble();
+			if (chanSelect & 0x2) // dI/dV
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x4) // d2I/dV2
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x8) // ADC0
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x10) // ADC1
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x20) // ADC2
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x40) // ADC3
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x80) // df
+				factor[nextFactor++] = 1;
+			if (chanSelect & 0x100) // Damping
+				factor[nextFactor++] = 1;
+			if (chanSelect & 0x200) // Amplitude
+				factor[nextFactor++] = 1;
+			if (chanSelect & 0x400) // dI_q
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x800) // dI2_q
+				factor[nextFactor++] = factor[0];
+			if (chanSelect & 0x800) // Topography
+				factor[nextFactor++] = factor[1];
+			if (chanSelect & 0x800) // CP
+				factor[nextFactor++] = 1;
+			}
 
 		int line = 0;
 		while (!file.atEnd() && line < npts) {
 //			QList<QByteArray> pt_data = file.readLine(800).split('\t');
 			QByteArray thisline = file.readLine(800);
 			QList<QByteArray> pt_data = thisline.split('\t');
-			if (pt_data.count() < 12)
+			if (pt_data.count() < nChannels)
 				NVBOutputError(QString("Line %1 too short : %2").arg(line).arg(QString(thisline)));
 //			xs << pt_data.first().toDouble();
-			for (int i = 0; i<12; i++)
+			for (int i = 0; i<nChannels; i++)
 				datae.at(i)[npts*specix+line] = pt_data.at(i+1).toDouble()*factor.at(i);
 			line += 1;
 			}
