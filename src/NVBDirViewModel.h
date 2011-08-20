@@ -65,6 +65,7 @@ private:
 	NVBDirModel * dirModel;
 	mutable QVector<NVBFile*> files;
 	mutable QList<int> unloadables;
+	mutable QList<int> inprogress;
 	mutable QVector<int> rowcounts;
 	QVector<QString> * fnamecache;
 
