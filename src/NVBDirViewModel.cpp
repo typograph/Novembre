@@ -199,7 +199,8 @@ void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 
 	files.fill(0,indexes.count());
 	unloadables.clear();
-	cacheRowCounts();
+        inprogress.clear();
+        cacheRowCounts();
 	endResetModel();
 }
 
@@ -213,10 +214,12 @@ int NVBDirViewModel::rowCount( const QModelIndex & parent ) const
 
 bool NVBDirViewModel::loadFile(int index) const
 {
-	if (files.at(index)) return true;
+        if (inprogress.contains(index)) return false;
+        if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 
 	fileFactory->openFile(dirModel->getAllFiles(indexes[index]),this);
+        inprogress.append(index);
 	return false;
 /*
 	NVBFile * f = fileFactory->openFile(dirModel->getAllFiles(indexes[index]));
