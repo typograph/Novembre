@@ -20,8 +20,9 @@
 
 void NVBLogger::outputMessage(NVB::LogEntryType type, QString issuer, QString text) {
 	static QRegExp fnct = QRegExp(" ([^ ]*::[^ ]*)\\(");
-	fnct.indexIn(issuer);
-	emit message(type,fnct.cap(1),text,QTime::currentTime());
+	QRegExp fnct_copy(fnct); // Thread safety, sort of
+	fnct_copy.indexIn(issuer);
+	emit message(type,fnct_copy.cap(1),text,QTime::currentTime());
   }
 
 void NVBOutputMessage(NVB::LogEntryType type,QString issuer, QString text){
