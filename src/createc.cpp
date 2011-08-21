@@ -205,12 +205,20 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	NVBFileInfo * fi = new NVBFileInfo(info);
 	if (!fi) return 0;
 	
+	QStringList chnames;
+
 	//  QString name;
 	NVB::PageType type;
 	QString filename = file.fileName();
 	QString ext = filename.right(filename.size()-filename.lastIndexOf('.')-1).toLower();
-	if (ext == "dat")
+	if (ext == "dat") {
 		type = NVB::TopoPage;
+		chnames << "Topography (forward)" << "Topography (backward)";
+		if (header.value("Chan(1,2,4)").toInt() > 1)
+			chnames << "Current (forward)" << "Current (backward)";
+		if (header.value("Chan(1,2,4)").toInt() > 2)
+			chnames << "ADC1 (forward)" << "ADC1 (backward)" << "ADC2 (forward)" << "ADC2 (backward)";
+		}
 	else if (ext == "lat")
 		type = NVB::SpecPage;
 	else if (ext == "vert")
@@ -416,11 +424,18 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	//	T_ADC3[K]=  0.000
 
 	int nchannels = header.value("Channels").toInt();
+	if (type == NVB::SpecPage) {
+		chnames << "I" << "dI"<< "U" << "z" << "dI2" << "dI_q" << "dI2_q" << "AD0" << "AD1" << "AD2" << "AD3" << "Dac0";
 #ifdef TMP_VOLTAGE_MAP
-	if (type == NVB::SpecPage) nchannels = 13;
+		if (header.value("VertFBMode").toInt() == 1)
+			chnames << "z(U)";
+		else
+			chnames << "dI/dV";
+		nchannels = 13;
 #else
-	if (type == NVB::SpecPage) nchannels = 12;
+		nchannels = 12;
 #endif
+		}
 
 	QSize dataSize;
 	if (type == NVB::SpecPage) {
@@ -431,7 +446,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	else
 		dataSize = QSize(header.value("Num.X",0).toInt(),header.value("Num.Y",0).toInt());
 	for (int i = 0; i < nchannels; i++)	
-		fi->pages.append(NVBPageInfo(header.value("BiasVoltage",QString()).toString(),type,dataSize,comments));
+		fi->pages.append(NVBPageInfo(chnames.at(i),type,dataSize,comments));
 
 	return fi;
 }
