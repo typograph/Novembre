@@ -42,13 +42,12 @@ private:
  */
 	bool keepItemsOnModelChanges;
 	
-	
 /// Number of rows before \a top_row with corresponding number of pages
 	mutable QVector<int> counts_above;
 /// Total number of rows with corresponding number of pages
 	mutable QVector<int> counts_total;
-	
 
+/// Total visual height of all items in the view, not including midMargin() at every end. For an empty view is equal to 0
 	int totalHeight();
   void calculateVOffset();
 	void updateTopRow(int rold, int rnew);
@@ -101,11 +100,13 @@ private:
 /**
 	* This distance is inserted before the first file, between files and also after the file/page to be positioned at bottom
 	*/
-	inline int midMargin() const { return 20; }
+	inline int midMargin() const { return 15; }
 /// Distance between the left border and the first grid line
 	inline int leftMargin() const { return 10; }
 /// Distance between the last grid line and the right border
 	inline int rightMargin() const { return 10; }
+
+	inline int viewportHeight() const { return viewport()->height() - 2*midMargin(); }
 
 private slots:
 	void updateScrollBars();

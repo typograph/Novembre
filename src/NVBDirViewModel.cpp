@@ -199,8 +199,8 @@ void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 
 	files.fill(0,indexes.count());
 	unloadables.clear();
-        inprogress.clear();
-        cacheRowCounts();
+				inprogress.clear();
+				cacheRowCounts();
 	endResetModel();
 }
 
@@ -214,12 +214,12 @@ int NVBDirViewModel::rowCount( const QModelIndex & parent ) const
 
 bool NVBDirViewModel::loadFile(int index) const
 {
-        if (inprogress.contains(index)) return false;
-        if (files.at(index)) return true;
+				if (inprogress.contains(index)) return false;
+				if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 
 	fileFactory->openFile(dirModel->getAllFiles(indexes[index]),this);
-        inprogress.append(index);
+				inprogress.append(index);
 	return false;
 /*
 	NVBFile * f = fileFactory->openFile(dirModel->getAllFiles(indexes[index]));
@@ -405,17 +405,17 @@ void NVBDirViewModel::parentInsertedRows(const QModelIndex & /*parent*/, int fir
                 last -= fc;
                 first = qMax(first,0);
 		if (last >= first) {
-                        beginInsertRows(QModelIndex(),first, last);
+			beginInsertRows(QModelIndex(),first, last);
 /*
-                        if (last >= rowcounts.count()) {
-                            rowcounts.resize(last+1);
-                            files.resize(last+1);
-                            unloadables.resize(last+1);
-                            }
+			if (last >= rowcounts.count()) {
+					rowcounts.resize(last+1);
+					files.resize(last+1);
+					unloadables.resize(last+1);
+					}
 */
-                        rowcounts.insert(first,last-first+1,0);
-                        for (int i = first; i <= last; i += 1)
-                                indexes.insert(i,QPersistentModelIndex(dirModel->index(fc+i,0,dirindex)));
+			rowcounts.insert(first,last-first+1,0);
+			for (int i = first; i <= last; i += 1)
+				indexes.insert(i,QPersistentModelIndex(dirModel->index(fc+i,0,dirindex)));
 			for(int i = 0; i < unloadables.size(); i++) {
 				if (unloadables.at(i) >= first)
 					unloadables[i] += last-first+1;
@@ -443,22 +443,28 @@ void NVBDirViewModel::parentRemovingRows(const QModelIndex & parent, int first, 
 void NVBDirViewModel::parentRemovedRows(const QModelIndex & /*parent*/, int first, int last)
 {
 	if (operationRunning) {
-		rowcounts.remove(first,last-first+1);
-		for(int i = 0; i < unloadables.size(); i++) {
-			if (unloadables.at(i) > last)
-				unloadables[i] -= last-first+1;
-			else if (unloadables.at(i) >= first)
-				unloadables.removeAt(i--);
-			}
-		for (int i = first; i <= last; i++) {
-			if (files.at(i))
-				files.at(i)->release();
-			}
-		files.remove(first,last-first+1);
-		for (int i = first; i <= last; i += 1)
-			indexes.removeAt(i);
+		int fc = dirModel->folderCount(dirindex);
+		first -= fc;
+		last -= fc;
+		first = qMax(first,0);
+		if (first <= last) {
+			rowcounts.remove(first,last-first+1);
+			for(int i = 0; i < unloadables.size(); i++) {
+				if (unloadables.at(i) > last)
+					unloadables[i] -= last-first+1;
+				else if (unloadables.at(i) >= first)
+					unloadables.removeAt(i--);
+				}
+			for (int i = first; i <= last; i++) {
+				if (files.at(i))
+					files.at(i)->release();
+				}
+			files.remove(first,last-first+1);
+			for (int i = first; i <= last; i += 1)
+				indexes.removeAt(i);
 
 //     rowcounts.resize(dirModel->fileCount(dirindex));
+			}
 		endRemoveRows();
 		operationRunning = false;
 		}
