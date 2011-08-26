@@ -32,69 +32,79 @@
 #include "NVBFile.h"
 #include "NVBAxisMaps.h"
 
-QStringList DATchannelNames = QStringList()
-																		<< "Topography"
-																		<< "Current"
-																		<< "ADC1"
-																		<< "ADC2"
-																		<< "ADC3"
-																		<< "dI/dV"
-																		<< "d2I/dV2"
-																		<< "df"
-																		<< "Damping"
-																		<< "Amplitude"
-																		<< "CP"
-																		<< "AUX1"
-																		;
-QList<NVBUnits> DATchannelDims = QList<NVBUnits>()
-                                    << NVBUnits("nm")
-                                    << NVBUnits("A")
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		;
+#define SCANTYPE_SPECTROSCOPY    0 // Spectroscopy
+#define SCANTYPE_SINGLEVOLTAGE   1 // Single-Voltage
+#define SCANTYPE_MULTIVOLTAGE    2 // Multi-Voltage
+#define SCANTYPE_ZRAMPING        3 // Z-Ramping
+#define SCANTYPE_NANOSTRUCTURING 4 // Nanostructuring
 
-QStringList VERT3channelNames = QStringList()
-																		<< "Current"
-																		<< "dI/dV"
-																		<< "d2I/dV2"
-																		<< "ADC0"
-																		<< "ADC1"
-																		<< "ADC2"
-																		<< "ADC3"
-																		<< "df"
-																		<< "Damping"
-																		<< "Amplitude"
-																		<< "dI_q"
-																		<< "dI2_q"
-																		<< "Topography"
-																		<< "CP"
-																		;
-QList<NVBUnits> VERT3channelDims = QList<NVBUnits>()
-																		<< NVBUnits("A")
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("DAC",false)
-																		<< NVBUnits("nm")
-																		;
+static QStringList DATchannelNames =
+	QStringList()
+		<< "Topography"
+		<< "Current"
+		<< "ADC1"
+		<< "ADC2"
+		<< "ADC3"
+		<< "dI/dV"
+		<< "d2I/dV2"
+		<< "df"
+		<< "Damping"
+		<< "Amplitude"
+		<< "CP"
+		<< "AUX1"
+		;
 
+static QList<NVBUnits> DATchannelDims =
+	QList<NVBUnits>()
+		<< NVBUnits("nm")
+		<< NVBUnits("A")
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		;
 
+static QStringList VERT3channelNames =
+	QStringList()
+		<< "Current"
+		<< "dI/dV"
+		<< "d2I/dV2"
+		<< "ADC0"
+		<< "ADC1"
+		<< "ADC2"
+		<< "ADC3"
+		<< "df"
+		<< "Damping"
+		<< "Amplitude"
+		<< "dI_q"
+		<< "dI2_q"
+		<< "Topography"
+		<< "CP"
+		;
+
+static QList<NVBUnits> VERT3channelDims =
+	QList<NVBUnits>()
+		<< NVBUnits("A")
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("DAC",false)
+		<< NVBUnits("nm")
+		;
 
 QStringList CreatecFileGenerator::availableInfoFields() const {
     return QStringList()
@@ -473,13 +483,24 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 		QVector<axissize_t> sz;
 		sz << header.value("Num.X").toInt() << header.value("Num.Y").toInt();
 
+		if (header.value("Scantype").toInt() == SCANTYPE_MULTIVOLTAGE) {
+			int multiVoltagePages = 0;
+			for(int vch = 1; vch <= 30; vch++)
+				if (header.value(QString("MVolt_%1").arg(vch)).toDouble() != 0)
+					multiVoltagePages += 1;
+				else
+					break; // A single 0 blocks all the rest
+			sz << multiVoltagePages;
+		}
+
+
 		bool backward = (header.value("Scanmode").toInt() == 2); // 1 means only forward
 		int chanSelect = header.value("Channelselectval",0).toInt();
 		if (chanSelect == 0)
 			switch(header.value("Chan(1,2,4)").toInt()) {
 				case 1 : chanSelect = 0x1; break;
 				case 2 : chanSelect = 0x3; break;
-				case 4 : chanSelect = 0x15; break;
+				case 4 : chanSelect = 0xF; break;
 				default : chanSelect = 0x1; NVBOutputError("Weird number of channels");
 			}
 		
@@ -629,17 +650,19 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 		return;
 		}
 
+	int page_data_volume = data_points*sizeof(double); // including multi-voltage
+
 	bool backward = (file_header.value("Scanmode").toInt() == 2); // 1 means only forward
 	int chanSelect = file_header.value("Channelselectval",0).toInt();
 	if (chanSelect == 0)
 		switch(file_header.value("Chan(1,2,4)").toInt()) {
 			case 1 : chanSelect = 0x1; break;
 			case 2 : chanSelect = 0x3; break;
-			case 4 : chanSelect = 0x15; break;
+			case 4 : chanSelect = 0xF; break;
 			default : chanSelect = 0x1; NVBOutputError("Weird number of channels");
 		}
 
-// Fill in Z factors
+	// Fill in Z factors
 
 	QList<double> factors;
 
@@ -720,6 +743,26 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 							10e-9,NVBUnits("m"))
 					));
 
+	int multiVoltagePages = 1;
+
+	if (file_header.value("Scantype").toInt() == SCANTYPE_MULTIVOLTAGE) {
+		QList<double> mvolt;
+
+		multiVoltagePages = 0;
+
+		for(int vch = 1; vch <= 30; vch++) {
+			double value = file_header.value(QString("MVolt_%1").arg(vch),0).toDouble();
+			if (value == 0)	break; // A single 0 blocks all the rest
+			multiVoltagePages += 1;
+			mvolt << value;
+			}
+		nchannels /= multiVoltagePages;
+		page_data_volume *= multiVoltagePages;
+
+		result->addAxis("Bias",multiVoltagePages);
+		result->addAxisMap(new NVBAxisPhysMap(mvolt, NVBUnits("mV")));
+		}
+
 	int magic = backward ? nchannels/2 : nchannels;
 
   file.seek(0);
@@ -732,45 +775,30 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 		delete result;
     return;
     }
-  else if (format == "[Paramet32]") {
+
+	QVector<double*> pages(nchannels);
+	for(int i=0; i<nchannels; i++)
+		pages[i] = (double*) malloc(page_data_volume);
+
+	if (format == "[Paramet32]") {
     // this is uncompressed
     file.seek(0x4004);
+		NVBValueScaler<quint32,double> intscaler;
 
     quint32 * idata = (quint32*)malloc(data_points*4);
 		if (!idata) {
 			NVBOutputError("Memory allocation failure");
 			delete result;
+			foreach(double * p, pages) delete p;
 			return;
 			}
 
-		NVBValueScaler<quint32,double> intscaler;
-		NVBDataComments emptyComments;
-		QVector<axisindex_t> axes;
-		axes << 0 << 1;
-		axes.squeeze();
-
-		for (int channel = 0; channel < nchannels; channel++) {
-      file.read((char*)idata,data_points*4);
-      double * data = (double*) malloc(data_points*8);
-			if (!data) {
-				NVBOutputError("Memory allocation failure");
-				free(idata);
-				delete result;
-				return;
+		for (int mvolt = 0; mvolt < multiVoltagePages; mvolt++)
+			for (int channel = 0; channel < nchannels; channel++) {
+				file.read((char*)idata,data_points*4);
+				intscaler.overwrite_params(0,factors.at(channel%magic));
+				intscaler.scaleMem(pages[channel]+mvolt*data_points,idata,data_points);
 				}
-			intscaler.change_output(0,1,0,factors.at(channel%magic));
-			intscaler.scaleMem(data,idata,data_points);
-			result->addDataSet(
-				backward ?
-							( DATchannelNames.at(invIndexes.at(channel%magic)) + ((channel < magic) ? " (forward)" : " (backward)"))
-							: DATchannelNames.at(invIndexes.at(channel)),
-				data,
-				DATchannelDims.at(invIndexes.at(channel%magic)),
-				emptyComments,
-				axes,
-				NVBDataSet::Topography
-				);
-    }
 
     free(idata);
     }
@@ -805,41 +833,41 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
     free(zbuf);
 
 		NVBValueScaler<float,double> intscaler;
-		NVBDataComments emptyComments;
-		QVector<axisindex_t> axes;
-		axes << 0 << 1;
-		axes.squeeze();
 
-		for (int channel = 0; channel < nchannels; channel++) {
-			double * data = (double*) malloc(data_points*8);
-			if (!data) {
-				NVBOutputError("Memory allocation failure");
-				free(buf);
-				delete result;
-				return;
+		for (int mvolt = 0; mvolt < multiVoltagePages; mvolt++)
+			for (int channel = 0; channel < nchannels; channel++) {
+				intscaler.overwrite_params(0,factors.at(channel%magic));
+				intscaler.scaleMem(pages[channel]+mvolt*data_points,buf+1+data_points*(channel + mvolt*nchannels),data_points);
 				}
-			intscaler.change_output(0,1,0,factors.at(channel%magic));
-			intscaler.scaleMem(data,buf+1+data_points*channel,data_points);
-			result->addDataSet(
-				backward ?
-							( DATchannelNames.at(invIndexes.at(channel%magic)) + ((channel < magic) ? " (forward)" : " (backward)"))
-							: DATchannelNames.at(invIndexes.at(channel)),
-				data,
-				DATchannelDims.at(invIndexes.at(channel%magic)),
-				emptyComments,
-				axes,
-				NVBDataSet::Topography
-				);
-    }
 
     free(buf);
     }
   else {
 		NVBOutputError("No idea how to deal with " + format);
 		delete result;
+		foreach(double * p, pages) delete p;
 		return;
     }
-    
+
+	NVBDataComments emptyComments;
+	QVector<axisindex_t> axes;
+	axes << 0 << 1;
+	if (result->nAxes() == 3) // multivoltage
+		axes << 2;
+	axes.squeeze();
+
+	for (int channel = 0; channel < nchannels; channel++)
+		result->addDataSet(
+			backward ?
+						( DATchannelNames.at(invIndexes.at(channel%magic)) + ((channel < magic) ? " (forward)" : " (backward)"))
+						: DATchannelNames.at(invIndexes.at(channel)),
+			pages[channel],
+			DATchannelDims.at(invIndexes.at(channel%magic)),
+			emptyComments,
+			axes,
+			NVBDataSet::Topography
+			);
+
 	sources->filterAddComments(comments);
 	result->filterAddComments(comments);
   *sources << result;
