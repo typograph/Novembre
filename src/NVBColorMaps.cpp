@@ -100,6 +100,8 @@ void NVBGrayStepColorMap::addStep(double x, double value) {
 }
 
 QRgb NVBGrayStepColorMap::colorize(double z) const {
+	if (z < steps.first()) return 0xFF000000;
+	if (z > steps.last()) return 0xFFFFFFFF;
 	int index = qLowerBound(steps.begin(),steps.end(),z) - steps.begin() - 1;
 	if (index == -1) index = 0;
 

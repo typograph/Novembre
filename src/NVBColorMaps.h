@@ -139,7 +139,7 @@ class NVBRGBMixColorMap : public NVBColorMap {
 			}
 
 		virtual QRgb colorize(double z) const {
-			return (r->colorize(z) & 0xFF) + (g->colorize(z) & 0xFF00) + (b->colorize(z) & 0xFF0000) + 0xFF000000;
+			return (r->colorize(z) & 0xFF0000) + (g->colorize(z) & 0xFF00) + (b->colorize(z) & 0xFF) + 0xFF000000;
 		}
 
 		virtual NVBRGBMixColorMap * copy() { return new NVBRGBMixColorMap(r->copy(),g->copy(),b->copy()); }
