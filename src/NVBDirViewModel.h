@@ -108,6 +108,7 @@ private:
 	NVBDirModel * dirModel;
   mutable QVector<NVBFileModel*> files;
 	mutable QList<int> unloadables;
+	mutable QList<int> inprogress;
 	mutable QVector<int> rowcounts;
 	QVector<QString> * fnamecache;
 	mutable NVBDirViewModelLoader	loader;

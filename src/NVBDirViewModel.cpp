@@ -163,7 +163,8 @@ void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 
 	files.fill(0,indexes.count());
 	unloadables.clear();
-	cacheRowCounts();
+				inprogress.clear();
+				cacheRowCounts();
 	endResetModel();
 }
 
@@ -179,10 +180,12 @@ int NVBDirViewModel::rowCount( const QModelIndex & parent ) const
 
 bool NVBDirViewModel::loadFile(int index) const
 {
-	if (files.at(index)) return true;
+				if (inprogress.contains(index)) return false;
+				if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 	
 	loader.loadFile(dirModel->getAllFiles(indexes[index]));
+				inprogress.append(index);
 
 	return false;
 }
@@ -358,10 +361,10 @@ QModelIndex NVBDirViewModel::parent( const QModelIndex & index ) const
 
 void NVBDirViewModel::parentInsertingRows(const QModelIndex & parent, int first, int last)
 {
-		Q_UNUSED(first)
-		Q_UNUSED(last)
-		if (dirindex.isValid() && parent == dirindex)
-				operationRunning = true;
+	Q_UNUSED(first)
+	Q_UNUSED(last)
+	if (dirindex.isValid() && parent == dirindex)
+		operationRunning = true;
 }
 
 void NVBDirViewModel::parentInsertedRows(const QModelIndex & /*parent*/, int first, int last)
@@ -410,22 +413,27 @@ void NVBDirViewModel::parentRemovingRows(const QModelIndex & parent, int first, 
 void NVBDirViewModel::parentRemovedRows(const QModelIndex & /*parent*/, int first, int last)
 {
 	if (operationRunning) {
-		rowcounts.remove(first,last-first+1);
-		for(int i = 0; i < unloadables.size(); i++) {
-			if (unloadables.at(i) > last)
-				unloadables[i] -= last-first+1;
-			else if (unloadables.at(i) >= first)
-				unloadables.removeAt(i--);
-			}
-		for (int i = first; i <= last; i++)
-			if (files.at(i))
-				delete files.at(i);
-			
-		files.remove(first,last-first+1);
-		for (int i = first; i <= last; i += 1)
-			indexes.removeAt(i);
+		int fc = dirModel->folderCount(dirindex);
+		first -= fc;
+		last -= fc;
+		first = qMax(first,0);
+		if (first <= last) {
+			rowcounts.remove(first,last-first+1);
+			for(int i = 0; i < unloadables.size(); i++) {
+				if (unloadables.at(i) > last)
+					unloadables[i] -= last-first+1;
+				else if (unloadables.at(i) >= first)
+					unloadables.removeAt(i--);
+				}
+			for (int i = first; i <= last; i++) {
+				if (files.at(i))
+					files.at(i)->release();
+			files.remove(first,last-first+1);
+			for (int i = first; i <= last; i += 1)
+				indexes.removeAt(i);
 
 //     rowcounts.resize(dirModel->fileCount(dirindex));
+			}
 		endRemoveRows();
 		operationRunning = false;
 		}
