@@ -163,8 +163,8 @@ void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 
 	files.fill(0,indexes.count());
 	unloadables.clear();
-				inprogress.clear();
-				cacheRowCounts();
+	inprogress.clear();
+	cacheRowCounts();
 	endResetModel();
 }
 
@@ -180,12 +180,12 @@ int NVBDirViewModel::rowCount( const QModelIndex & parent ) const
 
 bool NVBDirViewModel::loadFile(int index) const
 {
-				if (inprogress.contains(index)) return false;
-				if (files.at(index)) return true;
+	if (inprogress.contains(index)) return false;
+	if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 	
 	loader.loadFile(dirModel->getAllFiles(indexes[index]));
-				inprogress.append(index);
+	inprogress.append(index);
 
 	return false;
 }
@@ -205,8 +205,10 @@ void NVBDirViewModel::fileLoaded(NVBFile* file, QString name)
 		return;
 		}
 
-	if (file)
+	if (file) {
 		files[index] = new NVBFileModel(file);
+		inprogress.removeOne(index);
+		}
 	else
 		unloadables << index;
 
@@ -240,18 +242,18 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 				else
 					return extraDataAt(index.row(),role);
 				}
-			else if (role == Qt::DisplayRole) {
-				const QAbstractItemModel * m = indexes.at(index.row()).model();
-				QModelIndex pi = indexes.at(index.row()).parent();
-				int row = indexes.at(index.row()).row();
-				int c = m->columnCount(pi);
-				QStringList texts;
-				for(int i=0;i<c;i++) {
-					texts << m->index(row,i,pi).data(Qt::DisplayRole).toString();
-					if (texts.last().isEmpty()) texts.removeLast();
-					}
-				return texts.join("\n");
+			}
+		if (role == Qt::DisplayRole /*StatusTipRole*/) {
+			const QAbstractItemModel * m = indexes.at(index.row()).model();
+			QModelIndex pi = indexes.at(index.row()).parent();
+			int row = indexes.at(index.row()).row();
+			int c = m->columnCount(pi);
+			QStringList texts;
+			for(int i=0;i<c;i++) {
+				texts << m->index(row,i,pi).data(Qt::DisplayRole).toString();
+				if (texts.last().isEmpty()) texts.removeLast();
 				}
+			return texts.join("\n");
 			}
 		return indexes.at(index.row()).data(role);
 		}
@@ -425,9 +427,9 @@ void NVBDirViewModel::parentRemovedRows(const QModelIndex & /*parent*/, int firs
 				else if (unloadables.at(i) >= first)
 					unloadables.removeAt(i--);
 				}
-			for (int i = first; i <= last; i++) {
+			for (int i = first; i <= last; i++)
 				if (files.at(i))
-					files.at(i)->release();
+					delete files.at(i);
 			files.remove(first,last-first+1);
 			for (int i = first; i <= last; i += 1)
 				indexes.removeAt(i);
@@ -533,8 +535,9 @@ QMimeData * NVBDirViewModel::mimeData(const QModelIndexList &ixs) const {
 	QModelIndex i = ixs.first();
 
 	if (mode == SingleImage) {
+		if (!loadFile(i.row())) return 0;
 		QMimeData * md = new QMimeData();
-		md->setImageData(i.data(Qt::DecorationRole));
+		md->setImageData(imgConverter->pixmapFromFile(files.at(i.row())->file()));
 		return md;
 	}
 

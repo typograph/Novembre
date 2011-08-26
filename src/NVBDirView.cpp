@@ -447,9 +447,12 @@ void NVBDirView::drawHeader(int index, int y, QPainter * painter) const
 
 	QRect hrect = QRect(leftMargin(),y,viewport()->width()-leftMargin()-rightMargin(),headerHeight());
 
-	style()->drawItemText(painter,hrect,Qt::AlignCenter,palette(),true,model()->index(index,0).data(Qt::DisplayRole).toString(),QPalette::WindowText);
+	QString text = model()->index(index,0).data(Qt::DisplayRole).toString().split("\n").join("   ");
+//	QString text = model()->index(index,0).data(Qt::StatusTipRole).toStringList().join("   ");
 
-	QRect trect = style()->itemTextRect(painter->fontMetrics(), hrect, Qt::AlignCenter, true, model()->index(index,0).data(Qt::DisplayRole).toString());
+	style()->drawItemText(painter,hrect,Qt::AlignCenter,palette(),true,text,QPalette::WindowText);
+
+	QRect trect = style()->itemTextRect(painter->fontMetrics(), hrect, Qt::AlignCenter, true, text);
 	QLine hline = QLine(trect.right() + leftMargin(),trect.center().y(),hrect.right(),trect.center().y());
 	painter->drawLine(hline);
 	hline = QLine(leftMargin(),trect.center().y(),trect.left()-rightMargin(),trect.center().y());
@@ -552,6 +555,7 @@ void NVBDirView::drawGridItems(int start, int end, int y, QPainter *painter) con
 			option.state &= ~( QStyle::State_Selected | QStyle::State_HasFocus | QStyle::State_Active );
 
 		itemDelegate()->paint(painter, option, dindex);
+//		itemDelegate()-> TODO paint voltage
 		}
 }
 
@@ -565,7 +569,7 @@ void NVBDirView::setModel(QAbstractItemModel * m)
 		connect(m,SIGNAL(modelAboutToBeReset()),this,SLOT(scrollToTop()));
 		connect(m,SIGNAL(modelReset()),this,SLOT(invalidateCache()));
 		connect(m,SIGNAL(rowsRemoved(QModelIndex,int,int)),this,SLOT(rowsRemoved(QModelIndex,int,int)));
-		connect(m,SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),this,SLOT(rowsAboutToBeInserted(QModelIndex,int,int)));
+//		connect(m,SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),this,SLOT(rowsAboutToBeInserted(QModelIndex,int,int)));
 		}
 
 	invalidateCache();
@@ -578,7 +582,7 @@ int NVBDirView::totalHeight()
 	int tHeight;
 
 	if (oneItemPerFile)
-		tHeight = (gridSize.height()+midMargin())*((model()->rowCount()+pages_per_row-1)/pages_per_row);
+		tHeight = (gridSize.height() + midMargin())*((model()->rowCount()+pages_per_row-1)/pages_per_row) - midMargin();
 	else {
 		tHeight = (headerHeight() + headerMargin() + midMargin())*model()->rowCount() - midMargin();
 
@@ -734,10 +738,7 @@ void NVBDirView::scrollContentsBy(int dx, int dy) {
 		soft_shift -= dy;
 		voffset -= dy;
 		while (soft_shift < 0) {
-			if (oneItemPerFile)
-				top_row -= pages_per_row;
-			else
-				updateTopRow(top_row,top_row-1);
+			updateTopRow(top_row,top_row - (oneItemPerFile ? pages_per_row : 1));
 			soft_shift += fileHeight(top_row) + midMargin();
 			}
 		while (soft_shift > fileHeight(top_row) + midMargin()) {
@@ -766,7 +767,7 @@ void NVBDirView::calculateVOffset() {
 	if (top_row) {
 
 		if (oneItemPerFile)
-			voffset = (gridSize.height()+midMargin())*(top_row/pages_per_row);
+			voffset = (gridSize.height() + midMargin())*(top_row/pages_per_row);
 		else {
 			voffset = (headerHeight() + headerMargin() + midMargin())*top_row;
 
