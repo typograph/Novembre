@@ -214,6 +214,13 @@ public:
 	
   ~NVBValueScaler() {;}
 
+	// Dangerous function
+
+	void overwrite_params( double offset, double multiplier ) {
+		scale_offset = offset;
+		scale_multiplier = multiplier;
+	}
+
   // Input _was_ multiplied and shifted;
   void shift_input(double offset) { scale_offset += offset*scale_multiplier; }
   void multiply_input(double mult) { scale_multiplier *= mult; }
