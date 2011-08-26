@@ -7,12 +7,12 @@ include(Novembre.pri)
 INCLUDEPATH += src/qwtplot3d
 
 contains(CONFIG,NVBStatic) {
- CONFIG -= NVBShared
+	CONFIG -= NVBShared
 } else {
- contains(CONFIG,NVBShared) {
- } else {
-  CONFIG += NVBShared
- }
+	contains(CONFIG,NVBShared) {
+	} else {
+		CONFIG += NVBShared
+	}
 }
 
 contains(CONFIG,NVBStatic) {

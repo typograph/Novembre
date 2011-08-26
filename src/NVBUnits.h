@@ -16,6 +16,7 @@
 #include <math.h>
 #include <QtCore/QMetaType>
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 #include <QtCore/QPointF>
 #include "NVBLogger.h"
 
@@ -29,6 +30,7 @@ private:
 	QString base;
 	double mult;
 	mutable QString dimstr;
+	static QStringList recognizedUnits;
 public:
 	/// Constructs an invalid unit
 	NVBUnits():base(),mult(1) {;}

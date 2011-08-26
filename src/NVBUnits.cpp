@@ -11,8 +11,40 @@
 //
 
 #include <stdlib.h>
-#include <QtCore/QStringList>
 #include "NVBUnits.h"
+
+// Recognized units that are not complex (and have more than one letter). Lowcase
+QStringList NVBUnits::recognizedUnits = QStringList()
+// Base SI units
+	<< "cd"   // candela
+	<< "mol"  // mole
+// Derived SI units
+	<< "hz"   // Hertz
+	<< "rad"  // radian
+// OK	<< "sr"   // steradian
+	<< "pa"   // pascal
+// OK	<< "wb"   // weber
+// OK	<< "lm"   // lumen
+// OK	<< "lx"   // lux
+// OK	<< "bq"   // becquerel
+	<< "gy"   // gray
+	<< "sv"   // sievert
+	<< "kat"  // katal
+// officially accepted for use with the SI
+	<< "min"  // minutes
+	<< "sec"  // seconds // Just because it can be abbreviated this way
+	<< "np"   // neper
+	<< "ev"   // electron-volt
+	<< "da"   // dalton
+	<< "bar"  // bar
+	<< "atm"  // atmosphere
+	<< "deg"  // degrees
+// CGS
+	<< "oe"   // Oersted
+	<< "mw"   // Maxwell
+// TODO think about statvolt, abcoulomb and other CGS-related units
+//	<< "" //
+	;
 
 QChar NVBUnits::charFromOrder(int order, int * neworder)
 {
@@ -102,39 +134,6 @@ double NVBUnits::multFromChar(const QChar& c)
       default     : return 0;
       }
 }
-
-// Recognized units that are not complex (and have more than one letter). Lowcase
-const QStringList recognizedUnits = QStringList()
-// Base SI units
-	<< "cd"   // candela
-	<< "mol"  // mole
-// Derived SI units
-	<< "hz"   // Hertz
-	<< "rad"  // radian
-// OK	<< "sr"   // steradian 
-	<< "pa"   // pascal
-// OK	<< "wb"   // weber
-// OK	<< "lm"   // lumen
-// OK	<< "lx"   // lux
-// OK	<< "bq"   // becquerel
-	<< "gy"   // gray
-	<< "sv"   // sievert
-	<< "kat"  // katal
-// officially accepted for use with the SI
-	<< "min"  // minutes
-	<< "sec"  // seconds // Just because it can be abbreviated this way
-	<< "np"   // neper
-	<< "ev"   // electron-volt
-	<< "da"   // dalton
-	<< "bar"  // bar
-	<< "atm"  // atmosphere
-	<< "deg"  // degrees
-// CGS
-	<< "oe"   // Oersted
-	<< "mw"   // Maxwell
-// TODO think about statvolt, abcoulomb and other CGS-related units
-//	<< "" // 
-	;
 
 NVBUnits::NVBUnits(const QString& s, bool scalable):mult(1)
 {

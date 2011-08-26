@@ -77,13 +77,14 @@ CONFIG += qt
 contains(CONFIG,NVBStatic) {
   CONFIG -= dll
   CONFIG += static
+	OBJECTS_DIR = obj
 } else {
   CONFIG += dll
+	OBJECTS_DIR = objPIC
 }
 
 TARGET = lib/nvb
 MOC_DIR = moc
-OBJECTS_DIR = objPIC
 TEMPLATE = lib
 DESTDIR = .
 
