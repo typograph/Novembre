@@ -11,6 +11,34 @@ contains(CONFIG,NVBLog){
     src/NVBLogUtils.cpp
 }
 
+contains(CONFIG,NVBStatic) {
+
+	contains(CONFIG,debug) {
+		win32 : LIBS += -Ldebug/lib/files
+	} else {
+		win32 : LIBS += -Lrelease/lib/files
+	}
+
+	unix : LIBS += -Llib/files
+	LIBS += \
+		-lrhk \
+		-lcreatec \
+#		-lwinspm \
+		-lnanonis
+# libnvb should be included after everything, since everything depends on it
+
+	LIBS -= -lnvb
+	LIBS += -lnvb
+
+# libopengl32 has to be included after libnvb
+	contains(CONFIG, NVB3DView) {
+		win32 : LIBS += -lopengl32 -lglu32
+		unix : LIBS += -lGL -lGLU
+	}
+} else {
+	DEFINES += NVB_PLUGINS=\\\"$$NVB_PLUGIN_INSTALL_PATH\\\"
+}
+
 # STMFile tools
 HEADERS += \
   src/NVBFileBundle.h \
@@ -87,11 +115,6 @@ QT += core gui
 win32: RC_FILE = icons/novembre.rc
 
 macx : ICON = icons/nvb.icns
-
-contains(CONFIG,NVBStatic) {
-} else {
-DEFINES += NVB_PLUGINS=\\\"$$NVB_PLUGIN_INSTALL_PATH\\\"
-}
 
 target.path = $$NVB_BIN_INSTALL_PATH
 

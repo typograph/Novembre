@@ -26,8 +26,6 @@
 #include "NVBAxisMaps.h"
 #include "NVBColorMaps.h"
 #include <QtCore/QDir>
-#include "NVBFileInfo.h"
-#include "NVBFile.h"
 #include <QtCore/QRectF>
 #include <QtCore/QString>
 #include <QtCore/QDateTime>

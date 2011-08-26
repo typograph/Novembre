@@ -123,7 +123,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 							if (tv.isValid())
 								pans << tv;
 							else
-								pans << comments.value(static_cast<NVBVerbatimToken*>(list.at(i++))->sparam,QVariant());
+								pans << comments.value(static_cast<NVBVerbatimToken*>(list.at(i-1))->sparam,QVariant());
 							break;
 							}
 						case NVBToken::FileParam : {
