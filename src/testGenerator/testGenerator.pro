@@ -16,6 +16,7 @@ HEADERS += \
 	../NVBFileInfo.h \
 	../NVBFile.h \
 	../NVBAxis.h \
+	../NVBAxisSelectorHelpers.h \
 	../NVBAxisSelector.h \
 	../NVBScaler.h \
 	../NVBAxisMaps.h \
@@ -36,6 +37,7 @@ SOURCES += \
 	../NVBDataSourceModel.cpp \
 	../NVBFileInfo.cpp \
 	../NVBFile.cpp \
+	../NVBAxisSelectorHelpers.cpp \
 	../NVBAxisSelector.cpp \
 	../NVBColorMaps.cpp \
 	../NVBMap.cpp \
@@ -71,6 +73,9 @@ SOURCES += \
 LIBS += -lqwt6
 
 CONFIG += qt debug
+
+INCLUDEPATH += /usr/include/qwt6
+LIBS += -lqwt6
 
 MOC_DIR = .
 DESTDIR = .

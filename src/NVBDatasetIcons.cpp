@@ -27,9 +27,9 @@ QIcon createDatasetIcon(const NVBDataSet * set) {
 			return QIcon(new NVB2DIconEngine(set));
 		default:
 			NVBAxisSelector s;
-			s.addCase(1).addAxis().need(2,NVBSelectorAxis::Units);
-			s.addCase(2).addAxis().need(2);
-			s.addCase(3).addAxis();
+			s.addCase(1).addAxis().needMore(1,NVBSelectorRules::SameUnits);
+			s.addCase(2).setDataMinAxes(2);
+			s.addCase(3).setDataNAxes(1);
 			switch (s.instantiate(set).matchedCase()) {
 				case 0:
 					NVBOutputError("Dataset with no axes");
@@ -50,7 +50,7 @@ QList<QIcon> createDataIcons(const NVBFile * file) {
 	return icons;
 }
 
-QIcon createSpecOverlayIcon(const NVBDataSet * set, const NVBDataSource * ds, const NVBAxisMapping & mapping) {
+QIcon createSpecOverlayIcon(const NVBDataSet * set, const NVBDataSet * axessource, const NVBAxisMapping & mapping) {
 	if (!set) return QIcon();
 	
 	switch (set->type()) {
@@ -60,9 +60,9 @@ QIcon createSpecOverlayIcon(const NVBDataSet * set, const NVBDataSource * ds, co
 			break;
 		default:
 			NVBAxisSelector s;
-			s.addCase(1).addAxis().need(2,NVBSelectorAxis::Units);
-			s.addCase(2).addAxis().need(2);
-			s.addCase(3).addAxis();
+			s.addCase(1).addAxis().needMore(1,NVBSelectorRules::SameUnits);
+			s.addCase(2).setDataMinAxes(2);
+			s.addCase(3).setDataNAxes(1);
 			switch (s.instantiate(set).matchedCase()) {
 				case 0:
 					NVBOutputError("Dataset with no axes");
@@ -74,88 +74,55 @@ QIcon createSpecOverlayIcon(const NVBDataSet * set, const NVBDataSource * ds, co
 				}
 		}
 	
-	if (!ds || !mapping.map)
+	if (!axessource || !mapping.map)
 		return QIcon(new NVB2DIconEngine(set));
 	
 	if (mapping.axes.count() == 1)
-		return QIcon(new NVBMixTSIconEngine(set,dynamic_cast<NVBAxisPointMap*>(mapping.map),ds->axis(mapping.axes.first()).length()));
+		return QIcon(new NVBMixTSIconEngine(set,dynamic_cast<NVBAxisPointMap*>(mapping.map),axessource->axisAt(mapping.axes.first()).length()));
 	if (mapping.axes.count() == 2)
-		return QIcon(new NVBMixTSIconEngine(set,dynamic_cast<NVBAxes2DGridMap*>(mapping.map),ds->axis(mapping.axes.first()).length(),ds->axis(mapping.axes.last()).length()));
+		return QIcon(new NVBMixTSIconEngine(set,dynamic_cast<NVBAxes2DGridMap*>(mapping.map),axessource->axisAt(mapping.axes.first()).length(),axessource->axisAt(mapping.axes.last()).length()));
 	
 	return QIcon(new NVB2DIconEngine(set));
 }
 
-NVBAxisMapping getMapping(const NVBSelectorFileInstance & inst, const NVBDataSource * ds, NVBAxes2DGridMap * & mapToDelete) {
-	
-	if (mapToDelete) {
-		delete mapToDelete;
-		mapToDelete = 0;
-		}
-	
-	if (!ds)
-		ds = inst.matchedDatasources().first();
-	
-	NVBSelectorDataInstance dinst = inst.matchedInstance(ds).matchedInstances().first();
-	
-	if (dinst.matchedCase() == 1) {
-		NVBAxis a = dinst.matchedAxis(0);
-		foreach(NVBAxisMapping m, a.maps())
-			if (m.map->mappingType() == NVBAxisMap::Point) {
-				return m;
-				break;
-				}
-		}
-	else {
-		mapToDelete = new NVBAxes2DGridMap(dinst.matchedAxis(0).physMap(),dinst.matchedAxis(1).physMap());
-		NVBAxisMapping mapping;
-		mapping.axes << dinst.matchingData()->parentIndex(dinst.matchedAxes().at(0));
-		mapping.axes << dinst.matchingData()->parentIndex(dinst.matchedAxes().at(1));
-		mapping.map = mapToDelete;
-		return mapping;
-		}
-		
-	return NVBAxisMapping();
-}
-
-
 QList<QIcon> createSpecOverlayIcons(const NVBFile* file) {
 		
 	NVBAxisSelector s;
-	s.addCase(1).addAxisByType<NVBPhysPoint>(); // One axis for data taken on different points
-	s.addCase(2).setType(NVBDataSet::Spectroscopy).addAxisByUnits(NVBUnits("m")).need(2); // Two axes for grid
+	s.addCase(1).addMapByValueType(NVBAxisMap::Point); // One axis for data taken on different points
+	s.addCase(2).setDataType(NVBDataSet::Spectroscopy).addAxisByUnits(NVBUnits("m")).needMore(1); // Two axes for grid
 
 	NVBSelectorFileInstance inst = s.instantiate(file);
 	
 	if (inst.matchedInstances().isEmpty()) return createDataIcons(file);
 	
-	// Datasources that didn't match 1 or 2 get one of the others
 	// Datasources that match, take themselves as map.
 	// Datasources that match several times (or 1 & 2) use first type 1 match
 	
-	NVBAxes2DGridMap * mapToDelete = 0; // It's easier to keeptrack this way
-	NVBAxisMapping mapping;
-
-	mapping = getMapping(inst,inst.matchedDatasources().first(),mapToDelete);
+	// Datasources that didn't match 1 or 2 get one of the others
 	
 	QList<QIcon> icons;
 
-	NVB_FOREACH(NVBDataSource * ds, file) {
-		if (ds != inst.matchedDatasources().first() && inst.matchedDatasources().contains(ds)) {
-			mapping = getMapping(inst,ds,mapToDelete);
-			if (!mapping.map) {
-				NVBOutputError("Finding appropriate point map failed");
-				return createDataIcons(file);
+	NVBAxisMapping pointmap;
+	const NVBDataSet * pointdata;
+	
+	if (!inst.matchedInstances(1).isEmpty()) {
+		NVBSelectorDataInstance dinst = inst.matchedInstances(1).first().matchedInstances(1).first();
+		pointmap = dinst.matchedMaps().first();
+		pointdata = dinst.matchingData();
 				}
+	else {
+		NVBSelectorDataInstance dinst = inst.matchedInstances(2).first().matchedInstances(2).first();
+		pointmap.map = new NVBAxes2DGridMap(dinst.matchedAxis(0).physMap(),dinst.matchedAxis(1).physMap());
+		pointmap.axes = dinst.matchedAxes();
+		pointdata = dinst.matchingData();
 			}
 			
+	NVB_FOREACH(NVBDataSource * ds, file)
 		Q_FOREACH(NVBDataSet * dset, ds->dataSets())
-			icons << createSpecOverlayIcon(dset,inst.matchedDatasources().first(),mapping);
-		}
+			icons << createSpecOverlayIcon(dset,pointdata,pointmap);
 
-	if (mapToDelete) {
-		delete mapToDelete;
-		mapToDelete = 0;
-		}
+	if (inst.matchedInstances(1).isEmpty())
+		delete pointmap.map;
 
 	return icons;
 }
@@ -166,8 +133,8 @@ NVB2DIconEngine::NVB2DIconEngine(const NVBDataSet* dataset)
 	, dset(0)
 {
 	cache << QPixmap() << QPixmap() << QPixmap() << QPixmap();
-	selector.addCase(CASE_SAME_UNITS).addAxis().need(2,NVBSelectorAxis::Units);
-	selector.addCase(CASE_2_AXES).addAxis().need(2);
+	selector.addCase(CASE_SAME_UNITS).addAxis().needMore(1,NVBSelectorAxis::SameUnits);
+	selector.addCase(CASE_2_AXES).setDataMinAxes(2);
 	setSource(dataset);
 }
 

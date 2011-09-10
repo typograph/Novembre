@@ -76,11 +76,41 @@ class NVBDataSet : public QObject {
 		inline virtual const double * data() const { return d; }
     QVector<axissize_t> sizes() const;
     axissize_t sizeAt(axisindex_t i) const;
+		const NVBAxis & axisAt(axisindex_t i) const ;
+    inline axisindex_t nAxes() const { return as.count(); }
+		
 		inline axisindex_t parentIndex(axisindex_t i) const { return as.at(i); }
 		inline const QVector<axisindex_t> & parentIndexes() const { return as; }
 		inline axisindex_t indexAtParent(axisindex_t i) const { return as.indexOf(i); }
-		const NVBAxis & axisAt(axisindex_t i) const ;
-    inline axisindex_t nAxes() const { return as.count(); }
+		
+		template< template<class T> class CTo, template<class T> class CFrom >
+		CTo<axisindex_t> mapFromSource(CFrom<axisindex_t> indexes) const {
+			CTo< axisindex_t > r;
+			foreach(axisindex_t i, indexes)
+				r.append(indexAtParent(i));
+			return r;
+			}
+		
+		inline QList<axisindex_t> mapFromSource(QList<axisindex_t> indexes) const
+			{ return mapFromSource<QList,QList>(indexes); }
+		inline QVector<axisindex_t> mapFromSource(QVector<axisindex_t> indexes) const
+			{ return mapFromSource<QVector,QVector>(indexes); }
+
+		NVBAxisMapping mapFromSource(const NVBAxisMap * map) const;
+		NVBAxisMapping mapFromSource(const NVBAxisMapping & mapping) const;
+
+		template< template<class T> class CTo, template<class T> class CFrom >
+		CTo<axisindex_t> mapToSource(CFrom<axisindex_t> indexes) const {
+			CTo< axisindex_t > r;
+			foreach(axisindex_t i, indexes)
+				r.append(parentIndex(i));
+			return r;
+			}
+		
+		inline QList<axisindex_t> mapToSource(QList<axisindex_t> indexes) const
+			{ return mapToSource<QList,QList>(indexes); }
+		inline QVector<axisindex_t> mapToSource(QVector<axisindex_t> indexes) const
+			{ return mapToSource<QVector,QVector>(indexes); }
 
 		const NVBColorMap * colorMap() const ;
 		inline void setColorMap(NVBColorMap * m) { clr = m; }
@@ -160,6 +190,8 @@ class NVBDataSource : public QObject {
 		virtual const QList< NVBDataSet * > & dataSets() const = 0;
 
 		virtual const NVBColorMap * defaultColorMap() const;
+		
+		NVBAxisMapping getMapping(const NVBAxisMap * map) const;
 		
 		/// \returns the comment for the given \a key
 		virtual NVBVariant getComment(const QString& key, bool recursive = true) const;
