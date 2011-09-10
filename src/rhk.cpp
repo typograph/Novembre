@@ -528,7 +528,7 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 			for(np = 1; np < header.y_size && xposdata[np] == xposdata[0]; np++) {;}
 			for(nx = 1; nx*np < header.y_size && yposdata[nx*np] == yposdata[0]; nx++) {;}
 			for(ny = 1; ny*nx*np < header.y_size && xposdata[ny*nx*np] == xposdata[0]; ny++) {;}
-			if (ny * nx * np != header.y_size) {
+			if (ny * nx * np != header.y_size || (nx == 1 && ny == 1)) {
 				// There's probably no grid.
 				// There might be more than one spectrum per point, though.
 				nx = 0;
@@ -562,10 +562,6 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 		status |= 1;
 		}
 	if (nx != 0) {
-		if (nx == 1)
-			NVBOutputPMsg(QString("X axis length 1. This should be taken better care of. Please send file %1 to the developer.").arg(file.fileName()));
-		if (ny == 1)
-			NVBOutputPMsg(QString("Y axis length 1. This should be taken better care of. Please send file %1 to the developer.").arg(file.fileName()));
 		s.addAxisByLength(nx);
 		s.addAxisByLength(ny);
 		status |= 2;
