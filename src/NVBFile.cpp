@@ -68,7 +68,8 @@ void NVBFile::filterAddComments(NVBDataComments& newComments)
 		}
 		
 	if (comments.isEmpty()) {
-		NVBOutputPMsg("Adding first comments to a non-empty file object. This was probably not intended.");
+		// It can happen, actually - if more than 2 sets have totally different comments
+// 		NVBOutputPMsg("Adding first comments to a non-empty file object. This was probably not intended.");
 		return;
 		}
 	
