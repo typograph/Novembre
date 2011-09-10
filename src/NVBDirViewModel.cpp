@@ -114,6 +114,7 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 	, fnamecache(0)
 	, loader(factory)
 	, operationRunning(false)
+	, mode(Normal)
 {
 	
 	connect(&loader,SIGNAL(fileReady(NVBFile*,QString)),this,SLOT(fileLoaded(NVBFile*,QString)));
