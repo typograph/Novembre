@@ -18,99 +18,87 @@
 #define NVBAXISSELECTOR_H
 
 #include <QtCore/QList>
+#include <QtCore/QMap>
 #include <QtGui/QColor>
 #include "NVBUnits.h"
 #include "NVBAxis.h"
 #include "NVBDataGlobals.h"
-#include <QtCore/QMap>
 #include "NVBDataSource.h"
+#include "NVBAxisSelectorHelpers.h"
 
 class NVBDataSet;
 class NVBDataSource;
-struct NVBSelectorAxisPrivate;
+
+struct NVBSelectorAxisInstance;
 class NVBSelectorDataInstance;
 class NVBSelectorSourceInstance;
 class NVBSelectorFileInstance;
 
-struct NVBSelectorAxis {
-	NVBSelectorAxisPrivate * p;
-
-	enum NVBAxisPropertyType {
-		Invalid = 0,
-		Index,
-		Name,
-		MinLength,
-		MaxLength,
-		Length,
-		Units,
-		MapDimensions,
-		TypeID
-	};
-
-	NVBSelectorAxis();
-	NVBSelectorAxis(const NVBSelectorAxis & other);
-	~NVBSelectorAxis();
-	
-	NVBSelectorAxis & byName(QString name);
-	NVBSelectorAxis & byIndex(int index);
-	NVBSelectorAxis & byMinLength(int length);
-	NVBSelectorAxis & byMaxLength(int length);
-	NVBSelectorAxis & byLength(int length);
-
-	NVBSelectorAxis & byUnits(NVBUnits dimension);
-	NVBSelectorAxis & byMapDimensions(int dimension);
-	NVBSelectorAxis & byTypeId(int typeId);
-	
-	bool hasRuleFor(NVBAxisPropertyType type);
-	
-	template <class T>
-	inline NVBSelectorAxis & byType() { return byTypeId(qMetaTypeId<T>()); }
-
-	NVBSelectorAxis & need(int more_axes, NVBAxisPropertyType t = Invalid);
-
-	bool matches(const NVBAxis & axis, const NVBAxis & buddy = NVBAxis() ) const;
-	bool needMore(int matched) const;
-	
-};
-
-struct NVBSelectorCase {
+class NVBSelectorCase {
+friend class NVBSelectorSourceInstance;
+friend class NVBSelectorFileInstance;
+public:
 	enum Type { Undefined, AND, OR };
 	int id;
-	Type t;
-	NVBDataSet::Type target;
-	QList<NVBSelectorCase> cases;
-	QList<NVBSelectorAxis> axes;
-
-	bool optimal; // to save on optimize() calls
 	
-	NVBSelectorCase(int caseId = 0, Type caseType = Undefined)
+private:
+	Type t;
+// 	NVBDataSet::Type target;
+	QList<NVBSelectorCase> cases;
+	NVBSelectorDataset dataset;
+
+// 	bool optimal; // to save on optimize() calls
+	
+public:
+	
+	NVBSelectorCase(int caseId = 0)
 	: id(caseId)
-	, t(caseType)
-	, optimal(true)
+	, t(Undefined)
+// 	, optimal(true)
 	{;}
 
 	NVBSelectorCase(const NVBSelectorCase & other) ;
 
-	NVBSelectorCase & setType(NVBDataSet::Type type);
-	
-	NVBSelectorCase & addCase(int caseId = 0, Type caseType = Undefined);
+	NVBSelectorCase & addCase(int caseId = 0);
 	inline NVBSelectorCase & lastCase() { return (t == OR) ? cases.last() : *this; }
 
-	NVBSelectorAxis & addAxis();
-	inline NVBSelectorAxis & addAxisByName(QString name) { return addAxis().byName(name); }
-	inline NVBSelectorAxis & addAxisByIndex(int index) { return addAxis().byIndex(index); }
-	inline NVBSelectorAxis & addAxisByMinLength(int length) { return addAxis().byMinLength(length); }
-	inline NVBSelectorAxis & addAxisByMaxLength(int length) { return addAxis().byMaxLength(length); }
-	inline NVBSelectorAxis & addAxisByLength(int length) { return addAxis().byLength(length); }
+	NVBSelectorCase & setDataType(NVBDataSet::Type type);
+	NVBSelectorCase & setDataName(QString name);
+	NVBSelectorCase & setDataUnits(NVBUnits units);
+	NVBSelectorCase & setDataNAxes(axisindex_t naxes);
+	NVBSelectorCase & setDataMinAxes(axisindex_t naxes);	
+	NVBSelectorCase & setDataMaxAxes(axisindex_t naxes);	
 
-	inline NVBSelectorAxis & addAxisByUnits(NVBUnits dimension) { return addAxis().byUnits(dimension); }
-	inline NVBSelectorAxis & addAxisByMapDimensions(int dimension) { return addAxis().byMapDimensions(dimension); }
-	inline NVBSelectorAxis & addAxisByTypeId(int typeId) { return addAxis().byTypeId(typeId); }
+	NVBSelectorAxis addAxis();
+	inline NVBSelectorAxis addAxisByName(QString name) { return addAxis().byName(name); }
+	inline NVBSelectorAxis addAxisByIndex(int index) { return addAxis().byIndex(index); }
+	inline NVBSelectorAxis addAxisByMinLength(int length) { return addAxis().byMinLength(length); }
+	inline NVBSelectorAxis addAxisByMaxLength(int length) { return addAxis().byMaxLength(length); }
+	inline NVBSelectorAxis addAxisByLength(int length) { return addAxis().byLength(length); }
+	inline NVBSelectorAxis addAxisByUnits(NVBUnits dimension) { return addAxis().byUnits(dimension); }
+
+	NVBSelectorMap addMap();
+	inline NVBSelectorMap addMapByDimensions(axisindex_t d) { return addMap().byDimensions(d); }
+	inline NVBSelectorMap addMapByMinDimensions(axisindex_t d) { return addMap().byMinDimensions(d); }
+	inline NVBSelectorMap addMapByMapType(NVBAxisMap::MapType t) { return addMap().byMapType(t); }
+	inline NVBSelectorMap addMapByValueType(NVBAxisMap::ValueType t) { return addMap().byValueType(t); }
+	inline NVBSelectorMap addMapByTypeId(int typeId) { return addMap().byTypeID(typeId); }
 
 template <class T>
-	inline NVBSelectorAxis & addAxisByType() { return addAxisByTypeId(qMetaTypeId<T>()); }
+	inline NVBSelectorMap & addMapByType() { return addMapByTypeId(qMetaTypeId<T>()); }
 
 	bool matches(const NVBDataSet * dataSet);
+	NVBSelectorAxisInstanceList match(const NVBDataSet * dataSet) const
+		{ return dataset.match(dataSet); }
+	// No idea how to implement this function
+	// First, dataset rules cannot be instantiated well
+	// Second, map coverage is meaningless
+	// 
+	// On the other hand, this function is useful
+	// e.g. in icon drawing, since selecting 2 axes
+	// in all datasets is faster than in one.
+// 	NVBSelectorAxisInstanceList match(const NVBDataSource * dataSource) const
+// 		{ return dataset.match(dataSource); }
 
 	/// Returns an instance, that reports all datasources that have matching datasets
 	NVBSelectorFileInstance instantiate(const QList<NVBDataSource *> * dataSources);
@@ -127,23 +115,12 @@ template <class T>
 	/// Returns an instance, that has info on all matching axes from the selector (may be invalid if no match)
 	NVBSelectorDataInstance instantiate(const NVBDataSet * dataSet);
 
-	void optimize();
+// 	void optimize();
 //	NVBSelectorAxis & addDependentAxis();
 };
 
 typedef NVBSelectorCase NVBAxisSelector;
 // typedef NVBSelectorCase NVBAxesProps;
-
-struct NVBSelectorAxisInstance {
-	int additionalAxes;
-	QList<axisindex_t> axes;
-// 	QList<NVBAxisMapping> maps;
-	
-	NVBSelectorAxisInstance(int addA = 0) : additionalAxes(addA) {;} // the list is empty anyway
-	NVBSelectorAxisInstance(int addA, QList<axisindex_t> list) : additionalAxes(addA) , axes(list) {;}
-};
-
-typedef QList< NVBSelectorAxisInstance > NVBSelectorAxisInstanceList;
 
 class NVBSelectorDataInstance {
 	friend class NVBSelectorSourceInstance;
@@ -152,6 +129,7 @@ class NVBSelectorDataInstance {
 		const NVBDataSet * dataSet;
 	NVBSelectorCase s;
 		QVector<axisindex_t> matchedaxes;
+	QList<NVBAxisMapping> matchedmaps;
 		mutable QVector<axisindex_t> otheraxes;
 
 	NVBSelectorDataInstance(const NVBSelectorCase& selector, const NVBDataSet* dataset, NVBSelectorAxisInstanceList matched);
@@ -179,7 +157,7 @@ class NVBSelectorDataInstance {
 	/// Returns the axes that complement the matched ones. The axes are returned in dataset order
 	inline const QVector<axisindex_t> & otherAxes() const { return otheraxes; }
 	/// Returns the maps that were required by the rules in rule order. Axis indexes are in dataset axes.
-// 	inline const QList<NVBAxisMapping> & matchedMaps() const { return matchedmaps; }
+ 	inline const QList<NVBAxisMapping> & matchedMaps() const { return matchedmaps; }
 
 	NVBAxis matchedAxis(axisindex_t i) const ;
 	NVBAxis otherAxis(axisindex_t i) const ;
@@ -200,6 +178,10 @@ private:
 	const NVBDataSource * source;
 	
 public:
+	/// Constructs an invalid instance
+	NVBSelectorSourceInstance(const NVBSelectorCase & selector) : s(selector) {;}
+	
+	/// Constructs an instance matching the \a source
 	NVBSelectorSourceInstance(const NVBSelectorCase & selector, const NVBDataSource * source);
 	void fillInstances(const NVBSelectorCase & selector, const NVBDataSource* source);
 

@@ -30,7 +30,8 @@ class NVBAxisMap {
 		Template = 0, /// Underfined
 		Physical = 1, /// NVBPhysValue
 		Point = 2,    /// NVBPhysPoint
-		Color = 3     /// QColor
+		Color = 3,    /// QColor
+		Label = 4     /// QString
 		};
 
 		virtual int dimension() const = 0;

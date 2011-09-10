@@ -87,6 +87,18 @@ NVBDataColorInstance* NVBDataSet::colorInstance() const
 	return 0;
 }
 
+NVBAxisMapping NVBDataSet::mapFromSource(const NVBAxisMap* map) const
+{
+	NVB_ASSERT(p,"Dataset without parent");
+	return mapFromSource(p->getMapping(map));
+}
+
+NVBAxisMapping NVBDataSet::mapFromSource(const NVBAxisMapping& mapping) const
+{
+	NVB_ASSERT(p,"Dataset without parent");
+	return NVBAxisMapping(mapping.map, mapFromSource(mapping.axes));
+}
+
 
 void useDataSource(const NVBDataSource* source) {
   if (!source) return;
@@ -158,6 +170,14 @@ NVBVariant NVBDataSource::collectComments(const QString& key) const
 	
 }
 
+NVBAxisMapping NVBDataSource::getMapping(const NVBAxisMap* map) const
+{
+	for(axisindex_t i = 0; i<nAxes(); i++)
+		foreach(NVBAxisMapping m, axis(i).maps())
+			if (m.map == map)
+				return m;
+	return NVBAxisMapping();
+}
 
 /**
 	* \class NVBConstructableDataSource
@@ -284,7 +304,8 @@ void NVBConstructableDataSource::filterAddComments(NVBDataComments & _cms)
 		}
 		
 	if (comments.isEmpty()) {
-		NVBOutputPMsg("Adding first comments to a non-empty datasource. This was probably not intended.");
+		// It can happen, actually - if more than 2 sets have the same set of different comments
+//		NVBOutputPMsg("Adding first comments to a non-empty datasource. This was probably not intended.");
 		return;
 		}
 		

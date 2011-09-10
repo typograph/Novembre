@@ -66,6 +66,14 @@ axissize_t subprod(const axissize_t * numbers, axisindex_t m, const axisindex_t 
 
 inline axissize_t prod(QVector<axissize_t> numbers) { return prod(numbers.count(),numbers.constData()); }
 
+template< typename Container >
+void uniquify( Container & list ) {
+	qSort(list);
+	for(int i = 1; i<list.count(); i++) {
+		if (list.at(i) == list.at(i-1))
+			list.removeAt(--i);
+		}
+}
 
 QVector<axisindex_t> targetaxes(axisindex_t n, QVector<axisindex_t> sliceaxes);
 QVector<axissize_t> subvector(QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes);

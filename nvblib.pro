@@ -37,6 +37,7 @@ HEADERS += \
   src/NVBDatasetIcons.h \
   src/NVBDataSource.h \
   src/NVBDataSourceModel.h \
+  src/NVBAxisSelectorHelpers.h \
   src/NVBAxisSelector.h \
   src/NVBTokens.h \
   src/NVBFileInfo.h \
@@ -53,6 +54,7 @@ SOURCES += \
   src/NVBDatasetIcons.cpp \
   src/NVBDataSource.cpp \
   src/NVBDataSourceModel.cpp \
+  src/NVBAxisSelectorHelpers.cpp \
   src/NVBAxisSelector.cpp \
   src/NVBTokens.cpp \
   src/NVBFileInfo.cpp \
