@@ -36,19 +36,14 @@
 
 int main(int argc, char *argv[])
 {
-	try {
-		NVBBrowserApplication app(argc, argv);
-		
-		NVBMainWindow main;
-		main.setCentralWidget(new NVBBrowser());
-		main.setWindowTitle( QString("Novembre Browser") );
-		main.show();
-		
-		return app.exec();
-		}
-	catch (...) {
-		return 1;
-		}
+	NVBBrowserApplication app(argc, argv);
+
+	NVBMainWindow main;
+	main.setCentralWidget(new NVBBrowser());
+	main.setWindowTitle( QString("Novembre Browser") );
+	main.show();
+
+	return app.exec();
 }
 
 NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
@@ -72,14 +67,13 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 #ifdef NVB_ENABLE_LOG
 	if (conf->contains("LogFile"))
 		while (true) {
-			try {
-				new NVBLogFile(conf->value("LogFile").toString(),this);
-				break;
-				}
-			catch (int err) {
+			NVBLogFile * lf =	new NVBLogFile(conf->value("LogFile").toString(),this);
+			if (!lf) {
 				QMessageBox::critical(0,"Log error","Cannot access the logfile. Please check the settings");
 				if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
 				}
+			else
+				break;
 			}
 #endif
 
@@ -94,19 +88,15 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 			throw;
 #endif
 
-	while (true) {
-		try {
+//	while (true) {
 #ifndef NVB_STATIC
-			setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
+		setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
 #endif
-			qApp->setProperty("filesFactory",QVariant::fromValue(new NVBFileFactory()));
-			break;
-			}
-		catch (int err) {
-			QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
-			if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
-			}
-		}
+		qApp->setProperty("filesFactory",QVariant::fromValue(new NVBFileFactory()));
+//		break;
+//		}
+//	QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
+//	if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
 
 }
 

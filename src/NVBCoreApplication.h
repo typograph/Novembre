@@ -36,7 +36,7 @@ Q_OBJECT
 public:
   NVBCoreApplication ( int & argc, char ** argv );
   virtual ~NVBCoreApplication();
-  virtual bool notify ( QObject * receiver, QEvent * event ) ;
+	//virtual bool notify ( QObject * receiver, QEvent * event ) ;
 	
 #ifdef NVB_ENABLE_LOG
 private slots:

@@ -102,12 +102,9 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 		return 0;
 		}
 
-	NVBFile * f;
+	NVBFile * f = new NVBFile(info);
 
-	try {
-		f = new NVBFile(info);
-		}
-	catch (...) { // New threw something
+	if (!f) {
 		NVBOutputError("Memory allocation for NVBFile failed.");
 		return 0;
 		}

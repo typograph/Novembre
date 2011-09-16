@@ -49,6 +49,7 @@ NVBCoreApplication::NVBCoreApplication( int & argc, char ** argv )
 
 }
 
+/*
 bool NVBCoreApplication::notify( QObject * receiver, QEvent * event )
 {
 	try {
@@ -63,7 +64,7 @@ bool NVBCoreApplication::notify( QObject * receiver, QEvent * event )
 		return false;
 		}
 }
-
+*/
 #ifdef NVB_ENABLE_LOG
 void NVBCoreApplication::message(NVB::LogEntryType type, QString issuer, QString text)
 {
