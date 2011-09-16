@@ -388,12 +388,8 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 		return 0;
 		}
 
-	NVBFile * f = 0;
-
-	try {
-		f = new NVBFile(info);
-		}
-	catch (...) {
+	NVBFile * f = new NVBFile(info);
+	if (!f)	{
 		NVBOutputError("Memory allocation failed");
 		return 0;
 		}
@@ -1177,11 +1173,8 @@ void CreatecFileGenerator::loadAllChannelsFromVERT(QStringList filenames, NVBFil
 
 void CreatecFileGenerator::loadAllChannelsFromLAT(QString filename, NVBFile* sources) const {
 
-	NVBConstructableDataSource * result;
-	try {
-		result = new NVBConstructableDataSource(sources);
-		}
-	catch (...) {
+	NVBConstructableDataSource * result = new NVBConstructableDataSource(sources);
+	if (!result) {
 		NVBOutputError("NVBDataSource allocation failed");
 		return;
 		}
@@ -1289,11 +1282,8 @@ void CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename, NVBFile* s
 		return;
 	}
 
-	NVBConstructableDataSource * result;
-	try {
-		result = new NVBConstructableDataSource(sources);
-		}
-	catch (...) {
+	NVBConstructableDataSource * result = new NVBConstructableDataSource(sources);
+	if (!result) {
 		NVBOutputError("NVBDataSource allocation failed");
 		return;
 		}

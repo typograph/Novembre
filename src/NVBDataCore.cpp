@@ -569,7 +569,8 @@ NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisi
 	{
 	if (!dataset) {
 		NVBOutputError("NULL dataset");
-		throw;
+		is_running = false;
+		return;
 		}
 
 	if (maxCount <= 0)
