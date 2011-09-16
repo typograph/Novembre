@@ -45,7 +45,7 @@
 #endif
 
 #include "../icons/mainwindow.xpm"
-#include "../icons/novembre_v0.xpm"
+#include "../icons/novembre_v1.xpm"
 
 
 NVBMainWindow::NVBMainWindow() : QMainWindow()
