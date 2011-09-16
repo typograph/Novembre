@@ -405,9 +405,9 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 
 	while (rendered_row < model()->rowCount() && row_top < e->rect().bottom()) {
 		// TODO Draw alternating background
-		drawHeader(rendered_row,row_top,&painter);
 		if (pages_per_row > 0)
 			drawItems(rendered_row,row_top + headerHeight() + headerMargin(),&painter);
+		drawHeader(rendered_row,row_top,&painter); // To put the floating header on top
 		row_top += midMargin() + fileHeight(rendered_row++);
 	}
 
@@ -416,20 +416,20 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 	// DEBUG 
 	QString debugText = QString("TOP : %1 | SOFT : %2 | VOFF : %3/%4 | TOTAL : %5 | STEP : %6 | MAX : %7")
 			.arg(top_row,3)
-			.arg(soft_shift,4)
-			.arg(voffset,6)
-			.arg(verticalScrollBar()->value(),6)
+			.arg(soft_shift,6)
+			.arg(voffset,8)
+			.arg(verticalScrollBar()->value(),8)
 			.arg(totalHeight(),6)
 			.arg(verticalScrollBar()->pageStep(),6)
 			.arg(verticalScrollBar()->maximum(),6);
 
-	QRectF txtrect = painter.boundingRect(QRect(0,20,10000,200),Qt::AlignLeft | Qt::TextSingleLine,debugText);
-	txtrect.adjust(-5,-5,5,5);
-	painter.fillRect(txtrect,Qt::white);
+	QRectF txtrect = painter.boundingRect(0,viewportHeight(),1,1,Qt::AlignLeft | Qt::TextSingleLine,debugText);
+	txtrect.moveRight(viewport()->width()-5);
+	painter.fillRect(txtrect.adjusted(-5,-5,5,5),Qt::white);
 
 	painter.setBrush(QBrush(Qt::black));
 	painter.setPen(Qt::black);
-	painter.drawText(0,20,debugText);
+	painter.drawText(txtrect,debugText);
 	// debug
 #endif
 }
@@ -437,6 +437,8 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 void NVBDirView::drawHeader(int index, int y, QPainter * painter) const
 {
 	Q_ASSERT(model());
+
+	if (y<0) y = 0;
 
 	painter->setBrush(QBrush(Qt::black));
 	painter->setPen(QPen(painter->brush(),style()->pixelMetric(QStyle::PM_DefaultFrameWidth),Qt::SolidLine,Qt::RoundCap,Qt::RoundJoin));
@@ -448,7 +450,7 @@ void NVBDirView::drawHeader(int index, int y, QPainter * painter) const
 	QRect hrect = QRect(leftMargin(),y,viewport()->width()-leftMargin()-rightMargin(),headerHeight());
 
 	QString text = model()->index(index,0).data(Qt::DisplayRole).toString().split("\n").join("   ");
-//	QString text = model()->index(index,0).data(Qt::StatusTipRole).toStringList().join("   ");
+	painter->fillRect(hrect,palette().base());
 
 	style()->drawItemText(painter,hrect,Qt::AlignCenter,palette(),true,text,QPalette::WindowText);
 
