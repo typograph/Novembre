@@ -1,7 +1,10 @@
 # Test harness for arbitrary file generators
 
-HEADERS += ../createc.h
-SOURCES += ../createc.cpp
+HEADERS += ../nanonis.h
+SOURCES += ../nanonis.cpp
+QMAKE_CXXFLAGS += '-include ../nanonis.h'
+
+DEFINES += TESTGENERATOR=NanonisFileGenerator
 
 # end of serviceable part
 
@@ -30,6 +33,7 @@ HEADERS += \
 	../NVBTokens.h \
 	../NVBDatasetIcons.h \
 	../NVBMimeData.h \
+	../NVBCoreApplication.h \
 	testGenerator.h
 
 SOURCES += \
@@ -39,6 +43,7 @@ SOURCES += \
 	../NVBFile.cpp \
 	../NVBAxisSelectorHelpers.cpp \
 	../NVBAxisSelector.cpp \
+	../NVBScaler.cpp \
 	../NVBColorMaps.cpp \
 	../NVBMap.cpp \
 	../NVBLogger.cpp \
@@ -49,6 +54,7 @@ SOURCES += \
 	../NVBTokens.cpp \
 	../NVBDatasetIcons.cpp \
 	../NVBMimeData.cpp \
+	../NVBCoreApplication.cpp \
 	testGenerator.cpp
 
 

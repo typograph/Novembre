@@ -11,11 +11,12 @@
 #include <QtCore/QTextStream>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
+#include <QtCore/QDir>
 #include <QtGui/QFont>
 #include <QtGui/QListView>
 #include <QtGui/QCompleter>
 
-#include "../createc.h"
+#include "../NVBFileGenerator.h"
 #include "../NVBFile.h"
 #include "../NVBDataSourceModel.h"
 #include "../NVBforeach.h"
@@ -36,10 +37,10 @@ int main(int argc, char** argv) {
 	l->addWidget(app.files = new QLineEdit(mn));
 	QFileSystemModel * model = new QFileSystemModel(app.files);
 	model->setFilter(QDir::AllEntries | QDir::AllDirs | QDir::NoDotAndDotDot);
-	model->setNameFilters(QString("*.dat *.vert *.tspec *.lat").split(" "));
+//	model->setNameFilters(QString("*.sm3").split(" "));
 	model->setReadOnly(true);
 	model->setResolveSymlinks(true);
-	model->setRootPath("/home/timoty/programming/Novembre/test_files/");
+	model->setRootPath("/");
 
 	QCompleter * cmpl = new QCompleter(model,app.files);
 	app.files->setCompleter(cmpl);
@@ -72,54 +73,13 @@ int main(int argc, char** argv) {
 	
 }
 
-NVBTestGenApplication::NVBTestGenApplication( int & argc, char ** argv ):QApplication(argc,argv)
+NVBTestGenApplication::NVBTestGenApplication( int & argc, char ** argv )
+: NVBCoreApplication(argc,argv)
 {
-
-#ifdef NVB_ENABLE_LOG
-// For threads, we have to do that
-	qRegisterMetaType<NVB::LogEntryType>("NVB::LogEntryType");
-	NVBLogger * l = new NVBLogger(this);
-	setProperty("Logger",QVariant::fromValue(l));
- 	connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),this,SLOT(message(NVB::LogEntryType, QString, QString)));
-#endif
-
 }
-
-bool NVBTestGenApplication::notify( QObject * receiver, QEvent * event )
-{
-	try {
-		return QApplication::notify(receiver,event);
-		}
-	catch (int err) {
-		NVBOutputError(QString("Uncaught error #%1").arg(err));
-		return false;
-		}
-	catch (...) {
-		NVBOutputError("Fatal error");
-		return false;
-		}
-}
-
-#ifdef NVB_ENABLE_LOG
-void NVBTestGenApplication::message(NVB::LogEntryType type, QString issuer, QString text)
-{
-  qDebug() << issuer << "->" << text;
-/*
-	if (type == NVB::CriticalErrorEntry)
-    QMessageBox::critical(0,issuer,text);
-  else if (type == NVB::ErrorEntry)
-    qDebug() << issuer << "->" << text;
-  else if (type == NVB::DebugEntry)
-    qDebug() << text;
-*/
-}
-#endif
 
 NVBTestGenApplication::~ NVBTestGenApplication()
 {
-#ifdef NVB_ENABLE_LOG
-  delete property("Logger").value<NVBLogger*>();
-#endif
 }
 
 void NVBTestGenApplication::showPage(const QModelIndex & index) {
@@ -139,32 +99,106 @@ void NVBTestGenApplication::openFile(QString name) {
 
 	tree->clear();
 
-	CreatecFileGenerator gen;
+	if (name.isEmpty())
+		name = files->text();
 
-	//"/home/timoty/programming/Novembre/test_files/rhk/data1850.sm3"
-	NVBAssociatedFilesInfo inf = gen.associatedFiles(name.isEmpty() ? files->text() : name/*QFileDialog::getOpenFileName(l,"Select 
-file to 
-load")*/);
+	if (QDir(name).relativeFilePath(name).isEmpty()) {
+		openFolder(name);
+		return;
+		}
+
+	TESTGENERATOR * generator = new TESTGENERATOR();
+	
+	if (!generator) return;
+
+	NVBAssociatedFilesInfo inf = generator->associatedFiles(name.isEmpty() ? files->text() : name);
+	
+	NVBFileInfo * fi = inf.loadFileInfo();
+	if (!fi) { delete generator; return; }
+
+	tree->setHeaderLabel(fi->files.name());
+
+	addFileInfoToTree(tree->invisibleRootItem(),fi);
+	delete fi;
+	
+	NVBFile * fl = generator->loadFile(inf);
+	if (!fl) { delete generator; return; }
+
+	addFileToTree(tree->invisibleRootItem(),fl);
+
+	QAbstractItemModel * m = view->model();
+
+	view->setModel(new NVBDataSourceListModel(fl));
+	view->connect(view->selectionModel(),SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),this,SLOT(showPage(const QModelIndex&)));
 	
 
-	NVBFileInfo * fi = inf.loadFileInfo();
-	if (!fi) return;
+	if (m) delete m;
+	delete generator;
 
+}
+
+void NVBTestGenApplication::openFolder(QString dirname)
+{
+	qDebug() << "open dir " << dirname;
+	tree->clear();
+	QAbstractItemModel * m = view->model();
+	view->setModel(0);	
+	if (m) delete m;
+
+	if (dirname.isEmpty()) { qDebug() << "no name : empty"; return; }
+
+	TESTGENERATOR * generator = new TESTGENERATOR();
+
+	if (!generator) { qDebug() << "memalloc failed"; return; }
+	
+	QDir dir(dirname,generator->extFilters().join(";"));
+	if (!dir.exists()) { qDebug() << "no folder"; delete generator; return; }
+	
+	QStringList fnames = dir.entryList();
+	
+	while(!fnames.isEmpty()) {
+		qDebug() << fnames.first();
+	
+		NVBAssociatedFilesInfo inf = generator->associatedFiles(dir.absoluteFilePath(fnames.takeFirst()));
+
+		foreach(QString fname, inf)
+			fnames.removeOne(dir.relativeFilePath(fname));
+
+		NVBFileInfo * fi = inf.loadFileInfo();
+		if (!fi) continue;
+
+		QTreeWidgetItem * fitem;
+		fitem = new QTreeWidgetItem(tree);
+		fitem->setText(0,fi->files.name());
+		
+		addFileInfoToTree(fitem,fi);
+		delete fi;
+		
+		NVBFile * fl = generator->loadFile(inf);
+		if (!fl) continue;
+
+		addFileToTree(fitem,fl);
+		delete fl;
+	}
+	
+	delete generator;
+}
+
+void NVBTestGenApplication::addFileInfoToTree(QTreeWidgetItem* parent, NVBFileInfo* info)
+{
 	QFont font(QApplication::font());
 	font.setBold(true);
 
-	tree->setHeaderLabel(fi->files.name());
-	
 	QTreeWidgetItem * item;
-	item = new QTreeWidgetItem(tree,QStringList("Info"));
+	item = new QTreeWidgetItem(parent,QStringList("Info"));
 	item->setFont(0,font);
 	QTreeWidgetItem * cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
-	NVBDataComments cmnts = fi->getAllComments();
+	NVBDataComments cmnts = info->getAllComments();
 	foreach(QString key, cmnts.keys())
 		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
 	
 //	tree->addTopLevelItem(item);
-	NVB_FOREACH(NVBDataInfo i, fi) {
+	NVB_FOREACH(NVBDataInfo i, info) {
 		QTreeWidgetItem * di = new QTreeWidgetItem(item,QStringList(QString("%1 [%2]").arg(i.name,i.dimension.baseUnit())));
 		foreach(axissize_t sz, i.sizes)
 			new QTreeWidgetItem(di,QStringList(QString::number(sz)));
@@ -174,24 +208,30 @@ load")*/);
 		}
 //	l->setText(l->text() + "\n" + fi->files.name());
 //	l->setText(l->text() + "\n" + fi->files.name());
+
+}
+
+void NVBTestGenApplication::addFileToTree(QTreeWidgetItem* parent, NVBFile* file)
+{
+	QFont font(QApplication::font());
+	font.setBold(true);
+
+	QTreeWidgetItem * item;
 	
-	NVBFile * fl = gen.loadFile(inf);
-	if (!fl) return;
-	
-	item = new QTreeWidgetItem(tree,QStringList("File"));
+	item = new QTreeWidgetItem(parent,QStringList("File"));
 	item->setFont(0,font);
 //	tree->addTopLevelItem(item);
 
-	new QTreeWidgetItem(item,QStringList(fl->name()));
+	new QTreeWidgetItem(item,QStringList(file->name()));
 //	new QTreeWidgetItem(item,QString::number(fl->count()));
 
-	cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
-	cmnts = fl->getAllComments();
+	QTreeWidgetItem * cmnt = new QTreeWidgetItem(item,QStringList(QString("Comments")));
+	NVBDataComments cmnts = file->getAllComments();
 	foreach(QString key, cmnts.keys())
 		new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
 	
-	for(int i=0; i < fl->count(); i++) {
-		const NVBDataSource * src = fl->at(i);
+	for(int i=0; i < file->count(); i++) {
+		const NVBDataSource * src = file->at(i);
 		QTreeWidgetItem * dsi = new QTreeWidgetItem(item,QStringList(QString("Source")));
 
 		QTreeWidgetItem * dsa = new QTreeWidgetItem(dsi,QStringList(QString("Axes")));
@@ -213,14 +253,5 @@ load")*/);
 			new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,cmnts.value(key).toString())));
 		
 	}
-
-	QAbstractItemModel * m = view->model();
-
-	view->setModel(new NVBDataSourceListModel(*fl));
-	view->connect(view->selectionModel(),SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),this,SLOT(showPage(const QModelIndex&)));
-	
-
-	if (m) delete m;
-
 
 }
