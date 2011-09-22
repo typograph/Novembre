@@ -38,7 +38,7 @@
 
 
 QPair<QString, NVBUnits> channelFromStr(QString value) {
-	static QRegExp chName("^([^\\(]*)(?: \\(([^\\)]*)\\))?$");
+	static QRegExp chName("^([^\\(]*)(?: \\((.*)\\))?$");
 	if (chName.exactMatch(value)) {
 //		if (chName.capturedText().count());
 		return QPair<QString, NVBUnits>(chName.cap(1),NVBUnits(chName.cap(2)));
@@ -380,14 +380,8 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 		QList< QPair<QString, NVBUnits> > channels;
 		QRegExp chName("^(.*)(?: \\((.*)\\))?$");
 		
-		foreach(QString channel, QString(file.readLine(500)).trimmed().split('\t',QString::SkipEmptyParts)) {
-			if (chName.exactMatch(channel))
-				channels << QPair<QString, NVBUnits>(chName.cap(1),NVBUnits(chName.cap(2)));
-			else {
-				NVBOutputError(QString("Channel name format mismatch at %1").arg(channel));
-				channels << QPair<QString, NVBUnits>(channel,NVBUnits());
-				} 
-			}
+		foreach(QString channel, QString(file.readLine(500)).trimmed().split('\t',QString::SkipEmptyParts))
+			channels << channelFromStr(channel);
 			
 		// Euristics that might not work - there's approx. 12 symbols per channel per line
 		QVector<axissize_t> npts = QVector<axissize_t>() << (axissize_t)round((file.size() - file.pos())/12.0/channels.count());
