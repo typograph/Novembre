@@ -52,7 +52,7 @@ public:
 
 		bool operator==(const NVBAssociatedFilesInfo & other) const;
 		bool operator!=(const NVBAssociatedFilesInfo & other) const {
-			return operator==(other);
+			return !operator==(other);
 		}
 
 };
