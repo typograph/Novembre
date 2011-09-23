@@ -124,6 +124,8 @@ private:
 	static void CommentsFromString(NVBDataComments & comments, const QStringList & strings);
 	static void CommentsFromHeader(NVBDataComments & comments, const TRHKHeader & header);
 	
+	static void detectGrid(const TRHKHeader& header, const float* xposdata, const float* yposdata, int& np, int& nx, int& ny);
+	
 	static QList<QPointF> pointsFromXY(int length, float * x, float * y);
 
 public:

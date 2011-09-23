@@ -82,6 +82,86 @@ QStringList RHKFileGenerator::availableInfoFields() const {
 		;
 }
 
+void RHKFileGenerator::detectGrid(const TRHKHeader& header, const float * xposdata, const float * yposdata, int& np, int& nx, int& ny)
+{
+	nx = 0;
+	ny = 0;
+	np = 0;
+
+// Basically, we can go on on two things
+// First, some of the grid variants are encoded in header.page_type
+// Second, header version 2 has grid_xsize and grid_ysize (which are, unfortunately, usually zero)
+// Third, XPMPro measures curves one-by-one, first by point, then by X, then by Y, so the number of
+// repeated positions in X gives point multiplicity and the number of repetitions in Y gives point times X.
+
+	switch(header.page_type) {
+		case 11 : { // Image IV 4x4
+			nx = 4;
+			ny = 4;
+			break;
+			}
+		case 12 : { // Image IV 8x8
+			nx = 8;
+			ny = 8;
+			break;
+			}
+		case 13 : { // Image IV 16x16
+			nx = 16;
+			ny = 16;
+			break;
+			}
+		case 14 : { // Image IV 32x32
+			nx = 32;
+			ny = 32;
+			break;
+			}
+		case 15 : { // Image IV center
+			nx = 1;
+			ny = 1;
+			break;
+			}
+		case 23 : { // Image IV 64x64
+			nx = 64;
+			ny = 64;
+			break;
+			}
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 19:
+		case 20:
+			NVBOutputError(QString("Weird page type for spectroscopy : %1").arg(RHKFileGenerator::getPageTypeString(header.page_type)));
+			break;
+		}
+
+	if (nx == 0) {
+		if (header.grid_xsize > 0) {
+			nx = header.grid_xsize;
+			ny = header.grid_ysize;
+			}
+		else {
+			for(np = 1; np < header.y_size && xposdata[np] == xposdata[0]; np++) {;}
+			for(nx = 1; nx*np < header.y_size && yposdata[nx*np] == yposdata[0]; nx++) {;}
+			for(ny = 1; ny*nx*np < header.y_size && xposdata[ny*nx*np] == xposdata[0]; ny++) {;}
+			if (ny * nx * np != header.y_size || (nx == 1 && ny == 1)) {
+				// There's probably no grid.
+				// There might be more than one spectrum per point, though.
+				nx = 0;
+				ny = 0;
+				}
+			}
+		}
+		
+	if (np == 0) {
+		if (nx != 0)
+			np = header.y_size / nx / ny;
+		else
+			np = 1;
+		}
+}
 
 NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
@@ -159,6 +239,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 	TRHKHeader header;
 	int version;
 
+	// Read pages 1by1
 	while(!file.atEnd()) {
 
 		header = getRHKHeader(file);
@@ -170,7 +251,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 		}
 
 		version = header.version[14]-0x30; // 0,1,..9
-		if (version == 1) {
+		if (version == 1) { // Backward compatibility
 			header.colorinfo_count = 1;
 			header.grid_ysize = 0;
 			header.grid_xsize = 0;
@@ -182,46 +263,64 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 		RHKFileGenerator::CommentsFromString(comments,strings);
 		RHKFileGenerator::CommentsFromHeader(comments,header);
 	
-		file.seek(file.pos() + header.page_data_size);
+		file.seek(file.pos() + header.page_data_size); // New position directly after data
 
 		NVBDataSet::Type type = NVBDataSet::Undefined;
+		QVector<axissize_t> axes;
 		
 		switch (header.type) {
-			case 0 : { // Topography
+			case 0 : { // Topography - color_info starts here - skip it
 				if (header.colorinfo_count > 1)
-	NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
+					NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to the developer").arg(file.fileName()));
 				quint16 cs;
 				file.peek((char*)&cs,2);
 				file.seek(file.pos() + header.colorinfo_count*(cs+2));
-				break;
 				type = NVBDataSet::Topography;
+				axes << header.x_size << header.y_size;
+				break;
 				}
 			case 1 : { // Spectroscopy
-/* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
-				if (header.colorinfo_count != 0) 
-		NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to 
-Timofey").arg(file.fileName()));
-*/
-	// Skip curve position data
-		if (header.page_type != 7 && header.page_type != 31)
-						file.seek(file.pos() + 2*sizeof(float)*header.y_size);
-//	  fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments));
+				// Silently ignore non-zero colorinfo_count -- all RHK spec pages I encountered have colorinfo_count == 1
+//				if (header.colorinfo_count != 0) 
+//					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to the developer").arg(file.fileName()));
+
+				axes << header.x_size;
+				
+				// Skip curve position data
+				if (header.page_type != 7 && header.page_type != 31) {
+					float * posdata = (float*)malloc(2*sizeof(float)*header.y_size);
+					file.read((char*)posdata,2*sizeof(float)*header.y_size);
+					int np,nx,ny;
+					detectGrid(header,posdata,posdata + header.y_size,np,nx,ny);
+					if (np > 1) axes << np;
+					if (nx > 1) axes << nx;
+					if (ny > 1) axes << ny;
+					if (nx < 2 && ny << 2 && np > 0)
+						axes << header.y_size/np;
+					}
+				else	
+					axes << header.y_size;
+				
 				type = NVBDataSet::Spectroscopy;
 				break;
 				}
 			case 3 : { // Annotated spectroscopy, whatever that means
-	NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
+				NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
 //       type = NVB::SpecPage;
+				// Skip positions
 				file.seek(file.pos() + 2*sizeof(float)*header.y_size);
 				}
 			case 2 : // RHK lists this case as RESERVED
 			default : {
-	NVBOutputError(QString("Non-existing page found (type %1). Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
+				NVBOutputError(QString("Non-existing page found (type %1). Your file might be corrupted. If not, please send the file %2 to the developer").arg(header.type).arg(file.fileName()));
 //        type = NVB::InvalidPage;
 				}
 			}
-		fi->filterAddComments(comments);
-		fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),QVector<axissize_t>() << header.x_size << header.y_size,comments,type));
+			
+		if (type != NVBDataSet::Undefined) {
+			fi->filterAddComments(comments);
+			fi->append(NVBDataInfo(strings.at(0).trimmed(),NVBUnits(strings.at(9)),axes,comments,type));
+			}
 		}
 
 	return fi;
@@ -403,18 +502,6 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 	
 // To get to the points we have to load the data first
 
-/*
-	double xs = (double*)calloc(sizeof(double),header.x_size);
-	if (header.x_scale > 0)
-		for (int i = 0; i<header.x_size; i++)
-#ifdef RHK_SUBSTRACT_BIAS
-			xs[i] = header.x_offset+i*header.x_scale+header.bias;
-			xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale+header.bias;
-#else
-			xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale;
-#endif
-*/
-
 	double * ys;
 	switch (header.line_type) { // Some of pages have float type data, and some have the DAC values
 		case 19: // Gdatalog
@@ -468,81 +555,9 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 //     _data.append(new QwtCPointerData(xs,ys+i*header.x_size,header.x_size));
 	
 	// OK, let's find out
-	int nx=0, ny=0, np=0;
-
-// Basically, we can go on on two things
-// First, some of the grid variants are encoded in header.page_type
-// Second, header version 2 has grid_xsize and grid_ysize (which are, unfortunately, usually zero)
-// Third, XPMPro measures curves one-by-one, first by point, then by X, then by Y, so the number of
-// repeated positions in X gives point multiplicity and the number of repetitions in Y gives point times X.
-
-	switch(header.page_type) {
-		case 11 : { // Image IV 4x4
-			nx = 4;
-			ny = 4;
-			break;
-			}
-		case 12 : { // Image IV 8x8
-			nx = 8;
-			ny = 8;
-			break;
-			}
-		case 13 : { // Image IV 16x16
-			nx = 16;
-			ny = 16;
-			break;
-			}
-		case 14 : { // Image IV 32x32
-			nx = 32;
-			ny = 32;
-			break;
-			}
-		case 15 : { // Image IV center
-			nx = 1;
-			ny = 1;
-			break;
-			}
-		case 23 : { // Image IV 64x64
-			nx = 64;
-			ny = 64;
-			break;
-			}
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-		case 19:
-		case 20:
-			NVBOutputError(QString("Weird page type for spectroscopy : %1").arg(RHKFileGenerator::getPageTypeString(header.page_type)));
-			break;
-		}
-
-	if (nx == 0) {
-		if (header.grid_xsize > 0) {
-			nx = header.grid_xsize;
-			ny = header.grid_ysize;
-			}
-		else {
-			for(np = 1; np < header.y_size && xposdata[np] == xposdata[0]; np++) {;}
-			for(nx = 1; nx*np < header.y_size && yposdata[nx*np] == yposdata[0]; nx++) {;}
-			for(ny = 1; ny*nx*np < header.y_size && xposdata[ny*nx*np] == xposdata[0]; ny++) {;}
-			if (ny * nx * np != header.y_size || (nx == 1 && ny == 1)) {
-				// There's probably no grid.
-				// There might be more than one spectrum per point, though.
-				nx = 0;
-				ny = 0;
-				}
-			}
-		}
-		
-	if (np == 0) {
-		if (nx != 0)
-			np = header.y_size / nx / ny;
-		else
-			np = 1;
-		}
+	int nx, ny, np;
+	
+	detectGrid(header,xposdata,yposdata,np,nx,ny);
 
 	// Now, the axes
 	// If np != 1 -> "samples" axis
@@ -577,7 +592,21 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 	if (!inst.isValid()) { // We have to create the axes
 		ds = new NVBConstructableDataSource(sources);
 		sources->append(ds);
-		ds->addAxis(strings.at(10).isEmpty() ? "t" : strings.at(10),header.x_size);
+		// For some reason, this axis gets name "X" by default, which is unfortunate,
+		// as it clashes with grid and anyway is not very descriptive
+		QString nameT = strings.at(10);
+		if (nameT.isEmpty() || nameT == "X") { // TODO it might be interesting to move this method to NVBUnits
+			NVBUnits tu = NVBUnits(strings.at(7));
+			if (tu.isComparableWith("V"))
+				nameT = "Voltage";
+			else if (tu.isComparableWith("sec"))
+				nameT = "Time";
+			else if (tu.isComparableWith("A"))
+				nameT = "Current";
+			else
+				nameT = "T";
+			}
+		ds->addAxis(nameT,header.x_size);
 		ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
 		if (status & 1)
 			ds->addAxis("Samples",np);
