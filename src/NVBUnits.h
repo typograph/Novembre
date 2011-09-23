@@ -96,6 +96,10 @@ public:
 	bool isComparableWith(const NVBUnits & d) const {
 		return base == d.base;
 		}
+	/// \overload isComparableWith(NVBUnits)
+	bool isComparableWith(const QString & units) const {
+		return base == NVBUnits(units).baseUnit();
+		}
 
 	/// Two units are equal if the base and the multiplier match
 	bool operator== (const NVBUnits & d) const {
