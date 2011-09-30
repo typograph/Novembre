@@ -4,6 +4,7 @@
 #include "NVBColorMaps.h"
 #include "NVBAxisMaps.h"
 #include "NVBFile.h"
+#include "QtCore/QCoreApplication"
 
 NVBDataSet::NVBDataSet(NVBDataSource * parent,
 			QString name,
@@ -126,20 +127,24 @@ NVBDataSource::~NVBDataSource() {
 const NVBColorMap* NVBDataSource::defaultColorMap() const {
 //	return new NVBGrayRampColorMap(); // TODO : move to NVBToolsFactory
 
-	return new NVBRGBMixColorMap(
-				new NVBGrayStepColorMap(
-					QList<double>() << 0 << 0.12549 << 0.360784 << 0.596078 << 0.737255 << 1,
-					QList<double>() << 0 << 0.466667 << 0.776471 << 0.933333 << 0.976471 << 0.976471
-					),
-				new NVBGrayStepColorMap(
-					QList<double>() << 0 << 0.0666667 << 0.184314 << 0.415686 << 0.713725 << 0.909804 << 1,
-					QList<double>() << 0 << 0 << 0.0823529 << 0.376471 << 0.815686 << 0.972549 << 0.976471
-					),
-				new NVBGrayStepColorMap(
-					QList<double>() << 0 << 0.333333 << 0.627451 << 0.862745 << 1,
-					QList<double>() << 0 << 0 << 0.298039 << 0.835294 << 0.984314
-					)
-				);
+	NVBColorMap * m = QCoreApplication::instance()->property("DefaultGradient").value<NVBColorMap*>();
+	if (m) return m;
+	return new NVBGrayRampColorMap();
+
+//	return new NVBRGBMixColorMap(
+//				new NVBGrayStepColorMap(
+//					QList<double>() << 0 << 0.12549 << 0.360784 << 0.596078 << 0.737255 << 1,
+//					QList<double>() << 0 << 0.466667 << 0.776471 << 0.933333 << 0.976471 << 0.976471
+//					),
+//				new NVBGrayStepColorMap(
+//					QList<double>() << 0 << 0.0666667 << 0.184314 << 0.415686 << 0.713725 << 0.909804 << 1,
+//					QList<double>() << 0 << 0 << 0.0823529 << 0.376471 << 0.815686 << 0.972549 << 0.976471
+//					),
+//				new NVBGrayStepColorMap(
+//					QList<double>() << 0 << 0.333333 << 0.627451 << 0.862745 << 1,
+//					QList<double>() << 0 << 0 << 0.298039 << 0.835294 << 0.984314
+//					)
+//				);
 
 //	return new NVBHSVWheelColorMap(0.00555,0.163589,0.96796,0.90137,0.32778,1);
 }

@@ -64,6 +64,9 @@
 #include "NVBDataCore.h"
 #include "NVBMap.h"
 #include "NVBDataTransforms.h"
+#include "NVBGradientMenu.h"
+#include "NVBMutableGradients.h"
+#include "NVBColorMaps.h"
 
 #include <math.h>
 
@@ -85,14 +88,20 @@ private:
 		double * data = (double*) malloc(sz*sizeof(double));
 		QSize isize = QSize(d3->sizeAt(0),d3->sizeAt(1));
 		memcpy(data,d3->data(),sz*sizeof(double));
-		axissize_t w = d3->sizeAt(0);
-		axissize_t mi = NVBMaxMinTransform::max_index(d4->data(), 1, &w);
-		double factor = (d3->data()[mi] - d3->data()[mi-10])/(d4->data()[mi] - d4->data()[mi-10]);
+//		axissize_t w = d3->sizeAt(0);
+//		axissize_t mi = NVBMaxMinTransform::max_index(d4->data()+10, 1, &w)+10;
+//		double factor = (d3->data()[mi] - (d3->data()[mi+9] + d3->data()[mi-10])/2)/(d4->data()[mi] - (d4->data()[mi+9] + d4->data()[mi-10])/2);
+		axissize_t mi = NVBMaxMinTransform::max_index(d4->data(), 1, &sz);
+		double factor = 0;
+		if (mi < 10)
+			factor = (d3->data()[mi] - d3->data()[mi+9])/(d4->data()[mi] - d4->data()[mi+9] );
+		else
+			factor = (d3->data()[mi] - (d3->data()[mi+9] + d3->data()[mi-10])/2)/(d4->data()[mi] - (d4->data()[mi+9] + d4->data()[mi-10])/2);
 
 		for(axissize_t i = 0; i<sz;i++)
 			data[i] -= factor*d4->data()[i];
 		ci->autoscale(data,sz);
-		QPixmap result = ci->colorize(data,isize,isize);
+		QPixmap result = ci->colorize(data,isize,QSize(256,256));
 		free(data);
 		delete(ci);
 		return result;
@@ -194,8 +203,38 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
   showPageInfoAction->setCheckable(true);
   showPageInfoAction->setChecked(true);
   
+	// FIXME miscmode should have more options and have a drop-down menu.
 	miscModeAction = foldersToolBar->addAction(QIcon(_browser_magic),"Switch to magical mode",this,SLOT(switchMode(bool)));
 	miscModeAction->setCheckable(true);
+
+	QToolButton * gradientsButton = qobject_cast<QToolButton *>(
+				foldersToolBar->widgetForAction(
+					foldersToolBar->addAction(QIcon(_browser_gradient),QString("Set default color scheme"))
+					)
+				);
+	NVBGradientMenu * gmenu = new NVBGradientMenu(gradientsButton);
+	gradientsButton->setMenu(gmenu);
+	gradientsButton->setPopupMode(QToolButton::InstantPopup);
+	gmenu->addGradientAction(new NVBGrayRampColorMap());
+	gmenu->addGradientAction(new NVBBlackToColorGradientAction(0));
+	gmenu->addGradientAction(new NVBBlackToColorToWhiteGradientAction(0));
+	gmenu->addGradientAction(new NVBHSVWheelColorMap(0.00555,0.163589,0.96796,0.90137,0.32778,1));
+	gmenu->addGradientAction(new NVBRGBMixColorMap(
+										 new NVBGrayStepColorMap(
+											 QList<double>() << 0 << 0.12549 << 0.360784 << 0.596078 << 0.737255 << 1,
+											 QList<double>() << 0 << 0.466667 << 0.776471 << 0.933333 << 0.976471 << 0.976471
+											 ),
+										 new NVBGrayStepColorMap(
+											 QList<double>() << 0 << 0.0666667 << 0.184314 << 0.415686 << 0.713725 << 0.909804 << 1,
+											 QList<double>() << 0 << 0 << 0.0823529 << 0.376471 << 0.815686 << 0.972549 << 0.976471
+											 ),
+										 new NVBGrayStepColorMap(
+											 QList<double>() << 0 << 0.333333 << 0.627451 << 0.862745 << 1,
+											 QList<double>() << 0 << 0 << 0.298039 << 0.835294 << 0.984314
+											 )
+										 ));
+	gmenu->addSeparator();
+	gmenu->addAction(QString("Custom..."))->setEnabled(false);
 
   foldersToolBar->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 

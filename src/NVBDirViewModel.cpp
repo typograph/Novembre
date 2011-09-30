@@ -246,6 +246,7 @@ QVariant NVBDirViewModel::data( const QModelIndex & index, int role ) const
 			}
 		if (role == Qt::DisplayRole /*StatusTipRole*/) {
 			const QAbstractItemModel * m = indexes.at(index.row()).model();
+			if (!m) return QVariant(); // FIXME - persistent indexes have to be updated
 			QModelIndex pi = indexes.at(index.row()).parent();
 			int row = indexes.at(index.row()).row();
 			int c = m->columnCount(pi);

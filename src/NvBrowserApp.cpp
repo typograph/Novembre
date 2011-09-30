@@ -33,6 +33,7 @@
 #include <QtGui/QMainWindow>
 #include "NVBMainWindow.h"
 #include "NVBLogUtils.h"
+#include "NVBColorMaps.h" // TODO maybe move default map creation into browser
 
 int main(int argc, char *argv[])
 {
@@ -61,7 +62,23 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 
 	QSettings * conf = new QSettings(confile,QSettings::IniFormat,this);
 	setProperty("NVBSettings",QVariant::fromValue(conf));
-
+//	setProperty("DefaultGradient",QVariant::fromValue((NVBColorMap*)(new NVBRGBRampColorMap(0xFFFF30AD,0xFF15FF33))));
+	setProperty("DefaultGradient",QVariant::fromValue((NVBColorMap*)
+		new NVBRGBMixColorMap(
+			new NVBGrayStepColorMap(
+			 QList<double>() << 0 << 0.12549 << 0.360784 << 0.596078 << 0.737255 << 1,
+			 QList<double>() << 0 << 0.466667 << 0.776471 << 0.933333 << 0.976471 << 0.976471
+			 ),
+			new NVBGrayStepColorMap(
+			 QList<double>() << 0 << 0.0666667 << 0.184314 << 0.415686 << 0.713725 << 0.909804 << 1,
+			 QList<double>() << 0 << 0 << 0.0823529 << 0.376471 << 0.815686 << 0.972549 << 0.976471
+			 ),
+			new NVBGrayStepColorMap(
+			 QList<double>() << 0 << 0.333333 << 0.627451 << 0.862745 << 1,
+			 QList<double>() << 0 << 0 << 0.298039 << 0.835294 << 0.984314
+			 )
+			)
+		));
 	// Start logging
 
 #ifdef NVB_ENABLE_LOG
@@ -113,4 +130,5 @@ NVBBrowserApplication::~ NVBBrowserApplication()
 	conf->sync();
 	delete conf;
 	delete property("filesFactory").value<NVBFileFactory*>();
+	delete property("DefaultGradient").value<NVBColorMap*>();
 }
