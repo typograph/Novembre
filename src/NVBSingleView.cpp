@@ -435,7 +435,7 @@ NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
 	tAct = viewTB->addAction(QIcon(_sview_3D),"3D view",this,SLOT(show3DView()));
 	tAct->setCheckable(true);
 	viewActions->addAction(tAct);
-	tAct->setEnabled(false);
+	tAct->setEnabled(false); // TODO - implement NVBSingle3DView
 	menuLayout->addWidget(viewTB);
 	
 	vl->addStretch();

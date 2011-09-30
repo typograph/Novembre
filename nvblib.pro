@@ -59,7 +59,7 @@ SOURCES += \
   src/NVBTokens.cpp \
   src/NVBFileInfo.cpp \
   src/NVBMimeData.cpp \
-  src/NVBFile.cpp
+	src/NVBFile.cpp
 
 # Helpful objects for plugins
 
@@ -67,12 +67,14 @@ HEADERS += \
   src/NVBAxisMaps.h \
   src/NVBColorMaps.h \
   src/NVBPhysSpinBox.h \
-  src/NVBPhysStepSpinBox.h
+	src/NVBPhysStepSpinBox.h \
+	src/NVBColorWidgets.h
 
 SOURCES += \
   src/NVBColorMaps.cpp \
   src/NVBPhysSpinBox.cpp \
-  src/NVBPhysStepSpinBox.cpp
+	src/NVBPhysStepSpinBox.cpp \
+	src/NVBColorWidgets.cpp
 
 CONFIG += qt
 

@@ -151,8 +151,9 @@ class NVBColorMap {
 		NVBColorInstance * instantiate() const { return new NVBColorInstance(this); }
 		NVBDataColorInstance * instantiate(const NVBDataSet * data) const { return new NVBDataColorInstance(data,this); }
 		
-		virtual NVBColorMap * copy() = 0;
+		virtual NVBColorMap * copy() const = 0;
 };
 
+Q_DECLARE_METATYPE(NVBColorMap*)
 
 #endif

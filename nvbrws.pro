@@ -45,11 +45,13 @@ HEADERS += \
   src/NVBFileFactory.h
 SOURCES += \
   src/NVBFileBundle.cpp \
-  src/NVBFileFactory.cpp
+	src/NVBFileFactory.cpp
 
 # FileBrowser
 HEADERS += \
-  src/NVBPageInfoWidget.h \
+	src/NVBGradientMenu.h \
+	src/NVBMutableGradients.h \
+	src/NVBPageInfoWidget.h \
   src/NVBPageInfoView.h \
   src/NVBFileListView.h \
   src/NVBColumnsModel.h \
@@ -69,7 +71,9 @@ HEADERS += \
 	src/NVBBrowser.h
 
 SOURCES += \
-  src/NVBPageInfoWidget.cpp \
+	src/NVBGradientMenu.cpp \
+	src/NVBMutableGradients.cpp \
+	src/NVBPageInfoWidget.cpp \
   src/NVBFileListView.cpp \
   src/NVBColumnsModel.cpp \
   src/NVBColumnDialog.cpp \
