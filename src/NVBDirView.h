@@ -19,6 +19,7 @@
 
 class QPaintEvent;
 class QResizeEvent;
+class QKeyEvent;
 
 class NVBDirView : public QAbstractItemView
 {
@@ -69,6 +70,7 @@ protected:
 
   virtual void paintEvent(QPaintEvent *e);
   virtual void resizeEvent ( QResizeEvent * event );
+	virtual void keyPressEvent(QKeyEvent *event);
 
   virtual int horizontalOffset () const { return 0; } // Always wrapped
   virtual inline int verticalOffset () const { return voffset; }
