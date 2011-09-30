@@ -33,7 +33,7 @@ class NVBHSVWheelColorMap : public NVBColorMap{
 
 		virtual QRgb colorize(double z) const;
 		
-		virtual NVBHSVWheelColorMap * copy() { return new NVBHSVWheelColorMap(h.scale(0),h.scale(1),s.scale(0),s.scale(1),v.scale(0),v.scale(1)); }
+		virtual NVBHSVWheelColorMap * copy() const { return new NVBHSVWheelColorMap(h.scale(0),h.scale(1),s.scale(0),s.scale(1),v.scale(0),v.scale(1)); }
 };
 
 /**
@@ -47,7 +47,7 @@ class NVBGrayRampColorMap : public NVBColorMap{
 		
 		virtual QRgb colorize(double z) const;
 
-		virtual NVBGrayRampColorMap * copy() { return new NVBGrayRampColorMap(); }
+		virtual NVBGrayRampColorMap * copy() const { return new NVBGrayRampColorMap(); }
 
 };
 
@@ -84,7 +84,7 @@ class NVBGrayStepColorMap : public NVBColorMap{
 
 		virtual QRgb colorize(double z) const;
 
-		virtual NVBGrayStepColorMap * copy() { return new NVBGrayStepColorMap(steps,scales); }
+		virtual NVBGrayStepColorMap * copy() const { return new NVBGrayStepColorMap(steps,scales); }
 
 };
 
@@ -93,18 +93,18 @@ This class makes a simple gradient from ARGB_start to ARGB_end
 */
 class NVBRGBRampColorMap : public NVBColorMap {
 	private:
-		NVBValueScaler<double,quint32> rgb;
+		NVBValueScaler<double,quint8> r,g,b;
 	public:
 		NVBRGBRampColorMap(double r_min, double r_max, double g_min, double g_max, double b_min, double b_max);
-		NVBRGBRampColorMap(quint32 rgb_min, quint32 rgb_max)
-			: NVBColorMap()
-			, rgb(NVBValueScaler<double,quint32>(0,1,rgb_min,rgb_max))
-			{;}
+		NVBRGBRampColorMap(quint32 rgb_min, quint32 rgb_max);
 		virtual ~NVBRGBRampColorMap() {;}
 
-		virtual QRgb colorize(double z) const { return rgb.scale(z); }
-		
-		virtual NVBRGBRampColorMap * copy() { return new NVBRGBRampColorMap(rgb.scale(0),rgb.scale(1));}
+		virtual QRgb colorize(double z) const;
+
+		virtual NVBRGBRampColorMap * copy() const { return new NVBRGBRampColorMap(colorize(0),colorize(1));}
+
+		void setStart(quint32 start);
+		void setEnd(quint32 end);
 };
 
 /**
@@ -142,16 +142,37 @@ class NVBRGBMixColorMap : public NVBColorMap {
 			return (r->colorize(z) & 0xFF0000) + (g->colorize(z) & 0xFF00) + (b->colorize(z) & 0xFF) + 0xFF000000;
 		}
 
-		virtual NVBRGBMixColorMap * copy() { return new NVBRGBMixColorMap(r->copy(),g->copy(),b->copy()); }
+		virtual NVBRGBMixColorMap * copy() const { return new NVBRGBMixColorMap(r->copy(),g->copy(),b->copy()); }
+
+		NVBColorMap * red() { return r; }
+		const NVBColorMap * red() const { return r; }
+		NVBColorMap * green() { return g; }
+		const NVBColorMap * green() const { return g; }
+		NVBColorMap * blue() { return b; }
+		const NVBColorMap * blue() const { return b; }
 };
 
 /**
-This class uses a look-up table
-*/
-class NVBTableColorMap : public NVBColorMap {
-		NVBTableColorMap() {};
-		~NVBTableColorMap() {};
+	This class always returns the same colour
+	*/
+class NVBConstColorMap : public NVBColorMap {
+private:
+	QRgb constcolor;
+public:
+	NVBConstColorMap(QRgb color)	{;}
+	virtual ~NVBConstColorMap() {;}
+
+	virtual QRgb colorize(double z) const { return constcolor; }
+	virtual NVBConstColorMap * copy() const { return new NVBConstColorMap(constcolor); }
 };
+
+///**
+//  This class uses a look-up table
+//  */
+//class NVBTableColorMap : public NVBColorMap {
+//	NVBTableColorMap() {;}
+//	~NVBTableColorMap() {;}
+//);
 
 
 #endif
