@@ -13,6 +13,9 @@
 #include "NVBLogger.h"
 #include "NVBDirView.h"
 #include <QPaintEvent>
+#include <QKeyEvent>
+#include <QApplication>
+#include <QClipboard>
 #include <QRegion>
 #include <QRect>
 #include <QPoint>
@@ -575,6 +578,15 @@ void NVBDirView::rowsInserted(const QModelIndex& parent, int start, int end)
 	verticalScrollBar()->setValue(voffset); //workaround scrollContentsBy()
 }
 
+void NVBDirView::keyPressEvent(QKeyEvent * event)
+{
+	if (event == QKeySequence::Copy && model()) {
+		QApplication::clipboard()->setMimeData(model()->mimeData(selectedIndexes()));
+		event->accept();
+		}
+	else
+		QAbstractItemView::keyPressEvent(event);
+}
 
 void NVBDirView::resizeEvent(QResizeEvent * event)
 {
