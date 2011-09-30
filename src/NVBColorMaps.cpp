@@ -69,34 +69,80 @@ QRgb NVBHSVWheelColorMap::colorize( double z ) const
 
 QRgb NVBGrayRampColorMap::colorize( double z ) const
 {
-  quint32 u = 0xFF & (uchar)(0xFF*z);
+	if (z > 1) return 0xFFFFFFFF;
+	if (z < 0) return 0xFF000000;
+	quint32 u = 0xFF & (uchar)(0xFF*z);
   return (quint32)(0xFF000000 | (u << 16) | (u << 8) | u);
 }
 
 NVBRGBRampColorMap::NVBRGBRampColorMap(double r_min, double r_max, double g_min, double g_max, double b_min, double b_max)
 : NVBColorMap()
 {
-  quint32 rgb_min = 0xFF000000 + (((uchar)(r_min*0xFF)) << 16) + (((uchar)(g_min*0xFF)) << 8) + (uchar)(b_min*0xFF);
-  quint32 rgb_max = 0xFF000000 + (((uchar)(r_max*0xFF)) << 16) + (((uchar)(g_max*0xFF)) << 8) + (uchar)(b_max*0xFF);
-	rgb = NVBValueScaler<double,quint32>(0,1,rgb_min,rgb_max);
+	r = NVBValueScaler<double,quint8>(0,1,(uchar)(r_min*0xFF),(uchar)(r_max*0xFF));
+	g = NVBValueScaler<double,quint8>(0,1,(uchar)(g_min*0xFF),(uchar)(g_max*0xFF));
+	b = NVBValueScaler<double,quint8>(0,1,(uchar)(b_min*0xFF),(uchar)(b_max*0xFF));
+}
+
+NVBRGBRampColorMap::NVBRGBRampColorMap(quint32 rgb_min, quint32 rgb_max)
+: NVBColorMap()
+, r(NVBValueScaler<double,quint8>(0,1,(rgb_min & 0xFF0000) >> 16,(rgb_max & 0xFF0000) >> 16))
+, g(NVBValueScaler<double,quint8>(0,1,(rgb_min & 0xFF00) >> 8,(rgb_max & 0xFF00) >> 8))
+, b(NVBValueScaler<double,quint8>(0,1,(rgb_min & 0xFF),(rgb_max & 0xFF)))
+{;}
+
+void NVBRGBRampColorMap::setStart(quint32 start) {
+	r.change_output(r.scale(0),r.scale(1),(start & 0xFF0000) >> 16,r.scale(1));
+	g.change_output(g.scale(0),g.scale(1),(start & 0xFF00) >> 8,g.scale(1));
+	b.change_output(b.scale(0),b.scale(1),(start & 0xFF),b.scale(1));
+}
+
+void NVBRGBRampColorMap::setEnd(quint32 end) {
+	r.change_output(r.scale(0),r.scale(1),r.scale(0),(end & 0xFF0000) >> 16);
+	g.change_output(g.scale(0),g.scale(1),g.scale(0),(end & 0xFF00) >> 8);
+	b.change_output(b.scale(0),b.scale(1),b.scale(0),(end & 0xFF));
+}
+
+QRgb NVBRGBRampColorMap::colorize(double z) const {
+	if (z < 0) z = 0;
+	if (z > 1) z = 1;
+	return 0xFF000000 | r.scale(z) << 16 | g.scale(z) << 8 | b.scale(z);
 }
 
 void NVBGrayStepColorMap::addStep(double x, double value) {
+	if (x < 0) return; // Invalid step position
+	if (x > 1) return; // Invalid step position
 	QList<double>::iterator i = qLowerBound(steps.begin(),steps.end(),x);
 	int index = i-steps.begin()-1;
-	steps.insert(i,x);
 
-	NVBValueScaler<double,double> old = scales.takeAt(index);
-	scales.insert(index,
-								NVBValueScaler<double,double>(
-									steps.at(index),x,
-									old.scale(steps.at(index)),value)
-								);
-	scales.insert(index+1,
-								NVBValueScaler<double,double>(
-									x,steps.at(index+1),
-									value,old.scale(steps.at(index+1)))
-								);
+	if (*i == x) {
+		if (index >= 0)
+			scales[index].change_output(
+						scales.at(index).scale(steps.at(index)),
+						scales.at(index).scale(steps.at(index+1)),
+						scales.at(index).scale(steps.at(index)),
+						value);
+		if (index + 1 < scales.count())
+			scales[index+1].change_output(
+						scales.at(index+1).scale(steps.at(index)),
+						scales.at(index+1).scale(steps.at(index+1)),
+						value,
+						scales.at(index+1).scale(steps.at(index+1)));
+		}
+	else {
+		steps.insert(i,x);
+
+		NVBValueScaler<double,double> old = scales.takeAt(index);
+		scales.insert(index,
+									NVBValueScaler<double,double>(
+										steps.at(index),x,
+										old.scale(steps.at(index)),value)
+									);
+		scales.insert(index+1,
+									NVBValueScaler<double,double>(
+										x,steps.at(index+1),
+										value,old.scale(steps.at(index+1)))
+									);
+		}
 }
 
 QRgb NVBGrayStepColorMap::colorize(double z) const {
