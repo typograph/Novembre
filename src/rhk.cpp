@@ -84,9 +84,9 @@ QStringList RHKFileGenerator::availableInfoFields() const {
 
 void RHKFileGenerator::detectGrid(const TRHKHeader& header, const float * xposdata, const float * yposdata, int& np, int& nx, int& ny)
 {
-	nx = 0;
-	ny = 0;
-	np = 0;
+	nx = 1;
+	ny = 1;
+	np = 1;
 
 // Basically, we can go on on two things
 // First, some of the grid variants are encoded in header.page_type
@@ -137,7 +137,7 @@ void RHKFileGenerator::detectGrid(const TRHKHeader& header, const float * xposda
 			break;
 		}
 
-	if (nx == 0) {
+	if (nx == 1) {
 		if (header.grid_xsize > 0) {
 			nx = header.grid_xsize;
 			ny = header.grid_ysize;
@@ -146,21 +146,9 @@ void RHKFileGenerator::detectGrid(const TRHKHeader& header, const float * xposda
 			for(np = 1; np < header.y_size && xposdata[np] == xposdata[0]; np++) {;}
 			for(nx = 1; nx*np < header.y_size && yposdata[nx*np] == yposdata[0]; nx++) {;}
 			for(ny = 1; ny*nx*np < header.y_size && xposdata[ny*nx*np] == xposdata[0]; ny++) {;}
-			if (ny * nx * np != header.y_size || (nx == 1 && ny == 1)) {
-				// There's probably no grid.
-				// There might be more than one spectrum per point, though.
-				nx = 0;
-				ny = 0;
-				}
 			}
 		}
 		
-	if (np == 0) {
-		if (nx != 0)
-			np = header.y_size / nx / ny;
-		else
-			np = 1;
-		}
 }
 
 NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
@@ -266,7 +254,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 		file.seek(file.pos() + header.page_data_size); // New position directly after data
 
 		NVBDataSet::Type type = NVBDataSet::Undefined;
-		QVector<axissize_t> axes;
+		QList<NVBAxisInfo> axes;
 		
 		switch (header.type) {
 			case 0 : { // Topography - color_info starts here - skip it
@@ -276,7 +264,8 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 				file.peek((char*)&cs,2);
 				file.seek(file.pos() + header.colorinfo_count*(cs+2));
 				type = NVBDataSet::Topography;
-				axes << header.x_size << header.y_size;
+				axes << NVBAxisInfo(strings.at(10).isEmpty() ? "X" : strings.at(10),header.x_size,NVBUnits(strings.at(7)))
+				     << NVBAxisInfo(strings.at(11).isEmpty() ? "Y" : strings.at(11),header.x_size,NVBUnits(strings.at(8)));
 				break;
 				}
 			case 1 : { // Spectroscopy
@@ -284,22 +273,22 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 //				if (header.colorinfo_count != 0) 
 //					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to the developer").arg(file.fileName()));
 
-				axes << header.x_size;
+				axes << NVBAxisInfo(strings.at(10).isEmpty() ? "t" : strings.at(10),header.x_size,NVBUnits(strings.at(7)));
+				
+				int np=1,nx=1,ny=1;
 				
 				// Skip curve position data
 				if (header.page_type != 7 && header.page_type != 31) {
 					float * posdata = (float*)malloc(2*sizeof(float)*header.y_size);
 					file.read((char*)posdata,2*sizeof(float)*header.y_size);
-					int np,nx,ny;
 					detectGrid(header,posdata,posdata + header.y_size,np,nx,ny);
-					if (np > 1) axes << np;
-					if (nx > 1) axes << nx;
-					if (ny > 1) axes << ny;
-					if (nx < 2 && ny << 2 && np > 0)
-						axes << header.y_size/np;
 					}
-				else	
-					axes << header.y_size;
+
+				if (np > 1) axes << NVBAxisInfo("Samples",np);
+				if (nx > 1) axes << NVBAxisInfo("X",nx,NVBUnits(strings.at(7)));
+				if (ny > 1) axes << NVBAxisInfo("Y",ny,NVBUnits(strings.at(8)));;
+				if (nx < 2 && ny < 2 && (header.y_size / np) > 1)
+						axes << NVBAxisInfo("Points", header.y_size / np, NVBUnits("Point",false));
 				
 				type = NVBDataSet::Spectroscopy;
 				break;
@@ -555,13 +544,12 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 //     _data.append(new QwtCPointerData(xs,ys+i*header.x_size,header.x_size));
 	
 	// OK, let's find out
-	int nx, ny, np;
-	
+	int nx, ny, np;	
 	detectGrid(header,xposdata,yposdata,np,nx,ny);
 
 	// Now, the axes
-	// If np != 1 -> "samples" axis
-	// If nx != 0 -> X and Y axes
+	// If np > 1 -> "samples" axis
+	// If nx > 1 -> X and Y axes
 
 	// I need an intelligent approach!!!
 	// The easiest way would be to use NVBAxisSelector with a datasource.

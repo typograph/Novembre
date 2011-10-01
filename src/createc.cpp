@@ -429,13 +429,13 @@ NVBFile * CreatecFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 	return f;
 }
 
-void addDataInfoFB(bool fandb, NVBFileInfo * fi, QString name, const NVBUnits & u, const QVector<axissize_t> & sz) {
+void addDataInfoFB(bool fandb, NVBFileInfo * fi, QString name, const NVBUnits & u, const QList<NVBAxisInfo> & axes) {
 	if (fandb) {
-		fi->append(NVBDataInfo(name + " (forward)", u,sz,NVBDataComments(),NVBDataSet::Topography));
-		fi->append(NVBDataInfo(name + " (backward)",u,sz,NVBDataComments(),NVBDataSet::Topography));
+		fi->append(NVBDataInfo(name + " (forward)", u,axes,NVBDataComments(),NVBDataSet::Topography));
+		fi->append(NVBDataInfo(name + " (backward)",u,axes,NVBDataComments(),NVBDataSet::Topography));
 		}
 	else
-		fi->append(NVBDataInfo(name, u, sz, NVBDataComments(),NVBDataSet::Topography));
+		fi->append(NVBDataInfo(name, u, axes, NVBDataComments(),NVBDataSet::Topography));
 }
 
 NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo & info ) const throw()
@@ -480,8 +480,9 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	QString filename = info.first();
 	QString ext = filename.right(filename.size()-filename.lastIndexOf('.')-1).toLower();
 	if (ext == "dat") {
-		QVector<axissize_t> sz;
-		sz << header.value("Num.X").toInt() << header.value("Num.Y").toInt();
+		QList<NVBAxisInfo> axes;
+		axes << NVBAxisInfo("X", header.value("Num.X").toInt(), NVBUnits("m"))
+		     << NVBAxisInfo("Y", header.value("Num.Y").toInt(), NVBUnits("m"));
 
 		if (header.value("Scantype").toInt() == SCANTYPE_MULTIVOLTAGE) {
 			int multiVoltagePages = 0;
@@ -490,7 +491,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 					multiVoltagePages += 1;
 				else
 					break; // A single 0 blocks all the rest
-			sz << multiVoltagePages;
+			axes << NVBAxisInfo("Bias", multiVoltagePages, NVBUnits("V"));
 		}
 
 
@@ -506,7 +507,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 		
 		for (int i = 0; i < DATchannelNames.count(); i++)
 			if (chanSelect & (1 << i))
-				addDataInfoFB(backward, fi, DATchannelNames.at(i), DATchannelDims.at(i),sz);
+				addDataInfoFB(backward, fi, DATchannelNames.at(i), DATchannelDims.at(i),axes);
 		}
 	else if (ext == "vert") {
 
@@ -548,72 +549,102 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 				}
 			}
 
-		QVector<axissize_t> sz;
+		QList<NVBAxisInfo> axes;
 
-		sz << npts; // "Time"
+		axes << NVBAxisInfo("Time",npts,NVBUnits("sec"));
 		if (nr != 0)
-			sz << nr; // "Measurement"
+			axes << NVBAxisInfo("Measurement",nr);
 		if (nx != 0) {
-			sz << nx; // X
+			axes << NVBAxisInfo("X",nx,NVBUnits("m")); // X
 			if (ny != 0)
-				sz << ny; // Y
+				axes << NVBAxisInfo("Y",ny,NVBUnits("m")); // Y
 			}
 		if (np != 0)
-			sz << np; // "Point"
+			axes << NVBAxisInfo("Point",np); // "Point"
 
 		if (dataParams.count() < 4) { // No channel select parameter - ver 2
-			fi->append(NVBDataInfo("I",    NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("dI",   NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("U",    NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("z",    NVBUnits("nm"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("dI2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("AD0",  NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("AD1",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("AD2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("AD3",  NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("Dac0", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("I",    NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI",   NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("U",    NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("z",    NVBUnits("nm"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI2",  NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD0",  NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD1",  NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD2",  NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("AD3",  NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("Dac0", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			}
 		else { // ver 3
 			int chanSelect = dataParams.at(3).toInt();
 
-			fi->append(NVBDataInfo("U",    NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
-			fi->append(NVBDataInfo("z",    NVBUnits("nm"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("U",    NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo("z",    NVBUnits("nm"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x1)
-				fi->append(NVBDataInfo("I",    NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("I",    NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x2)
-				fi->append(NVBDataInfo("dI/dV",   NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("dI/dV",   NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x4)
-				fi->append(NVBDataInfo("d2I/dV2",  NVBUnits("A/V^2"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("d2I/dV2",  NVBUnits("A/V^2"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x8)
-				fi->append(NVBDataInfo("ADC0",  NVBUnits("A"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("ADC0",  NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x10)
-				fi->append(NVBDataInfo("ADC1",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("ADC1",  NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x20)
-				fi->append(NVBDataInfo("ADC2",  NVBUnits("V"),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("ADC2",  NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x40)
-				fi->append(NVBDataInfo("ADC3",  NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("ADC3",  NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x80)
-				fi->append(NVBDataInfo("df", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("df", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x100)
-				fi->append(NVBDataInfo("Damping", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("Damping", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x200)
-				fi->append(NVBDataInfo("Amplitude", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("Amplitude", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x400)
-				fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("dI_q", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x800)
-				fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("dI2_q",NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x1000)
-				fi->append(NVBDataInfo("Topography", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("Topography", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			if (chanSelect & 0x2000)
-				fi->append(NVBDataInfo("CP", NVBUnits("DAC",false),sz,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("CP", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 			}
 		}
-	else if (ext == "lat")
-		fi->append(NVBDataInfo("I",NVBUnits("A"),QVector<axissize_t>(1,1024),NVBDataComments(),NVBDataSet::Spectroscopy));
-	else if (ext == "tspec")
-		fi->append(NVBDataInfo("I",NVBUnits("A"),QVector<axissize_t>(1,30),NVBDataComments(),NVBDataSet::Spectroscopy));
+	else if (ext == "lat") {
+		file.seek(0x4006);
+		int npts = QString(file.readLine(200)).split(' ',QString::SkipEmptyParts).first().toInt();
+		QList<NVBAxisInfo> axes;
+		axes << NVBAxisInfo("Motion",npts,"s");
+		fi->append(NVBDataInfo("Z",NVBUnits("nm"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("I",NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+		}
+	else if (ext == "tspec") {
+		file.seek(0x4002);
+		int nparam = file.readLine(800).split('\t').count()-3;
+		QList<NVBAxisInfo> axes;
+		axes << NVBAxisInfo("Time", header.value("FFTPoints").toInt(),"s");
+		
+		fi->append(NVBDataInfo("Z", NVBUnits("nm"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("I", NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+		if (nparam > 4) {
+			fi->append(NVBDataInfo("dI", NVBUnits("V"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (nparam > 6) {
+				fi->append(NVBDataInfo("ADC2", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("ADC3", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+				}
+			}
+
+		fi->append(NVBDataInfo("FFT Z", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+		fi->append(NVBDataInfo("FFT I", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+		if (nparam > 4) {
+			fi->append(NVBDataInfo("FFT dI", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+			if (nparam > 6) {
+				fi->append(NVBDataInfo("FFT ADC2", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+				fi->append(NVBDataInfo("FFT ADC3", NVBUnits("DAC",false),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
+				}
+			}
+		}
 	else {
 		NVBOutputError(QString("Unrecognizable file extension in %1").arg(filename));
 		}

@@ -88,11 +88,19 @@ QIcon createSpecOverlayIcon(const NVBDataSet * set, const NVBDataSet * axessourc
 QList<QIcon> createSpecOverlayIcons(const NVBFile* file) {
 		
 	NVBAxisSelector s;
-	s.addCase(1).addMapByValueType(NVBAxisMap::Point); // One axis for data taken on different points
+	s.addCase(1).setDataType(NVBDataSet::Spectroscopy).addMapByValueType(NVBAxisMap::Point); // One axis for data taken on different points
+	// Note that although setting data type seems unnecessary, we might encounter Topography dataset on this axis...
 	s.addCase(2).setDataType(NVBDataSet::Spectroscopy).addAxisByUnits(NVBUnits("m")).needMore(1); // Two axes for grid
 
+	// ^ Although two metric axes seems reasonable, we might encounter spectroscopy taken
+	// on different axes, that, nevertheless, match the axes that topography will be displayed on
+	// FIXME Choose the two axes based on the topography axes.
+	// E.g. s.addCase(2).setDataType(NVBDataSet::Spectroscopy).setDataMinAxes(3)
+	// This would choose all potentially suitable spectroscopy pages
+	
 	NVBSelectorFileInstance inst = s.instantiate(file);
 	
+	// If no such spectroscopy exists
 	if (inst.matchedInstances().isEmpty()) return createDataIcons(file);
 	
 	// Datasources that match, take themselves as map.
@@ -109,17 +117,34 @@ QList<QIcon> createSpecOverlayIcons(const NVBFile* file) {
 		NVBSelectorDataInstance dinst = inst.matchedInstances(1).first().matchedInstances(1).first();
 		pointmap = dinst.matchedMaps().first();
 		pointdata = dinst.matchingData();
-				}
+		}
 	else {
 		NVBSelectorDataInstance dinst = inst.matchedInstances(2).first().matchedInstances(2).first();
 		pointmap.map = new NVBAxes2DGridMap(dinst.matchedAxis(0).physMap(),dinst.matchedAxis(1).physMap());
 		pointmap.axes = dinst.matchedAxes();
 		pointdata = dinst.matchingData();
+		}
+	
+	int ix;
+	
+	NVB_FOREACH(NVBDataSource * ds, file) {
+		
+		// Check for matches belonging to this datasource
+		if ((ix = inst.matchedDatasources(1).indexOf(ds)) >= 0) {
+			NVBSelectorDataInstance dinst = inst.matchedInstances(1).at(ix).matchedInstances(1).first();
+			pointmap = dinst.matchedMaps().first();
+			pointdata = dinst.matchingData();
 			}
-			
-	NVB_FOREACH(NVBDataSource * ds, file)
+		else if ((ix = inst.matchedDatasources(2).indexOf(ds)) >= 0) {
+			NVBSelectorDataInstance dinst = inst.matchedInstances(2).at(ix).matchedInstances(2).first();
+			pointmap.map = new NVBAxes2DGridMap(dinst.matchedAxis(0).physMap(),dinst.matchedAxis(1).physMap());
+			pointmap.axes = dinst.matchedAxes();
+			pointdata = dinst.matchingData();
+			}
+		
 		Q_FOREACH(NVBDataSet * dset, ds->dataSets())
 			icons << createSpecOverlayIcon(dset,pointdata,pointmap);
+		}
 
 	if (inst.matchedInstances(1).isEmpty())
 		delete pointmap.map;
@@ -220,7 +245,7 @@ NVB1DIconEngine::~NVB1DIconEngine()
 void NVB1DIconEngine::setSource(const NVBDataSet* dataset)
 {
 	if (dset) {
-		disconnect(dset,0,this,0);
+//		dset->disconnect(this);
 		dset = 0;
 		cache.clear();
 		instance.reset();
@@ -310,6 +335,8 @@ NVBMixTSIconEngine::NVBMixTSIconEngine(const NVBDataSet* topo, const NVBAxisPoin
 		if (!xm || !ym) return; // Shouldn't happen
 
 		NVBUnits tu = xm->units();
+		if (!tu.isComparableWith(points->value(0).dimension()))
+			return; // FIXME What if the topography has 3 same-units axes or 2 pairs, and the second matches?
 		
 		NVBValueScaler<double,double> xmapper(
 			xm->value(0).getValue(tu),
@@ -346,6 +373,9 @@ NVBMixTSIconEngine::NVBMixTSIconEngine(const NVBDataSet* topo, const NVBAxes2DGr
 		const NVBAxisPhysMap * ym = si.matchedAxis(1).physMap();
 		if (!xm || !ym) return; // Shouldn't happen
 		NVBUnits tu = xm->units();
+		if (!tu.isComparableWith(points->origin().dimension()))
+			return; // FIXME What if the topography has 3 same-units axes or 2 pairs, and the second matches?
+			
 		NVBValueScaler<double,double> xmapper(xm->value(0).getValue(tu),xm->value(si.matchedAxis(0).length() - 1).getValue(tu),0,si.matchedAxis(0).length()-1);
 		NVBValueScaler<double,double> ymapper(ym->value(0).getValue(tu),ym->value(si.matchedAxis(1).length() - 1).getValue(tu),0,si.matchedAxis(1).length()-1);
 		for (axissize_t x = 0; x < nptsx; x++)

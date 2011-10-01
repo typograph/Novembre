@@ -22,6 +22,7 @@
 #include <QtGui/QCheckBox>
 #include <QtGui/QLineEdit>
 #include <QtGui/QStylePainter>
+#include <QtGui/QSpinBox>
 
 #include <QtGui/QApplication>
 #include "NVBFileFactory.h"
@@ -33,11 +34,19 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 //   setMinimumSize(QSize(363, 163));
 
-  QGridLayout * gridLayout = new QGridLayout(this);
+	QVBoxLayout * mainLayout = new QVBoxLayout(this);
+
+  QGridLayout * gridLayout = new QGridLayout();
   fileOption = new QRadioButton("File parameter",this);
+	connect(fileOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
 //   fileOption->setChecked(true);
   gridLayout->addWidget(fileOption, 0, 0, 1, 1);
 
+	//
+	// The main reason why the choices are added manually and not iterating over a map
+	// is because this way the order is predictable, and local to NVBColumnInputWidget
+	//
+	
   fileChoice = new QComboBox(this);
   fileChoice->addItem(NVBTokenList::nameFileParam(NVBFileParamToken::FileName),NVBFileParamToken::FileName);
   fileChoice->addItem(NVBTokenList::nameFileParam(NVBFileParamToken::NPages),NVBFileParamToken::NPages);
@@ -52,83 +61,111 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	connect(fileChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToFile()));
 
   dataOption = new QRadioButton("Data parameter",this);
+	connect(dataOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
   gridLayout->addWidget(dataOption, 1, 0, 1, 1);
 
   dataChoice = new QComboBox(this);
   dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::Name),NVBDataParamToken::Name);
+  dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::Units),NVBDataParamToken::Units);
   dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::DataSize),NVBDataParamToken::DataSize);
+  dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::NAxes),NVBDataParamToken::NAxes);
   dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::IsTopo),NVBDataParamToken::IsTopo);
   dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::IsSpec),NVBDataParamToken::IsSpec);
-//  dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::XSize),NVBDataParamToken::XSize);
-//  dataChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::YSize),NVBDataParamToken::YSize);
 //  NVBDataParamToken:: dataChoice->addItem(NVBTokenList::nameDataParam(),QVariant());
   dataChoice->setCurrentIndex(0);
   gridLayout->addWidget(dataChoice, 1, 1, 1, 1);  
 	connect(dataChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToData()));
 
-  topoOption = new QRadioButton("Topography parameter",this);
-  gridLayout->addWidget(topoOption, 2, 0, 1, 1);
-
-  topoChoice = new QComboBox(this);
-  topoChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::Name),NVBDataParamToken::Name);
-  topoChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::DataSize),NVBDataParamToken::DataSize);
-//  topoChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::IsTopo),NVBDataParamToken::IsTopo);
-//  topoChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::IsSpec),NVBDataParamToken::IsSpec);
-//  topoChoice->addItem("Points in X",NVBDataParamToken::XSize);
-//  topoChoice->addItem("Points in Y",NVBDataParamToken::YSize);
-//  NVBDataParamToken:: topoChoice->addItem(NVBTokenList::nameDataParam(),QVariant());
-  topoChoice->setCurrentIndex(0);
-  gridLayout->addWidget(topoChoice, 2, 1, 1, 1);
-	connect(topoChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToTopo()));
-
-  specOption = new QRadioButton("Spectroscopy parameter",this);
-  gridLayout->addWidget(specOption, 3, 0, 1, 1);
-
-  specChoice = new QComboBox(this);
-  specChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::Name),NVBDataParamToken::Name);
-  specChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::DataSize),NVBDataParamToken::DataSize);
-//  specChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::IsTopo),NVBDataParamToken::IsTopo);
-//  specChoice->addItem(NVBTokenList::nameDataParam(NVBDataParamToken::IsSpec),NVBDataParamToken::IsSpec);
-//  specChoice->addItem("Points per curve",NVBDataParamToken::XSize);
-//  specChoice->addItem("Number of curves",NVBDataParamToken::YSize);
-//  NVBDataParamToken:: specChoice->addItem(NVBTokenList::nameDataParam(),QVariant());
-  specChoice->setCurrentIndex(0);
-  gridLayout->addWidget(specChoice, 3, 1, 1, 1);
-	connect(specChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToSpec()));
-
   QHBoxLayout *horizontalLayout = new QHBoxLayout();
+  axisOption = new QRadioButton("Axis",this);
+	connect(axisOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+  horizontalLayout->addWidget(axisOption);
 
-  commentOption = new QRadioButton("Custom",this);
-  horizontalLayout->addWidget(commentOption);
+	axisNameEdit = new QLineEdit(this);
+  horizontalLayout->addWidget(axisNameEdit);
+	connect(axisNameEdit,SIGNAL(textEdited(QString)),SLOT(switchToAxis()));
 
-  horizontalLayout->addStretch(1);
+  gridLayout->addLayout(horizontalLayout, 2, 0, 1, 1);
 
-  topoCustomCheck = new QCheckBox("T",this);
-  topoCustomCheck->setChecked(true);
-  horizontalLayout->addWidget(topoCustomCheck);
+  axisChoice = new QComboBox(this);
+  axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Name),NVBAxisParamToken::Name);
+  axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Length),NVBAxisParamToken::Length);
+  axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Units),NVBAxisParamToken::Units);
 
-  specCustomCheck = new QCheckBox("S",this);
-  specCustomCheck->setChecked(true);
-  horizontalLayout->addWidget(specCustomCheck);
+	axisChoice->setCurrentIndex(0);
+  gridLayout->addWidget(axisChoice, 2, 1, 1, 1);
+	connect(axisChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToAxis()));
 
-  gridLayout->addLayout(horizontalLayout, 4, 0, 1, 1);
+  commentOption = new QRadioButton("Parameter",this);
+	connect(commentOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+  gridLayout->addWidget(commentOption, 3, 0, 1, 1);
 
   commentChoice = new QComboBox(this);
 //	commentChoice->setEditable(true);
   commentChoice->addItems(qApp->property("filesFactory").value<NVBFileFactory*>()->availableInfoFields());
 	commentChoice->setAutoCompletion(true);
-  gridLayout->addWidget(commentChoice, 4, 1, 1, 1);
+  gridLayout->addWidget(commentChoice, 3, 1, 1, 1);
 	connect(commentChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToCustom()));
+	
+	textOption = new QRadioButton("Text",this);
+	connect(textOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	gridLayout->addWidget(textOption,4,0,1,1);
+	
+	textChoice = new QLineEdit(this);
+	connect(textChoice,SIGNAL(textEdited(QString)),SLOT(switchToText()));
+	gridLayout->addWidget(textChoice,4,1,1,1);
+	
+	mainLayout->addLayout(gridLayout);
 
-  expertOption = new QRadioButton("Expert",this);
-  gridLayout->addWidget(expertOption, 5, 0, 1, 1);
+	QFrame * limitFrame = new QFrame(this);
+	mainLayout->addWidget(limitFrame);
+	
+	limitFrame->setLineWidth(1);
+	limitFrame->setFrameShape(QFrame::Panel);
+	limitFrame->setFrameShadow(QFrame::Sunken);
+	
+	QVBoxLayout * vertLayout = new QVBoxLayout(limitFrame);
+	
+	topoOnlyOption = new QRadioButton("Limit to topographic data",limitFrame);
+	connect(topoOnlyOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	vertLayout->addWidget(topoOnlyOption);
+	specOnlyOption = new QRadioButton("Limit to spectroscopic data",limitFrame);
+	connect(specOnlyOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	vertLayout->addWidget(specOnlyOption);
+	horizontalLayout = new QHBoxLayout();
+	axisNumOption = new QCheckBox("Limit to data with",limitFrame);
+	connect(axisNumOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	horizontalLayout->addWidget(axisNumOption);
+	axisLimitChoice = new QComboBox(limitFrame);
+	axisLimitChoice->addItem("exactly",NVBGotoToken::HasNAxes);
+	axisLimitChoice->addItem("at least",NVBGotoToken::HasAtLeastNAxes);
+	axisLimitChoice->addItem("at most",NVBGotoToken::HasAtMostNAxes);
+	connect(axisLimitChoice,SIGNAL(currentIndexChanged(int)),this,SIGNAL(stateChanged()));
+	horizontalLayout->addWidget(axisLimitChoice);
+	axisNumChoice = new QSpinBox(limitFrame);
+	axisNumChoice->setMinimum(1);
+	axisNumChoice->setValue(2);
+	axisNumChoice->setSuffix(" axes");
+	connect(axisNumChoice,SIGNAL(valueChanged(int)),this,SIGNAL(stateChanged()));
+	horizontalLayout->addWidget(axisNumChoice);
+	horizontalLayout->addStretch(1);
+	
+	vertLayout->addLayout(horizontalLayout);
+	
+	horizontalLayout = new QHBoxLayout();
+	expertOption = new QRadioButton("Expert",this);
+	connect(expertOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	horizontalLayout->addWidget(expertOption);
 
-  expertEdit = new QLineEdit(this);
-  gridLayout->addWidget(expertEdit, 5, 1, 1, 1);
+	expertEdit = new QLineEdit(this);
+	horizontalLayout->addWidget(expertEdit);
 	connect(expertEdit,SIGNAL(textEdited(QString)),SLOT(switchToExpert()));
 
-  tokenListToLayout(l);
+	mainLayout->addLayout(horizontalLayout);
+	
+	tokenListToLayout(l);
 
+	connect(this,SIGNAL(stateChanged()),this,SLOT(updateExpertText()));
 }
 
 void NVBColumnInputWidget::switchToFile() {
@@ -141,18 +178,19 @@ void NVBColumnInputWidget::switchToData() {
 	emit stateChanged();
 }
 
-void NVBColumnInputWidget::switchToTopo() {
-	topoOption->setChecked(true);
+void NVBColumnInputWidget::switchToAxis() {
+	axisOption->setChecked(true);
 	emit stateChanged();
 }
 
-void NVBColumnInputWidget::switchToSpec() {
-	specOption->setChecked(true);
-	emit stateChanged();
-}
-
-void NVBColumnInputWidget::switchToCustom() {
+void NVBColumnInputWidget::switchToComment() {
 	commentOption->setChecked(true);
+	emit stateChanged();
+}
+
+void NVBColumnInputWidget::switchToText()
+{
+	textOption->setChecked(true);
 	emit stateChanged();
 }
 
@@ -161,10 +199,34 @@ void NVBColumnInputWidget::switchToExpert() {
 	emit stateChanged();
 }
 
+void NVBColumnInputWidget::updateExpertText()
+{
+	if (!expertOption->isChecked()) {
+		expertEdit->setText(getState().sourceString());
+		}
+}
+
 NVBTokenList NVBColumnInputWidget::getState()
 {
-  QList<NVBToken*> state_tokens;
-  
+  if (expertOption->isChecked())
+    return NVBTokenList(expertEdit->text());
+	
+	QList<NVBToken*> state_tokens;
+
+	if (topoOnlyOption->isChecked()) {
+		state_tokens << new NVBGotoToken( NVBGotoToken::IsTopo, 1, axisNumOption->isChecked() ? 3 : 2 );
+		}
+	else if (specOnlyOption->isChecked()) {
+		state_tokens << new NVBGotoToken( NVBGotoToken::IsSpec, 1, axisNumOption->isChecked() ? 3 : 2  );
+		}
+	
+	if (axisNumOption->isChecked()) {
+		NVBGotoToken * gt;
+		gt = new NVBGotoToken( (NVBGotoToken::NVBCondType) axisLimitChoice->itemData(axisLimitChoice->currentIndex()).toInt(), 1, 2 );
+		gt->n = axisNumChoice->value();
+		state_tokens << gt;
+		}	
+	
   if (fileOption->isChecked()) {
     state_tokens << new NVBFileParamToken(
       (NVBFileParamToken::NVBFileParam) fileChoice->itemData(fileChoice->currentIndex()).toInt() );
@@ -173,40 +235,27 @@ NVBTokenList NVBColumnInputWidget::getState()
     state_tokens << new NVBDataParamToken(
       (NVBDataParamToken::NVBDataParam) dataChoice->itemData(dataChoice->currentIndex()).toInt() );
     }
-  else if (topoOption->isChecked()) {
-    state_tokens << new NVBGotoToken( NVBGotoToken::IsTopo, 1, 2 );
-    state_tokens << new NVBDataParamToken(
-      (NVBDataParamToken::NVBDataParam) topoChoice->itemData(topoChoice->currentIndex()).toInt() );
-    }
-  else if (specOption->isChecked()) {
-    state_tokens << new NVBGotoToken( NVBGotoToken::IsSpec, 1, 2 );
-    state_tokens << new NVBDataParamToken(
-      (NVBDataParamToken::NVBDataParam) specChoice->itemData(specChoice->currentIndex()).toInt() );
+  else if (axisOption->isChecked()) {
+		if (axisNameEdit->text().isEmpty())
+			axisNameEdit->setText("0");
+		bool ok;
+		int ix = axisNameEdit->text().toInt(&ok);
+		if (ok)
+			state_tokens << new NVBAxisParamToken(ix, (NVBAxisParamToken::NVBAxisParam) axisChoice->itemData(axisChoice->currentIndex()).toInt() );
+		else
+			state_tokens << new NVBAxisParamToken(axisNameEdit->text(), (NVBAxisParamToken::NVBAxisParam) axisChoice->itemData(axisChoice->currentIndex()).toInt() );
     }
   else if (commentOption->isChecked()) {
-    if (topoCustomCheck->isChecked() && !specCustomCheck->isChecked()) {
-      state_tokens << new NVBGotoToken( NVBGotoToken::IsTopo, 1, 2 );
-      }
-    else if (!topoCustomCheck->isChecked() && specCustomCheck->isChecked()) {
-      state_tokens << new NVBGotoToken( NVBGotoToken::IsSpec, 1, 2 );
-      }
-      
-    if (topoCustomCheck->isChecked() || specCustomCheck->isChecked()) {
       state_tokens << new NVBPCommentToken( commentChoice->currentText() );
-      }    
     }
-  else if (expertOption->isChecked()) {
-    return NVBTokenList(expertEdit->text());
+  else if (textOption->isChecked()) {
+      state_tokens << new NVBVerbatimToken( textChoice->text() );
     }
   else { // s is null;
     return NVBTokenList();
     }
 
-  NVBTokenList result(state_tokens);
-  
-  expertEdit->setText(result.sourceString());
-  
-  return result;
+  return NVBTokenList(state_tokens);;
 
 }
 
@@ -494,103 +543,148 @@ void NVBCCCBox::setValue( )
 
 void NVBColumnInputWidget::tokenListToLayout( NVBTokenList l )
 {
-  expertEdit->setText(l.sourceString()); // For curious people
+  expertEdit->setText(l.sourceString()); // For curious people (like me)
   
-  if (l.size() == 0 || l.size() > 2 || (l.size() == 2 && l.first()->type != NVBToken::Goto)) {
+  if (l.size() == 0 || l.size() > 3) {
     expertOption->setChecked(true);    
     return;
     }
-    
-  if (l.size() == 2)
-    switch (static_cast<NVBGotoToken*>(l.last())->type) {
-      case NVBToken::FileParam :
-      case NVBToken::Goto :
-      case NVBToken::Verbatim :
-      case NVBToken::Invalid :
-        {
-        expertOption->setChecked(true);    
-        return;
-        }
-      case NVBToken::DataComment : {
-        commentOption->setChecked(true);
-        
-        switch (static_cast<NVBGotoToken*>(l.first())->condition) {
-          case NVBGotoToken::IsSpec : {
-            specCustomCheck->setChecked(true);
-            topoCustomCheck->setChecked(false);
-            break;
-            }
-          case NVBGotoToken::IsTopo : {
-            topoCustomCheck->setChecked(true);
-            specCustomCheck->setChecked(false);
-            break;
-            }
-          case NVBGotoToken::None : 
-          case NVBGotoToken::Stop :
-          default : {
-            expertOption->setChecked(true);    
-            return;
-            }
-          }
-          
-        commentChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.last())->sparam);          
-        return;
-        }
-      case NVBToken::DataParam : {
-        switch (static_cast<NVBGotoToken*>(l.first())->condition) {
-          case NVBGotoToken::IsSpec : {
-            specOption->setChecked(true);
-            specChoice->setCurrentIndex(specChoice->findData(static_cast<NVBDataParamToken*>(l.last())->pparam));
-            return;
-            }
-          case NVBGotoToken::IsTopo : {
-            topoOption->setChecked(true);
-            topoChoice->setCurrentIndex(topoChoice->findData(static_cast<NVBDataParamToken*>(l.last())->pparam));
-            return;
-            }
-          case NVBGotoToken::None : 
-          case NVBGotoToken::Stop :
-          default : {
-            expertOption->setChecked(true);    
-            return;
-            }
-          }
-        return; // Unreachable
-        }
-      }
-      
-    switch (l.first()->type) {
-      case NVBToken::DataComment : {
-        commentOption->setChecked(true);
-        topoCustomCheck->setChecked(true);
-        specCustomCheck->setChecked(true);
-				int ci = commentChoice->findText(static_cast<NVBPCommentToken*>(l.first())->sparam);
-				if (ci > -1)
-					commentChoice->setCurrentIndex(ci);
-				else {
-					commentChoice->setEditable(true);
-					commentChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.first())->sparam);
+
+	if (l.size() == 3) {
+		if (!l.first()->type == NVBToken::Goto || !l.at(1)->type == NVBToken::Goto) {
+			expertOption->setChecked(true);    
+			return;
+			}
+			
+		NVBGotoToken* gt1 = static_cast<NVBGotoToken*>(l.at(0));
+		NVBGotoToken* gt2 = static_cast<NVBGotoToken*>(l.at(1));
+		
+		if (gt1->condition == gt2->condition) {
+			expertOption->setChecked(true);    
+			return;
+			}
+		
+		switch (gt1->condition) {
+			case NVBGotoToken::IsSpec : {
+				if (gt2->condition == NVBGotoToken::IsTopo) {
+					expertOption->setChecked(true);
+					return;
 					}
-        break;
-        }
-      case NVBToken::FileParam : {
-        fileOption->setChecked(true);
-        fileChoice->setCurrentIndex(fileChoice->findData(static_cast<NVBFileParamToken*>(l.first())->fparam));
-        break;
-        }
-      case NVBToken::DataParam : {
-        dataOption->setChecked(true);
-        dataChoice->setCurrentIndex(dataChoice->findData(static_cast<NVBDataParamToken*>(l.first())->pparam));
-        break;
-        }
-      case NVBToken::Verbatim :
-      case NVBToken::Goto : 
-      default :
-        {
-        expertOption->setChecked(true);  
-        return;
-        }
-      }
+				specOnlyOption->setChecked(true);
+				break;
+				}
+			case NVBGotoToken::IsTopo : {
+				if (gt2->condition == NVBGotoToken::IsSpec) {
+					expertOption->setChecked(true);    
+					return;
+					}
+				topoOnlyOption->setChecked(true);
+				break;
+				}
+			case NVBGotoToken::HasNAxes :
+			case NVBGotoToken::HasAtLeastNAxes :
+			case NVBGotoToken::HasAtMostNAxes : {
+				axisNumOption->setChecked(true);
+				axisNumChoice->setValue(gt1->n);
+				axisLimitChoice->setCurrentIndex(axisLimitChoice->findData(gt1->condition));
+				break;
+				}
+			case NVBGotoToken::None : 
+			case NVBGotoToken::Stop :
+			default : {
+				expertOption->setChecked(true);    
+				return;
+				}
+			}
+		
+		switch (gt2->condition) {
+			case NVBGotoToken::IsSpec : {
+				specOnlyOption->setChecked(true);
+				break;
+				}
+			case NVBGotoToken::IsTopo : {
+				topoOnlyOption->setChecked(true);
+				break;
+				}
+			case NVBGotoToken::HasNAxes :
+			case NVBGotoToken::HasAtLeastNAxes :
+			case NVBGotoToken::HasAtMostNAxes : {
+				axisNumOption->setChecked(true);
+				axisNumChoice->setValue(gt2->n);
+				axisLimitChoice->setCurrentIndex(axisLimitChoice->findData(gt2->condition));
+				break;
+				}
+			case NVBGotoToken::None : 
+			case NVBGotoToken::Stop :
+			default : {
+				expertOption->setChecked(true);    
+				return;
+				}
+			}
+		}
+	else if (l.size() == 2) {
+		NVBGotoToken* gt = static_cast<NVBGotoToken*>(l.first());
+		if (!gt) {NVBOutputError("Impossible cast error"); setEnabled(false); return;}
+		switch (gt->condition) {
+			case NVBGotoToken::IsSpec : {
+				specOnlyOption->setChecked(true);
+				break;
+				}
+			case NVBGotoToken::IsTopo : {
+				topoOnlyOption->setChecked(true);
+				break;
+				}
+			case NVBGotoToken::HasNAxes :
+			case NVBGotoToken::HasAtLeastNAxes :
+			case NVBGotoToken::HasAtMostNAxes : {
+				axisNumOption->setChecked(true);
+				axisNumChoice->setValue(gt->n);
+				axisLimitChoice->setCurrentIndex(axisLimitChoice->findData(gt->condition));
+				break;
+				}
+			case NVBGotoToken::None : 
+			case NVBGotoToken::Stop :
+			default : {
+				expertOption->setChecked(true);    
+				return;
+				}
+			}
+		}
+	
+	switch (l.last()->type) {
+		case NVBToken::FileParam : {
+			fileOption->setChecked(true);
+			fileChoice->setCurrentIndex(fileChoice->findData(static_cast<NVBFileParamToken*>(l.last())->fparam));
+			return;
+			}
+		case NVBToken::DataParam : {
+			dataOption->setChecked(true);
+			dataChoice->setCurrentIndex(dataChoice->findData(static_cast<NVBDataParamToken*>(l.last())->pparam));
+			return;
+			}
+		case NVBToken::AxisParam : {
+			NVBAxisParamToken * at = static_cast<NVBAxisParamToken*>(l.last());
+			axisOption->setChecked(true);
+			axisNameEdit->setText(at->nparam.isEmpty() ? QString::number(at->ixparam) : at->nparam);
+			axisChoice->setCurrentIndex(axisChoice->findData(at->aparam));
+			return;
+			}
+		case NVBToken::DataComment : {
+			commentOption->setChecked(true);
+			commentChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.last())->sparam);          
+			return;
+			}
+		case NVBToken::Verbatim : {
+			textOption->setChecked(true);
+			textOption->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);          
+			}
+		case NVBToken::Goto :
+		case NVBToken::Invalid :
+			{
+			expertOption->setChecked(true);    
+			return;
+			}
+		}
 
 }
 
