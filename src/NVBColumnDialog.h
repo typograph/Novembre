@@ -17,6 +17,7 @@ class QVBoxLayout;
 class QPushButton;
 class QRadioButton;
 class QCheckBox;
+class QSpinBox;
 
 /**
  * \class NVBColumnInputWidget
@@ -44,14 +45,20 @@ class NVBColumnInputWidget : public QWidget
   QComboBox *fileChoice;
   QRadioButton *dataOption;
   QComboBox *dataChoice;
-  QRadioButton *topoOption;
-  QComboBox *topoChoice;
-  QRadioButton *specOption;
-  QComboBox *specChoice;
+  QRadioButton *axisOption;
+  QLineEdit *axisNameEdit;
+  QComboBox *axisChoice;
   QRadioButton *commentOption;
   QComboBox *commentChoice;
-  QCheckBox *topoCustomCheck;
-  QCheckBox *specCustomCheck;
+	QRadioButton *textOption;
+	QLineEdit *textChoice;
+	
+	QRadioButton *topoOnlyOption;
+	QRadioButton *specOnlyOption;
+	QCheckBox *axisNumOption;
+  QComboBox *axisLimitChoice;
+  QSpinBox *axisNumChoice;
+
   QRadioButton *expertOption;
   QLineEdit *expertEdit;
 
@@ -65,10 +72,11 @@ private:
 private slots:
 	void switchToFile();
 	void switchToData();
-	void switchToTopo();
-	void switchToSpec();
-	void switchToCustom();
+	void switchToAxis();
+	void switchToComment();
+	void switchToText();
 	void switchToExpert();
+	void updateExpertText();
 signals:
 	void stateChanged();
 };

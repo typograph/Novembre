@@ -321,7 +321,7 @@ NVBFileInfo * NVBFileBundle::loadFileInfo( const NVBAssociatedFilesInfo & info )
 			NVBDataComments c = finfo->getAllComments();
 			fi->filterAddComments(c);
 			NVB_FOREACH(NVBDataInfo i, finfo)
-				fi->append(NVBDataInfo(i.name,i.dimension,i.sizes,i.comments.unite(c),i.type));
+				fi->append(NVBDataInfo(i.name,i.dimension,i.axes,i.comments.unite(c),i.type));
 			delete finfo;
 			}
 		return fi;
@@ -330,7 +330,7 @@ NVBFileInfo * NVBFileBundle::loadFileInfo( const NVBAssociatedFilesInfo & info )
 // Now there are axes
 // To simplify and speed up loading we assume that the shape of the data is the same for all files
 
-	QVector<axissize_t> new_sizes;
+	QList<NVBAxisInfo> new_axes;
 	foreach(QString axis, axes) {
 		QStringList aprop = axis.split(' ');
 		if (aprop.first().at(0) == '\"') {
@@ -345,10 +345,16 @@ NVBFileInfo * NVBFileBundle::loadFileInfo( const NVBAssociatedFilesInfo & info )
 			aprop.prepend(aname.mid(1,aname.length()-2));
 			}
 		switch(aprop.length()) {
-			case 2:
-			case 3:
+			case 2: {
+				new_axes << NVBAxisInfo(aprop.at(0),aprop.at(1).toInt());
+				break;
+				}
+			case 3: {
+				new_axes << NVBAxisInfo(aprop.at(0),aprop.at(1).toInt()); // FIXME axis units not empty
+				break;
+				}
 			case 5: {
-				new_sizes << aprop.at(1).toInt();
+				new_axes << NVBAxisInfo(aprop.at(0),aprop.at(1).toInt(),aprop.at(4));
 				break;
 				}
 			default: {
@@ -371,7 +377,7 @@ NVBFileInfo * NVBFileBundle::loadFileInfo( const NVBAssociatedFilesInfo & info )
 	fi->filterAddComments(finfo->comments);
 	
 	NVB_FOREACH(NVBDataInfo i, finfo)
-		fi->append(NVBDataInfo(i.name,i.dimension,QVector<axissize_t>() << i.sizes << new_sizes,i.comments,i.type));
+		fi->append(NVBDataInfo(i.name,i.dimension,QList<NVBAxisInfo>() << i.axes << new_axes,i.comments,i.type));
 	delete finfo;
 	
 	return fi;

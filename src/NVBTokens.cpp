@@ -12,12 +12,12 @@ QMap<NVBFileParamToken::NVBFileParam,NVBDescrPair > NVBTokenList::initFileParamN
   
   QMap<NVBFileParamToken::NVBFileParam,NVBDescrPair > pnames;
   
-  pnames.insert(NVBFileParamToken::FileATime,NVBDescrPair("fileATime","File access time"));
-  pnames.insert(NVBFileParamToken::FileMTime,NVBDescrPair("fileMTime","File modification time"));
-  pnames.insert(NVBFileParamToken::FileCTime,NVBDescrPair("fileCTime","File creation time"));
-  pnames.insert(NVBFileParamToken::FileName,NVBDescrPair("fileName","File name"));
-	pnames.insert(NVBFileParamToken::FileNames,NVBDescrPair("fileNames","Files on disk"));
-	pnames.insert(NVBFileParamToken::FileSize,NVBDescrPair("fileSize","File size"));
+  pnames.insert(NVBFileParamToken::FileATime,NVBDescrPair("fileATime","Time of last access"));
+  pnames.insert(NVBFileParamToken::FileMTime,NVBDescrPair("fileMTime","Time of last modification"));
+  pnames.insert(NVBFileParamToken::FileCTime,NVBDescrPair("fileCTime","Time of creation"));
+  pnames.insert(NVBFileParamToken::FileName,NVBDescrPair("fileName","Name"));
+	pnames.insert(NVBFileParamToken::FileNames,NVBDescrPair("fileNames","All included files"));
+	pnames.insert(NVBFileParamToken::FileSize,NVBDescrPair("fileSize","Size"));
   pnames.insert(NVBFileParamToken::NPages,NVBDescrPair("nPages","Number of datasets"));
    
 //   pnames.insert(NVBFileParamToken::,NVBDescrPair("",""));
@@ -40,16 +40,23 @@ QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > NVBTokenList::dataParamNames
 
 QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > NVBTokenList::initDataParamNames( )
 {
-  QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > fnames;
+  QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > dnames;
   
-  fnames.insert(NVBDataParamToken::Name,NVBDescrPair("dataName","Data name"));
-  fnames.insert(NVBDataParamToken::DataSize,NVBDescrPair("dataSize","Data dimensions"));
-  fnames.insert(NVBDataParamToken::Units,NVBDescrPair("dataUnits","Data units"));
-  fnames.insert(NVBDataParamToken::NAxes,NVBDescrPair("dataNAxes","Number of axes"));
+  dnames.insert(NVBDataParamToken::Name,NVBDescrPair("dataName","Name"));
+  dnames.insert(NVBDataParamToken::DataSize,NVBDescrPair("dataSize","Dimensions"));
+  dnames.insert(NVBDataParamToken::Units,NVBDescrPair("dataUnits","Units"));
+  dnames.insert(NVBDataParamToken::NAxes,NVBDescrPair("dataNAxes","Number of axes"));
+  dnames.insert(NVBDataParamToken::IsTopo,NVBDescrPair("dataIsTopo","Topography type"));
+  dnames.insert(NVBDataParamToken::IsSpec,NVBDescrPair("dataIsSpec","Spectroscopic type"));
 
 //  fnames.insert(NVBDataParamToken::,NVBDescrPair("",""));
 
-  return fnames;
+  return dnames;
+}
+
+QString NVBTokenList::nameDataParam( NVBDataParamToken::NVBDataParam p )
+{
+  return dataParamNames.value(p).verbName();
 }
 
 NVBDataParamToken::NVBDataParam NVBTokenList::findDataParam( QString key )
@@ -57,9 +64,29 @@ NVBDataParamToken::NVBDataParam NVBTokenList::findDataParam( QString key )
   return dataParamNames.key(NVBDescrPair(key,QString()));
 }
 
-QString NVBTokenList::nameDataParam( NVBDataParamToken::NVBDataParam p )
+QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > NVBTokenList::axisParamNames = NVBTokenList::initAxisParamNames();
+
+QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > NVBTokenList::initAxisParamNames( )
 {
-  return dataParamNames.value(p).verbName();
+  QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > anames;
+  
+  anames.insert(NVBAxisParamToken::Name,NVBDescrPair("axisName","Name"));
+  anames.insert(NVBAxisParamToken::Length,NVBDescrPair("axisLength","Length"));
+  anames.insert(NVBAxisParamToken::Units,NVBDescrPair("axisUnits","Units"));
+
+//  fnames.insert(NVBAxisParamToken::,NVBDescrPair("",""));
+
+  return anames;
+}
+
+NVBAxisParamToken::NVBAxisParam NVBTokenList::findAxisParam( QString key )
+{
+  return axisParamNames.key(NVBDescrPair(key,QString()));
+}
+
+QString NVBTokenList::nameAxisParam(NVBAxisParamToken::NVBAxisParam p)
+{
+  return axisParamNames.value(p).verbName();
 }
 
 QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > & tokens )
@@ -83,6 +110,16 @@ QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > 
       case NVBToken::DataParam : {
         if (needsemicolon) s += ';';
         s += dataParamNames.value(static_cast<NVBDataParamToken*>(tokens.at(i++))->pparam).keyName();
+        needsemicolon = true;
+        break;        
+        }
+      case NVBToken::AxisParam : {
+        if (needsemicolon) s += ';';
+        NVBAxisParamToken * at = static_cast<NVBAxisParamToken*>(tokens.at(i++));
+				if (at->nparam.isEmpty())
+					s += QString("(%1)%2").arg(at->ixparam).arg(axisParamNames.value(at->aparam).keyName());
+				else
+					s += QString("(%1)%2").arg(at->nparam).arg(axisParamNames.value(at->aparam).keyName());
         needsemicolon = true;
         break;        
         }
@@ -186,6 +223,7 @@ QList< NVBToken * > NVBTokenList::tokenizeSubString( QString s, int & pos)
   QList< NVBToken * > falseclause;
 
   static QRegExp param("[^?|;:\"]+");
+  static QRegExp axis("\\(([1-9][0-9]*|[^\\)]+)\\)([^?|;:\"]+)");
   static QRegExp user("\"([^\"]*)\"");
 
   bool inif = false;
@@ -288,7 +326,22 @@ QList< NVBToken * > NVBTokenList::tokenizeSubString( QString s, int & pos)
         inelse = false;
         break;
         }
-      default : {
+			case '(' : {
+				if (axis.indexIn(s,pos) == pos) {
+					NVBAxisParamToken::NVBAxisParam k;
+					if ((k = findAxisParam(axis.cap(2))) != NVBAxisParamToken::Invalid) {
+						bool ok;
+						int ix = axis.cap(1).toInt(&ok);
+						if (ok)
+							result << new NVBAxisParamToken(ix,findAxisParam(axis.cap(2)));
+						else
+							result << new NVBAxisParamToken(axis.cap(1),findAxisParam(axis.cap(2)));
+						pos += axis.matchedLength();
+						break;
+						}
+          }
+				}
+			default : {
         if (user.indexIn(s,pos) == pos) {
           result << new NVBVerbatimToken(user.cap(1));
           pos += user.matchedLength();
@@ -347,61 +400,102 @@ NVBTokenList::NVBTokenList( QString s ) { data = new NVBTokenListData(s); }
 
 QString NVBTokenList::verboseString() const
 {
-  if (data->tokens.isEmpty()) return QString("");
+	if (data->tokens.isEmpty()) return QString("");
+	
+	if (data->tokens.size() > 3 || (data->tokens.first()->type != NVBToken::Goto && data->tokens.size() > 1) )
+		return QString("Expert: \"%1\"").arg(data->source); 
+	
+	QString prefix;
   
-  if (data->tokens.size() > 2 || (data->tokens.first()->type != NVBToken::Goto && data->tokens.size() > 1) ) return QString("Expert: \"%1\"").arg(data->source); 
+	if (data->tokens.first()->type == NVBToken::Goto)
+		switch (static_cast<NVBGotoToken*>(data->tokens.first())->condition) {
+			case NVBGotoToken::None : {
+				return QString("Nothing");
+				}
+			case NVBGotoToken::Stop : {
+				return QString("Empty");
+				}
+			case NVBGotoToken::IsSpec : {
+				prefix = "Spectroscopy: ";
+				break;
+				}
+			case NVBGotoToken::IsTopo : {
+				prefix = "Topography: ";
+				break;
+				}
+			case NVBGotoToken::HasAtLeastNAxes : {
+				prefix = QString("Has >= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
+				break;
+				}
+			case NVBGotoToken::HasAtMostNAxes : {
+				prefix = QString("Has <= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
+				break;
+				}
+			case NVBGotoToken::HasNAxes : {
+				prefix = QString("Has %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
+				break;
+				}
+			default : {
+				prefix = "(): ";
+				break;
+				}
+			}
   
-  QString prefix;
-  
-  if (data->tokens.first()->type == NVBToken::Goto)
-    switch (static_cast<NVBGotoToken*>(data->tokens.first())->condition) {
-      case NVBGotoToken::None : {
-        return QString("Nothing");
-        }
-      case NVBGotoToken::Stop : {
-        return QString("Empty");
-        }
-      case NVBGotoToken::IsSpec : {
-        prefix = "Spectroscopy: ";
-        break;
-        }
-      case NVBGotoToken::IsTopo : {
-        prefix = "Topography: ";
-        break;
-        }
-      case NVBGotoToken::HasAtLeastNAxes : {
-        prefix = QString("Has >= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
-        break;
-        }
-      case NVBGotoToken::HasAtMostNAxes : {
-        prefix = QString("Has <= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
-        break;
-        }
-      case NVBGotoToken::HasNAxes : {
-        prefix = QString("Has %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.first())->n);
-        break;
-        }
-      default : {
-        prefix = "(): ";
-        break;
-        }
-      }
-  
-  
-  switch (data->tokens.last()->type) {
-    case NVBToken::Verbatim :
-      return prefix + QString("Text: \"%1\"").arg(static_cast<NVBVerbatimToken*>(data->tokens.last())->sparam);
-    case NVBToken::DataComment :
-      return prefix + static_cast<NVBPCommentToken*>(data->tokens.last())->sparam;
-    case NVBToken::FileParam :
-      return prefix + fileParamNames.value((static_cast<NVBFileParamToken*>(last())->fparam),NVBDescrPair("","Bug!!!")).verbName();
-    case NVBToken::DataParam :
-      return prefix +  dataParamNames.value((static_cast<NVBDataParamToken*>(last())->pparam),NVBDescrPair("","Bug!!!")).verbName();
-    case NVBToken::Goto : {
-      return QString();
-      }
-    default : return QString();
-    }
+	if (data->tokens.size() == 3) {
+		if (data->tokens.at(1)->type != NVBToken::Goto)
+			return QString("Expert: \"%1\"").arg(data->source);
+		switch (static_cast<NVBGotoToken*>(data->tokens.at(1))->condition) {
+			case NVBGotoToken::None : {
+				return QString("Nothing");
+				}
+			case NVBGotoToken::Stop : {
+				return QString("Empty");
+				}
+			case NVBGotoToken::IsSpec : {
+				prefix += "Spectroscopy: ";
+				break;
+				}
+			case NVBGotoToken::IsTopo : {
+				prefix += "Topography: ";
+				break;
+				}
+			case NVBGotoToken::HasAtLeastNAxes : {
+				prefix += QString("Has >= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
+				break;
+				}
+			case NVBGotoToken::HasAtMostNAxes : {
+				prefix += QString("Has <= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
+				break;
+				}
+			case NVBGotoToken::HasNAxes : {
+				prefix += QString("Has %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
+				break;
+				}
+			default : {
+				prefix += "(): ";
+				break;
+				}
+			}
+		}
+	  
+	switch (data->tokens.last()->type) {
+		case NVBToken::Verbatim :
+			return prefix + QString("Text: \"%1\"").arg(static_cast<NVBVerbatimToken*>(data->tokens.last())->sparam);
+		case NVBToken::DataComment :
+			return prefix + static_cast<NVBPCommentToken*>(data->tokens.last())->sparam;
+		case NVBToken::FileParam :
+			return prefix + fileParamNames.value((static_cast<NVBFileParamToken*>(last())->fparam),NVBDescrPair("","Bug!!!")).verbName() + " of the file";
+		case NVBToken::DataParam :
+			return prefix +  dataParamNames.value((static_cast<NVBDataParamToken*>(last())->pparam),NVBDescrPair("","Bug!!!")).verbName() + " of dataset";
+		case NVBToken::AxisParam : {
+			NVBAxisParamToken * at = static_cast<NVBAxisParamToken*>(last());
+			return prefix +  axisParamNames.value(at->aparam,NVBDescrPair("","Bug!!!")).verbName() + QString(" of axis %1").arg(at->nparam.isEmpty() ? ("#"+QString::number(at->ixparam)) : at->nparam);
+			}
+		case NVBToken::Goto : {
+			return QString();
+			}
+		default : return QString();
+		}
 }
 
 QList< NVBToken * > NVBTokenList::tokenizeString( QString s )
