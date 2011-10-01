@@ -42,6 +42,7 @@ public:
 		\example NVBUnits("DAC",false) // DAC units
 		*/
 	NVBUnits( const QString& s, bool scalable = true );
+	NVBUnits( const char * s, bool scalable = true );
 	/**
 		Construct NVBUnits by using the provided string as unit, and the multiplier directly.
 
@@ -95,10 +96,6 @@ public:
 	/// A unit is comparable with another unit if both have the same base
 	bool isComparableWith(const NVBUnits & d) const {
 		return base == d.base;
-		}
-	/// \overload isComparableWith(NVBUnits)
-	bool isComparableWith(const QString & units) const {
-		return base == NVBUnits(units).baseUnit();
 		}
 
 	/// Two units are equal if the base and the multiplier match
