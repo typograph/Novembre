@@ -38,7 +38,7 @@
 
 
 QPair<QString, NVBUnits> channelFromStr(QString value) {
-	static QRegExp chName("^([^\\(]*)(?: \\(([^\\)]*)\\))?$");
+	static QRegExp chName("^([^\\(]*)(?: \\((.*)\\))?$");
 	if (chName.exactMatch(value)) {
 //		if (chName.capturedText().count());
 		return QPair<QString, NVBUnits>(chName.cap(1),NVBUnits(chName.cap(2)));
@@ -380,20 +380,21 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 		QList< QPair<QString, NVBUnits> > channels;
 		QRegExp chName("^(.*)(?: \\((.*)\\))?$");
 		
-		foreach(QString channel, QString(file.readLine(500)).trimmed().split('\t',QString::SkipEmptyParts)) {
-			if (chName.exactMatch(channel))
-				channels << QPair<QString, NVBUnits>(chName.cap(1),NVBUnits(chName.cap(2)));
-			else {
-				NVBOutputError(QString("Channel name format mismatch at %1").arg(channel));
-				channels << QPair<QString, NVBUnits>(channel,NVBUnits());
-				} 
-			}
+		foreach(QString channel, QString(file.readLine(500)).trimmed().split('\t',QString::SkipEmptyParts))
+			channels << channelFromStr(channel);
 			
 		// Euristics that might not work - there's approx. 12 symbols per channel per line
-		QVector<axissize_t> npts = QVector<axissize_t>() << (axissize_t)round((file.size() - file.pos())/12.0/channels.count());
+		axissize_t npts = (axissize_t)round((file.size() - file.pos())/12.0/channels.count());
+
+		QList<NVBAxisInfo> axes;
+		
+		if (channels.first().first.right(4) == "calc") // Let's assume this is always a marker for equally-spaced data
+			axes << NVBAxisInfo(channels.first().first.left(channels.first().first.length()-5),npts,channels.first().second);
+		else
+			axes << NVBAxisInfo(channels.first().first,npts,channels.first().second);
 		
 		for(int i = 1; i < channels.count(); i++)
-			fi->append(NVBDataInfo(channels.at(i).first,channels.at(i).second,npts,c,NVBDataSet::Spectroscopy));
+			fi->append(NVBDataInfo(channels.at(i).first,channels.at(i).second,axes,c,NVBDataSet::Spectroscopy));
 		
 		}
 	else if (ext == "sxm") {
@@ -405,14 +406,17 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 			
 		NVBDataComments c = commentsFromSXMHeader(h);
 		fi->filterAddComments(c);
-		QVector<axissize_t> axes;
+		QList<NVBAxisInfo> axes;
 		ifHeaderParam("SCAN_PIXELS") {
 			QStringList px = h.value("SCAN_PIXELS").split(' ',QString::SkipEmptyParts);
-			axes << px.first().toInt() << px.last().toInt();
+			axes << NVBAxisInfo("X",px.first().toInt(),"m")
+			     << NVBAxisInfo("Y",px.last().toInt(),"m");
 			}
 		else {
 			NVBOutputError(QString("No scan size data in file %1").arg(ffname));
-			axes << 1 << 1;
+			delete fi;
+			return 0;
+//			axes << 1 << 1;
 			}
 
 		QStringList l = h.value("DATA_INFO").split('\n');
@@ -526,10 +530,16 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 		free(fxParams);
 
 		int nPoints = h.value("Points").toInt();	
-		
-		QVector<axissize_t> tAxes, sAxes;
-		tAxes << nx << ny; // Axes for topography pages
-		sAxes << nPoints << nx << ny; // Axes for spectroscopy pages
+
+		QList<NVBAxisInfo> tAxes, sAxes;
+		tAxes << NVBAxisInfo("X",nx,"m")
+		      << NVBAxisInfo("Y",ny,"m"); // Axes for topography pages
+
+		ifHeaderParam("Sweep Signal") {
+			QPair<QString,NVBUnits>	sweep = channelFromStr(h.value("Sweep Signal"));
+			sAxes << NVBAxisInfo(sweep.first,nPoints,sweep.second)
+						<< tAxes; // Axes for spectroscopy pages
+			}
 			
 		for(int j = 0; j < exp_params.count(); j++)
 			if (exp_params.at(j).first != "X" && exp_params.at(j).first != "Y") // Skip useless X and Y
@@ -594,8 +604,8 @@ NVBFile * NanonisFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) co
 	return f;
 }
 
-void NanonisFileGenerator::loadChannelsFromDAT(QString filename, NVBFile * sources) const
-{
+void NanonisFileGenerator::loadChannelsFromDAT(QString filename, NVBFile * sources) const {
+
 	QFile file(filename);
 
 	if (!file.open(QIODevice::ReadOnly)) {
@@ -762,7 +772,6 @@ void NanonisFileGenerator::loadChannelsFromSXM(QString filename, NVBFile* source
 	sources->append(ds);
 	
 }
-
 
 void NanonisFileGenerator::loadChannelsFrom3DS(QString filename, NVBFile* sources) const {
 // Have to find format description.

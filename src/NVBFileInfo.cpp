@@ -68,7 +68,7 @@ NVBVariant NVBFileInfo::fileParam(NVBFileParamToken::NVBFileParam p) const {
 
 }
 
-NVBVariant NVBFileInfo::dataParam(NVBDataInfo pi, NVBDataParamToken::NVBDataParam p) const {
+NVBVariant NVBFileInfo::dataParam(const NVBDataInfo& pi, NVBDataParamToken::NVBDataParam p) const {
 
   switch (p) {
     case NVBDataParamToken::Name : {
@@ -76,8 +76,8 @@ NVBVariant NVBFileInfo::dataParam(NVBDataInfo pi, NVBDataParamToken::NVBDataPara
       }
 		case NVBDataParamToken::DataSize : {
 			NVBVariantList l;
-			foreach(axissize_t s, pi.sizes)
-				l << s;
+			foreach(NVBAxisInfo s, pi.axes)
+				l << s.length;
 			l.setSeparator(" x ");
 			return l;
       }
@@ -85,7 +85,7 @@ NVBVariant NVBFileInfo::dataParam(NVBDataInfo pi, NVBDataParamToken::NVBDataPara
 			return pi.dimension;
       }
 		case NVBDataParamToken::NAxes : {
-      return pi.sizes.count();
+      return pi.axes.count();
       }
 		case NVBDataParamToken::IsTopo : {
       return pi.type == NVBDataSet::Topography;
@@ -98,6 +98,34 @@ NVBVariant NVBFileInfo::dataParam(NVBDataInfo pi, NVBDataParamToken::NVBDataPara
     }
 
 }
+
+NVBVariant NVBFileInfo::axisParam(const NVBDataInfo & pi, QString name, NVBAxisParamToken::NVBAxisParam p) const
+{
+	for(int i=0; i<pi.axes.count(); i++)
+		if (pi.axes.at(i).name == name)
+			return axisParam(pi,i,p);
+	return NVBVariant();
+}
+
+NVBVariant NVBFileInfo::axisParam(const NVBDataInfo& pi, int index, NVBAxisParamToken::NVBAxisParam p) const
+{	
+	if (index < 0 || index > pi.axes.count()) return NVBVariant();
+	
+  switch (p) {
+    case NVBAxisParamToken::Name : {
+      return pi.axes.at(index).name;
+      }
+		case NVBAxisParamToken::Length : {
+			return pi.axes.at(index).length;
+      }
+		case NVBAxisParamToken::Units : {
+			return pi.axes.at(index).units;
+      }
+    default :
+      return NVBVariant();
+    }
+}
+
 
 NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
   
@@ -134,6 +162,11 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 							pans << dataParam(pi,static_cast<NVBDataParamToken*>(list.at(i++))->pparam);
 							break;
 							}
+						case NVBToken::AxisParam : {
+							NVBAxisParamToken * at = static_cast<NVBAxisParamToken*>(list.at(i++));
+							pans << axisParam(pi,at->nparam,at->aparam);
+							break;
+							}
 						case NVBToken::Goto : {
 							switch (static_cast<NVBGotoToken*>(list.at(i))->condition) {
 								case NVBGotoToken::None : {
@@ -155,21 +188,21 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 									break;
 									}
 								case NVBGotoToken::HasNAxes : {
-									if (pi.sizes.count() == static_cast<NVBGotoToken*>(list.at(i))->n)
+									if (pi.axes.count() == static_cast<NVBGotoToken*>(list.at(i))->n)
 										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
 									else
 										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
 									break;
 									}
 								case NVBGotoToken::HasAtLeastNAxes : {
-									if (pi.sizes.count() >= static_cast<NVBGotoToken*>(list.at(i))->n)
+									if (pi.axes.count() >= static_cast<NVBGotoToken*>(list.at(i))->n)
 										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
 									else
 										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;
 									break;
 									}
 								case NVBGotoToken::HasAtMostNAxes : {
-									if (pi.sizes.count() <= static_cast<NVBGotoToken*>(list.at(i))->n)
+									if (pi.axes.count() <= static_cast<NVBGotoToken*>(list.at(i))->n)
 										i += static_cast<NVBGotoToken*>(list.at(i))->gototrue;
 									else
 										i += static_cast<NVBGotoToken*>(list.at(i))->gotofalse;

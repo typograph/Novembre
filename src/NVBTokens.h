@@ -22,7 +22,7 @@
  * conditional ::= ? cond_char expression [: expression] '|'
  * cond_char ::= S | T | = number | < number | > number | !
  * user_text ::= '"' any_text '"'
- * axis_param ::= ['(' axis_name ')'] axisParam
+ * axis_param ::= ['(' axis_name ')' | '(' axis_index ')'] axisParam
  *   
  * 1) File parameters
  * 
@@ -40,6 +40,8 @@
  * dataSize  : Data dimensions
  * dataUnits : Data units
  * dataNAxes : Number of axes
+ * dataIsTopo : Toporaphy data bool
+ * dataIsSpec : Spectroscopy data bool
  * 
  * 3) Axis parameters
  * 
@@ -52,7 +54,7 @@
 namespace NVBTokens {
 
 struct NVBToken {
-  enum NVBTokenType {Invalid = 0, Verbatim, FileParam, DataParam, DataComment, Goto} type;
+  enum NVBTokenType {Invalid = 0, Verbatim, FileParam, DataParam, AxisParam, DataComment, Goto} type;
   NVBToken(NVBTokenType t):type(t) {;}
 };
 
@@ -77,10 +79,13 @@ struct NVBGotoToken : NVBToken {
 		HasAtMostNAxes
 	} condition;
 	int n;
+	/// If \a condition is true, go forward by this amount (default 1)
   unsigned int gototrue;
+	/// If \a condition is false, go forward by this amount (default 1)
   unsigned int gotofalse;
   
-  NVBGotoToken(NVBCondType c, int t = -1, int f = -1):NVBToken(Goto),condition(c),gototrue(t),gotofalse(f) {;}
+	/// Constructs a GOTO token. Defaults to a token with no effect
+  NVBGotoToken(NVBCondType c, int t = 1, int f = 1):NVBToken(Goto),condition(c),gototrue(t),gotofalse(f) {;}
 };
 
 struct NVBFileParamToken : NVBToken {
@@ -91,6 +96,14 @@ struct NVBFileParamToken : NVBToken {
 struct NVBDataParamToken : NVBToken {
   enum NVBDataParam {Invalid = 0, Name, DataSize, Units, NAxes, IsTopo, IsSpec} pparam;
   NVBDataParamToken(NVBDataParam p):NVBToken(DataParam),pparam(p) {;}
+};
+
+struct NVBAxisParamToken : NVBToken {
+  enum NVBAxisParam {Invalid = 0, Name, Length, Units} aparam;
+	QString nparam;
+	int ixparam;
+  NVBAxisParamToken(QString name, NVBAxisParam a):NVBToken(AxisParam),aparam(a),nparam(name) {;}
+  NVBAxisParamToken(int index, NVBAxisParam a):NVBToken(AxisParam),aparam(a),ixparam(index) {;}
 };
 
 class NVBTokenListData : public QSharedData {
@@ -152,6 +165,7 @@ public:
 
   static QString nameFileParam(NVBFileParamToken::NVBFileParam);
   static QString nameDataParam(NVBDataParamToken::NVBDataParam);
+  static QString nameAxisParam(NVBAxisParamToken::NVBAxisParam);
 
 
 private:
@@ -162,6 +176,9 @@ private:
   static QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > dataParamNames;
   static QMap<NVBDataParamToken::NVBDataParam,NVBDescrPair > initDataParamNames();
   static NVBDataParamToken::NVBDataParam findDataParam(QString key);
+  static QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > axisParamNames;
+  static QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > initAxisParamNames();
+  static NVBAxisParamToken::NVBAxisParam findAxisParam(QString key);
 
   static QString readFromTo( int start, int end, const QList< NVBToken * > & tokens);
   static QList< NVBToken * > tokenizeSubString( QString s, int & pos );
