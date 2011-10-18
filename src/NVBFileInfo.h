@@ -21,6 +21,7 @@
 
 #include "NVBDataSource.h"
 #include "NVBTokens.h"
+#include "NVBAxisMaps.h"
 
 class NVBFile;
 class NVBFileGenerator;
@@ -52,7 +53,7 @@ public:
 
 		bool operator==(const NVBAssociatedFilesInfo & other) const;
 		bool operator!=(const NVBAssociatedFilesInfo & other) const {
-			return operator==(other);
+			return !operator==(other);
 		}
 
 };
@@ -71,28 +72,39 @@ public:
   Thus, there is currently no need for signals.
 */
 
+struct NVBAxisInfo {
+	QString name;
+	axissize_t length;
+	NVBUnits units;
+	
+	NVBAxisInfo(QString n, axissize_t l, NVBUnits u = NVBUnits()):name(n),length(l),units(u) {;}
+};
+
 struct NVBDataInfo {
 
 	NVBDataInfo(const NVBDataSet * source) {
 		name = source->name();
 		type = source->type();
 		dimension = source->dimension();
-		sizes = source->sizes();
+		for(axisindex_t i = 0; i < source->nAxes(); i++) {
+			const NVBAxis & a = source->axisAt(i);
+			axes << NVBAxisInfo(a.name(),a.length(),a.physMap() ? a.physMap()->units() : NVBUnits());
+			}
 		comments = source->getAllComments();
 		}
 
-	NVBDataInfo(QString dataName, NVBUnits dataDimension, QVector<axissize_t> dataSizes, NVBDataComments dataComments, NVBDataSet::Type dataType = NVBDataSet::Undefined)
+	NVBDataInfo(QString dataName, NVBUnits dataDimension, QList<NVBAxisInfo> dataAxes, NVBDataComments dataComments, NVBDataSet::Type dataType = NVBDataSet::Undefined)
 	:	name(dataName)
 	, type(dataType)
 	, dimension(dataDimension)
-	,	sizes(dataSizes)
+	,	axes(dataAxes)
 	, comments( dataComments)
 	{;}
 
 	QString name;
 	NVBDataSet::Type type;
 	NVBUnits dimension;
-	QVector<axissize_t> sizes;
+	QList<NVBAxisInfo> axes;
 	NVBDataComments comments;
 };
 
@@ -124,7 +136,9 @@ class NVBFileInfo : public QList<NVBDataInfo> {
 
 	protected :
 		NVBVariant fileParam(NVBTokens::NVBFileParamToken::NVBFileParam p) const;
-		NVBVariant dataParam(NVBDataInfo pi, NVBTokens::NVBDataParamToken::NVBDataParam p) const;
+		NVBVariant dataParam(const NVBDataInfo& pi, NVBTokens::NVBDataParamToken::NVBDataParam p) const;
+		NVBVariant axisParam(const NVBDataInfo& pi, QString name, NVBTokens::NVBAxisParamToken::NVBAxisParam p) const;
+		NVBVariant axisParam(const NVBDataInfo& pi, int index, NVBTokens::NVBAxisParamToken::NVBAxisParam p) const;
 };
 
 #endif

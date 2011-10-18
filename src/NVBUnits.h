@@ -42,6 +42,7 @@ public:
 		\example NVBUnits("DAC",false) // DAC units
 		*/
 	NVBUnits( const QString& s, bool scalable = true );
+	NVBUnits( const char * s, bool scalable = true );
 	/**
 		Construct NVBUnits by using the provided string as unit, and the multiplier directly.
 

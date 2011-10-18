@@ -157,6 +157,14 @@ NVBUnits::NVBUnits(const QString& s, bool scalable):mult(1)
   }
 }
 
+NVBUnits::NVBUnits(const char* s, bool scalable)
+{
+	NVBUnits tmp(QString(s),scalable);
+	base = tmp.base;
+	mult = tmp.mult;
+}
+
+
 QString NVBUnits::unitFromOrder(int order) const
 {
   if (mult == 0) return base;
