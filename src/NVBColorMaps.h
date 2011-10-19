@@ -159,10 +159,10 @@ class NVBConstColorMap : public NVBColorMap {
 private:
 	QRgb constcolor;
 public:
-	NVBConstColorMap(QRgb color)	{;}
+	NVBConstColorMap(QRgb color):constcolor(color)	{;}
 	virtual ~NVBConstColorMap() {;}
 
-	virtual QRgb colorize(double z) const { return constcolor; }
+	virtual QRgb colorize(double) const { return constcolor; }
 	virtual NVBConstColorMap * copy() const { return new NVBConstColorMap(constcolor); }
 };
 
