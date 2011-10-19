@@ -1,10 +1,13 @@
 # Test harness for arbitrary file generators
 
-HEADERS += ../nanonis.h
-SOURCES += ../nanonis.cpp
-QMAKE_CXXFLAGS += '-include ../nanonis.h'
+GNAME = rhk
+GCLASSNAME = RHKFileGenerator
 
-DEFINES += TESTGENERATOR=NanonisFileGenerator
+HEADERS += ../$${GNAME}.h
+SOURCES += ../$${GNAME}.cpp
+QMAKE_CXXFLAGS += "-include ../$${GNAME}.h"
+
+DEFINES += TESTGENERATOR=$${GCLASSNAME}
 
 # end of serviceable part
 
@@ -75,8 +78,6 @@ SOURCES += \
 	../NVBSingleGraphView.cpp \
 	../NVBSingleView.cpp
 
-
-LIBS += -lqwt6
 
 CONFIG += qt debug
 
