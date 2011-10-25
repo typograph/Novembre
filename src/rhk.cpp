@@ -541,8 +541,10 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 //     _data.append(new QwtCPointerData(xs,ys+i*header.x_size,header.x_size));
 	
 	// OK, let's find out
-	int nx, ny, np;	
-	detectGrid(header,xposdata,yposdata,np,nx,ny);
+	int nx=1, ny=1, np=1;
+	if (header.page_type != 7 && header.page_type != 31) {
+		detectGrid(header,xposdata,yposdata,np,nx,ny);
+		}
 
 	// Now, the axes
 	// If np > 1 -> "samples" axis
@@ -556,23 +558,27 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 	
 	// FIXME can X or Y have length 1? If yes, this should be taken into account by _not_ looking for these axes
 	
+	QVector<axisindex_t> ia(1);
+
 	s.addAxisByLength(header.x_size).byUnits(NVBUnits(strings.at(7)));
 	if (np > 1) {
 		s.addAxisByLength(np);
 		status |= 1;
+		ia.resize(ia.size()+1);
 		}
-	if (nx != 0) {
+	if (nx > 1) {
 		s.addAxisByLength(nx);
 		s.addAxisByLength(ny);
 		status |= 2;
+		ia.resize(ia.size()+2);
 		}
 	else { // Instead of a grid we have some points
 		s.addAxisByLength(header.y_size / np);
+		ia.resize(ia.size()+1);
 		}
 	
 	NVBSelectorDataInstance inst = s.instantiateOneDataset(sources);
 	NVBConstructableDataSource * ds = 0;
-	QVector<axisindex_t> ia(((!status) & 2 >> 1) + status + 1); // 0 -> 2, 1-> 3, 2-> 3, 3-> 4
 	
 	if (!inst.isValid()) { // We have to create the axes
 		ds = new NVBConstructableDataSource(sources);
