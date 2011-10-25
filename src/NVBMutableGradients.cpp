@@ -9,7 +9,7 @@ NVBMutableGradientAction::NVBMutableGradientAction(NVBColorMap *gradient, QObjec
 	connect(colorMenu,SIGNAL(colorSelected(QColor)),this,SLOT(setColor(QColor)));
 }
 
-void NVBMutableGradientAction::setColor(QColor color) {;}
+void NVBMutableGradientAction::setColor(QColor) {;}
 
 NVBBlackToColorGradientAction::NVBBlackToColorGradientAction(QObject *parent)
 	: NVBMutableGradientAction(new NVBRGBRampColorMap(0xFF000000,0xFFFFFFFF),parent)

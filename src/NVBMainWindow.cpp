@@ -169,7 +169,7 @@ void NVBMainWindow::dropEvent(QDropEvent * event)
 		}
 }
 
-void NVBMainWindow::openDataSet(NVBDataSet * dataset)
+void NVBMainWindow::openDataSet(NVBDataSet * /*dataset*/)
 {
 //  new NVBFileWindow(this, NVBToolsFactory::hardlinkDataSource(source));
 }

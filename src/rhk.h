@@ -27,12 +27,12 @@
 // #include "NVBLogger.h"
 
 /*GUID*/
-typedef struct {
+struct RHK_GUID {
   quint32 Data1;
   quint16 Data2;
   quint16 Data3;
   quint64 Data4;
-} RHK_GUID;
+};
 
 /*TRHKHEADER*/
 struct TRHKHeader{
@@ -85,7 +85,7 @@ struct  TRHKColorTransform{
 };
 
 /*TCOLORINFO*/
-typedef struct  {
+struct TRHKColorInfo {
   qint16 parameter_count;
   float start_h;
   float start_s;
@@ -98,7 +98,7 @@ typedef struct  {
   float start_slidepos;
   float end_slidepos;
   TRHKColorTransform transform;
-} TRHKColorInfo;
+};
 
 // using namespace NVBErrorCodes;
 
