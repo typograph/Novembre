@@ -102,7 +102,7 @@ void NVBTestGenApplication::openFile(QString name) {
 	if (name.isEmpty())
 		name = files->text();
 
-	if (QDir(name).relativeFilePath(name).isEmpty()) {
+	if (QDir(name).exists()) {
 		openFolder(name);
 		return;
 		}
@@ -200,8 +200,8 @@ void NVBTestGenApplication::addFileInfoToTree(QTreeWidgetItem* parent, NVBFileIn
 //	tree->addTopLevelItem(item);
 	NVB_FOREACH(NVBDataInfo i, info) {
 		QTreeWidgetItem * di = new QTreeWidgetItem(item,QStringList(QString("%1 [%2]").arg(i.name,i.dimension.baseUnit())));
-		foreach(axissize_t sz, i.sizes)
-			new QTreeWidgetItem(di,QStringList(QString::number(sz)));
+		foreach(NVBAxisInfo ai, i.axes)
+			new QTreeWidgetItem(di,QStringList(QString("%1 [%2] x%3").arg(ai.name).arg(ai.units.toStr()).arg(ai.length)));
 		cmnt = new QTreeWidgetItem(di,QStringList(QString("Comments")));
 		foreach(QString key, i.comments.keys())
 			new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,i.comments.value(key).toString())));		
