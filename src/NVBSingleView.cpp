@@ -213,18 +213,40 @@ NVBSingleViewSliders::NVBSingleViewSliders(const NVBDataSet* ds, NVBSingleView::
 	
 	connect(&cbs,SIGNAL(mapped(int)),this,SLOT(axisOpChanged(int)));
 	connect(&slds,SIGNAL(mapped(int)),this,SLOT(slicePosChanged(int)));
-	
-	nPlotAxes = (axisindex_t) type;
-	
-	axes << 0 << 1;
-	axisOps[0] = asX;
-	if (nPlotAxes > 1)
-		axisOps[1] = asY;
-	
-	for(axisindex_t i = (axisindex_t) nPlotAxes; i < ds->nAxes(); i++) {
-		av_axes << i;
-		axisOps[i] = (type == NVBSingleView::Graph) ? Keep : Average;
-		}
+
+	//	Initialize cases
+	switch(type) {
+		case NVBSingleView::Graph :
+			nPlotAxes = 1;
+			axes << 0;
+			axisOps[0] = asX;
+			break;
+		case NVBSingleView::Image :
+		case NVBSingleView::Landscape :
+			{
+			nPlotAxes = 2;
+			NVBAxisSelector s;
+			s.addAxisByName("X");
+			s.addAxisByName("Y");
+			NVBSelectorDataInstance i = s.instantiate(ds);
+			if (i.isValid())
+				axes = i.matchedAxes();
+			else
+				axes << 0 << 1;
+			axisOps[axes[0]] = asX;
+			axisOps[axes[1]] = asY;
+			break;
+			}
+		default:
+			nPlotAxes = 0;
+			break;
+	}
+
+	for(axisindex_t i = 0; i < ds->nAxes(); i++)
+		if (!axes.contains(i)){
+			av_axes << i;
+			axisOps[i] = (type == NVBSingleView::Graph) ? Keep : Average;
+			}
 
 	QStringList contents;
 	contents << "Use as X";
@@ -492,6 +514,8 @@ void NVBSingleView::createView(NVBSingleView::Type type)
 			vl->insertWidget(1,viewGraph = new NVBSingleGraphView(ods,this),1);
 			vl->insertWidget(2,sliders = new NVBSingleViewSliders(ds,Graph),1);
 			viewTB->actions().at(0)->setChecked(true);
+			break;
+		case NVBSingleView::Landscape :
 			break;
 		}
 	
