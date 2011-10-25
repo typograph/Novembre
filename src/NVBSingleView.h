@@ -86,8 +86,9 @@ class NVBSingleView : public QFrame
 	Q_OBJECT;
 public:	
 	enum Type {
-		Graph = 1,
-		Image = 2
+		Graph,    // 1D
+		Image,    // 2D
+		Landscape // 3D
 		};
 
 private:
