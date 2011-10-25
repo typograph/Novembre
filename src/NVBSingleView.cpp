@@ -29,6 +29,7 @@
 #include "NVBSingleView.h"
 
 #include "NVBLogger.h"
+#include "NVBAxisSelector.h"
 #include "NVBPosLabel.h"
 #include "NVBDataCore.h"
 #include "NVBSingle2DView.h"
@@ -84,12 +85,13 @@ NVBAverageSlicingDataSet::NVBAverageSlicingDataSet(const NVBDataSet* parent)
 , avas(parent->parentIndexes())
 , avsizes(parent->sizes())
 {
-
+	useDataSet(orig);
 }
 
 NVBAverageSlicingDataSet::~NVBAverageSlicingDataSet()
 {
 	if (avdata) free(avdata);
+	releaseDataSet(orig);
 }
 
 const double * NVBAverageSlicingDataSet::data() const {
@@ -509,6 +511,7 @@ void NVBSingleView::createView(NVBSingleView::Type type)
 
 NVBSingleView::~NVBSingleView()
 {
+	setDataSet(0);
 	if (ods)
 		delete ods;
 }
@@ -561,15 +564,31 @@ void NVBSingleView::targetsChanged(axisindex_t x, axisindex_t y, QVector< axisin
 
 void NVBSingleView::setDataSet(const NVBDataSet* dataSet)
 {
-	ds = 0;
+	if (ds) {
+		releaseDataSet(ds);
+		ds = 0;
+		}
 	
+	if (view2D) {
+		delete view2D;
+		view2D = 0;
+		}
+	else if (viewGraph) {
+		delete viewGraph;
+		viewGraph = 0;
+		}
+
 	if (ods) {
+		// ods is an orphan, so we can't releaseDataSet(ods)
+		// as this will have no result. ods is definitely deleted
+		// here, and this is done after the views are deleted
 		delete ods;
 		ods = 0;
 		}
 		
 	if (dataSet) {
 		ds = dataSet;
+		useDataSet(ds);
 		ods = new NVBAverageSlicingDataSet(ds);
 
 		switch (ds->type()) {

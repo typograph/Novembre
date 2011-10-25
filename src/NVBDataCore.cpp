@@ -560,13 +560,15 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 		
 }
 
-NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes, int maxCount) : dset(dataset)
+NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisindex_t >& sliceaxes, const QVector< axisindex_t >& tgaxes, int maxCount)
+	: dset(dataset)
 	, is_running(true)
 	, slice(
 			dataset,
 			sliceaxes,
 			dataset ? (tgaxes.isEmpty() ? targetaxes(dataset->nAxes(), sliceaxes) : tgaxes) : QVector<axisindex_t>())
 	{
+	useDataSet(dataset);
 	if (!dataset) {
 		NVBOutputError("NULL dataset");
 		is_running = false;
@@ -582,8 +584,19 @@ NVBSliceCounter::NVBSliceCounter(const NVBDataSet* dataset, const QVector< axisi
 
 	slice.calculate();
 	}
-
+/*
+NVBSliceCounter::NVBSliceCounter(const NVBSliceCounter & other)
+ : dset(other.dset)
+ , is_running(other.is_running)
+ , slice(
+			 dataset,
+			 sliceaxes,
+			 dataset ? (tgaxes.isEmpty() ? targetaxes(dataset->nAxes(), sliceaxes) : tgaxes) : QVector<axisindex_t>())	{
+	useDataSet(dset);
+	}
+*/
 NVBSliceCounter::~NVBSliceCounter() {
+	releaseDataSet(dset);
 	}
 
 bool NVBSliceCounter::stepIndexVector(QVector< axissize_t >& ixs, const QVector< axissize_t >& sizes, int step) {
@@ -622,8 +635,14 @@ NVBDataSlice::NVBDataSlice(const NVBDataSet * ds, const QVector< axisindex_t >& 
 , sliceAxes(kept)
 , indexes((axissize_t)sliced.count(),0)
 	{
+	useDataSet(dataset);
 	if (!ds) NVBOutputError("Null dataset");
 	sizes = subvector(ds->sizes(),sliced);
+	}
+
+NVBDataSlice::~NVBDataSlice() {
+	releaseDataSet(dataset);
+	if(data) free(data);
 	}
 
 void NVBDataSlice::calculate() {

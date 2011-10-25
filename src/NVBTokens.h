@@ -125,7 +125,6 @@ private:
 public:
   NVBDescrPair():QPair<QString,QString>("BUG","BUG!!!") {;}
   NVBDescrPair(QString key, QString name):QPair<QString,QString>(key,name) {;}
-  NVBDescrPair(const NVBDescrPair & other):QPair<QString,QString>(other.keyName(),other.verbName()) {;}
   
   QString keyName() const { return first; }
   QString verbName() const { return second; }
@@ -144,7 +143,6 @@ public:
 
   NVBTokenList(QString s = QString());
   NVBTokenList(QList< NVBToken * >);
-  NVBTokenList(const NVBTokenList & other):data(other.data) {;}
   ~NVBTokenList() {;}
 
   QString sourceString() const { return data->source; }
@@ -187,6 +185,6 @@ private:
 
 };
   
-Q_DECLARE_METATYPE(NVBTokens::NVBTokenList);  
+Q_DECLARE_METATYPE(NVBTokens::NVBTokenList);
 
 #endif

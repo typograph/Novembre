@@ -152,10 +152,41 @@ class NVBDataSet : public QObject {
 Q_DECLARE_METATYPE(NVBDataSet*)
 // Q_DECLARE_METATYPE(const NVBDataSet*)
 
-/// Increases the reference count for the source \a source
+#ifdef NVB_DEBUG_DSUSE
+
+/// Mark the datasource \a source as used, to prevent clean-up
+#define useDataSource(source) useAndLogDataSource(NVB_CURRENT_FUNCTION,(source));
+/// Unmark the datasource, to enable automatic clean-up
+#define releaseDataSource(source) releaseAndLogDataSource(NVB_CURRENT_FUNCTION,(source));
+
+/// Mark the dataset \a set as used, to prevent clean-up
+#define useDataSet(set) useAndLogDataSet(NVB_CURRENT_FUNCTION,(set));
+/// Unmark the dataset, to enable automatic clean-up
+#define releaseDataSet(set) releaseAndLogDataSet(NVB_CURRENT_FUNCTION,(set));
+
+/// Mark the datasource \a source as used, to prevent clean-up
+void useAndLogDataSource(QString fn, const NVBDataSource* source);
+/// Unmark the datasource, to enable automatic clean-up
+void releaseAndLogDataSource(QString fn, const NVBDataSource* source);
+
+/// Mark the dataset \a set as used, to prevent clean-up
+void useAndLogDataSet(QString fn, const NVBDataSet* set);
+/// Unmark the dataset, to enable automatic clean-up
+void releaseAndLogDataSet(QString fn, const NVBDataSet* set);
+
+#else
+
+/// Mark the datasource \a source as used, to prevent clean-up
 void useDataSource(const NVBDataSource* source);
-/// Decreases the reference count for the source \a source
+/// Unmark the datasource, to enable automatic clean-up
 void releaseDataSource(const NVBDataSource* source);
+
+/// Mark the dataset \a set as used, to prevent clean-up
+void useDataSet(const NVBDataSet* set);
+/// Unmark the dataset, to enable automatic clean-up
+void releaseDataSet(const NVBDataSet* set);
+
+#endif
 
 typedef int NVBAxesProps; // FIXME This is here to make compilation times faster
 
@@ -166,10 +197,15 @@ class NVBDataSource : public QObject {
 	Q_OBJECT
 
 	private:
-		/// Number of references to this source. Note, that creating an object uses it automatically
+		/// Number of references to this source
 		mutable unsigned int refCount;
-		friend void useDataSource(const NVBDataSource* source);
-		friend void releaseDataSource(const NVBDataSource* source);
+#ifdef NVB_DEBUG_DSUSE
+		friend void useAndLogDataSource(QString fn, const NVBDataSource* source);
+		friend void releaseAndLogDataSource(QString fn, const NVBDataSource* source);
+#else
+	friend void useDataSource(const NVBDataSource* source);
+	friend void releaseDataSource(const NVBDataSource* source);
+#endif
 	NVBDataSource( const NVBDataSource& );
 
 	protected:

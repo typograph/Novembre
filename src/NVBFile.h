@@ -28,9 +28,13 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 		NVBAssociatedFilesInfo files;
 		int refCount;
 		NVBDataComments comments;
+
+		// Private constructors - nobody should use them
     NVBFile();
-		NVBFile(QList<NVBDataSource*>);
-		NVBFile(const NVBFile & other):QObject(),QList< NVBDataSource* >(other) {;} // FIXME this will not work - if the original is deleted, datasources will be deleted too.
+		explicit NVBFile(const QList<NVBDataSource*> & list);
+		NVBFile(const NVBFile & other);
+		NVBFile & operator=(const NVBFile & other);
+
 	public:
 		NVBFile(NVBAssociatedFilesInfo sources): QObject(), QList<NVBDataSource*>(), files(sources), refCount(0) {;}
 		NVBFile(NVBAssociatedFilesInfo sources, QList<NVBDataSource*> pages, NVBDataComments file_comments): QObject(), QList<NVBDataSource*>(pages), files(sources), refCount(0), comments(file_comments) {;}

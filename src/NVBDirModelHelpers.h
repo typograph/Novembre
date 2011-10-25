@@ -113,8 +113,9 @@ private:
 
 	WatchedContentType type;
 	NVBDirEntry(); // private constructor... Checking
-	NVBDirEntry(const NVBDirEntry & ):QObject() {;} // private copy constructor... Checking
-	NVBDirEntry(const NVBDirEntry * ):QObject() {;} // private copy constructor... Checking
+
+	Q_DISABLE_COPY(NVBDirEntry)
+
 public:
 	NVBDirEntry(NVBDirEntry * _parent, QString _label);
 	NVBDirEntry(NVBDirEntry * _parent, QString _label, QDir _dir, bool recursive = false);

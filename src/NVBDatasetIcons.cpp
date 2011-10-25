@@ -163,18 +163,35 @@ NVB2DIconEngine::NVB2DIconEngine(const NVBDataSet* dataset)
 	setSource(dataset);
 }
 
+NVB2DIconEngine::NVB2DIconEngine(const NVB2DIconEngine & other)
+ : QObject()
+ , QIconEngineV2()
+ , dset(0)
+ , cache(other.cache)
+ , selector(other.selector)
+	{
+	setSource(other.dset);
+	}
+
+NVB2DIconEngine & NVB2DIconEngine::operator=(const NVB2DIconEngine & other) {
+	if (this != &other) {
+		selector = other.selector;
+		setSource(other.dset);
+		}
+	return *this;
+	}
+
 NVB2DIconEngine::~NVB2DIconEngine() {
-//	setSource();	 // disconnects dataset
-	dset = 0; // autodisconnected on delete
-	if (ci) delete ci;
-	redrawCache(); // cleans up cache list
+	setSource(0);	 // disconnects dataset
+//	redrawCache(); // cleans up cache list
 }
 
 void NVB2DIconEngine::setSource(const NVBDataSet * dataset) {
 	if (dset) {
 		disconnect(dset,0,this,0);
+		releaseDataSet(dset);
 		dset = 0;
-		delete ci;
+		if (ci) delete ci;
 		ci = 0;
 		si.reset();
 		}
@@ -182,6 +199,7 @@ void NVB2DIconEngine::setSource(const NVBDataSet * dataset) {
 	dset = dataset;
 	
 	if (dset) {
+		useDataSet(dset);
 		si = selector.instantiate(dset);
 		if (!si.isValid()) {
 			NVBOutputError("Dataset has less than two axes");
@@ -192,6 +210,7 @@ void NVB2DIconEngine::setSource(const NVBDataSet * dataset) {
 		connect(dset, SIGNAL(dataChanged()), SLOT(redrawCache()) );
 		connect(dset, SIGNAL(destroyed()), SLOT(setSource()) );
 		}
+	redrawCache();
 }
 
 void NVB2DIconEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State) {
@@ -237,6 +256,23 @@ NVB1DIconEngine::NVB1DIconEngine(const NVBDataSet* dataset)
 	setSource(dataset);
 }
 
+NVB1DIconEngine::NVB1DIconEngine(const NVB1DIconEngine & other)
+ : QObject()
+ , QIconEngineV2()
+ , dset(0)
+ , selector(other.selector)
+{
+	setSource(0);
+}
+
+NVB1DIconEngine & NVB1DIconEngine::operator=(const NVB1DIconEngine & other) {
+	if (this != &other) {
+		selector = other.selector;
+		setSource(other.dset);
+		}
+	return *this;
+	}
+
 NVB1DIconEngine::~NVB1DIconEngine()
 {
 	setSource(0);	 // disconnects dataset
@@ -246,6 +282,7 @@ void NVB1DIconEngine::setSource(const NVBDataSet* dataset)
 {
 	if (dset) {
 //		dset->disconnect(this);
+		releaseDataSet(dset);
 		dset = 0;
 		cache.clear();
 		instance.reset();
@@ -260,6 +297,7 @@ void NVB1DIconEngine::setSource(const NVBDataSet* dataset)
 			dset = 0;
 			return;
 			}
+		useDataSet(dset);
 		connect(dset, SIGNAL(dataChanged()), SLOT(redrawCache()) );
 		connect(dset, SIGNAL(destroyed()), SLOT(setSource()) );
 		}

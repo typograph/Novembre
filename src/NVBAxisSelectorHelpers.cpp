@@ -162,21 +162,23 @@ struct NVBSelectorRule {
 		}
 	
 	NVBSelectorRule & operator=(const NVBSelectorRule & other) {
-		type = other.type;
-		switch(type) {
-			case NVBSelectorRules::Name :
-				n = other.n;
-				break;
-			case NVBSelectorRules::Units :
-				u = other.u;
-				break;
-			case NVBSelectorRules::Invalid :
-				break;
-			default :
-				i = other.i;
-				break;
+		if (this != &other) {
+			type = other.type;
+			switch(type) {
+				case NVBSelectorRules::Name :
+					n = other.n;
+					break;
+				case NVBSelectorRules::Units :
+					u = other.u;
+					break;
+				case NVBSelectorRules::Invalid :
+					break;
+				default :
+					i = other.i;
+					break;
+				}
+			return *this;
 			}
-		return *this;
 		}
 	
 	NVBSelectorRule(NVBSelectorRules::NVBSelectorRuleType t, int ii)
@@ -253,8 +255,10 @@ NVBSelectorRules::NVBSelectorRules(NVBSelectorRules::NVBSelectorRulesType type)
 
 NVBSelectorRules::NVBSelectorRules(const NVBSelectorRules& other)
 {
-	p = other.p;
-	if (p) p->refCount += 1;
+	if (this != &other) {
+		p = other.p;
+		if (p) p->refCount += 1;
+		}
 }
 
 NVBSelectorRules::~NVBSelectorRules()
@@ -322,23 +326,23 @@ NVBSelectorAxisInstanceList NVBSelectorRules::match(const NVBDataSet* dataset, c
 	NVBOutputDMsg(QString("Rules %1").arg(results.isEmpty() ? "didn't match" : "matched"));
 #endif
 
-	if (results.isEmpty() || p->subrules.isEmpty())
-		return results;
+	if (!results.isEmpty() && !p->subrules.isEmpty()) {
 
 #ifdef NVB_DEBUG_AXISSELECTOR
-	NVBOutputDMsg("Matching subrules...");
+		NVBOutputDMsg("Matching subrules...");
 #endif
 	
-	foreach(NVBSelectorRules subrule, p->subrules) {
-		NVBSelectorAxisInstanceList rcopy(results);
-		results.clear();
-		foreach(NVBSelectorAxisInstance i, rcopy) // foreach made a copy of results
-			results.append(subrule.match(dataset,i));
-		}
+		foreach(NVBSelectorRules subrule, p->subrules) {
+			NVBSelectorAxisInstanceList rcopy(results);
+			results.clear();
+			foreach(NVBSelectorAxisInstance i, rcopy) // foreach made a copy of results
+				results.append(subrule.match(dataset,i));
+			}
 
 #ifdef NVB_DEBUG_AXISSELECTOR
-	NVBOutputDMsg(QString("Subrules %1").arg(results.isEmpty() ? "didn't match" : "matched"));
+		NVBOutputDMsg(QString("Subrules %1").arg(results.isEmpty() ? "didn't match" : "matched"));
 #endif
+		}
 
 	// results cleanup
 	
@@ -348,7 +352,7 @@ NVBSelectorAxisInstanceList NVBSelectorRules::match(const NVBDataSet* dataset, c
 //			(*i).unmatched.removeOne((*i).parent_axis);
 		(*i).parent_axis = instance.parent_axis;
 		}
-	
+
 	return results;
 }
 

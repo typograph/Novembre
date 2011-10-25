@@ -152,6 +152,12 @@ struct NVBSelectorMap : public NVBSelectorRules {
 		
 	/// Creates a map selector with a given axis coverage
 	NVBSelectorMap(NVBMapCoverage c = Full);
+	NVBSelectorMap(const NVBSelectorMap & other) : NVBSelectorRules(other) {;}
+	NVBSelectorMap & operator=(const NVBSelectorMap & other) {
+		if (this != &other)
+			NVBSelectorRules::operator=(other);
+		return *this;
+		}
 	~NVBSelectorMap() {}
 	
 	NVBSelectorMap & byDimensions(axisindex_t d) { addRule(NVBSelectorRules::Size,d); return *this; }
@@ -169,8 +175,6 @@ struct NVBSelectorMap : public NVBSelectorRules {
 	// And I don't know how to make it return a reference
 	NVBSelectorAxis addAxis();
 
-	NVBSelectorMap & operator=(const NVBSelectorMap & other) { NVBSelectorRules::operator=(other); return *this; }
-
 };
 
 struct NVBSelectorAxis : public NVBSelectorRules {
@@ -178,6 +182,11 @@ struct NVBSelectorAxis : public NVBSelectorRules {
 	NVBSelectorAxis() : NVBSelectorRules(NVBSelectorRules::Axis) {;}
 	NVBSelectorAxis(NVBSelectorRulesPrivate * d);
 	NVBSelectorAxis(const NVBSelectorAxis & other) : NVBSelectorRules(other) {;}
+	NVBSelectorAxis & operator=(const NVBSelectorAxis & other) {
+		if (this != &other)
+			NVBSelectorRules::operator=(other);
+		return *this;
+		}
 	~NVBSelectorAxis() {}
 	
 	NVBSelectorAxis & byName(QString name) { addRule(name); return *this; }
@@ -195,14 +204,17 @@ struct NVBSelectorAxis : public NVBSelectorRules {
 	// And I don't know how to make it return a reference
 	NVBSelectorMap addMap(NVBSelectorMap::NVBMapCoverage coverage);
 
-	NVBSelectorAxis & operator=(const NVBSelectorAxis & other) { NVBSelectorRules::operator=(other); return *this; }
-	
 };
 
 struct NVBSelectorDataset : public NVBSelectorRules {
 
 	NVBSelectorDataset() : NVBSelectorRules(NVBSelectorRules::Dataset) {;}
 	NVBSelectorDataset(const NVBSelectorDataset & other) : NVBSelectorRules(other) {;}
+	NVBSelectorDataset & operator=(const NVBSelectorDataset & other) {
+		if (this != &other)
+			NVBSelectorRules::operator=(other);
+		return *this;
+		}
 	~NVBSelectorDataset() {}
 	
 	NVBSelectorDataset & byName(QString name) { addRule(name); return *this; }
@@ -219,8 +231,6 @@ struct NVBSelectorDataset : public NVBSelectorRules {
 
 	NVBSelectorAxisInstanceList match(const NVBDataSet* dataset ) const
 		{ return NVBSelectorRules::match(dataset,NVBSelectorAxisInstance()); }
-
-	NVBSelectorDataset & operator=(const NVBSelectorDataset & other) { NVBSelectorRules::operator=(other); return *this; }	
 };
 
 #endif // NVBAXISSELECTORHELPERS_H

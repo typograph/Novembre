@@ -31,6 +31,8 @@ class NVB2DIconEngine : public QObject, public QIconEngineV2 {
 	public :
 		
 		NVB2DIconEngine(const NVBDataSet* dataset);
+		NVB2DIconEngine(const NVB2DIconEngine & other);
+		NVB2DIconEngine & operator=(const NVB2DIconEngine & other);
 		virtual ~NVB2DIconEngine();
 
 		virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode, QIcon::State);
@@ -55,6 +57,8 @@ class NVB1DIconEngine : public QObject, public QIconEngineV2 {
 		QPixmap drawCacheAt(QSize size);
 	public:
 		NVB1DIconEngine(const NVBDataSet* dataset);
+		NVB1DIconEngine(const NVB1DIconEngine & other);
+		NVB1DIconEngine & operator=(const NVB1DIconEngine & other);
 		~NVB1DIconEngine();
 
 		virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode, QIcon::State);

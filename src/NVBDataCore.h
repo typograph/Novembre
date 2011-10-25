@@ -101,7 +101,7 @@ struct NVBDataSlice {
 	QVector<axissize_t> sizes;
 
 	NVBDataSlice(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept);
-	~NVBDataSlice() { if(data) free(data); }
+	~NVBDataSlice();
 
 	/// Slices the dataset at \a indexes
 	void calculate() ;
@@ -116,10 +116,12 @@ class NVBSliceCounter {
 	int step;
 	NVBDataSlice slice;
 
+	Q_DISABLE_COPY(NVBSliceCounter);
+
 	public:
 		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept = QVector<axisindex_t>(), int maxCount = -1);
 
-		~NVBSliceCounter() ;
+		~NVBSliceCounter();
 
 		static bool stepIndexVector(QVector<axissize_t> & ixs, const QVector<axissize_t> & sizes, int step) ;
 		

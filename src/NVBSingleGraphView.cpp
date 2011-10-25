@@ -29,6 +29,7 @@ QwtPlotZoomer * zoomer;
 
 NVBSingleGraphView::NVBSingleGraphView(NVBDataSet* dataset, QWidget* parent)
 : QwtPlot(parent)
+, ds(0)
 {
 	curves = new NVBPlotCurves(0);
 	if (curves) {
@@ -57,12 +58,15 @@ NVBSingleGraphView::NVBSingleGraphView(NVBDataSet* dataset, QWidget* parent)
 
 NVBSingleGraphView::~NVBSingleGraphView()
 {
+	setDataSet(0);
 	if (curves) delete curves;
 }
 
 void NVBSingleGraphView::setDataSet(NVBDataSet* dataset)
 {
+	releaseDataSet(ds);
 	ds = dataset;
+	useDataSet(ds);
 	if (curves) {
 		curves->setDataSet(dataset);
 		axisWidget(QwtPlot::yLeft)->setTitle(dataset->name());

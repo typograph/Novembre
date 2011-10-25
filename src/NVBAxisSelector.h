@@ -57,8 +57,6 @@ public:
 // 	, optimal(true)
 	{;}
 
-	NVBSelectorCase(const NVBSelectorCase & other) ;
-
 	NVBSelectorCase & addCase(int caseId = 0);
 	inline NVBSelectorCase & lastCase() { return (t == OR) ? cases.last() : *this; }
 
@@ -127,9 +125,9 @@ class NVBSelectorDataInstance {
 	private:
 		bool valid;
 		const NVBDataSet * dataSet;
-	NVBSelectorCase s;
+		NVBSelectorCase s;
 		QVector<axisindex_t> matchedaxes;
-	QList<NVBAxisMapping> matchedmaps;
+		QList<NVBAxisMapping> matchedmaps;
 		mutable QVector<axisindex_t> otheraxes;
 
 	NVBSelectorDataInstance(const NVBSelectorCase& selector, const NVBDataSet* dataset, NVBSelectorAxisInstanceList matched);
@@ -138,16 +136,20 @@ class NVBSelectorDataInstance {
 	
 	public:
 	NVBSelectorDataInstance() : valid(false), dataSet(0) {;}
-	NVBSelectorDataInstance( const NVBSelectorCase& selector, const NVBDataSet* dataset = 0);
+	NVBSelectorDataInstance(const NVBSelectorCase& selector, const NVBDataSet* dataset = 0);
+	NVBSelectorDataInstance(const NVBSelectorDataInstance & other);
+	~NVBSelectorDataInstance();
+
+	const NVBSelectorDataInstance& operator=(const NVBSelectorDataInstance & other);
 
 	/// Returns the dataset this instance was constructed for
 	inline const NVBDataSet * matchingData() const { return dataSet; }
 
 	int matchedCase() const;
 	/// The instance is valid when all rules in one case matched
-		inline bool isValid() const { return valid; }
+	inline bool isValid() const { return valid; }
 	/// Make the instance invalid
-		inline void reset() { valid = false; }
+	inline void reset() { valid = false; }
 
 //	/// Returns the datasource this instance was constructed for
 //	NVBDataSource * matchingSource();

@@ -105,9 +105,12 @@ private:
 	
 	struct NVBDirEntryOperation {
 		NVBDirEntryOperation():e(0),r(0),c(0),t(NVBDirEntry::FolderRemove) {;}
-		NVBDirEntryOperation(const NVBDirEntry * _e, int _r, int _c, NVBDirEntry::ContentChangeType _t):e(_e),r(_r),c(_c),t(_t) {;}
-	//     NVBDirEntryOperation(const NVBDirEntryOperation & o):e(o.e),r(o.r),c(o.c),t(o.t) {;}
-	//     NVBDirEntryOperation& operator=(const NVBDirEntryOperation & o);
+		NVBDirEntryOperation(const NVBDirEntry * _e, int _r, int _c, NVBDirEntry::ContentChangeType _t)
+		 : e(_e)
+		 , r(_r)
+		 , c(_c)
+		 , t(_t)
+		{;}
 		const NVBDirEntry * e;
 		int r,c;
 		NVBDirEntry::ContentChangeType t;

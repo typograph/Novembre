@@ -110,7 +110,9 @@ class NVBDataColorInstance : public QObject, public NVBColorInstance {
 		void parentDataChanged();
 	public:
 		NVBDataColorInstance(const NVBDataSet * data, const NVBColorMap * map);
-		~NVBDataColorInstance() {;}
+		NVBDataColorInstance(const NVBDataColorInstance & other);
+		NVBDataColorInstance & operator=(const NVBDataColorInstance & other);
+		~NVBDataColorInstance();
 	/**
 		\fn void setImageAxes(axisindex_t x, axisindex_t y)
 
