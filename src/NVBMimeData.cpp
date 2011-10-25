@@ -19,6 +19,7 @@ NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSource * source)
  , internal(source)
  , dset(0)
 {
+	useDataSource(internal);
   // Think about setHtml and stuff
 }
 
@@ -27,11 +28,13 @@ NVBDataSourceMimeData::NVBDataSourceMimeData(NVBDataSet * dataset)
  , internal(dataset->dataSource())
  , dset(dataset)
 {
+	useDataSource(internal);
 	// Think about setHtml and stuff
 }
 
 NVBDataSourceMimeData::~ NVBDataSourceMimeData()
 {
+	releaseDataSource(internal);
 }
 
 QStringList NVBDataSourceMimeData::formats() const

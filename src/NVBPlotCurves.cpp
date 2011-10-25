@@ -68,8 +68,8 @@ NVBPlotCurves::NVBPlotCurves(const NVBDataSet* data)
 
 NVBPlotCurves::~NVBPlotCurves()
 {
+	setDataSet(0);
 	if (drawCurve) delete drawCurve;
-	if (xdata) free(xdata);
 }
 
 /**
@@ -97,16 +97,19 @@ void NVBPlotCurves::draw(QPainter* painter, const QwtScaleMap& xMap, const QwtSc
 
 void NVBPlotCurves::setDataSet(const NVBDataSet* data)
 {
+	releaseDataSet(parent);
 	parent = 0;
+
 	if (xdata) {
 		free(xdata);
 		xdata = 0;
 		}
-	
+
 	rect = QRectF();
 	
 	if (data) {
 		parent = data;
+		useDataSet(parent);
 		connect(parent,SIGNAL(dataChanged()),this,SLOT(parentDataChanged()));
 		connect(parent,SIGNAL(dataReformed()),this,SLOT(parentAxesChanged()));
 		connect(parent,SIGNAL(destroyed()),this,SLOT(setDataSet()));

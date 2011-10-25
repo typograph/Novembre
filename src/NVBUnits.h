@@ -226,8 +226,6 @@ class NVBPhysPoint {
 		NVBPhysPoint(const NVBPhysValue & x, const NVBPhysValue & y);
 		NVBPhysPoint(const QPointF & point, const NVBUnits & dimension):p(point),d(dimension) {;}
 
-		NVBPhysPoint(const NVBPhysPoint & other):p(other.p),d(other.d) {;}
-
 		~NVBPhysPoint() {;}
 		
 		inline NVBPhysValue x() const { return NVBPhysValue(p.x(),d); }
@@ -245,13 +243,18 @@ class NVBPhysPoint {
 			return NVBPhysPoint(p + other, d);
 			}
 			
-		void operator+=(const QPointF & other) {
-			p += other;
-			}
-			
 		NVBPhysPoint operator-(const NVBPhysPoint & other) const {
 			return NVBPhysPoint(p - other.point(d), d);
 			}
+
+		void operator+=(const QPointF & other) {
+			p += other;
+			}
+
+		void operator-=(const QPointF & other) {
+			p -= other;
+			}
+
 };
 
 Q_DECLARE_METATYPE(NVBPhysPoint);

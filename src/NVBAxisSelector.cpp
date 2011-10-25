@@ -119,26 +119,6 @@
 
 // NVBSelectorCase
 
-
-NVBSelectorCase::NVBSelectorCase(const NVBSelectorCase & other)
-: id(other.id)
-, t(other.t)
-, cases(other.cases)
-, dataset(other.dataset)
-{
-	
-/*	switch (other.t) {
-		case NVBSelectorCase::AND :
-			dataset = other.dataset;
-			break;
-		case NVBSelectorCase::OR :
-			cases = other.cases;
-			break;
-		default:
-			break;
-		}*/
-	}
-
 NVBSelectorCase & NVBSelectorCase::addCase(int caseId) {
 	if (t == NVBSelectorCase::AND) {
 		NVBOutputError("Trying to add a Case to an AND-case. Case type changed to OR.");
@@ -281,10 +261,10 @@ void NVBSelectorCase::optimize() {
 
 NVBSelectorFileInstance NVBSelectorCase::instantiate(const QList< NVBDataSource* > * dataSources)
 {
-	if (t != NVBSelectorCase::AND) {
-		NVBOutputError("Only one case per selector is supported when instantiating on list");
-		return NVBSelectorFileInstance(*this);
-		}
+//	if (t != NVBSelectorCase::AND) {
+//		NVBOutputError("Only one case per selector is supported when instantiating on list");
+//		return NVBSelectorFileInstance(*this);
+//		}
 
 // 	optimize();
 
@@ -390,18 +370,52 @@ NVBSelectorDataInstance::NVBSelectorDataInstance(const NVBSelectorCase & selecto
 , dataSet(dataset)
 , s(selector)
 {
+	useDataSet(dataset);
 	if (dataset)
 		initAxes(s.match(dataset));
 }
 
 NVBSelectorDataInstance::NVBSelectorDataInstance(const NVBSelectorCase & selector, const NVBDataSet* dataset, NVBSelectorAxisInstanceList matched)
  : valid(false)
-, dataSet(dataset)
+ , dataSet(dataset)
  , s(selector)
-	{
+{
+	useDataSet(dataset);
 	if (dataset)
 		initAxes(matched);
 }
+
+NVBSelectorDataInstance::NVBSelectorDataInstance(const NVBSelectorDataInstance & other)
+ : valid(other.valid)
+ , dataSet(other.dataSet)
+ , s(other.s)
+ , matchedaxes(other.matchedaxes)
+ , matchedmaps(other.matchedmaps)
+ , otheraxes(other.otheraxes)
+	{
+	useDataSet(dataSet);
+	}
+
+NVBSelectorDataInstance::~NVBSelectorDataInstance() {
+	releaseDataSet(dataSet);
+	}
+
+const NVBSelectorDataInstance& NVBSelectorDataInstance::operator=(const NVBSelectorDataInstance & other) {
+	if (this != &other) {
+		releaseDataSet(dataSet); // Just in case we are overwriting
+		valid = other.valid;
+		dataSet = other.dataSet;
+		s = other.s;
+		matchedaxes = other.matchedaxes;
+		matchedmaps = other.matchedmaps;
+		otheraxes = other.otheraxes;
+
+		useDataSet(dataSet);
+		}
+	return *this;
+
+	}
+
 
 void NVBSelectorDataInstance::initAxes(NVBSelectorAxisInstanceList matched)
 {
@@ -529,7 +543,7 @@ void NVBSelectorFileInstance::fillInstances(const NVBSelectorCase & selector, co
 		foreach(NVBSelectorCase subs, selector.cases)
 			fillInstances(subs, sources);
 		return;
-			}
+		}
 			
 	QList<NVBSelectorSourceInstance> listInst;
 	QList<NVBDataSource*> listS;
@@ -542,7 +556,7 @@ void NVBSelectorFileInstance::fillInstances(const NVBSelectorCase & selector, co
 			listS << sources.at(ix);
 			listIx << ix;
 			}
-	}
+		}
 
 	if (!listInst.isEmpty()) {
 		instances.insert(selector.id,listInst);
@@ -551,7 +565,7 @@ void NVBSelectorFileInstance::fillInstances(const NVBSelectorCase & selector, co
 		allSources.append(listS);
 		indexes.insert(selector.id,listIx);
 		allIndexes.append(listIx);
-	}
+		}
 }
 
 void NVBSelectorFileInstance::fillLists()
@@ -570,4 +584,4 @@ const NVBSelectorSourceInstance& NVBSelectorFileInstance::instFromDatasource(con
 		
 	empty = NVBSelectorSourceInstance(s,source);
 	return empty;
-	}
+}

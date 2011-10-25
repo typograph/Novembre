@@ -14,12 +14,41 @@
 
 //------------- NVBFile -----------------------
 
+NVBFile::NVBFile(const NVBFile & other)
+ : QObject()
+ , QList< NVBDataSource* >(other)
+ , files(other.files)
+ , comments(other.comments)
+	{
+	NVB_FOREACH(NVBDataSource * ds, this)
+			useDataSource(ds);
+	}
+
+NVBFile::NVBFile(const QList<NVBDataSource*> & other)
+	: QObject()
+	, QList< NVBDataSource* >(other)
+	{
+	NVB_FOREACH(NVBDataSource * ds, this)
+			useDataSource(ds);
+	}
+
+NVBFile & NVBFile::operator=(const NVBFile & other)
+	{
+	if (this != &other) {
+		files = other.files;
+		QList<NVBDataSource*>::operator =(other);
+		NVB_FOREACH(NVBDataSource * ds, this)
+			useDataSource(ds);
+		}
+	return *this;
+	}
+
 NVBFile::~NVBFile()
 {
   if (refCount)
 		NVBOutputError("Non-free file deleted. Possible negative implications for NVBFileFactory");
 	NVB_FOREACH(NVBDataSource * d, this)
-		delete d;
+		releaseDataSource(d);
 }
 
 void NVBFile::release()

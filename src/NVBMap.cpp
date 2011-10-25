@@ -83,6 +83,7 @@ NVBDataColorInstance::NVBDataColorInstance ( const NVBDataSet* _data, const NVBC
 	, data(_data)
 	, rescaleOnDataChange(true)
 {
+	useDataSet(data);
 	xyAxes << 0 << 1;
 
 	if (!data) NVBOutputError("No data supplied");
@@ -98,6 +99,49 @@ NVBDataColorInstance::NVBDataColorInstance ( const NVBDataSet* _data, const NVBC
 		calculateSliceAxes();
 		}
 }
+
+NVBDataColorInstance::NVBDataColorInstance(const NVBDataColorInstance & other)
+	: QObject()
+	,	NVBColorInstance(other.source)
+	, data(other.data)
+	, sliceAxes(other.sliceAxes)
+	, xyAxes(other.xyAxes)
+	, rescaleOnDataChange(other.rescaleOnDataChange)
+	{
+	useDataSet(data);
+
+	if (data) {
+		setLimits(data->min(),data->max());
+
+		connect(data,SIGNAL(dataChanged()),this,SLOT(parentDataChanged()));
+		connect(data,SIGNAL(dataReformed()),this,SLOT(parentDataReformed()));
+		}
+	}
+
+NVBDataColorInstance & NVBDataColorInstance::operator=(const NVBDataColorInstance & other) {
+	if (this != &other) {
+		if (data) {
+			disconnect(data,0,this,0);
+			releaseDataSet(data);
+			}
+
+		sliceAxes = other.sliceAxes;
+		xyAxes = other.xyAxes;
+		rescaleOnDataChange = other.rescaleOnDataChange;
+		data = other.data;
+
+		if (data) {
+			setLimits(data->min(),data->max());
+			connect(data,SIGNAL(dataChanged()),this,SLOT(parentDataChanged()));
+			connect(data,SIGNAL(dataReformed()),this,SLOT(parentDataReformed()));
+			}
+		}
+	return *this;
+	}
+
+NVBDataColorInstance::~NVBDataColorInstance() {
+	releaseDataSet(data);
+	}
 
 void NVBDataColorInstance::setImageAxes(QVector< axisindex_t > xy)
 {

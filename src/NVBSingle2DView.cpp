@@ -67,8 +67,7 @@ NVBSingle2DView::NVBSingle2DView(NVBDataSet* data, QWidget * parent)
 
 NVBSingle2DView::~NVBSingle2DView()
 {
-	if (colors)
-		delete colors;
+	setDataSet(0);
 }
 
 void NVBSingle2DView::dataSetDestoyed()
@@ -128,10 +127,14 @@ void NVBSingle2DView::setDataSet(NVBDataSet* data)
 
 	if (plotData)
 		plotData->disconnect(this);
+
+	releaseDataSet(plotData);
 		
 	plotData = data;
 	
 	if (plotData) {
+		useDataSet(plotData);
+
 		/* 
 		 * NVBDataSet::dataChanged is connected to NVBColotInstace, and its slot
 		 * has to be called before regenerating the cache

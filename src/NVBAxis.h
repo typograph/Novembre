@@ -36,7 +36,6 @@ class NVBAxis {
 	public:
 		NVBAxis():p(0) {;}
     NVBAxis(NVBDataSource * parent, QString name, axissize_t length) : p(parent), n(name), l(length), pm(0) {;}
-    NVBAxis(const NVBAxis & other) : p(other.p), n(other.n), l(other.l), ms(other.ms), pm(other.pm) {;}
     // NVBAxis doesn't own anything, neither the parent, nor the maps.
     ~NVBAxis() {;}
 

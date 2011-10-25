@@ -30,7 +30,10 @@ NVBDataSet::NVBDataSet(NVBDataSource * parent,
 	}
 
 NVBDataSet::~NVBDataSet() {
-	if (d) free(d);
+	if (d) {
+		free(d);
+		d = 0; // FIXME stupid safeguard against memory bugs
+		}
 	}
 
 QVector<axissize_t> NVBDataSet::sizes() const {
@@ -100,17 +103,67 @@ NVBAxisMapping NVBDataSet::mapFromSource(const NVBAxisMapping& mapping) const
 	return NVBAxisMapping(mapping.map, mapFromSource(mapping.axes));
 }
 
+#ifdef NVB_DEBUG_DSUSE
+
+void useAndLogDataSource(QString fn, const NVBDataSource* source) {
+  if (!source) return;
+
+	source->refCount++;
+
+	NVBOutputDMsg(QString("%3 reserved %2 from file %1 [%4]").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))).arg(fn).arg(source->refCount));
+}
+
+void releaseAndLogDataSource(QString fn, const NVBDataSource* source) {
+  if (!source) return;
+
+	source->refCount--;
+
+	NVBOutputDMsg(QString("%3 released %2 from file %1 [%4]").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))).arg(fn).arg(source->refCount));
+
+	if (!source->refCount) {
+		NVBOutputDMsg(QString("... releasing %2 from file %1").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))));
+		delete const_cast<NVBDataSource *>(source);
+		}
+}
+
+void useAndLogDataSet(QString fn, const NVBDataSet* set) {
+	if (!set) return;
+	useAndLogDataSource(fn,set->dataSource());
+	}
+
+void releaseAndLogDataSet(QString fn, const NVBDataSet* set) {
+	if (!set) return;
+	releaseAndLogDataSource(fn,set->dataSource());
+	}
+
+#else
 
 void useDataSource(const NVBDataSource* source) {
-  if (!source) return;
-  source->refCount++;
+	if (!source) return;
+	NVBOutputDMsg(QString("Reserved %2 from file %1").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))));
+
+	source->refCount++;
 }
 
 void releaseDataSource(const NVBDataSource* source) {
-  if (!source) return;
-  source->refCount--;
-  if (!source->refCount) delete const_cast<NVBDataSource *>(source);
+	if (!source) return;
+
+	NVBOutputDMsg(QString("Released %2 from file %1").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))));
+
+	source->refCount--;
+	if (!source->refCount) delete const_cast<NVBDataSource *>(source);
 }
+
+void useDataSet(const NVBDataSet* set) {
+	if (!set) return;
+	useDataSource(set->dataSource());
+	}
+
+void releaseDataSet(const NVBDataSet* set) {
+	if (!set) return;
+	releaseDataSource(set->dataSource());
+	}
+#endif
 
 /**
 	* \class NVBDataSource
@@ -118,10 +171,12 @@ void releaseDataSource(const NVBDataSource* source) {
 	*
 	*/
 
-NVBDataSource::NVBDataSource() {
+NVBDataSource::NVBDataSource() : refCount(0) {
 }
 
 NVBDataSource::~NVBDataSource() {
+	if (refCount != 0)
+		NVBOutputError("Source still marked as used.");
 }
 
 const NVBColorMap* NVBDataSource::defaultColorMap() const {
@@ -196,6 +251,8 @@ NVBConstructableDataSource::NVBConstructableDataSource(NVBFile * orig)
 {
 	if (!o)
 		NVBOutputVPMsg("Created without file");
+	else
+		useDataSource(this); // We are used by the file we are created for
 }
 
 NVBConstructableDataSource::~NVBConstructableDataSource() {
