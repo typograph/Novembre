@@ -32,8 +32,10 @@ void NVBLogger::outputMessage(NVB::LogEntryType type, QString issuer, QString te
   }
 
 void NVBOutputMessage(NVB::LogEntryType type,QString issuer, QString text){
+	NVBLogger * logger = qApp->property("Logger").value<NVBLogger*>();
+	if (logger)
 	QMetaObject::invokeMethod(
-		qApp->property("Logger").value<NVBLogger*>(),
+		logger,
 		"outputMessage",
 		Q_ARG(NVB::LogEntryType,type),
 		Q_ARG(QString,issuer),
