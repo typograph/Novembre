@@ -214,12 +214,12 @@ int NVBDirViewModel::rowCount( const QModelIndex & parent ) const
 
 bool NVBDirViewModel::loadFile(int index) const
 {
-				if (inprogress.contains(index)) return false;
-				if (files.at(index)) return true;
+	if (inprogress.contains(index)) return false;
+	if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 
 	fileFactory->openFile(dirModel->getAllFiles(indexes[index]),this);
-				inprogress.append(index);
+	inprogress.append(index);
 	return false;
 /*
 	NVBFile * f = fileFactory->openFile(dirModel->getAllFiles(indexes[index]));
@@ -421,8 +421,8 @@ void NVBDirViewModel::parentInsertedRows(const QModelIndex & /*parent*/, int fir
 					unloadables[i] += last-first+1;
 				}
 			files.insert(first,last-first+1,0);
-                        cacheRowCounts(first,last);
-                        endInsertRows();
+			cacheRowCounts(first,last);
+			endInsertRows();
 			}
 		operationRunning = false;
 		}
@@ -455,10 +455,10 @@ void NVBDirViewModel::parentRemovedRows(const QModelIndex & /*parent*/, int firs
 				else if (unloadables.at(i) >= first)
 					unloadables.removeAt(i--);
 				}
-			for (int i = first; i <= last; i++) {
+			for (int i = first; i <= last; i++)
 				if (files.at(i))
 					files.at(i)->release();
-				}
+
 			files.remove(first,last-first+1);
 			for (int i = first; i <= last; i += 1)
 				indexes.removeAt(i);

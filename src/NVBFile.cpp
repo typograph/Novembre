@@ -13,29 +13,27 @@
 
 //------------- NVBFile -----------------------
 
-NVBFile::~NVBFile()
-{
+NVBFile::~NVBFile() {
   if (refCount)
 		NVBOutputError("Non-free file deleted. Possible negative implications for NVBFileFactory");
 	emit free(sourceInfo.name());
-}
+	}
 
-void NVBFile::addSource(NVBDataSource * page, NVBVizUnion viz)
-{
+void NVBFile::addSource(NVBDataSource * page, NVBVizUnion viz) {
 	if (page != 0) {
-	 // NVBFile is appending pages, instead of prepending them
+		// NVBFile is appending pages, instead of prepending them
 		NVBPageViewModel::addSource(page,rowCount(),viz);
 		page->owner = this;
-	}
+		}
 	else
 		NVBOutputError("Can't add a NULL page");
-}
+	}
 
 void NVBFile::addSources(QList<NVBDataSource *> pages) {
 	foreach (NVBDataSource * s, pages) {
 		addSource(s);
 		}
-}
+	}
 
 QRectF NVBFile::fullarea() {
   QRectF rect;
@@ -43,42 +41,40 @@ QRectF NVBFile::fullarea() {
   for (int i = pages.size()-1;i>=0;i--) {
     NVBDataSource * fPage = pages.at(i);
     switch (fPage->type()) {
-      case NVB::TopoPage  : {
-                          rect |= ((NVB3DPage *)fPage)->position();
-                          break;
-                        }
-      case NVB::SpecPage  : {
-                          QListIterator<QPointF> ppi(((NVBSpecPage*)fPage)->positions());
-                          ppi.toFront();
-                          while(ppi.hasNext()) {
-                            if (!rect.contains(ppi.next()))
+			case NVB::TopoPage : {
+				rect |= ((NVB3DPage *)fPage)->position();
+				break;
+				}
+			case NVB::SpecPage : {
+				QListIterator<QPointF> ppi(((NVBSpecPage*)fPage)->positions());
+				ppi.toFront();
+				while(ppi.hasNext()) {
+					if (!rect.contains(ppi.next()))
 #if QT_VERSION >= 0x040300
-                              rect |= QRectF(ppi.peekPrevious(),rect.topLeft());
+						rect |= QRectF(ppi.peekPrevious(),rect.topLeft());
 #else
-                              rect |= QRectF(ppi.peekPrevious().x(),ppi.peekPrevious().y(),rect.x()-ppi.peekPrevious().x(),rect.y()-ppi.peekPrevious().y());
+						rect |= QRectF(ppi.peekPrevious().x(),ppi.peekPrevious().y(),rect.x()-ppi.peekPrevious().x(),rect.y()-ppi.peekPrevious().y());
 #endif			    
-                            }
-                          break;
-                        }
-      default         : {
-                          break;
-                        }
+					}
+				break;
+			}
+			default : {
+				break;
+				}
       }
 
     }
   return rect;
-}
+	}
 
-void NVBFile::release()
-{
+void NVBFile::release() {
   refCount--;
   if (!refCount) emit free(this);
-}
+	}
 
-void NVBFile::use()
-{
+void NVBFile::use()	{
   refCount++;
-}
+	}
 
 
 /*
@@ -91,11 +87,11 @@ void NVBFile::setVisualizer(NVBVizUnion visualizer)
 */
 
 NVBFile::NVBFile(NVBAssociatedFilesInfo sources, QList< NVBDataSource * > pages)
-		:	NVBPageViewModel() \
-		,	sourceInfo(sources)
-		,	refCount(0) \
+	:	NVBPageViewModel() \
+	,	sourceInfo(sources)
+	,	refCount(0) \
 {
 	foreach(NVBDataSource * s, pages) {
 		addSource(s);
 		}
-}
+	}
