@@ -172,15 +172,16 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 
     comments.clear();
 
-    header = getRHKHeader(file);
-
-    if (memcmp(header.version, MAGIC, 28) != 0) {
+	file.peek((char*)&header,44);
+	if (memcmp(header.version, MAGIC, 28) != 0) {
 			NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
       delete fi;
       return NULL;
     }
 
-    version = header.version[14]-0x30; // 0,1,..9
+	header = getRHKHeader(file);
+
+	version = header.version[14]-0x30; // 0,1,..9
     if (version == 1) {
       header.colorinfo_count = 1;
       header.grid_ysize = 0;
@@ -655,6 +656,12 @@ TRHKHeader RHKFileGenerator::getRHKHeader(QFile & file)
 {
   TRHKHeader header;
   file.read((char*)&header.parameter_size,2); // read header size
+
+	if ( header.parameter_size > file.size() ) {
+		memset((char*)&header.parameter_size,0,sizeof(TRHKHeader));
+		return;
+		}
+
   file.read((char*)header.version,header.parameter_size);
   if (header.parameter_size+2 > (int)sizeof(TRHKHeader))
     file.seek(file.pos() + header.parameter_size+2-sizeof(TRHKHeader));
