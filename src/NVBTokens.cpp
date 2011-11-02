@@ -461,15 +461,15 @@ QString NVBTokenList::verboseString() const
 				break;
 				}
 			case NVBGotoToken::HasAtLeastNAxes : {
-				prefix += QString("Has >= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
+				prefix += QString("If >= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
 				break;
 				}
 			case NVBGotoToken::HasAtMostNAxes : {
-				prefix += QString("Has <= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
+				prefix += QString("If <= %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
 				break;
 				}
 			case NVBGotoToken::HasNAxes : {
-				prefix += QString("Has %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
+				prefix += QString("If %1 axes : ").arg(static_cast<NVBGotoToken*>(data->tokens.at(1))->n);
 				break;
 				}
 			default : {
@@ -490,7 +490,10 @@ QString NVBTokenList::verboseString() const
 			return prefix +  dataParamNames.value((static_cast<NVBDataParamToken*>(last())->pparam),NVBDescrPair("","Bug!!!")).verbName() + " of dataset";
 		case NVBToken::AxisParam : {
 			NVBAxisParamToken * at = static_cast<NVBAxisParamToken*>(last());
-			return prefix +  axisParamNames.value(at->aparam,NVBDescrPair("","Bug!!!")).verbName() + QString(" of axis %1").arg(at->nparam.isEmpty() ? ("#"+QString::number(at->ixparam)) : at->nparam);
+			QString axisname = QString("axis %1").arg(at->nparam.isEmpty() ? ("#"+QString::number(at->ixparam)) : at->nparam);
+			if (at->aparam == NVBAxisParamToken::Exists) // grammar...
+				return prefix + "Has " + axisname;
+			return prefix +  axisParamNames.value(at->aparam,NVBDescrPair("","Bug!!!")).verbName() + " of " + axisname;
 			}
 		case NVBToken::Goto : {
 			return QString();
