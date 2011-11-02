@@ -1,7 +1,7 @@
 #ifndef NVBDATASETICONS_H
 #define NVBDATASETICONS_H
 
-#include <QtCore/QMap>
+#include <QtCore/QHash>
 #include <QtGui/QIcon>
 #include <QtGui/QIconEngine>
 #include "NVBDataGlobals.h"
@@ -49,7 +49,7 @@ class NVB1DIconEngine : public QObject, public QIconEngineV2 {
 	Q_OBJECT
 	protected:
 		const NVBDataSet* dset;
-		QMap<QSize,QPixmap> cache;
+		QHash<QSize,QPixmap> cache;
 
 		NVBAxisSelector selector;
 		NVBSelectorDataInstance instance;
