@@ -70,6 +70,8 @@ public:
 private:
   void tokenListToLayout(NVBTokens::NVBTokenList l);
 private slots:
+	void switchToTopo();
+	void switchToSpec();
 	void switchToFile();
 	void switchToData();
 	void switchToAxis();
