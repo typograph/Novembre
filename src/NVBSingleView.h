@@ -47,7 +47,7 @@ public:
 
 class NVBAverageSlicingDataSet : public NVBDataSet
 {
-	Q_OBJECT;
+	Q_OBJECT
 private:
 	const NVBDataSet * orig;
 	
@@ -83,7 +83,7 @@ public slots:
 
 class NVBSingleView : public QFrame 
 {
-	Q_OBJECT;
+	Q_OBJECT
 public:	
 	enum Type {
 		Graph,    // 1D
@@ -104,6 +104,7 @@ private:
 	// -------------------------
 
 	void createView(NVBSingleView::Type type);
+	void removeView();
 	void hideEvent(QHideEvent * e);
 	
 public:	
