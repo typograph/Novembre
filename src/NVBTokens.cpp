@@ -70,7 +70,8 @@ QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > NVBTokenList::initAxisParamN
 {
   QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > anames;
   
-  anames.insert(NVBAxisParamToken::Name,NVBDescrPair("axisName","Name"));
+	anames.insert(NVBAxisParamToken::Exists,NVBDescrPair("axisExists","Exists"));
+	anames.insert(NVBAxisParamToken::Name,NVBDescrPair("axisName","Name"));
   anames.insert(NVBAxisParamToken::Length,NVBDescrPair("axisLength","Length"));
   anames.insert(NVBAxisParamToken::Units,NVBDescrPair("axisUnits","Units"));
 

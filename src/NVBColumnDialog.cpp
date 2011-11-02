@@ -94,7 +94,8 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   gridLayout->addLayout(horizontalLayout, 2, 0, 1, 1);
 
   axisChoice = new QComboBox(this);
-  axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Name),NVBAxisParamToken::Name);
+	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Exists),NVBAxisParamToken::Exists);
+	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Name),NVBAxisParamToken::Name);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Length),NVBAxisParamToken::Length);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Units),NVBAxisParamToken::Units);
 
