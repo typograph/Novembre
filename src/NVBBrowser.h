@@ -106,7 +106,7 @@ private:
 	void fillFolders( QString index, QModelIndex parent);
 
 protected:
-  Q_PROPERTY(unsigned short iconSize READ getIconSize());
+	Q_PROPERTY(unsigned short iconSize READ getIconSize())
   unsigned short iconSize;
   QSettings * confile;
 
