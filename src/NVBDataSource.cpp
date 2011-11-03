@@ -182,7 +182,7 @@ NVBDataSource::~NVBDataSource() {
 const NVBColorMap* NVBDataSource::defaultColorMap() const {
 //	return new NVBGrayRampColorMap(); // TODO : move to NVBToolsFactory
 
-	NVBColorMap * m = QCoreApplication::instance()->property("DefaultGradient").value<NVBColorMap*>();
+	const NVBColorMap * m = QCoreApplication::instance()->property("DefaultGradient").value<const NVBColorMap*>();
 	if (m) return m;
 	return new NVBGrayRampColorMap();
 
