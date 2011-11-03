@@ -156,6 +156,7 @@ class NVBColorMap {
 		virtual NVBColorMap * copy() const = 0;
 };
 
+Q_DECLARE_METATYPE(const NVBColorMap*)
 Q_DECLARE_METATYPE(NVBColorMap*)
 
 #endif
