@@ -464,12 +464,10 @@ NVBBrowser::~ NVBBrowser( )
   updateColumns();
 	confile->setValue("Browser/Size", size());
   confile->setValue("Browser/Pos", pos());
-	// TODO maybe it's better to save the absolute width of the dir tree
-//	confile->setValue("Browser/Split", atan2(hSplitter->sizes().at(0),hSplitter->sizes().at(1)));
 	confile->setValue("Browser/TreeW", hSplitter->sizes().at(0));
 	confile->setValue("Browser/FileListSize", fileList->size());
   confile->setValue("Browser/ShowPageInfo", piview->isVisible());
-	if (dirView) delete dirView;
+	if (dirView) delete dirView; // This ensures that the gradient menu is deleted after the models
   if (fileModel) delete fileModel;
 }
 
