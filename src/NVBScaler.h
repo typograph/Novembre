@@ -193,7 +193,8 @@ public:
 	\fn NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
 	Constructs a scaler that will map \a from_min to \a to_min and \a from_max to \a to_max linearly.
 	*/
-  NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max);
+	NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
+		{ reinit(from_min, from_max, to_min, to_max); }
 /**
 	\fn NVBValueScaler( double offset, double multiplier)
 	Constructs a scaler with given \a offset and \a multiplier.
@@ -220,6 +221,8 @@ public:
 		scale_offset = offset;
 		scale_multiplier = multiplier;
 	}
+
+	void reinit( fromT from_min, fromT from_max, toT to_min, toT to_max);
 
   // Input _was_ multiplied and shifted;
   void shift_input(double offset) { scale_offset += offset*scale_multiplier; }
@@ -286,7 +289,7 @@ public:
 };
 
 template <class fromT, class toT>
-NVBValueScaler<fromT,toT>::NVBValueScaler( fromT from_min, fromT from_max, toT to_min, toT to_max)
+void NVBValueScaler<fromT,toT>::reinit( fromT from_min, fromT from_max, toT to_min, toT to_max)
 {
   if (from_max != from_min) {
     calcOM<double>(scale_offset,scale_multiplier,from_min, from_max, to_min, to_max);

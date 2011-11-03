@@ -116,17 +116,13 @@ void NVBGrayStepColorMap::addStep(double x, double value) {
 
 	if (*i == x) {
 		if (index >= 0)
-			scales[index].change_output(
-						scales.at(index).scale(steps.at(index)),
-						scales.at(index).scale(steps.at(index+1)),
-						scales.at(index).scale(steps.at(index)),
-						value);
+			scales[index].reinit(
+						steps.at(index),steps.at(index+1),
+						scales.at(index).scale(steps.at(index)), value);
 		if (index + 1 < scales.count())
-			scales[index+1].change_output(
-						scales.at(index+1).scale(steps.at(index)),
-						scales.at(index+1).scale(steps.at(index+1)),
-						value,
-						scales.at(index+1).scale(steps.at(index+1)));
+			scales[index+1].reinit(
+						steps.at(index+1), steps.at(index+2),
+						value, scales.at(index+1).scale(steps.at(index+2)));
 		}
 	else {
 		steps.insert(i,x);
@@ -139,8 +135,8 @@ void NVBGrayStepColorMap::addStep(double x, double value) {
 									);
 		scales.insert(index+1,
 									NVBValueScaler<double,double>(
-										x,steps.at(index+1),
-										value,old.scale(steps.at(index+1)))
+										x,steps.at(index+2),
+										value,old.scale(steps.at(index+2)))
 									);
 		}
 }
