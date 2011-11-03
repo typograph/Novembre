@@ -6,17 +6,22 @@
 
 class NVBMutableGradientAction : public NVBGradientAction {
 Q_OBJECT
-//protected:
-//	NVBColorSelectMenu * menu;
+protected:
+	NVBColorSelectMenu * colorMenu;
 public:
 	NVBMutableGradientAction(NVBColorMap * gradient, QObject * parent );
 	virtual ~NVBMutableGradientAction() {;}
+
 public slots:
 	virtual void setColor(QColor color);
 };
 
+class NVBRGBRampColorMap;
+
 class NVBBlackToColorGradientAction : public NVBMutableGradientAction {
 Q_OBJECT
+private:
+	NVBRGBRampColorMap * pcolors;
 public:
 	NVBBlackToColorGradientAction(QObject * parent);
 	virtual ~NVBBlackToColorGradientAction() {;}

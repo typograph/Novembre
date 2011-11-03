@@ -25,6 +25,7 @@ public:
 		setMargin(4);
 		setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 		setMinimumSize(10,style()->pixelMetric(QStyle::PM_TitleBarHeight));
+//		setMouseTracking(true);
 	}
 
 	virtual ~NVBGradientMenuWidget() {;}
@@ -79,16 +80,16 @@ protected:
 		// The arrow was painted by drawControl before, but now it's behind the gradient.
 		if (option.menuItemType == QStyleOptionMenuItem::SubMenu) {// draw sub menu arrow
 			option.rect = QRect(width() - margin(),option.rect.top()+margin(),margin(),height()-2*margin());
-			QStyle::PrimitiveElement arrow;
-			arrow = (option.direction == Qt::RightToLeft) ? QStyle::PE_IndicatorArrowLeft : QStyle::PE_IndicatorArrowRight;
-			style()->drawPrimitive(arrow, &option, &p, this);
+//			QStyle::PrimitiveElement arrow;
+//			arrow = (option.direction == Qt::RightToLeft) ? QStyle::PE_IndicatorArrowLeft : QStyle::PE_IndicatorArrowRight;
+			style()->drawPrimitive(QStyle::PE_IndicatorArrowDown, &option, &p, this);
 			}
 	}
 
 	virtual void enterEvent(QEvent * e) {
 		e->accept();
 		mouseInWidget = true;
-		action->activate(QAction::Hover);
+//		action->hover();
 		update();
 	}
 	virtual void leaveEvent(QEvent * e) {
@@ -100,12 +101,14 @@ protected:
 	virtual void mousePressEvent(QMouseEvent * e) {
 		e->accept();
 		mouseDown = true;
-		action->activate(QAction::Trigger);
+		if (e->button() == Qt::RightButton && action->menu())
+			action->menu()->popup(e->globalPos());
 	}
 	virtual void mouseReleaseEvent(QMouseEvent * e) {
 		e->accept();
 		mouseDown = false;
-//		action->activate(QAction::Trigger);
+		if (e->button() == Qt::LeftButton)
+			action->trigger();
 	}
 
 };
@@ -170,6 +173,7 @@ void NVBColorSelectMenu::selectExtraColor() {
 NVBGradientAction * NVBGradientMenu::addGradientAction(NVBColorMap * gradient) {
 	NVBGradientAction * action = new NVBGradientAction(gradient,this);
 	addAction(action);
+	connect(action,SIGNAL(triggered(const NVBColorMap*)),SLOT(selectGradient(const NVBColorMap*)));
 	return action;
 }
 
@@ -179,7 +183,15 @@ void NVBGradientMenu::addGradientAction(NVBGradientAction * gradientAction) {
 }
 
 void NVBGradientMenu::selectGradient(const NVBColorMap *gradient) {
-	NVBColorMap * old = qApp->property("DefaultGradient").value<NVBColorMap*>();
-	qApp->setProperty("DefaultGradient",QVariant::fromValue(gradient->copy()));
-	delete old; // Bad idea.
+	hide();
+	qApp->setProperty("DefaultGradient",QVariant::fromValue(gradient));
+
+	// Technically, this might be a memory leak.
+	// On the other hand, there's only one original colormap,
+	// and the rest can only be set through this menu.
+
+	// The colormaps are deleted together with actions,
+	// i.e. when the browser gets destroyed. This is after
+	// the models using these colormaps are deleted.
+
 }
