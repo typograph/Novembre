@@ -47,8 +47,11 @@ NVBFile::~NVBFile()
 {
   if (refCount)
 		NVBOutputError("Non-free file deleted. Possible negative implications for NVBFileFactory");
-	NVB_FOREACH(NVBDataSource * d, this)
+	NVB_FOREACH(NVBDataSource * d, this) {
+		NVBConstructableDataSource * cd = qobject_cast<NVBConstructableDataSource*>(d);
+		if (cd) cd->detach();
 		releaseDataSource(d);
+		}
 }
 
 void NVBFile::release()

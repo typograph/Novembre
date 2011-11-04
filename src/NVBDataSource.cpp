@@ -110,7 +110,7 @@ void useAndLogDataSource(QString fn, const NVBDataSource* source) {
 
 	source->refCount++;
 
-	NVBOutputDMsg(QString("%3 reserved %2 from file %1 [%4]").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))).arg(fn).arg(source->refCount));
+	NVBOutputDMsg(QString("%3 reserved %2 from file %1 [%4]").arg(source->origin() ? source->origin()->name() : "NULL").arg(source->origin() ? source->origin()->indexOf(const_cast<NVBDataSource*>(source)) : 0).arg(fn).arg(source->refCount));
 }
 
 void releaseAndLogDataSource(QString fn, const NVBDataSource* source) {
@@ -118,10 +118,10 @@ void releaseAndLogDataSource(QString fn, const NVBDataSource* source) {
 
 	source->refCount--;
 
-	NVBOutputDMsg(QString("%3 released %2 from file %1 [%4]").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))).arg(fn).arg(source->refCount));
+	NVBOutputDMsg(QString("%3 released %2 from file %1 [%4]").arg(source->origin() ? source->origin()->name() : "NULL").arg(source->origin() ? source->origin()->indexOf(const_cast<NVBDataSource*>(source)) : 0).arg(fn).arg(source->refCount));
 
 	if (!source->refCount) {
-		NVBOutputDMsg(QString("... releasing %2 from file %1").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))));
+		NVBOutputDMsg(QString("... releasing %2 from file %1").arg(source->origin() ? source->origin()->name() : "NULL").arg(source->origin() ? source->origin()->indexOf(const_cast<NVBDataSource*>(source)) : 0));
 		delete const_cast<NVBDataSource *>(source);
 		}
 }
@@ -140,16 +140,11 @@ void releaseAndLogDataSet(QString fn, const NVBDataSet* set) {
 
 void useDataSource(const NVBDataSource* source) {
 	if (!source) return;
-	NVBOutputDMsg(QString("Reserved %2 from file %1").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))));
-
 	source->refCount++;
 }
 
 void releaseDataSource(const NVBDataSource* source) {
 	if (!source) return;
-
-	NVBOutputDMsg(QString("Released %2 from file %1").arg(source->origin()->name()).arg(source->origin()->indexOf(const_cast<NVBDataSource*>(source))));
-
 	source->refCount--;
 	if (!source->refCount) delete const_cast<NVBDataSource *>(source);
 }

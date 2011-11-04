@@ -52,10 +52,14 @@ void NVBPageInfoWidget::refresh(NVBDataSet * page)
 		addRow("Data units",page->dimension().toStr());
 		addRow("","");
 		addComments(page->getAllComments());
-		addRow("","");
-		addComments(page->dataSource()->getAllComments());
-		addRow("","");
-		addComments(page->dataSource()->origin()->getAllComments());
+		if (page->dataSource()) {
+			addRow("","");
+			addComments(page->dataSource()->getAllComments());
+			if (page->dataSource()->origin()) {
+				addRow("","");
+				addComments(page->dataSource()->origin()->getAllComments());
+				}
+			}
 		}
 }
 
