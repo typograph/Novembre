@@ -255,7 +255,7 @@ class NVBDataSource : public QObject {
 		/// Set minimal axis number / dimensions etc.
 		virtual void setOutputRequirements(NVBAxesProps axesprops);
 		virtual inline NVBAxesProps outputRequirements() const { return outputAxesProps; }
-		virtual inline NVBAxesProps inputRequirements() const { return outputRequirements(); };
+		virtual inline NVBAxesProps inputRequirements() const { return outputRequirements(); }
 		
 	public slots:
 		/// To be used by "on-top" data sources. Emits \a objectPushed()
@@ -339,6 +339,9 @@ class NVBConstructableDataSource : public NVBDataSource {
 
 		/// Original file
 		virtual NVBFile * origin() const { return o;}
+
+		/// Make this datasource an orphan
+		void detach() { o = 0; }
 
 };
 
