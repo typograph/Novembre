@@ -43,11 +43,17 @@ private:
 	}
 };
 
+NVBDirViewModelLoader::~NVBDirViewModelLoader() {
+	condition.wakeAll();
+	wait();
+	}
+
 void NVBDirViewModelLoader::run() {
 	forever {
 		mutex.lock();
 		if (queue.isEmpty())
 			condition.wait(&mutex);
+		if (queue.isEmpty()) return;
 		NVBAssociatedFilesInfo files = queue.dequeue();
 		mutex.unlock();
 		

@@ -40,6 +40,7 @@ private:
 public:
 
 	NVBDirViewModelLoader(NVBFileFactory * ff) : QThread(), factory(ff) {;}
+	virtual ~NVBDirViewModelLoader();
 	
 	void run();
 	
