@@ -135,7 +135,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 		else {   
 			NVBVariantList ans, pans;
 			ans.setSeparator(" : ");
-			pans.setSeparator(" : ");
+			pans.setSeparator("");
 			foreach(NVBDataInfo pi, *this) {
 				
 				pans.clear();
