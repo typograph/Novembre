@@ -699,13 +699,18 @@ void NVBColumnInputWidget::tokenListToLayout( NVBTokenList l )
 			return;
 			}
 		case NVBToken::DataComment : {
-			commentOption->setChecked(true);
-			commentChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.last())->sparam);          
-			return;
+			int ix = commentChoice->findText(static_cast<NVBPCommentToken*>(l.last())->sparam);
+			if (ix > -1) {
+				commentOption->setChecked(true);
+				commentChoice->setCurrentIndex(ix);
+				return;
+				}
+			// Else fall through
 			}
 		case NVBToken::Verbatim : {
 			textOption->setChecked(true);
-			textOption->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);          
+			textChoice->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);
+			return;
 			}
 		case NVBToken::Goto :
 		case NVBToken::Invalid :
