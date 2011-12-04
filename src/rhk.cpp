@@ -227,13 +227,14 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 	// Read pages 1by1
 	while(!file.atEnd()) {
 
-		header = getRHKHeader(file);
-
+		file.peek((char*)&header,44);
 		if (memcmp(header.version, MAGIC, 28) != 0) {
 			NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
 			delete fi;
 			return NULL;
 		}
+
+		header = getRHKHeader(file);
 
 		version = header.version[14]-0x30; // 0,1,..9
 		if (version == 1) { // Backward compatibility
@@ -270,8 +271,20 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 //				if (header.colorinfo_count != 0) 
 //					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to the developer").arg(file.fileName()));
 
-				axes << NVBAxisInfo(strings.at(10).isEmpty() ? "t" : strings.at(10),header.x_size,NVBUnits(strings.at(7)));
-				
+				QString nameT = strings.at(10);
+				if (nameT.isEmpty() || nameT == "X") { // TODO it might be interesting to move this method to NVBUnits
+					NVBUnits tu = NVBUnits(strings.at(7));
+					if (tu.isComparableWith("V"))
+						nameT = "Voltage";
+					else if (tu.isComparableWith("sec"))
+						nameT = "Time";
+					else if (tu.isComparableWith("A"))
+						nameT = "Current";
+					else
+						nameT = "T";
+					}
+				axes << NVBAxisInfo(nameT,header.x_size,NVBUnits(strings.at(7)));
+
 				int np=1,nx=1,ny=1;
 				
 				// Skip curve position data
