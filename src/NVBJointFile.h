@@ -22,7 +22,7 @@ public:
 
 	virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
 	virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
-	virtual bool setData ( const QModelIndex & index, const QVariant & value, int role = Qt::EditRole ) { return false; }
+	virtual bool setData ( const QModelIndex & , const QVariant & , int = Qt::EditRole ) { return false; }
 
 	virtual Qt::ItemFlags flags ( const QModelIndex & index ) const;
 

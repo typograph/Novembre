@@ -44,7 +44,7 @@ public:
     }
 
   void addNewSpecPoint(double x, double y, QwtData * pdata) {
-    if (! _datasize.isNull() && pdata->size() != _datasize.width()) {
+		if (! _datasize.isNull() && (int)pdata->size() != _datasize.width()) {
       NVBOutputError(QString("Wrong size of added data: %1 when main size is %2").arg(pdata->size()).arg(_datasize.width()) );
       return;
       };
@@ -343,7 +343,7 @@ NVBFile * NanonisFileGenerator::loadSpecAggregation(const NVBAssociatedFilesInfo
       s = specdata.readLine();
       double ypos = s.mid(s.indexOf('\t')).toDouble();
       s = specdata.readLine();
-      double zpos = s.mid(s.indexOf('\t')).toDouble();
+//      double zpos = s.mid(s.indexOf('\t')).toDouble();
       while(specdata.readLine() != "[DATA]")
 			if (specdata.atEnd()) { 
 				NVBOutputError("File format error: no DATA section");

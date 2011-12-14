@@ -84,7 +84,7 @@ public:
   virtual bool hasWidthForHeight() const;
   virtual int  widthForHeight(int h) const;
 
-  virtual bool acceptsPage(NVBDataSource * source) const { return true; }
+	virtual bool acceptsPage(NVBDataSource * /*source*/) const { return true; }
 
   virtual const QWidget * w() const { return this; }
   virtual QWidget * w() { return this; }

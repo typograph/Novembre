@@ -87,7 +87,7 @@ void NVB3DPageView::updateVizs(const QModelIndex & start, const QModelIndex & en
   rowsInserted(QModelIndex(),start.row(),end.row());
 }
 
-bool NVB3DPageView::acceptsPage(NVBDataSource * source) const
+bool NVB3DPageView::acceptsPage(NVBDataSource *) const
 {
   return true;
 }

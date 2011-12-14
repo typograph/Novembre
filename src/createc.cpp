@@ -654,6 +654,9 @@ CreatecVertPage::CreatecVertPage():NVBSpecPage()
 
 CreatecVertPage::CreatecVertPage( CreatecHeader file_header, int channel, double * bulk_data ):NVBSpecPage() // :header(file_header)
 {
+	Q_UNUSED(file_header);
+	Q_UNUSED(channel);
+	Q_UNUSED(bulk_data);
 }
 
 QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {

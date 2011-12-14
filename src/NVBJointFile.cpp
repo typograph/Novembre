@@ -15,7 +15,7 @@ void NVBJointFile::addFiles(QList<NVBFile*> others) {
 		addFile(f);
 }
 
-int NVBJointFile::rowCount ( const QModelIndex & parent ) const {
+int NVBJointFile::rowCount ( const QModelIndex &  ) const {
 	int sum = 0;
 	foreach (NVBFile * f, files)
 		sum += f->rowCount();

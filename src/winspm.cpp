@@ -764,6 +764,10 @@ WinSPMSpecPage::WinSPMSpecPage( const TWinSPM::Header & topo_header ):theader(to
 WinSPMSpecPage::WinSPMSpecPage(QFile & file, const TWinSPM::Header & topo_header, const TWinSPM::Header & _header, quint32 data_offset):theader(topo_header)
 {
 
+	Q_UNUSED(file);
+	Q_UNUSED(_header);
+	Q_UNUSED(data_offset);
+
 	// FIXME: Spectroscopy format unknown at that point
 
   pagename = "Spectroscopy";

@@ -659,7 +659,7 @@ TRHKHeader RHKFileGenerator::getRHKHeader(QFile & file)
 
 	if ( header.parameter_size > file.size() ) {
 		memset((char*)&header.parameter_size,0,sizeof(TRHKHeader));
-		return;
+		return header;
 		}
 
   file.read((char*)header.version,header.parameter_size);
