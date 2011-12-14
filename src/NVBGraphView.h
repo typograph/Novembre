@@ -97,9 +97,9 @@ public:
   QAbstractListModel * getVizModel() { return vizmodel; }
 
   virtual bool hasWidthForHeight() const { return false; }
-  virtual int  widthForHeight(int h) const { return -1; }
+	virtual int  widthForHeight(int) const { return -1; }
 
-  virtual bool acceptsPage(NVBDataSource * source) const { return true; } // FIXME
+	virtual bool acceptsPage(NVBDataSource *) const { return true; } // FIXME
 
   virtual const QWidget * w() const { return this; }
   virtual QWidget * w() { return this; }

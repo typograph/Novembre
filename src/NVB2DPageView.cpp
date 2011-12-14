@@ -134,7 +134,7 @@ void NVB2DPageView::setModel(QAbstractItemModel * model)
 */
 
 
-void NVB2DPageView::rowsAboutToBeRemoved( const QModelIndex & parent, int start, int end )
+void NVB2DPageView::rowsAboutToBeRemoved( const QModelIndex &, int start, int end )
 {
   if (currentIndex >= start && currentIndex <= end && activeViz.valid != 0)
     emit activeVizEOL();
@@ -159,6 +159,7 @@ void NVB2DPageView::rowsInserted( const QModelIndex & parent, int start, int end
   if (currentIndex >= start) currentIndex += end-start+1;
 
   foreach(QGraphicsItem* item, theScene->items()) {
+		NVBOutputError(QString::number(item->zValue()));
     if (item->zValue() <= -start)
       item->setZValue(item->zValue()-end+start-1);
     }
@@ -169,15 +170,15 @@ void NVB2DPageView::rowsInserted( const QModelIndex & parent, int start, int end
     NVBVizUnion tmp = vizmodel->index(i).data(PageVizItemRole).value<NVBVizUnion>();
 //    tmp->setZValue(z->scale(i));
     if (tmp.valid && tmp.vtype == NVB::TwoDView) {
-      theScene->addItem(tmp.TwoDViz);
+			theScene->addItem(tmp.TwoDViz);
 #if QT_VERSION >= 0x040500
       itemsRect |= tmp.TwoDViz->mapRectToScene(tmp.TwoDViz->boundingRect());
 #else
       itemsRect |= tmp.TwoDViz->mapToScene(tmp.TwoDViz->boundingRect()).boundingRect();
 #endif
-      tmp.TwoDViz->setZValue(-i);
 //       tmp.TwoDViz->setSelected(false);
-      }
+			tmp.TwoDViz->setZValue(-i);
+			}
     }
 
   autoFocus();

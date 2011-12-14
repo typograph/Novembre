@@ -20,7 +20,7 @@ public:
   ~NVB3DPageView();
 
   virtual bool hasWidthForHeight() const { return false; } // FIXME not entirely true, since there are constrains
-  virtual int  widthForHeight(int h) const { return -1; }
+	virtual int  widthForHeight(int) const { return -1; }
 
   virtual bool acceptsPage(NVBDataSource * source) const;
 
