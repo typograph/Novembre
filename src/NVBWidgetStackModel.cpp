@@ -14,7 +14,7 @@
 #include "NVBWidgetStackModel.h"
 
 
-NVBWidgetStackModel::NVBWidgetStackModel(NVBPageViewModel * model):pagemodel(model)
+NVBWidgetStackModel::NVBWidgetStackModel(NVBVizModel * model):pagemodel(model)
 {
   connect(pagemodel,SIGNAL(rowsAboutToBeRemoved(const QModelIndex&,int,int)),SLOT(pagesAboutToBeRemoved(const QModelIndex&,int,int)));
   connect(pagemodel,SIGNAL(rowsInserted(const QModelIndex&,int,int)),SLOT(pagesInserted(const QModelIndex&,int,int)));
@@ -47,6 +47,10 @@ QModelIndex NVBWidgetStackModel::index(int row, int column, const QModelIndex & 
     }
 
 }
+
+int NVBWidgetStackModel::addSource(NVBDataSource *page, NVBVizUnion viz) {
+	return pagemodel->addSource(page,viz);
+	}
 
 int NVBWidgetStackModel::columnCount(const QModelIndex & ) const
 {

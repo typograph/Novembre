@@ -266,3 +266,47 @@ NVBDataSource * NVBToolsFactory::hardlinkDataSource(NVBDataSource * source)
     default : return 0;
     }
 }
+
+class NVBIconViewController : public NVBViewController {
+public:
+
+	NVBIconViewController() : NVBViewController(0) {;}
+
+	QIcon icon;
+	virtual NVB::ViewType viewType() { return NVB::IconView;}
+
+	virtual void setSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion()) {}
+	virtual void addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion()) {}
+
+	virtual void setVisualizer(NVBVizUnion visualizer) {
+		if (visualizer.valid)
+			icon = QIcon(*visualizer.IconViz);
+		}
+	virtual void addControlWidget(QWidget * controlWidget) {}
+	virtual void setActiveVisualizer(NVBVizUnion visualizer) {}
+
+	virtual NVBViewController * openInNewWindow(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion(), NVB::ViewType vtype = NVB::DefaultView)
+		{ return 0; }
+	};
+
+QIcon NVBToolsFactory::getDefaultIcon(NVBDataSource *source) {
+	quint32 DPID = 0;
+
+	switch(source->type()) {
+		case NVB::TopoPage :
+			DPID = DPID_IT;
+			break;
+		case NVB::SpecPage :
+			DPID = DPID_IS;
+			break;
+		default : break;
+		}
+
+	NVBIconViewController c;
+
+	if (DPID)
+		plugins.value((quint16)(DPID >> 16))->activateDelegate((quint16)DPID,source,&c);
+
+	return c.icon;
+
+	}

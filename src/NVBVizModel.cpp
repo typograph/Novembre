@@ -11,8 +11,9 @@
 //
 
 #include "NVBVizModel.h"
+#include "NVBPageViewModel.h"
 
-NVBVizModel::NVBVizModel(QAbstractListModel * model, NVB::ViewType vtype):QAbstractListModel(),pagemodel(model),viewtype(vtype)
+NVBVizModel::NVBVizModel(NVBPageViewModel * model, NVB::ViewType vtype):QAbstractListModel(),viewtype(vtype),pagemodel(model)
 {
   connect(pagemodel,SIGNAL(rowsAboutToBeRemoved(const QModelIndex&,int,int)),
                       SLOT(pagesAboutToBeRemoved(const QModelIndex&,int,int)));
@@ -48,11 +49,22 @@ void NVBVizModel::pagesInserted(const QModelIndex & parent, int start, int end)
 {
   if (parent.isValid()) return;
 
-  NVBVizUnion u; // Invalid union
-
   for (int i = start; i <= end; i++) {
-    vizs.insert(i,u);
-    }
+		int j=0;
+		NVBDataSource * page = parent.child(i,0).data(PageRole).value<NVBDataSource*>();
+		for(j = 0; j < future.size(); j++) {
+			if (future.at(j).first == page) {
+				vizs.insert(i,future.at(j).second);
+				future.removeAt(j);
+				break;
+				}
+			}
+		if (j == future.size()) {
+			NVBOutputError("Cannot insert no viz.");
+
+			vizs.insert(i,NVBVizUnion());
+			}
+		}
 
   endInsertRows();
 }
@@ -110,12 +122,14 @@ NVBVizModel::~ NVBVizModel()
     }
 }
 
+int NVBVizModel::addSource(NVBDataSource *page, NVBVizUnion viz) {
+	future << QPair<NVBDataSource*,NVBVizUnion>(page,viz);
+	return pagemodel->addSource(page);
+}
+
 void NVBVizModel::setVisualizer(NVBVizUnion visualizer, const QModelIndex & index)
 {
-  if (index.isValid()) {
-    vizs.replace(index.row(),visualizer);
-    emit dataChanged(index,index);
-    }
+	setVisualizer(visualizer,index.row());
 }
 
 void NVBVizModel::setVisualizer(NVBVizUnion visualizer, int row)

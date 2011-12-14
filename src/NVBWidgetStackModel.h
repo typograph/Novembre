@@ -17,7 +17,7 @@
 #include <QWidget>
 #include <QAbstractItemModel>
 
-#include "NVBPageViewModel.h"
+#include "NVBVizModel.h"
 
 /**
   * widgets keep the normal controlwidget information. parent.row corresponds to pagemodel_row, row to stack order
@@ -27,11 +27,11 @@
 class NVBWidgetStackModel : public QAbstractItemModel {
 Q_OBJECT
 private:
-  NVBPageViewModel * pagemodel;
+	NVBVizModel * pagemodel;
   QList< QList< QWidget* > > widgets;
 //  QList< QWidget* > vizwidgets;
 public:
-  NVBWidgetStackModel(NVBPageViewModel * model);
+	NVBWidgetStackModel(NVBVizModel * model);
   ~NVBWidgetStackModel();
 
   virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
@@ -39,10 +39,11 @@ public:
   virtual int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
   virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
   virtual bool hasChildren ( const QModelIndex & parent = QModelIndex() ) const;
-  virtual QModelIndex parent ( const QModelIndex & index ) const;
+	virtual QModelIndex parent ( const QModelIndex & index ) const;
   virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 
 public slots:
+	int addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
   void addWidget(QWidget * widget, const QModelIndex & index = QModelIndex());
 //  void addWidget(QWidget * widget, const QModelIndex & index = QModelIndex());
 //   void setVizWidget(QWidget * widget, const QModelIndex & index);

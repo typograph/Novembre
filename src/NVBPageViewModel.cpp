@@ -11,12 +11,9 @@
 //
 #include "NVBPageViewModel.h"
 
-NVBPageViewModel::NVBPageViewModel( NVBWorkingArea * area):NVBViewController(area),lastAddedRow(-1)
+NVBPageViewModel::NVBPageViewModel():QAbstractListModel(),lastAddedRow(-1)
 {
   tools = qApp->property("toolsFactory").value<NVBToolsFactory*>();
-//   icons = new NVBVizModel(this,NVB::IconView);
-//   connect(icons,SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)));
-
   setSupportedDragActions(Qt::CopyAction);
 }
 
@@ -161,9 +158,10 @@ void NVBPageViewModel::setSource(NVBDataSource * , NVBVizUnion )
   // Do nothing since there's no note which to set
 }
 
-void NVBPageViewModel::addSource(NVBDataSource * page, NVBVizUnion viz)
+int NVBPageViewModel::addSource(NVBDataSource * page, NVBVizUnion viz)
 {
   addSource(page,0,viz);
+	return 0;
 }
 
 void NVBPageViewModel::addSource(NVBDataSource * page, int row, NVBVizUnion viz)
@@ -183,10 +181,8 @@ void NVBPageViewModel::addSource(NVBDataSource * page, int row, NVBVizUnion viz)
 
   if (viz.valid)
     icons.insert(row,*(viz.IconViz));
-  else {
-    icons.insert(row,QIcon());
-    tools->activateDefaultVisualizer(page,this);
-    }
+	else
+		icons.insert(row,tools->getDefaultIcon(page));
 
   endInsertRows();
 
@@ -198,31 +194,6 @@ void NVBPageViewModel::addSource(const QModelIndex & index)
 {
   if (index.isValid())
     addSource(index.data(PageRole).value<NVBDataSource*>());
-}
-
-NVBViewController * NVBPageViewModel::openInNewWindow(NVBDataSource * , NVBVizUnion , NVB::ViewType )
-{
-// I have no idea how to use that
-  return NULL;
-}
-
-void NVBPageViewModel::addControlWidget(QWidget * )
-{
-  // Do nothing since there's no controller for us
-}
-
-void NVBPageViewModel::setActiveVisualizer(NVBVizUnion )
-{
-  // Do nothing since there's no supervizs
-}
-
-void NVBPageViewModel::setVisualizer(NVBVizUnion visualizer)
-{
-  // This function will be called after a query for a new icon.
-  // The position is defined by lastAddedRow.
-//   icons->setVisualizer(visualizer,lastAddedRow);
-  if (visualizer.valid)
-    icons.replace(lastAddedRow,*(visualizer.IconViz));
 }
 
 void NVBPageViewModel::updateSource(NVBDataSource * newobj, NVBDataSource * oldobj)

@@ -158,6 +158,7 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 	, files(QVector<NVBFile*>())
 	, fnamecache(0)
 	, operationRunning(false)
+	, mode(Normal)
 {
 	overlay = new NVBSpecOverlayIconProvider();
 

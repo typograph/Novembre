@@ -457,7 +457,7 @@ void NVBDirView::setModel(QAbstractItemModel * m)
 		connect(m,SIGNAL(modelAboutToBeReset()),this,SLOT(scrollToTop()));
 		connect(m,SIGNAL(modelReset()),this,SLOT(invalidateCache()));
 		connect(m,SIGNAL(rowsRemoved(QModelIndex,int,int)),this,SLOT(rowsRemoved(QModelIndex,int,int)));
-		connect(m,SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),this,SLOT(rowsAboutToBeInserted(QModelIndex,int,int)));
+//		connect(m,SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),this,SLOT(rowsAboutToBeInserted(QModelIndex,int,int)));
 		}
 
 	invalidateCache();
