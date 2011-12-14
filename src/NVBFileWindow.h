@@ -33,7 +33,7 @@
 #endif
 #include "NVBGeneralDelegate.h"
 #include "NVBFile.h"
-#include "NVBPageViewModel.h"
+// #include "NVBPageViewModel.h"
 #include "NVBVizModel.h"
 #include "NVBWidgetStackModel.h"
 #include "NVBDelegateStackView.h"
@@ -44,7 +44,7 @@
 
 class NVBFileWindow;
 class NVBToolsFactory;
-class NVBPageViewModel;
+class NVBUserPageViewModel;
 class NVBDataView;
 
 class NVBDoubleListView : public QSplitter {
@@ -114,7 +114,7 @@ class NVBFileWindow : public QFrame, public NVBViewController
   Q_OBJECT
 
 //  NVBFile * model;
-  NVBPageViewModel * viewmodel;
+	NVBUserPageViewModel * viewmodel;
   NVBVizModel * vizmodel;
   NVBWidgetStackModel * widgetmodel;
 

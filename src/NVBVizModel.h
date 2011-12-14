@@ -15,19 +15,22 @@
 
 #include <QAbstractListModel>
 #include <QList>
+#include <QPair>
 #include "NVBGeneralDelegate.h"
+
+class NVBPageViewModel;
 
 class NVBVizModel : public QAbstractListModel {
 Q_OBJECT
 private:
-  QList<NVBVizUnion> vizs;
-  QAbstractListModel * pagemodel;
-  NVB::ViewType viewtype;
+	NVB::ViewType viewtype;
+	QList<NVBVizUnion> vizs;
+	QList<QPair<NVBDataSource*,NVBVizUnion> > future;
 protected:
-
+	NVBPageViewModel * pagemodel;
 public:
 
-  NVBVizModel(QAbstractListModel* model, NVB::ViewType vtype);
+	NVBVizModel(NVBPageViewModel* model, NVB::ViewType vtype);
   virtual ~NVBVizModel();
 
   virtual int rowCount(const QModelIndex & index = QModelIndex()) const {
@@ -42,6 +45,7 @@ public:
 //  void addViz(NVBVizUnion u = NVBVizUnion(), int row = 1);
 
 public slots:
+	int addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
 
   void setVisualizer(NVBVizUnion visualizer, const QModelIndex& index);
   void setVisualizer(NVBVizUnion visualizer, int row = 0);

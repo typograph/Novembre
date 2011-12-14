@@ -11,6 +11,7 @@
 //
 
 #include "NVBFileWindow.h"
+#include "NVBUserPageViewModel.h"
 #ifdef WITH_2DVIEW
   #include "NVB2DPageView.h"
 #endif
@@ -263,11 +264,9 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
   setAcceptDrops(true);
   setCursor(Qt::ArrowCursor);
 
-  viewmodel = new NVBPageViewModel();
+	viewmodel = new NVBUserPageViewModel();
 
   connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
-
-  widgetmodel = new NVBWidgetStackModel(viewmodel);
 
   pageListView = new NVBDoubleListView(this,viewmodel,model);
   pageListView->setWindowTitle("Pages");
@@ -278,10 +277,6 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
   connect(pageListView->topSelection(),SIGNAL(selectionChanged( const QItemSelection & , const QItemSelection & )),this,SLOT(selectionChanged( const QItemSelection & , const QItemSelection & )));
   connect(pageListView,SIGNAL(topContextMenuRequested(const QModelIndex&, const QPoint & )),
                    SLOT(showPageOperationsMenu(const QModelIndex&, const QPoint &)));
-
-  stackView = new NVBDelegateStackView(widgetmodel);
-  connect(this,SIGNAL(selectionChanged( const QModelIndex & , const QModelIndex & )),stackView,SLOT(setSelectedIndex(const QModelIndex&)));
-  stackView->hide();
 
   toolBarLayout = new QVBoxLayout();
 
@@ -331,7 +326,13 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
 
     vizmodel = new NVBVizModel(viewmodel,vtype);
 
-    switch (vtype) {
+		widgetmodel = new NVBWidgetStackModel(vizmodel);
+
+		stackView = new NVBDelegateStackView(widgetmodel);
+		connect(this,SIGNAL(selectionChanged( const QModelIndex & , const QModelIndex & )),stackView,SLOT(setSelectedIndex(const QModelIndex&)));
+		stackView->hide();
+
+		switch (vtype) {
 #ifdef WITH_2DVIEW
       case NVB::TwoDView: {
         set2DView();
@@ -479,15 +480,15 @@ void NVBFileWindow::addSource(NVBDataSource * page, NVBVizUnion viz)
 {
   if (!page) return;
 
-  disconnect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),this,SLOT(activateVisualizers(const QModelIndex &,int,int)));
-  viewmodel->addSource(page);
-  pageListView->topSelection()->select(viewmodel->index(0),QItemSelectionModel::ClearAndSelect);
-  connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
+	pageListView->topSelection()->select(viewmodel->index(widgetmodel->addSource(page,viz)),QItemSelectionModel::ClearAndSelect);
+	if (!viz.valid)
+		tools->activateDefaultVisualizer(page,this);
 
-  if (viz.valid)
-    vizmodel->setVisualizer(viz,pageListView->selectedTopPage());
-  else
-    tools->activateDefaultVisualizer(page,this);
+//  disconnect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),this,SLOT(activateVisualizers(const QModelIndex &,int,int)));
+//  viewmodel->addSource(page);
+//  pageListView->topSelection()->select(viewmodel->index(0),QItemSelectionModel::ClearAndSelect);
+//  connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
+
 
 /*
   if (activate) {

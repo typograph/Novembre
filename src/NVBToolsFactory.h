@@ -15,32 +15,14 @@
 #include <QApplication>
 #include "NVBDelegateProvider.h"
 
-//#include "NVBFileWindow.h"
 #include <QWidget>
 #include <QMultiHash>
 #include <QMetaType>
 #include <QDir>
 #include <QPluginLoader>
 #include <QAction>
-//#include <QSettings>
 #include "NVBSettings.h"
 
-//class NVBFileWindow;
-
-//class NVBDelegateProvider;
-//class NVBToolTypes;
-
-/*
-struct pluginID {
-  NVBWindow * receiver;
-  NVBDelegateProvider * provider;
-  int index;
-};
-
-pluginID mymakePluginID(NVBWindow * r, NVBDelegateProvider * p, int i);
-
-Q_DECLARE_METATYPE(pluginID);
-*/
 class NVBToolsFactory : public QObject
 {
   Q_OBJECT
@@ -80,6 +62,9 @@ public:
   bool isPIDValid( quint32 pluginID );
 
   static NVBDataSource * hardlinkDataSource(NVBDataSource * source);
+
+	// QUICKFIX
+	QIcon getDefaultIcon(NVBDataSource * source);
 
 public slots:
   void activateDelegate(quint32 pluginID, NVBDataSource * source, NVBViewController * wnd);
