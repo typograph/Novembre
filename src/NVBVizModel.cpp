@@ -60,8 +60,7 @@ void NVBVizModel::pagesInserted(const QModelIndex & parent, int start, int end)
 				}
 			}
 		if (j == future.size()) {
-			NVBOutputError("Cannot insert no viz.");
-
+//			NVBOutputError("Cannot insert no viz.");
 			vizs.insert(i,NVBVizUnion());
 			}
 		}
@@ -138,6 +137,31 @@ void NVBVizModel::setVisualizer(NVBVizUnion visualizer, int row)
   vizs.replace(row,visualizer);
   emit dataChanged(index(row),index(row));
 }
+
+void NVBVizModel::swapItems(int row1, int row2) {
+	if (!(row1 >= 0 && row2 >= 0 && row1 < rowCount() && row2 < rowCount())) {
+		NVBOutputError("Swap targets not in model");
+		return;
+		}
+	emit layoutAboutToBeChanged();
+	vizs.swap(row1,row2);
+	if (viewtype == NVB::TwoDView) { // Change Z index
+		NVBVizUnion u1 = vizs.at(row1);
+		NVBVizUnion u2 = vizs.at(row2);
+		if (u1.isValid() && u2.isValid()) {
+			qreal z1 = u1.TwoDViz->zValue();
+			qreal z2 = u2.TwoDViz->zValue();
+			// FIXME this code breaks incapsulation. NVB2DView should listen to layout changes
+			if (z1 < 0)
+				u1.TwoDViz->setZValue(-row2);
+			if (z2 < 0)
+				u2.TwoDViz->setZValue(-row1);
+			}
+		}
+	pagemodel->swapItems(row1,row2);
+	emit layoutChanged();
+
+	}
 
 void NVBVizModel::pagesAboutToBeInserted(const QModelIndex & parent, int start, int end)
 {
