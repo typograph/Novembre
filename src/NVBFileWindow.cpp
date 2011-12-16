@@ -266,8 +266,6 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
 
 	viewmodel = new NVBUserPageViewModel();
 
-  connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
-
   pageListView = new NVBDoubleListView(this,viewmodel,model);
   pageListView->setWindowTitle("Pages");
   pageListView->hide();
@@ -396,6 +394,9 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
   }
 
 //   resize(sizeHint());
+
+	// Has to happed after widgetModel connects its slot
+	connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
 
 }
 
@@ -653,13 +654,27 @@ void NVBFileWindow::showPageOperationsMenu(const QModelIndex & index, const QPoi
 
   if (!a) return;
 
+	int selectedIndex = pageListView->topSelection()->selectedRows().first().row();
+
   if (a->text() == "Open in new window") {
     openInNewWindow(index);
     }
   else if (a->text() == "Move up") {
+		widgetmodel->swapItems(index.row()-1,index.row());
+		if (selectedIndex == index.row())
+			pageListView->topSelection()->select(viewmodel->index(selectedIndex-1),QItemSelectionModel::ClearAndSelect);
+		else if (selectedIndex == index.row()-1) {
+			pageListView->topSelection()->select(viewmodel->index(selectedIndex+1),QItemSelectionModel::ClearAndSelect);
+			}
     }
   else if (a->text() == "Move down") {
-    }
+		widgetmodel->swapItems(index.row(),index.row()+1);
+		if (selectedIndex == index.row())
+			pageListView->topSelection()->select(viewmodel->index(selectedIndex+1),QItemSelectionModel::ClearAndSelect);
+		else if (selectedIndex == index.row()+1) {
+			pageListView->topSelection()->select(viewmodel->index(selectedIndex-1),QItemSelectionModel::ClearAndSelect);
+			}
+		}
   else if (a->text() == "Remove") {
     viewmodel->removeRow(index.row());
     }
@@ -836,7 +851,7 @@ void NVBFileWindow::print( )
 
   QFont fnt;
   fnt.setPointSize(14); //TODO make fontsize paper-dependent
-  QSize text = QFontMetrics::QFontMetrics(fnt).size(0,windowTitle());
+	QSize text = QFontMetrics(fnt).size(0,windowTitle());
   
   txtoffset.setX((page.width()-text.width())/2);
   txtoffset.setY(text.height());

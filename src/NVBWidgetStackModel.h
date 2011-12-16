@@ -42,6 +42,9 @@ public:
 	virtual QModelIndex parent ( const QModelIndex & index ) const;
   virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 
+	/// Swaps two items together with their widget stacks
+	void swapItems(int row1, int row2);
+
 public slots:
 	int addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
   void addWidget(QWidget * widget, const QModelIndex & index = QModelIndex());
