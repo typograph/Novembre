@@ -29,7 +29,7 @@
 #include "NVBFileFactory.h"
 #include "NVBMainDocks.h"
 #include "NVBMimeData.h"
-#include "NVBSettings.h"
+#include <QtCore/QSettings>
 
 #include <QtGui/QDropEvent>
 #include <QtGui/QDragEnterEvent>

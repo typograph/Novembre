@@ -11,7 +11,7 @@
 //
 #include "NVBFileFactory.h"
 #include "NVBFileBundle.h"
-#include "NVBSettings.h"
+#include <QtCore/QSettings>
 #include <QtCore/QStringList>
 #include <QtCore/QRegExp>
 #include <QtCore/QPluginLoader>
