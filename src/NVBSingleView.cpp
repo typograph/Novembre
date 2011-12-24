@@ -438,8 +438,6 @@ NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
 , view2D(0)
 , viewGraph(0)
 {
-	setDataSet(dataSet);
-
 	QVBoxLayout * vl = new QVBoxLayout(this);
 	setLayout(vl);
 	QHBoxLayout * menuLayout = new QHBoxLayout();
@@ -465,26 +463,27 @@ NVBSingleView::NVBSingleView(const NVBDataSet* dataSet, QWidget* parent)
 	vl->addStretch();
 	
 	viewTB->setEnabled(false);
+
+	setDataSet(dataSet);
+
 }
 
-void NVBSingleView::createView(NVBSingleView::Type type)
-{
-	
-	if (layout()->count() > 2) {
+void NVBSingleView::removeView()	{
+	while (layout()->count() > 1) {
 		QLayoutItem * tmp;
 		tmp = layout()->takeAt(1);
 		if (tmp) {
 			if (tmp->widget()) delete tmp->widget();
 			delete tmp;
 			}
-		tmp = layout()->takeAt(1);
-		if (tmp) {
-			if (tmp->widget()) delete tmp->widget();
-			delete tmp;
-			}
-		view2D = 0;
-		viewGraph = 0;
 		}
+	view2D = 0;
+	viewGraph = 0;
+	}
+
+void NVBSingleView::createView(NVBSingleView::Type type)
+{
+	removeView();
 
 	viewTB->setEnabled(false);
 	viewTB->actions().at(0)->setChecked(true);
@@ -593,14 +592,7 @@ void NVBSingleView::setDataSet(const NVBDataSet* dataSet)
 		ds = 0;
 		}
 	
-	if (view2D) {
-		delete view2D;
-		view2D = 0;
-		}
-	else if (viewGraph) {
-		delete viewGraph;
-		viewGraph = 0;
-		}
+	removeView();
 
 	if (ods) {
 		// ods is an orphan, so we can't releaseDataSet(ods)

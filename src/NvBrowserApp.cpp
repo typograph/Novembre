@@ -38,14 +38,20 @@
 
 int main(int argc, char *argv[])
 {
-	NVBBrowserApplication app(argc, argv);
+	NVBBrowserApplication * app = new NVBBrowserApplication(argc, argv);
 
-	NVBMainWindow main;
-	main.setCentralWidget(new NVBBrowser());
-	main.setWindowTitle( QString("Novembre Browser") );
-	main.show();
+	NVBMainWindow * main = new NVBMainWindow();
+	main->setCentralWidget(new NVBBrowser());
+	main->setWindowTitle( QString("Novembre Browser") );
+	main->show();
 
-	return app.exec();
+	// If we leave deleting everything to g++,
+	// there are segfaults on program exit...
+
+	int res = app->exec();
+	delete main;
+	delete app;
+	return res;
 }
 
 NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
