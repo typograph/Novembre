@@ -36,16 +36,9 @@
 
 #include <QtCore/QSettings>
 
-#ifndef newIcon
-#define newIcon(var,name) \
-	QIcon var; \
-	var.addPixmap(name ## _16); \
-	var.addPixmap(name ## _24); \
-	var.addPixmap(name ## _32);
-#endif
-
-#include "../icons/mainwindow.xpm"
-#include "../icons/novembre_v1.xpm"
+#include "NVBSettings.h"
+#include "NVBSettingsDialog.h"
+#include "NVBStandardIcons.h"
 
 
 NVBMainWindow::NVBMainWindow() : QMainWindow()
@@ -53,12 +46,11 @@ NVBMainWindow::NVBMainWindow() : QMainWindow()
 
 	setAcceptDrops(true);
 
-	setWindowIcon(QIcon(_main_novembre));
-//  newIcon(browsicon,_main_browse);
+	setWindowIcon(getStandardIcon(NVBStandardIcon::Novembre));
 
 	// Initialisation
 
-	conf = qApp->property("NVBSettings").value<QSettings*>();
+	conf = getGlobalSettings();
 	if (!conf)
 		NVBCriticalError("Configuration missing");
 
@@ -75,7 +67,6 @@ NVBMainWindow::NVBMainWindow() : QMainWindow()
 
 	fileOpenDir.setPath(QDir::homePath());
 	fileOpenDir.setFilter(QDir::Readable & QDir::AllDirs & QDir::Files & QDir::Dirs & QDir::Drives);
-
 	createMenus();
 	show();
 }
@@ -97,22 +88,31 @@ void NVBMainWindow::callFileOpenDialog( )
 	}
 }
 
+void NVBMainWindow::callSettingsDialog()
+{
+	NVBSettingsDialog::showGeneralSettings();
+}
+
+
 void NVBMainWindow::createMenus( )
 {
 	// Menus and toolbars
 
 	menuBar()->clear();
 
-	newIcon(openicon,_main_open);
-
-	fileOpenAction = new QAction(openicon, "&Open", this);
+	fileOpenAction = new QAction(getStandardIcon(NVBStandardIcon::Open), "&Open", this);
 	connect( fileOpenAction, SIGNAL( triggered() ), this, SLOT( callFileOpenDialog() ) );
+
+	QAction * fileSettingsAction = new QAction(/*QIcon(_ICON_fish),*/ "Se&ttings", this);
+	connect( fileSettingsAction, SIGNAL( triggered() ), this, SLOT( callSettingsDialog() ) );
 
 	fileExitAction = new QAction(/*QIcon(_ICON_fish),*/ "E&xit", this);
 	connect( fileExitAction, SIGNAL( triggered() ), qApp, SLOT( quit() ) );
 
 	fileMenu = menuBar()->addMenu(QString("&File"));
 	fileMenu->addAction( fileOpenAction );
+	fileMenu->addSeparator();
+	fileMenu->addAction( fileSettingsAction );
 	fileMenu->addSeparator();
 	fileMenu->addAction( fileExitAction );
 

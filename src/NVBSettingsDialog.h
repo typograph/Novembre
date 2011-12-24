@@ -13,8 +13,6 @@
 
 #include <QtGui/QDialog>
 
-Q_DECLARE_METATYPE(QSettings*);
-
 class QStackedWidget;
 class QPushButton;
 class QListWidget;
@@ -41,8 +39,8 @@ public:
 public slots:
 	void switchToPage(int page);
 	
-	virtual void accept();
-	virtual void reject();
+	void tryAccept();
+
 	void writeSettings();
 	void reinitSettings();
 

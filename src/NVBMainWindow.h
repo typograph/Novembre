@@ -77,6 +77,7 @@ public slots:
 	void openFile(const NVBAssociatedFilesInfo &);
 
 	void callFileOpenDialog();	
+	void callSettingsDialog();
 };
 
 #endif

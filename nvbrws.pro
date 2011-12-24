@@ -93,14 +93,20 @@ SOURCES += \
 
 # Application headers
 HEADERS += \
+  src/NVBStandardIcons.h \
   src/NVBSettings.h \
+  src/NVBSettingsDialog.h \
+  src/NVBSettingsWidget.h \
   src/NVBMainWindow.h \
   src/NVBMainDocks.h \
   src/NVBCoreApplication.h \
   src/NvBrowserApp.h
 
 SOURCES += \
+  src/NVBStandardIcons.cpp \
   src/NVBSettings.cpp \
+  src/NVBSettingsDialog.cpp \
+  src/NVBSettingsWidget.cpp \
   src/NVBMainWindow.cpp \
   src/NVBMainDocks.cpp \
   src/NVBCoreApplication.cpp \
