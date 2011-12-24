@@ -11,6 +11,8 @@
 //
 #include "NVBFileFactory.h"
 #include "NVBFileBundle.h"
+#include "NVBSettings.h"
+
 #include <QtCore/QSettings>
 #include <QtCore/QStringList>
 #include <QtCore/QRegExp>
@@ -100,7 +102,7 @@ NVBFileFactory::NVBFileFactory()
 	}
 #endif
 
-	confile = qApp->property("NVBSettings").value<QSettings*>();
+	confile = getGlobalSettings();
 	if (!confile) {
 		NVBOutputError("FileFactory cannot access the configuration file");
 		generators = allGenerators;

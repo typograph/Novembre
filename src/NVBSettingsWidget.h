@@ -25,7 +25,7 @@
 #ifndef NVBSETTINGSWIDGET_H
 #define NVBSETTINGSWIDGET_H
 
-#include <QtGui/QWidget>
+#include <QtGui/QFrame>
 #include <QtCore/QStringList>
 
 class QSettings;
@@ -59,12 +59,12 @@ struct NVBSettingsWidgetEntry {
 		};
 		
 	NVBSettingsWidgetEntry(QString entry, QComboBox * combo) : type(ComboBox), key(entry), comboBox(combo) {;}
-	NVBSettingsWidgetEntry(QString entry, QCheckBox * check) : type(CheckBox), key(entry), comboBox(check) {;}
-	NVBSettingsWidgetEntry(QString entry, QComboBox * line ) : type(LineEdit), key(entry), lineEdit(line) {;}
-	NVBSettingsWidgetEntry(NVBSettingsWidgetEntry * widget ) : type(External), settingsWidget(widget) {;}
+	NVBSettingsWidgetEntry(QString entry, QCheckBox * check) : type(CheckBox), key(entry), checkBox(check) {;}
+	NVBSettingsWidgetEntry(QString entry, QLineEdit * line ) : type(LineEdit), key(entry), lineEdit(line) {;}
+	NVBSettingsWidgetEntry(NVBSettingsWidget * widget ) : type(External), settingsWidget(widget) {;}
 };
 
-class NVBSettingsWidget : public QWidget {
+class NVBSettingsWidget : public QFrame {
 Q_OBJECT
 
 protected:

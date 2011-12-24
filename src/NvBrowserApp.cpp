@@ -27,7 +27,7 @@
 
 #include "NvBrowserApp.h"
 #include "NVBSettingsDialog.h"
-#include <QtCore/QSettings>
+#include "NVBSettings.h"
 #include "NVBBrowser.h"
 #include "NVBFileFactory.h"
 #include <QtGui/QMessageBox>
@@ -86,9 +86,9 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 	if (conf->contains("LogFile") && !new NVBLogFile(conf->value("LogFile").toString(),this)) {
 		QMessageBox::critical(0,"Log error","Cannot access the logfile. Please check the settings");
 		NVBSettingsDialog::showGeneralSettings();
-		if (conf->contains("LogFile") && !new NVBLogFile(conf->value("LogFile").toString(),this) {
+		if (conf->contains("LogFile") && !new NVBLogFile(conf->value("LogFile").toString(),this)) {
 			NVBOutputError("Cannot access the logfile. Disable file logging.");
-			conf->removeKey("LogFile"); // This part should not be reachable
+			conf->remove("LogFile"); // This part should not be reachable
 			}
 		}
 #endif

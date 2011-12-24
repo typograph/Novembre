@@ -28,15 +28,20 @@
 
 #include "NVBLogger.h"
 
-NVBSettingsWidget::NVBSettingsWidget(QWidget* parent): QWidget(parent)
+NVBSettingsWidget::NVBSettingsWidget(QWidget* parent): QFrame(parent)
 {
-	setLayout(vlayout = new QVBoxLayout());
+	vlayout = new QVBoxLayout(this);
+	vlayout->setMargin(10);
+	vlayout->addStretch(1000);
+	setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+	setFrameStyle(QFrame::Sunken);
+	setFrameShape(QFrame::StyledPanel);
 }
 
 void NVBSettingsWidget::addSetting(NVBSettingsWidget* widget)
 {
 	entries << NVBSettingsWidgetEntry(widget);
-	vlayout->addWidget(widget);
+	vlayout->insertWidget(entries.count()-1,widget);
 
 	connect(widget,SIGNAL(dataChanged()),this,SIGNAL(dataChanged()));
 }
@@ -52,7 +57,7 @@ void NVBSettingsWidget::addCheckBox(QString entry, QCheckBox* checkBox)
 {
 	if (!checkBox) return;
 	entries << NVBSettingsWidgetEntry(entry,checkBox);
-	vlayout->addWidget(checkBox);
+	vlayout->insertWidget(entries.count()-1,checkBox);
 	connect(checkBox,SIGNAL(clicked(bool)),this,SIGNAL(dataChanged()));
 }
 
@@ -75,7 +80,7 @@ void NVBSettingsWidget::addComboBox(QString entry, QString label, QComboBox* com
 	if (lbl) lbl->setToolTip(combobox->toolTip());
 	hl->addWidget(lbl);
 	hl->addWidget(combobox);
-	vlayout->addLayout(hl);
+	vlayout->insertLayout(entries.count()-1,hl);
 	connect(combobox,SIGNAL(currentIndexChanged(int)),this,SIGNAL(dataChanged()));
 }
 
@@ -95,7 +100,7 @@ void NVBSettingsWidget::addLineEdit(QString entry, QString label, QLineEdit* lin
 	if (lbl) lbl->setToolTip(lineedit->toolTip());
 	hl->addWidget(lbl);
 	hl->addWidget(lineedit);
-	vlayout->addLayout(hl);
+	vlayout->insertLayout(entries.count()-1,hl);
 	connect(lineedit,SIGNAL(textChanged(QString)),this,SIGNAL(dataChanged()));
 }
 
@@ -111,7 +116,7 @@ void NVBSettingsWidget::init(QSettings* settings)
 			case NVBSettingsWidgetEntry::External :
 				e.settingsWidget->init(settings);
 				break;
-			case NVBSettingsWidgetEntry::ComboBox :
+			case NVBSettingsWidgetEntry::ComboBox : {
 				QString value = settings->value(e.key).toString();
 				int i = e.comboBox->findText(value);
 				if (i >= 0)
@@ -121,6 +126,7 @@ void NVBSettingsWidget::init(QSettings* settings)
 				else
 					NVBOutputError(QString("Unrecognized value %3 in settings at %1/%2").arg(group()).arg(e.key).arg(value));
 				break;
+				}
 			case NVBSettingsWidgetEntry::CheckBox :
 				e.checkBox->setChecked(settings->value(e.key).toBool());
 				break;

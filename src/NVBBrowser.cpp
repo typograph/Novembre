@@ -69,6 +69,7 @@
 #include <math.h>
 
 #include "../icons/browser.xpm"
+#include "NVBSettings.h"
 
 class NVBDataSet34Substractor : public NVBFile2ImageConverter {
 private:
@@ -115,7 +116,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	NVBCriticalError("Browser cannot access the file factory");
 	}
 
-	confile = qApp->property("NVBSettings").value<QSettings*>();
+	confile = getGlobalSettings();
 	if (!confile) NVBCriticalError("Browser cannot access the configuration file");
 
 	setWindowTitle("Novembre File Browser");
