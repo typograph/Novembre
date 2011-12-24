@@ -247,12 +247,24 @@ void NVB2DIconEngine::redrawCache()
 		}
 }
 
+//QString serializeSize(const QSize & s) {
+//	return QString("%1x%2").arg(s.width()).arg(s.height());
+//	}
+
+// This is not the best hash, but I assume the sizes are
+// not exactly random. This one works well for square icons
+// and for any icons with sizes < 1024x1024, which should be
+// ok. An example of collision: 3x1 = 2*1025
+uint qHash(const QSize & s) {
+	return s.width() ^ ((uint)s.height() << 10);
+	}
+
 NVB1DIconEngine::NVB1DIconEngine(const NVBDataSet* dataset)
 	: QObject()
   , QIconEngineV2()
 	, dset(0)
 {
-	selector.addAxis();
+	selector.addAxisByIndex(0);
 	setSource(dataset);
 }
 
@@ -307,6 +319,8 @@ void NVB1DIconEngine::paint(QPainter* painter, const QRect& rect, QIcon::Mode , 
 {
 	if (!dset) return;
 	if (!instance.isValid()) return;
+
+//	QString key = serializeSize(rect.size());
 
 	if (!cache.contains(rect.size()))
 		cache.insert(rect.size(), drawCacheAt(rect.size()));

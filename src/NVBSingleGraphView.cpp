@@ -69,9 +69,11 @@ void NVBSingleGraphView::setDataSet(NVBDataSet* dataset)
 	useDataSet(ds);
 	if (curves) {
 		curves->setDataSet(dataset);
-		axisWidget(QwtPlot::yLeft)->setTitle(dataset->name());
-		setAxisScaleDraw(QwtPlot::yLeft,new NVBPhysScaleDraw(dataset->dimension(),axisWidget(QwtPlot::yLeft)));
-		zoomer->setZoomBase(curves->boundingRect());
+		if (dataset) {
+			axisWidget(QwtPlot::yLeft)->setTitle(dataset->name());
+			setAxisScaleDraw(QwtPlot::yLeft,new NVBPhysScaleDraw(dataset->dimension(),axisWidget(QwtPlot::yLeft)));
+			zoomer->setZoomBase(curves->boundingRect());
+			}
 		}
 }
 

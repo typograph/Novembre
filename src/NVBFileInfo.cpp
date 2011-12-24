@@ -103,24 +103,24 @@ NVBVariant NVBFileInfo::axisParam(const NVBDataInfo & pi, QString name, NVBAxisP
 {
 	for(int i=0; i<pi.axes.count(); i++)
 		if (pi.axes.at(i).name == name)
-			return axisParam(pi,i,p);
-	return NVBVariant();
+			return p == NVBAxisParamToken::Exists ? true : axisParam(pi,i,p);
+	return p == NVBAxisParamToken::Exists ? false : NVBVariant();
 }
 
 NVBVariant NVBFileInfo::axisParam(const NVBDataInfo& pi, int index, NVBAxisParamToken::NVBAxisParam p) const
 {	
-	if (index < 0 || index > pi.axes.count()) return NVBVariant();
+	if (index < 0 || index > pi.axes.count())
+		return p == NVBAxisParamToken::Exists ? false : NVBVariant();
 	
   switch (p) {
-    case NVBAxisParamToken::Name : {
+		case NVBAxisParamToken::Exists:
+			return true;
+		case NVBAxisParamToken::Name :
       return pi.axes.at(index).name;
-      }
-		case NVBAxisParamToken::Length : {
+		case NVBAxisParamToken::Length :
 			return pi.axes.at(index).length;
-      }
-		case NVBAxisParamToken::Units : {
+		case NVBAxisParamToken::Units :
 			return pi.axes.at(index).units;
-      }
     default :
       return NVBVariant();
     }
@@ -135,7 +135,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 		else {   
 			NVBVariantList ans, pans;
 			ans.setSeparator(" : ");
-			pans.setSeparator(" : ");
+			pans.setSeparator("");
 			foreach(NVBDataInfo pi, *this) {
 				
 				pans.clear();

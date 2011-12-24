@@ -99,7 +99,7 @@ struct NVBDataParamToken : NVBToken {
 };
 
 struct NVBAxisParamToken : NVBToken {
-  enum NVBAxisParam {Invalid = 0, Name, Length, Units} aparam;
+	enum NVBAxisParam {Invalid = 0, Exists, Name, Length, Units} aparam;
 	QString nparam;
 	int ixparam;
   NVBAxisParamToken(QString name, NVBAxisParam a):NVBToken(AxisParam),aparam(a),nparam(name) {;}
@@ -113,8 +113,9 @@ public:
   
   NVBTokenListData(QString s);
   NVBTokenListData(QList< NVBToken * > t);
-  Q_DISABLE_COPY(NVBTokenListData);
-  ~NVBTokenListData() {  while (!tokens.isEmpty()) delete tokens.takeLast(); }
+	Q_DISABLE_COPY(NVBTokenListData)
+
+	~NVBTokenListData() { while (!tokens.isEmpty()) delete tokens.takeLast(); }
   
 };
 

@@ -19,6 +19,7 @@
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QPushButton>
 #include <QtGui/QRadioButton>
+#include <QtGui/QButtonGroup>
 #include <QtGui/QCheckBox>
 #include <QtGui/QLineEdit>
 #include <QtGui/QStylePainter>
@@ -36,8 +37,11 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 
 	QVBoxLayout * mainLayout = new QVBoxLayout(this);
 
+	QButtonGroup * types = new QButtonGroup(this);
+
   QGridLayout * gridLayout = new QGridLayout();
   fileOption = new QRadioButton("File parameter",this);
+	types->addButton(fileOption);
 	connect(fileOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
 //   fileOption->setChecked(true);
   gridLayout->addWidget(fileOption, 0, 0, 1, 1);
@@ -61,6 +65,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	connect(fileChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToFile()));
 
   dataOption = new QRadioButton("Data parameter",this);
+	types->addButton(dataOption);
 	connect(dataOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
   gridLayout->addWidget(dataOption, 1, 0, 1, 1);
 
@@ -78,6 +83,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 
   QHBoxLayout *horizontalLayout = new QHBoxLayout();
   axisOption = new QRadioButton("Axis",this);
+	types->addButton(axisOption);
 	connect(axisOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
   horizontalLayout->addWidget(axisOption);
 
@@ -88,7 +94,8 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   gridLayout->addLayout(horizontalLayout, 2, 0, 1, 1);
 
   axisChoice = new QComboBox(this);
-  axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Name),NVBAxisParamToken::Name);
+	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Exists),NVBAxisParamToken::Exists);
+	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Name),NVBAxisParamToken::Name);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Length),NVBAxisParamToken::Length);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Units),NVBAxisParamToken::Units);
 
@@ -97,6 +104,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	connect(axisChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToAxis()));
 
   commentOption = new QRadioButton("Parameter",this);
+	types->addButton(commentOption);
 	connect(commentOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
   gridLayout->addWidget(commentOption, 3, 0, 1, 1);
 
@@ -105,9 +113,10 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   commentChoice->addItems(qApp->property("filesFactory").value<NVBFileFactory*>()->availableInfoFields());
 	commentChoice->setAutoCompletion(true);
   gridLayout->addWidget(commentChoice, 3, 1, 1, 1);
-	connect(commentChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToCustom()));
+	connect(commentChoice,SIGNAL(currentIndexChanged(int)),SLOT(switchToComment()));
 	
 	textOption = new QRadioButton("Text",this);
+	types->addButton(textOption);
 	connect(textOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
 	gridLayout->addWidget(textOption,4,0,1,1);
 	
@@ -127,10 +136,12 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	QVBoxLayout * vertLayout = new QVBoxLayout(limitFrame);
 	
 	topoOnlyOption = new QRadioButton("Limit to topographic data",limitFrame);
-	connect(topoOnlyOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	topoOnlyOption->setAutoExclusive(false);
+	connect(topoOnlyOption,SIGNAL(clicked(bool)),this,SLOT(switchToTopo()));
 	vertLayout->addWidget(topoOnlyOption);
 	specOnlyOption = new QRadioButton("Limit to spectroscopic data",limitFrame);
-	connect(specOnlyOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	specOnlyOption->setAutoExclusive(false);
+	connect(specOnlyOption,SIGNAL(clicked(bool)),this,SLOT(switchToSpec()));
 	vertLayout->addWidget(specOnlyOption);
 	horizontalLayout = new QHBoxLayout();
 	axisNumOption = new QCheckBox("Limit to data with",limitFrame);
@@ -154,7 +165,9 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	
 	horizontalLayout = new QHBoxLayout();
 	expertOption = new QRadioButton("Expert",this);
+	types->addButton(expertOption);
 	connect(expertOption,SIGNAL(clicked(bool)),this,SIGNAL(stateChanged()));
+	connect(expertOption,SIGNAL(toggled(bool)),limitFrame,SLOT(setDisabled(bool)));
 	horizontalLayout->addWidget(expertOption);
 
 	expertEdit = new QLineEdit(this);
@@ -168,34 +181,50 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	connect(this,SIGNAL(stateChanged()),this,SLOT(updateExpertText()));
 }
 
+void NVBColumnInputWidget::switchToSpec() {
+	topoOnlyOption->setChecked(false);
+	emit stateChanged();
+}
+
+void NVBColumnInputWidget::switchToTopo() {
+	specOnlyOption->setChecked(false);
+	emit stateChanged();
+}
+
 void NVBColumnInputWidget::switchToFile() {
 	fileOption->setChecked(true);
+	topoOnlyOption->parentWidget()->setEnabled(true);
 	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToData() {
 	dataOption->setChecked(true);
+	topoOnlyOption->parentWidget()->setEnabled(true);
 	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToAxis() {
 	axisOption->setChecked(true);
+	topoOnlyOption->parentWidget()->setEnabled(true);
 	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToComment() {
 	commentOption->setChecked(true);
+	topoOnlyOption->parentWidget()->setEnabled(true);
 	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToText()
 {
 	textOption->setChecked(true);
+	topoOnlyOption->parentWidget()->setEnabled(true);
 	emit stateChanged();
 }
 
 void NVBColumnInputWidget::switchToExpert() {
 	expertOption->setChecked(true);
+	topoOnlyOption->parentWidget()->setEnabled(false);
 	emit stateChanged();
 }
 
@@ -670,13 +699,18 @@ void NVBColumnInputWidget::tokenListToLayout( NVBTokenList l )
 			return;
 			}
 		case NVBToken::DataComment : {
-			commentOption->setChecked(true);
-			commentChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.last())->sparam);          
-			return;
+			int ix = commentChoice->findText(static_cast<NVBPCommentToken*>(l.last())->sparam);
+			if (ix > -1) {
+				commentOption->setChecked(true);
+				commentChoice->setCurrentIndex(ix);
+				return;
+				}
+			// Else fall through
 			}
 		case NVBToken::Verbatim : {
 			textOption->setChecked(true);
-			textOption->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);          
+			textChoice->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);
+			return;
 			}
 		case NVBToken::Goto :
 		case NVBToken::Invalid :
