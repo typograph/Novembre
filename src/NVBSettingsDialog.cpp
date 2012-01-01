@@ -61,13 +61,13 @@ public:
 		addLineEdit("LogFile","Logfile","If you want to keep record of application messages, select a location for the log file.");
 		}
 	
-	virtual void write(QSettings * settings) {
+	virtual bool write(QSettings * settings) {
 	
 #ifndef NVB_STATIC
 		QLineEdit * plgPath = entries.first().lineEdit;
 		if (!QFile::exists(plgPath->text())) {
 			QMessageBox::critical(0,"Settings","Specified plugin path does not exist");
-			return;
+			return false;
 			}
 #endif
 
@@ -79,11 +79,11 @@ public:
 			if (f.exists()) {
 				if (!f.isFile()) {
 					QMessageBox::critical(0,"Settings","Specified log file is not a file");
-					return;
+					return false;
 					}
 				if (!f.isWritable()) {
 					QMessageBox::critical(0,"Settings","You do not have permissions to write to the specified log file");
-					return;
+					return false;
 					}
 				}
 			else {
@@ -91,12 +91,12 @@ public:
 				if (p.exists() && !p.isWritable()) {
 					QMessageBox::critical(0,"Settings","You do not have permissions to create the specified log file");
 	
-				return;
+				return false;
 					}
 				}
 			}
 			
-		NVBSettingsWidget::write(settings);
+		return NVBSettingsWidget::write(settings);
 	}
 };
 
