@@ -5,6 +5,17 @@
 
 Q_DECLARE_METATYPE(QSettings*);
 
+namespace NVBSettings {
+
+/**
+	* @brief Returns application-wide QSettings
+	*
+	* @return QSettings*
+	**/
 QSettings * getGlobalSettings();
+
+QString pluginGroup();
+
+}
 
 #endif
