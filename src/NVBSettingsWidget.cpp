@@ -28,7 +28,10 @@
 
 #include "NVBLogger.h"
 
-NVBSettingsWidget::NVBSettingsWidget(QWidget* parent): QFrame(parent)
+NVBSettingsWidget::NVBSettingsWidget(QWidget* parent)
+: QFrame(parent)
+, parentSettings(0)
+, uncommitted(false)
 {
 	vlayout = new QVBoxLayout(this);
 	vlayout->setMargin(10);
@@ -36,14 +39,20 @@ NVBSettingsWidget::NVBSettingsWidget(QWidget* parent): QFrame(parent)
 	setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
 	setFrameStyle(QFrame::Sunken);
 	setFrameShape(QFrame::StyledPanel);
+	
+	connect(this,SIGNAL(dataChanged()),SLOT(edited()));
+	connect(this,SIGNAL(dataSynced()),SLOT(synced()));
 }
 
 void NVBSettingsWidget::addSetting(NVBSettingsWidget* widget)
 {
 	entries << NVBSettingsWidgetEntry(widget);
 	vlayout->insertWidget(entries.count()-1,widget);
+	widget->parentSettings = this;
 
 	connect(widget,SIGNAL(dataChanged()),this,SIGNAL(dataChanged()));
+	// Note that dataSynced is not connected, since when the subwidget
+	// is synced, this doesn't mean the parent is
 }
 
 void NVBSettingsWidget::addCheckBox(QString entry, QString text, QString tooltip)
@@ -144,17 +153,26 @@ void NVBSettingsWidget::init(QSettings* settings)
 	emit dataSynced();
 }
 
-void NVBSettingsWidget::write(QSettings* settings)
+bool NVBSettingsWidget::write(QSettings* settings)
 {
-	if (!settings) return;
+	if (!settings) return false;
+	if (!uncommitted) return true;
 	
 	if (!groupname.isNull())
 		settings->beginGroup(groupname);
+
+	// To make sure all the commited parameters lead to sigmal emission,
+	// we first try to write whole widgets. If one fails, the process stops,
+	// but the ones before that are commited and can lead to slot calls
 	
+	foreach(NVBSettingsWidgetEntry e, entries)
+		if (e.type == NVBSettingsWidgetEntry::External)
+			if (!e.settingsWidget->write(settings))
+				return false;
+
 	foreach(NVBSettingsWidgetEntry e, entries) {
 		switch(e.type) {
 			case NVBSettingsWidgetEntry::External :
-				e.settingsWidget->write(settings);
 				break;
 			case NVBSettingsWidgetEntry::ComboBox :
 				settings->setValue(e.key,e.comboBox->currentText());
@@ -170,11 +188,13 @@ void NVBSettingsWidget::write(QSettings* settings)
 				break;
 			default:
 				NVBOutputError("Unrecognized settings item type");
+				break;
 			}
 		}
 		
 	if (!groupname.isNull())
 		settings->endGroup();
 	
+	onWrite();
 	emit dataSynced();
 }

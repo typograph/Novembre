@@ -68,6 +68,8 @@ class NVBSettingsWidget : public QFrame {
 Q_OBJECT
 
 protected:
+	bool uncommitted;
+	
 	QString groupname;
 	NVBSettingsWidget * parentSettings;
 	
@@ -81,9 +83,13 @@ public:
 	void setGroup(QString groupName) { groupname = groupName; }
 	/// Return the group in use
 	QString group() {
-		return groupname.isNull() ? (parentSettings ? parentSettings->group() : QString() ) : groupname ;
+		return groupname;
 		}
-	
+
+	QString fullGroup() {
+		return (parentSettings ? QString("%1/%2").arg(parentSettings->fullGroup(),groupname) : groupname );
+		}
+
 	/// Add an NVBSettingsWidget to the layout (last position)
 	void addSetting(NVBSettingsWidget *);
 	/// Add a checkbox to the layout, with caption \a text and the corresponding QSettings key \a entry
@@ -102,13 +108,19 @@ public:
 	/// Copy widget values from an existing QSettings
 	virtual void init(QSettings * settings);
 	/// Write out all changes into QSettings
-	virtual void write(QSettings * settings);
+	virtual bool write(QSettings * settings);
 
+	/// This function will be called when data is written.
+	virtual void onWrite() {;}
+	
 signals:
 	
 	void dataSynced();
 	void dataChanged();
 	
+private slots:
+	void synced() { uncommitted = false; }
+	void edited() { uncommitted = true;  }
 };
 
 #endif // NVBSETTINGSWIDGET_H
