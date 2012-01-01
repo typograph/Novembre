@@ -127,13 +127,15 @@ private:
 	static void detectGrid(const TRHKHeader& header, const float* xposdata, const float* yposdata, int& np, int& nx, int& ny);
 	
 	static QList<QPointF> pointsFromXY(int length, float * x, float * y);
-
+	
 public:
-  RHKFileGenerator():NVBFileGenerator() {;}
+  RHKFileGenerator();
   virtual ~RHKFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("RHK XPMPro files");}
   virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for SM3 files"); }
+
+	virtual NVBSettingsWidget* configurationPage() const;
 
   virtual inline QStringList extFilters() const {
       static QStringList exts = QStringList() << "*.SM3" ; // FIXME << "*.SM2" << "*.SM4";
@@ -147,6 +149,9 @@ public:
 
 	//- Using super's method, since RHK only uses one file per measurement.
 	// virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const;
+
+	bool subtractBias;	
+	
 };
 
 #endif

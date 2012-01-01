@@ -25,15 +25,51 @@
 #include "NVBAxisMaps.h"
 #include "NVBColorMaps.h"
 #include "NVBAxisSelector.h"
+#include "NVBSettingsWidget.h"
 #include "rhk.h"
 #include <stdlib.h>
 
 #include <QtCore/QDateTime>
+#include "NVBSettings.h"
+#include <QtGui/QCheckBox>
 
 #define RHK_TOPOPAGE 0
 #define RHK_SPECPAGE 1
 #define RHK_UNKPAGE 2
 #define RHK_ANNOTATEDSPECPAGE 3
+
+class RHKSettingsWidget : public NVBSettingsWidget {
+public:
+	explicit RHKSettingsWidget(RHKFileGenerator * g, QWidget* parent = 0) : NVBSettingsWidget(parent) {
+		setGroup("RHK");
+		addCheckBox("subtractBias","Subtract bias voltage","In case 'Bias mode' was not selected in XPMPro, I(U) spectroscopy voltage is shifted by the applied bias. This setting will apply to any spectroscopic data with X axis in volts.");
+		}
+		
+private:
+	void onWrite() {
+		// TODO : think about what happens with threads... (this is probably atomic, so it's fine)
+		g->subtractBias = entries.first().checkBox->isChecked();
+		}
+};
+
+NVBSettingsWidget* RHKFileGenerator::configurationPage() const
+{
+	static NVBSettingsWidget * w = new RHKSettingsWidget();
+	return w;
+}
+
+RHKFileGenerator::RHKFileGenerator() :NVBFileGenerator()
+{
+	// Load subtractBias from settings;
+	QSettings * conf = NVBSettings::getGlobalSettings();
+	if (!conf)
+		subtractBias = false;
+	else {
+		conf->beginGroup(NVBSettings::pluginGroup());
+		subtractBias = conf->value("RHK/subtractBias",false);
+		conf->endGroup();
+		}
+}
 
 /*
 
@@ -611,7 +647,11 @@ void RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources )
 				nameT = "T";
 			}
 		ds->addAxis(nameT,header.x_size);
-		ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
+		if (subtractBias && tu.isComparableWith("V"))
+			ds->addAxisMap(new NVBAxisPhysMap(header.x_offset + header.bias,header.x_scale,NVBUnits(strings.at(7))));
+		else
+			ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));
+		
 		if (status & 1)
 			ds->addAxis("Samples",np);
 		if (status & 2) {
