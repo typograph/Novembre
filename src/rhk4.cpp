@@ -24,57 +24,7 @@
 #include "rhk4.h"
 #include "NVBLogger.h"
 
-/*
-
-void TRHKFile::load( FILE * rf) {
-  const char MAGIC_SM2[] = {
-  0x9E, 0x00, 0x53, 0x00, 0x54, 0x00, 0x69, 0x00, 0x4d, 0x00, 0x61, 0x00,
-  0x67, 0x00, 0x65, 0x00, 0x20, 0x00, 0x30, 0x00, 0x30, 0x00, 0x34, 0x00,
-  0x2E, 0x00, 0x30, 0x00, 0x30, 0x00, 0x31, 0x00, 0x20, 0x00, 0x31, 0x00
-  };
-  
-  const char MAGIC_SM3[] = {
-  0xAA, 0x00, 0x53, 0x00, 0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
-  0x67, 0x00, 0x65, 0x00, 0x20, 0x00, 0x30, 0x00, 0x30, 0x00, 0x34, 0x00,
-  0x2E, 0x00, 0x30, 0x00, 0x30, 0x00, 0x32, 0x00, 0x20, 0x00, 0x31, 0x00
-  };
-  
-  const char MAGIC_SIZE = sizeof(MAGIC_SM3);
-
-  char test[44];
-  qint64 size_of_file;
-  
-}
-*/
-
-// ----------- New code
-
-/*
-bool RHKFileGenerator::canLoadFile(QString filename)
-{
-  if (filename.right(3).toLower() != "sm3") return false;
-  QFile file(filename);
-  if (!file.open(QIODevice::ReadOnly))
-    return false;
-  if (!file.seek(2))
-    return false;
-
-  const char MAGIC[] = {
-  0x53, 0x00, 0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
-  0x67, 0x00, 0x65, 0x00, 0x20, 0x00};
-
-  const char MAGIC_SIZE = sizeof(MAGIC);
-
-  char test[MAGIC_SIZE];
-
-  if (file.read(test,MAGIC_SIZE) != MAGIC_SIZE)
-    return false;
-  file.close();
-  return (memcmp(test,MAGIC,MAGIC_SIZE) == 0);  
-}
-*/
-
-QStringList RHKFileGenerator::availableInfoFields() const {
+QStringList RHK4FileGenerator::availableInfoFields() const {
     return QStringList() \
             << "System note" \
             << "Session comment" \
@@ -99,7 +49,7 @@ QStringList RHKFileGenerator::availableInfoFields() const {
 }
 
 
-NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
+NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
 	const char MAGIC[] = {  0x53, 0x00,
 	0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
@@ -135,7 +85,7 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 	version = ((fileheader.header.version[8]-0x30)*10 + fileheader.header.version[9]-0x30)*10 + fileheader.header.version[10]-0x30;
 	version_minor = ((fileheader.header.version[12]-0x30)*10 + fileheader.header.version[13]-0x30)*10 + fileheader.header.version[14]-0x30;
 
-	if (version != 4) {
+	if (version != 5) {
 		NVBOutputError("Only RHK v4 files are supported by this plugin");
 		return NULL;
 		}
@@ -150,10 +100,10 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 		RHKPageIndex * pi = fileheader.page_index.page_index_array + i;
 		switch (pi->page_data_type) {
 			case 0:
-				f->addSource(new RHKTopoPage(pi,file));
+				f->addSource(new RHK4TopoPage(pi,file));
 				break;
 			case 1:
-				f->addSource(new RHKSpecPage(pi,file));
+				f->addSource(new RHK4SpecPage(pi,file));
 				break;
 			default:
 				NVBOutputError(QString("%1 : data type unsupported").arg(getPageTypeString(pi->page_data_type)));
@@ -167,7 +117,7 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 	return f;
 }
 
-NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info) const throw()
+NVBFileInfo * RHK4FileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info) const throw()
 {
   const char MAGIC[] = {  0x53, 0x00,
   0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
@@ -191,7 +141,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 		}
 
 //  QString name;
-  NVB::PageType type;
+	NVB::PageType type;
 //  QSize size;
   QMap<QString,NVBVariant> comments;
 	RHKFile fileheader = getRHKHeader(file);
@@ -213,7 +163,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 	version = ((fileheader.header.version[8]-0x30)*10 + fileheader.header.version[9]-0x30)*10 + fileheader.header.version[10]-0x30;
 	version_minor = ((fileheader.header.version[12]-0x30)*10 + fileheader.header.version[13]-0x30)*10 + fileheader.header.version[14]-0x30;
 
-	if (version != 4) {
+	if (version != 5) {
 		NVBOutputError("Only RHK v4 files are supported by this plugin");
 		delete fi;
 		return NULL;
@@ -228,6 +178,10 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 			NVBOutputError(QString("%1 : data type unsupported").arg(getPageTypeString(pi->page_data_type)));
 			continue;
 			}
+		if (!pi->object_list) { // Object list didn't load
+			NVBOutputError("Empty object list");
+			continue;
+			}
 
 		comments.clear();
 
@@ -237,8 +191,9 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 			switch(pi->object_list[j].id) {
 				case  3: // Page header
 					file.seek(pi->object_list[j].offset);
-					file.read((char*)&header,pi->object_list[j].data_size);
+					file.read((char*)&header,qMin(pi->object_list[j].data_size,sizeof(header)));
 					header.object_list = loadObjectList(file,header.object_list_count);
+					if (!header.object_list) header.object_list_count = 0;
 					break;
 				case  4: // Page data
 					NVBOutputPMsg("Skipping data");
@@ -258,6 +213,10 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 
 		if (!header.object_list_count) {
 			NVBOutputError("Page header not found");
+			continue;
+			}
+		if (!header.object_list) {
+			NVBOutputError("Page header object list empty");
 			continue;
 			}
 
@@ -331,22 +290,28 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   return fi;
 }
 
-RHKTopoPage::RHKTopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
+RHK4TopoPage::RHK4TopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 {
 	RHKPageHeader header;
 	RHKColorInfo cInfo;
-	qint64 * dataRHK = 0;
+	qint32 * dataRHK = 0;
 
+	if (!index->object_list) {
+		NVBOutputError("Object list empty");
+		throw;
+		}
+	
 	for (quint32 j=0; j < index->object_list_count;j++)
 		switch(index->object_list[j].id) {
 			case  3: // Page header
 				file.seek(index->object_list[j].offset);
-				file.read((char*)&header,index->object_list[j].data_size);
-				header.object_list = RHKFileGenerator::loadObjectList(file,header.object_list_count);
+				file.read((char*)&header,qMin(index->object_list[j].data_size,sizeof(header)));
+				header.object_list = RHK4FileGenerator::loadObjectList(file,header.object_list_count);
+				if (!header.object_list) header.object_list_count = 0;
 				break;
 			case  4: // Page data
 					file.seek(index->object_list[j].offset);
-					dataRHK = (qint64*)malloc(index->object_list[j].data_size);
+					dataRHK = (qint32*)malloc(index->object_list[j].data_size);
 					if (file.read((char*)dataRHK,index->object_list[j].data_size) < index->object_list[j].data_size) {
 						NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
 						free(dataRHK);
@@ -359,12 +324,16 @@ RHKTopoPage::RHKTopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 				NVBOutputPMsg("Skipping thumbnail header");
 				break;
 			default:
-				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page index object list").arg(RHKFileGenerator::getObjectTypeString(index->object_list[j].id)));
+				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page index object list").arg(RHK4FileGenerator::getObjectTypeString(index->object_list[j].id)));
 				break;
 			}
 
 	if (!header.object_list_count) {
 		NVBOutputError("Page header not found");
+		throw;
+		}
+	if (!header.object_list) {
+		NVBOutputError("Page header object list empty");
 		throw;
 		}
 
@@ -377,7 +346,7 @@ RHKTopoPage::RHKTopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 			case 11: // Tip track header
 			case 12: // Tip track data
 			case 17: // Tip track data
-				NVBOutputPMsg(QString("Skipping %1").arg(RHKFileGenerator::getObjectTypeString(header.object_list[j].id)));
+				NVBOutputPMsg(QString("Skipping %1").arg(RHK4FileGenerator::getObjectTypeString(header.object_list[j].id)));
 				break;
 			case  9: // Color info // FIXME there's a list there - we are only taking the first color scheme
 				file.seek(header.object_list[j].offset);
@@ -385,10 +354,10 @@ RHKTopoPage::RHKTopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 				break;
 			case 10: // String data
 				file.seek(header.object_list[j].offset);
-				strings = RHKFileGenerator::loadRHKStrings(file,header.string_count);
+				strings = RHK4FileGenerator::loadRHKStrings(file,header.string_count);
 				break;
 			default:
-				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page header object list").arg(RHKFileGenerator::getObjectTypeString(header.object_list[j].id)));
+				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page header object list").arg(RHK4FileGenerator::getObjectTypeString(header.object_list[j].id)));
 				break;
 			}
 
@@ -416,19 +385,19 @@ RHKTopoPage::RHKTopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 		setComment(QString("Unexpected comment #%1").arg(i-12),strings.at(i));
 		}
 
-	setComment("Source type",RHKFileGenerator::getSourceTypeString(index->page_source_type));
-	setComment("Image type",RHKFileGenerator::getImageTypeString(header.image_type));
+	setComment("Source type",RHK4FileGenerator::getSourceTypeString(index->page_source_type));
+	setComment("Image type",RHK4FileGenerator::getImageTypeString(header.image_type));
 
-	setComment("Scan direction",RHKFileGenerator::getDirectionString(header.scan));
+	setComment("Scan direction",RHK4FileGenerator::getDirectionString(header.scan));
 	setComment("Group ID",QString::number(header.group_ID));
 
 	setComment("Time per point",NVBPhysValue(QString("%1 s").arg(header.period)));
 	setComment("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
 	setComment("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
-	setComment("GUID",RHKFileGenerator::getGUIDString(index->page_ID));
+	setComment("GUID",RHK4FileGenerator::getGUIDString(index->page_ID));
 
 
-  setComment("Page type",RHKFileGenerator::getPageTypeString(header.page_type));
+  setComment("Page type",RHK4FileGenerator::getPageTypeString(header.page_type));
 
   _resolution = QSize(header.x_size,header.y_size);
   _position = QRectF(0,0,fabs(header.x_scale*header.x_size),fabs(header.y_scale*header.y_size));
@@ -437,8 +406,8 @@ RHKTopoPage::RHKTopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 	if (dataRHK) {
 		double * tdata = (double*)calloc(sizeof(double),header.x_size*header.y_size);
 
-		scaler<qint64,double> intscaler(header.z_offset,header.z_scale);
-		scaleMem<qint64,double>(tdata,intscaler,dataRHK,header.x_size*header.y_size);
+		scaler<qint32,double> intscaler(header.z_offset,header.z_scale);
+		scaleMem<qint32,double>(tdata,intscaler,dataRHK,header.x_size*header.y_size);
 		free(dataRHK);
 
 	/*    int fx = header.x_scale > 0 ? 1 : -1;
@@ -456,18 +425,24 @@ RHKTopoPage::RHKTopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 		}
 }
 
-RHKSpecPage::RHKSpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
+RHK4SpecPage::RHK4SpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
 {
 	RHKPageHeader header;
 	RHKObject * data_obj = 0;
 	RHKObject * xdata_obj = 0;
 
+	if (!index->object_list) {
+		NVBOutputError("Object list empty");
+		throw;
+		}
+
 	for (quint32 j=0; j < index->object_list_count;j++)
 		switch(index->object_list[j].id) {
 			case  3: // Page header
 				file.seek(index->object_list[j].offset);
-				file.read((char*)&header,index->object_list[j].data_size);
-				header.object_list = RHKFileGenerator::loadObjectList(file,header.object_list_count);
+				file.read((char*)&header,qMin(index->object_list[j].data_size,sizeof(header)));
+				header.object_list = RHK4FileGenerator::loadObjectList(file,header.object_list_count);
+				if (!header.object_list) header.object_list_count = 0;
 				break;
 			case  4: // Page data
 				data_obj = index->object_list + j;
@@ -485,12 +460,16 @@ RHKSpecPage::RHKSpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
 				NVBOutputPMsg("Skipping thumbnail header");
 				break;
 			default:
-				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page index object list").arg(RHKFileGenerator::getObjectTypeString(index->object_list[j].id)));
+				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page index object list").arg(RHK4FileGenerator::getObjectTypeString(index->object_list[j].id)));
 				break;
 			}
 
 	if (!header.object_list_count) {
 		NVBOutputError("Page header not found");
+		throw;
+		}
+	if (!header.object_list) {
+		NVBOutputError("Page header object list empty");
 		throw;
 		}
 
@@ -503,17 +482,17 @@ RHKSpecPage::RHKSpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
 			case 11: // Tip track header
 			case 12: // Tip track data
 			case 17: // Tip track data
-				NVBOutputPMsg(QString("Skipping %1").arg(RHKFileGenerator::getObjectTypeString(header.object_list[j].id)));
+				NVBOutputPMsg(QString("Skipping %1").arg(RHK4FileGenerator::getObjectTypeString(header.object_list[j].id)));
 				break;
 			case  8: // Spec drift data
 				xdata_obj = header.object_list + j;
 				break;
 			case 10: // String data
 				file.seek(header.object_list[j].offset);
-				strings = RHKFileGenerator::loadRHKStrings(file,header.string_count);
+				strings = RHK4FileGenerator::loadRHKStrings(file,header.string_count);
 				break;
 			default:
-				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page header object list").arg(RHKFileGenerator::getObjectTypeString(header.object_list[j].id)));
+				NVBOutputPMsg(QString("Skipping object of unexpected type '%1' in page header object list").arg(RHK4FileGenerator::getObjectTypeString(header.object_list[j].id)));
 				break;
 			}
 
@@ -542,20 +521,20 @@ RHKSpecPage::RHKSpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
 		setComment(QString("Unexpected comment #%1").arg(i-12),strings.at(i));
 		}
 
-	setComment("Source type",RHKFileGenerator::getSourceTypeString(index->page_source_type));
-	setComment("Image type",RHKFileGenerator::getImageTypeString(header.image_type));
+	setComment("Source type",RHK4FileGenerator::getSourceTypeString(index->page_source_type));
+	setComment("Image type",RHK4FileGenerator::getImageTypeString(header.image_type));
 
-//	setComment("Scan direction",RHKFileGenerator::getDirectionString(header.scan));
+//	setComment("Scan direction",RHK4FileGenerator::getDirectionString(header.scan));
 	setComment("Group ID",QString::number(header.group_ID));
 
 	setComment("Time per point",NVBPhysValue(QString("%1 s").arg(header.period)));
 	setComment("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
 	setComment("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
-	setComment("GUID",RHKFileGenerator::getGUIDString(index->page_ID));
+	setComment("GUID",RHK4FileGenerator::getGUIDString(index->page_ID));
 
 
-	setComment("Page type",RHKFileGenerator::getPageTypeString(header.page_type));
-  setComment("Line type",RHKFileGenerator::getLineTypeString(header.line_type));
+	setComment("Page type",RHK4FileGenerator::getPageTypeString(header.page_type));
+  setComment("Line type",RHK4FileGenerator::getLineTypeString(header.line_type));
 
 	if (!data_obj) {
 		NVBOutputError("Data not found");
@@ -610,13 +589,13 @@ RHKSpecPage::RHKSpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
       break;
       }
     default : {
-			qint64 * tdata = (qint64*)malloc(header.page_data_size);
+			qint32 * tdata = (qint32*)malloc(header.page_data_size);
       if (file.read((char*)tdata,header.page_data_size) < header.page_data_size) {
 				NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
         }
       else {
-				scaler<qint64,double> intscaler(header.z_offset,header.z_scale);
-				scaleMem<qint64,double>(ys,intscaler,tdata,header.x_size*header.y_size);
+				scaler<qint32,double> intscaler(header.z_offset,header.z_scale);
+				scaleMem<qint32,double>(ys,intscaler,tdata,header.x_size*header.y_size);
         }
       free(tdata);
       break;
@@ -646,7 +625,7 @@ RHKSpecPage::RHKSpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
 
 }
 
-RHKSpecPage::~ RHKSpecPage()
+RHK4SpecPage::~ RHK4SpecPage()
 {
   while (!_data.isEmpty()) {
     delete _data.takeFirst();
@@ -655,11 +634,11 @@ RHKSpecPage::~ RHKSpecPage()
   if (ys) free(ys);
 }
 
-QString RHKFileGenerator::getGUIDString(RHK_GUID id) {
+QString RHK4FileGenerator::getGUIDString(RHK_GUID id) {
 	return QString("%1-%2-%3-%4").arg(id.Data1,0,16).arg(id.Data2,0,16).arg(id.Data3,0,16).arg(id.Data4,0,16);
 }
 
-QString RHKFileGenerator::getLineTypeString(qint32 type) {
+QString RHK4FileGenerator::getLineTypeString(qint32 type) {
   switch(type) {
     case  0: return "Not a line";
     case  1: return "Histogram";
@@ -691,7 +670,7 @@ QString RHKFileGenerator::getLineTypeString(qint32 type) {
     }
 }
 
-QString RHKFileGenerator::getSourceTypeString(qint32 type) {
+QString RHK4FileGenerator::getSourceTypeString(qint32 type) {
   switch(type) {
     case 0 : return "Raw page";
     case 1 : return "Processed page";
@@ -704,7 +683,7 @@ QString RHKFileGenerator::getSourceTypeString(qint32 type) {
     }
 }
 
-QString RHKFileGenerator::getDirectionString(qint32 type) {
+QString RHK4FileGenerator::getDirectionString(qint32 type) {
   switch(type) {
     case 0 : return "Right";
     case 1 : return "Left";
@@ -717,7 +696,7 @@ QString RHKFileGenerator::getDirectionString(qint32 type) {
     }
 }
 
-QString RHKFileGenerator::getImageTypeString(qint32 type) {
+QString RHK4FileGenerator::getImageTypeString(qint32 type) {
   switch(type) {
     case 0 : return "Normal image";
     case 1 : return "Autocorrelation image";
@@ -728,7 +707,7 @@ QString RHKFileGenerator::getImageTypeString(qint32 type) {
     }
 }
 
-QString RHKFileGenerator::getPageDataTypeString(qint32 type) {
+QString RHK4FileGenerator::getPageDataTypeString(qint32 type) {
 	switch(type) {
 		case 0 : return "Image data";
 		case 1 : return "Line/Spectral data";
@@ -744,7 +723,7 @@ QString RHKFileGenerator::getPageDataTypeString(qint32 type) {
 		}
 }
 
-QString RHKFileGenerator::getPageTypeString(qint32 type) {
+QString RHK4FileGenerator::getPageTypeString(qint32 type) {
   switch(type) {
     case  0 : return "Undefined";
     case  1 : return "Topographic image";
@@ -793,7 +772,7 @@ QString RHKFileGenerator::getPageTypeString(qint32 type) {
     }
 }
 
-QString RHKFileGenerator::getObjectTypeString(qint32 type) {
+QString RHK4FileGenerator::getObjectTypeString(qint32 type) {
 	switch(type) {
 		case  0 : return "Undefined";
 		case  1 : return "Page Index Header";
@@ -821,7 +800,7 @@ QString RHKFileGenerator::getObjectTypeString(qint32 type) {
 
 }
 
-RHKFile RHKFileGenerator::getRHKHeader(QFile & file)
+RHKFile RHK4FileGenerator::getRHKHeader(QFile & file)
 {
 	RHKFile fileheader;
 
@@ -830,7 +809,6 @@ RHKFile RHKFileGenerator::getRHKHeader(QFile & file)
 	file.read((char*)&fileheader.header_size,2); // read header size
 	if (fileheader.header_size > sizeof(RHKFileHeader)) {
 		NVBOutputError("Unreasonably large header");
-		memset(&fileheader,0,sizeof(RHKFile));
 		return fileheader;
 	}
 
@@ -842,6 +820,8 @@ RHKFile RHKFileGenerator::getRHKHeader(QFile & file)
 		NVBOutputError("Weird object size. This will crash"); // FIXME
 
 	fileheader.header.object_list = loadObjectList(file,fileheader.header.object_list_count);
+	if (!fileheader.header.object_list) fileheader.header.object_list_count = 0;
+	
 	for(quint32 i=0;i<fileheader.header.object_list_count;i++) {
 		switch(fileheader.header.object_list[i].id) {
 			case 1: // Page index header
@@ -851,8 +831,9 @@ RHKFile RHKFileGenerator::getRHKHeader(QFile & file)
 					}
 				else {
 					file.seek(fileheader.header.object_list[i].offset);
-					file.read((char*)&fileheader.page_index,fileheader.header.object_list[i].data_size);
+					file.read((char*)&fileheader.page_index,qMin(fileheader.header.object_list[i].data_size,sizeof(fileheader.page_index)));
 					fileheader.page_index.object_list = loadObjectList(file,fileheader.page_index.object_list_count);
+					if (!fileheader.page_index.object_list) fileheader.page_index.object_list_count = 0;
 					}
 				break;
 			case 13: // PRM data
@@ -867,7 +848,7 @@ RHKFile RHKFileGenerator::getRHKHeader(QFile & file)
 		}
 	}
 
-	if (!fileheader.page_index.page_count)	return fileheader;
+	if (!fileheader.page_index.page_count) return fileheader;
 
 	const quint32 sizeof_RHKPageIndex = 32; // FIXME somehow
 
@@ -876,12 +857,15 @@ RHKFile RHKFileGenerator::getRHKHeader(QFile & file)
 			case 2: // Page index array
 				file.seek(fileheader.page_index.object_list[i].offset);
 				fileheader.page_index.page_index_array = (RHKPageIndex*)malloc(sizeof(RHKPageIndex)*fileheader.page_index.page_count);
+				memset((char*)fileheader.page_index.page_index_array,0,sizeof(RHKPageIndex)*fileheader.page_index.page_count);
 				for (quint32 j=0; j<fileheader.page_index.page_count; j++) {
 					quint64 success = file.read((char*)(fileheader.page_index.page_index_array+j),sizeof_RHKPageIndex);
-					if (success < sizeof_RHKPageIndex)
+					if (success < sizeof_RHKPageIndex) {
 						NVBOutputError(QString("Error while reading next page index : %1").arg(file.errorString()));
-					return fileheader;
+						return fileheader;
+						}
 					fileheader.page_index.page_index_array[j].object_list = loadObjectList(file,fileheader.page_index.page_index_array[j].object_list_count);
+					if (!fileheader.page_index.page_index_array[j].object_list) fileheader.page_index.page_index_array[j].object_list_count = 0;
 					}
 				break;
 			default:
@@ -893,7 +877,7 @@ RHKFile RHKFileGenerator::getRHKHeader(QFile & file)
 	return fileheader;
 }
 
-void RHKFileGenerator::destroyRHKHeader(RHKFile fileheader) {
+void RHK4FileGenerator::destroyRHKHeader(RHKFile fileheader) {
 	if (fileheader.header.object_list) {
 		free(fileheader.header.object_list);
 		fileheader.header.object_list = 0;
@@ -911,7 +895,7 @@ void RHKFileGenerator::destroyRHKHeader(RHKFile fileheader) {
 		}
 }
 
-RHKObject * RHKFileGenerator::loadObjectList(QFile &file, quint32 object_count) {
+RHKObject * RHK4FileGenerator::loadObjectList(QFile &file, quint32 object_count) {
 	quint64 list_size = object_count*sizeof(RHKObject);
 	RHKObject * list = (RHKObject*)malloc(list_size);
 	quint64 success = file.read((char*)list,list_size);
@@ -924,7 +908,7 @@ RHKObject * RHKFileGenerator::loadObjectList(QFile &file, quint32 object_count) 
 		return list;
 }
 
-QString RHKFileGenerator::loadRHKString(QFile & file) {
+QString RHK4FileGenerator::loadRHKString(QFile & file) {
 	QString r;
 
 	quint32 * s;
@@ -939,7 +923,7 @@ QString RHKFileGenerator::loadRHKString(QFile & file) {
 
 }
 
-QStringList RHKFileGenerator::loadRHKStrings(QFile & file, qint16 nstrings)
+QStringList RHK4FileGenerator::loadRHKStrings(QFile & file, qint16 nstrings)
 {
   QStringList r;
   quint32 * s;
@@ -957,4 +941,4 @@ QStringList RHKFileGenerator::loadRHKStrings(QFile & file, qint16 nstrings)
 
 
 
-Q_EXPORT_PLUGIN2(rhk, RHKFileGenerator)
+Q_EXPORT_PLUGIN2(rhk4, RHK4FileGenerator)
