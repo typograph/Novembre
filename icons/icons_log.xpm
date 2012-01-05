@@ -1,0 +1,65 @@
+/* XPM */
+const char * _log_error[] = {
+/* columns rows colors chars-per-pixel */
+"8 8 3 1",
+"  c None",
+"0 c red",
+"X c black",
+"  XXXX  ",
+" X0000X ",
+"X000000X",
+"X000000X",
+"X000000X",
+"X000000X",
+" X0000X ",
+"  XXXX  "
+};
+
+/* XPM */
+const char * _log_info[] = {
+/* columns rows colors chars-per-pixel */
+"8 8 3 1",
+"  c None",
+"0 c green",
+"X c black",
+"  XXXX  ",
+" X0000X ",
+"X000000X",
+"X000000X",
+"X000000X",
+"X000000X",
+" X0000X ",
+"  XXXX  "
+};
+/* XPM */
+
+const char * _log_verbose[] = {
+/* columns rows colors chars-per-pixel */
+"8 8 2 1",
+"  c None",
+"X c black",
+"  XXXX  ",
+" X    X ",
+"X      X",
+"X      X",
+"X      X",
+"X      X",
+" X    X ",
+"  XXXX  "
+};
+/* XPM */
+const char * _log_unk[] = {
+/* columns rows colors chars-per-pixel */
+"8 8 3 1",
+"  c None",
+"0 c gray",
+"X c black",
+" 0XXXX0 ",
+" XX  XX ",
+"0X   XX ",
+" 0  XX0 ",
+"   XX   ",
+"        ",
+"   XX   ",
+"   XX   "
+};
