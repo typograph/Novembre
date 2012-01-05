@@ -1,7 +1,10 @@
 TEMPLATE = subdirs
 
-# RHK SM{2|3} files # UNDER TESTING
+# RHK SM3 files
 SUBDIRS += rhk.pro
+
+# RHK SM4 files
+SUBDIRS += rhk4.pro
 
 # WinSPM ver. 4 files
  SUBDIRS += winspm.pro

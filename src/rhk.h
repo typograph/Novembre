@@ -142,10 +142,10 @@ public:
   virtual ~RHKFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("RHK XPMPro files");}
-  virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for [SM2], SM3 and [SM4] files"); }
+	virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for SM3 files"); }
 
   virtual inline QStringList extFilters() const {
-      static QStringList exts = QStringList() << "*.SM3" ; // FIXME << "*.SM2" << "*.SM4";
+			static QStringList exts = QStringList() << "*.SM3" ;
       return exts;
   }
 

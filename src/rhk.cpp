@@ -134,7 +134,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   0x67, 0x00, 0x65, 0x00, 0x20, 0x00, 0x30, 0x00,
   0x30, 0x00, 0x34, 0x00, 0x2E, 0x00, 0x30, 0x00,
   0x30, 0x00, 0x32, 0x00, 0x20, 0x00, 0x31, 0x00,
-  0x00, 0x00}; // STImage 004.002 1
+	0x00, 0x00}; // STiMage 004.002 1
 
 	if (info.generator() != this) {
 		NVBOutputError("Associated files provided by other generator");
@@ -166,14 +166,14 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   QMap<QString,NVBVariant> comments;
   TRHKHeader header;
   QStringList strings;
-  int version;
+	int version, version_minor, unicode;
 
   while(!file.atEnd()) {
 
     comments.clear();
 
 	file.peek((char*)&header,44);
-	if (memcmp(header.version, MAGIC, 28) != 0) {
+	if (memcmp(header.version, MAGIC, 16) != 0) {
 			NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
       delete fi;
       return NULL;
@@ -181,12 +181,22 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 
 	header = getRHKHeader(file);
 
-	version = header.version[14]-0x30; // 0,1,..9
-    if (version == 1) {
-      header.colorinfo_count = 1;
-      header.grid_ysize = 0;
-      header.grid_xsize = 0;
-      }
+	version = ((header.version[8]-0x30)*10 + header.version[9]-0x30)*10 + header.version[10]-0x30;
+	version_minor = ((header.version[12]-0x30)*10 + header.version[13]-0x30)*10 + header.version[14]-0x30;
+
+	if (version != 3) {
+		NVBOutputError("Only RHK v3 files are supported by this plugin");
+		delete fi;
+		return NULL;
+		}
+
+	if (version_minor == 1) {
+		header.colorinfo_count = 1;
+		header.grid_ysize = 0;
+		header.grid_xsize = 0;
+		}
+
+		unicode = header.version[16]-0x30; // FIXME unicode is never used
 
     strings = loadRHKStrings(file,header.string_count);
   
