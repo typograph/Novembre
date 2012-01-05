@@ -57,6 +57,7 @@ struct RHKObject {
 	quint32 id;
 	quint32 offset;
 	quint32 data_size;
+	RHKObject() { memset((char*)this,0,sizeof(*this)); }
 	};
 
 struct RHKFileHeader {
@@ -66,13 +67,15 @@ struct RHKFileHeader {
 	quint32 object_field_size;
 	quint32 reserved[2];
 	RHKObject * object_list; // as of rev4, 3 objects
+	
+	RHKFileHeader() { memset((char*)this,0,sizeof(*this));}
 	};
 
 struct RHKPageHeader {
 	quint16 field_size;
 	quint16 string_count;
 
-	quint32 type;
+//	quint32 type;
 	quint32 page_type;
 	quint32 data_sub_source;
 	quint32 line_type;
@@ -112,6 +115,8 @@ struct RHKPageHeader {
 	quint8 reserved[60];
 
 	RHKObject * object_list;
+
+	RHKPageHeader() { memset((char*)this,0,sizeof(*this)); }
 };
 
 struct RHKPageIndex {
@@ -122,6 +127,8 @@ struct RHKPageIndex {
 	quint32 minor_version;
 	RHKObject * object_list;
 	RHKPageHeader page_header;
+
+	RHKPageIndex() { memset((char*)this,0,sizeof(*this));}
 	};
 
 struct RHKPageIndexHeader {
@@ -130,6 +137,8 @@ struct RHKPageIndexHeader {
 	quint32 reserved[2];
 	RHKObject * object_list; // as of rev4, 1 objects
 	RHKPageIndex * page_index_array;
+	
+	RHKPageIndexHeader() { memset((char*)this,0,sizeof(*this));}
 	};
 
 struct RHKFile {
@@ -137,6 +146,7 @@ struct RHKFile {
 	RHKFileHeader header;
 	RHKPageIndexHeader page_index;
 	// RHKPRMHeader // FIXME ignored
+	RHKFile() { memset((char*)this,0,sizeof(*this)); }
 	};
 
 struct RHKSequentialDataHeader {
@@ -148,6 +158,8 @@ struct RHKSequentialDataHeader {
 	quint32 data_info_size;
 	quint32 data_info_string_count;
 	RHKObject * object_list;
+
+	RHKSequentialDataHeader() { memset((char*)this,0,sizeof(*this));}
 };
 
 
@@ -280,7 +292,7 @@ struct RHKThumbnailHeader {
 
 class NVBDataSource;
 
-class RHKFileGenerator: public QObject, public NVBFileGenerator {
+class RHK4FileGenerator: public QObject, public NVBFileGenerator {
 Q_OBJECT
 Q_INTERFACES(NVBFileGenerator);
 
@@ -300,12 +312,12 @@ private:
   static QString getImageTypeString(qint32 type);
 	static QString getObjectTypeString(qint32 type);
 
-  friend class RHKTopoPage;
-  friend class RHKSpecPage;
+  friend class RHK4TopoPage;
+  friend class RHK4SpecPage;
 
 public:
-  RHKFileGenerator():NVBFileGenerator() {;}
-  virtual ~RHKFileGenerator() {;}
+  RHK4FileGenerator():NVBFileGenerator() {;}
+  virtual ~RHK4FileGenerator() {;}
 
 	virtual inline QString moduleName() const { return QString("RHK XPMPro2 files");}
 	virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for SM4 files"); }
@@ -325,19 +337,19 @@ public:
 	// virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 };
 
-class RHKTopoPage : public NVB3DPage {
+class RHK4TopoPage : public NVB3DPage {
 Q_OBJECT
 private:
 	RHKPageHeader header;
   QStringList strings;
 public:
-	RHKTopoPage(RHKPageIndex * index, QFile & file);
-  virtual ~RHKTopoPage() {;}
+	RHK4TopoPage(RHKPageIndex * index, QFile & file);
+  virtual ~RHK4TopoPage() {;}
 public slots:
   virtual void commit() {;}
 };
 
-class RHKSpecPage : public NVBSpecPage {
+class RHK4SpecPage : public NVBSpecPage {
 Q_OBJECT
 protected:
 	RHKPageHeader header;
@@ -345,8 +357,8 @@ protected:
   double * ys;
   double * xs;
 public:
-	RHKSpecPage(RHKPageIndex * index, QFile & file);
-  virtual ~RHKSpecPage();
+	RHK4SpecPage(RHKPageIndex * index, QFile & file);
+  virtual ~RHK4SpecPage();
 public slots:
   virtual void commit() {;}
 };
