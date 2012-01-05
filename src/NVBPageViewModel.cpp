@@ -218,6 +218,17 @@ void NVBPageViewModel::updateSource(NVBDataSource * newobj, NVBDataSource * oldo
 		NVBOutputError( "Page not in model" );
 }
 
+void NVBPageViewModel::swapItems(int row1, int row2) {
+	if (!(row1 >= 0 && row2 >= 0 && row1 < rowCount() && row2 < rowCount())) {
+		NVBOutputError("Swap targets not in model");
+		return;
+		}
+	emit layoutAboutToBeChanged();
+	icons.swap(row1,row2);
+	pages.swap(row1,row2);
+	emit layoutChanged();
+	}
+
 QMimeData * NVBPageViewModel::mimeData(const QModelIndexList & indexes) const
 {
   if (indexes.count() > 1) {

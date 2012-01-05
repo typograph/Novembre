@@ -56,6 +56,8 @@ public:
   void addSource(NVBDataSource * page, int row, NVBVizUnion viz = NVBVizUnion());
 	void addSource(const QModelIndex & index);
 
+	virtual void swapItems(int row1, int row2);
+
 protected slots:
   virtual void updateSource( NVBDataSource * newobj, NVBDataSource * oldobj);
 };

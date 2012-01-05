@@ -42,6 +42,8 @@ public:
   virtual Qt::ItemFlags flags(const QModelIndex &index) const;
   virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
 
+	void swapItems(int row1, int row2);
+
 //  void addViz(NVBVizUnion u = NVBVizUnion(), int row = 1);
 
 public slots:

@@ -52,6 +52,17 @@ int NVBWidgetStackModel::addSource(NVBDataSource *page, NVBVizUnion viz) {
 	return pagemodel->addSource(page,viz);
 	}
 
+void NVBWidgetStackModel::swapItems(int row1, int row2) {
+	if (!(row1 >= 0 && row2 >= 0 && row1 < rowCount() && row2 < rowCount())) {
+		NVBOutputError("Swap targets not in model");
+		return;
+		}
+	emit layoutAboutToBeChanged();
+	widgets.swap(row1,row2);
+	pagemodel->swapItems(row1,row2);
+	emit layoutChanged();
+	}
+
 int NVBWidgetStackModel::columnCount(const QModelIndex & ) const
 {
   return 1;
