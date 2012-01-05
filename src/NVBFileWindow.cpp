@@ -836,7 +836,7 @@ void NVBFileWindow::print( )
 
   QFont fnt;
   fnt.setPointSize(14); //TODO make fontsize paper-dependent
-  QSize text = QFontMetrics::QFontMetrics(fnt).size(0,windowTitle());
+  QSize text = QFontMetrics(fnt).size(0,windowTitle());
   
   txtoffset.setX((page.width()-text.width())/2);
   txtoffset.setY(text.height());
