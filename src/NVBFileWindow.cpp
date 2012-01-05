@@ -266,8 +266,6 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
 
 	viewmodel = new NVBUserPageViewModel();
 
-  connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
-
   pageListView = new NVBDoubleListView(this,viewmodel,model);
   pageListView->setWindowTitle("Pages");
   pageListView->hide();
@@ -394,6 +392,9 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
   toolBarLayout->addStretch(1);
 
   }
+
+	if (viewmodel) connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
+
 
 //   resize(sizeHint());
 
