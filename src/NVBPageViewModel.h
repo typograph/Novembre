@@ -70,17 +70,12 @@ public:
 	/// View type is NVB::IconView
 	virtual NVB::ViewType viewType() { return NVB::IconView; }
 
-	/// Replace top page with \a page
-	virtual void setSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
 	/// Adds a \a page to the top of the stack
-	int addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
+	int addSource(NVBDataSource * page);
 	/// Inserts \a page at position \a row
-	void addSource(NVBDataSource * page, int row, NVBVizUnion viz = NVBVizUnion());
+	void addSource(NVBDataSource * page, int row);
 	/// Inserts a page at \a index from another model
 	void addSource(const QModelIndex & index);
-
-	/// Swap pages at @p row1 and @p row2
-	virtual void swapItems(int row1, int row2);
 
 protected slots:
 	/// Updates the page in case the page tree is affected

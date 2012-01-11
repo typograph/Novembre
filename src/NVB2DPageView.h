@@ -41,6 +41,7 @@ private:
   void activateSelectedViz();
   void activateViz(NVBVizUnion viz);
   void deactivateFilter();
+  NVBVizUnion getVizAt(int row);
   NVBVizUnion getVizFromSelection();
 public:
   NVB2DPageView(NVBVizModel* model, QWidget * parent = 0);
@@ -104,6 +105,8 @@ public slots :
 //   void setZooming(bool _zooming) {zooming = _zooming;}
 //   void setCarefulZooming(bool _keepRatio) { keepRatio = _keepRatio; }
 //   void setShowTicks(bool _showTicks) { showTicks = _showTicks; update(); }
+	/// Swaps graphic items at row1 and row2
+	void swapItems(int row1, int row2);
 
 protected :
 //   QRectF visibleArea();

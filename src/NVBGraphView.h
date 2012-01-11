@@ -109,7 +109,8 @@ public slots:
   void showGrid(bool);
 	void activateZoom();
 	void deactivateZoom();
-
+	void swapItems(int row1, int row2);
+	
 protected slots:
   void activateVisualizer(int row);
   void deactivateVisualizer(int row);

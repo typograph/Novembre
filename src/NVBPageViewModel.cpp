@@ -171,27 +171,19 @@ Qt::ItemFlags NVBPageViewModel::flags(const QModelIndex & index) const
 }
 
 /**
- * Does nothing.
- */
-void NVBPageViewModel::setSource(NVBDataSource * , NVBVizUnion )
-{
-	// Do nothing since there's no note which to set
-}
-
-/**
  * The @p viz parameter should specify an icon for the added page.
  * If none is provided, the model will use the default one.
  */
-int NVBPageViewModel::addSource(NVBDataSource * page, NVBVizUnion viz)
+int NVBPageViewModel::addSource(NVBDataSource * page)
 {
-	addSource(page,0,viz);
+	addSource(page,0);
 	return 0;
 }
 
 /**
  * \overload NVBPageViewModel::addSource
  */
-void NVBPageViewModel::addSource(NVBDataSource * page, int row, NVBVizUnion viz)
+void NVBPageViewModel::addSource(NVBDataSource* page, int row)
 {
 	if (!page) return;
 
@@ -206,10 +198,7 @@ void NVBPageViewModel::addSource(NVBDataSource * page, int row, NVBVizUnion viz)
 
 	pages.insert(row,page);
 
-	if (viz.valid)
-		icons.insert(row,*(viz.IconViz));
-	else
-		icons.insert(row,tools->getDefaultIcon(page));
+	icons.insert(row,tools->getDefaultIcon(page));
 
 	endInsertRows();
 
@@ -250,20 +239,6 @@ void NVBPageViewModel::updateSource(NVBDataSource * newobj, NVBDataSource * oldo
 	else
 		NVBOutputError( "Page not in model" );
 }
-
-/**
- * The model will emit layoutAboutToBeChanged and layoutChanged.
- */
-void NVBPageViewModel::swapItems(int row1, int row2) {
-	if (!(row1 >= 0 && row2 >= 0 && row1 < rowCount() && row2 < rowCount())) {
-		NVBOutputError("Swap targets not in model");
-		return;
-		}
-	emit layoutAboutToBeChanged();
-	icons.swap(row1,row2);
-	pages.swap(row1,row2);
-	emit layoutChanged();
-	}
 
 /**
  * The function will not work if there are multiple items in @p indexes.

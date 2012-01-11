@@ -19,10 +19,10 @@ NVBFile::~NVBFile() {
 	emit free(sourceInfo.name());
 	}
 
-void NVBFile::addSource(NVBDataSource * page, NVBVizUnion viz) {
+void NVBFile::addSource(NVBDataSource * page) {
 	if (page != 0) {
 		// NVBFile is appending pages, instead of prepending them
-		NVBPageViewModel::addSource(page,rowCount(),viz);
+		NVBPageViewModel::addSource(page,rowCount());
 		page->owner = this;
 		}
 	else

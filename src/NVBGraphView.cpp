@@ -30,6 +30,7 @@ NVBGraphView::NVBGraphView(NVBVizModel * model, QWidget* parent)
   connect(vizmodel,SIGNAL(rowsAboutToBeRemoved(const QModelIndex&,int,int)),SLOT(rowsAboutToBeRemoved(const QModelIndex&,int,int)));
   connect(vizmodel,SIGNAL(rowsInserted(const QModelIndex&,int,int)),SLOT(rowsInserted(const QModelIndex&,int,int)));
   connect(vizmodel,SIGNAL(dataChanged(const QModelIndex&,const QModelIndex&)),SLOT(updateVizs(const QModelIndex&,const QModelIndex&)));
+  connect(vizmodel,SIGNAL(itemsSwapped(int,int)),SLOT(swapItems(int,int)));
 }
 
 
@@ -277,6 +278,22 @@ void NVBGraphView::deactivateVisualizer(int row)
 QwtPlot * NVBGraphView::plotAt(int row)
 {
   return qobject_cast<QwtPlot*>(plotlayout->itemAt(row)->widget());
+}
+
+void NVBGraphView::swapItems(int row1, int row2)
+{
+	supraVizs.swap(row1,row2);
+	grids.swap(row1,row2);
+	zoomers.swap(row1,row2);
+	int rx = qMax(row1,row2);
+	QwtPlot * px = plotAt(rx);
+	int rn = qMin(row1,row2);
+	QwtPlot * pn = plotAt(rn);
+	
+	delete plotlayout->takeAt(rx);
+	delete plotlayout->takeAt(rn);
+	plotlayout->insertWidget(rn,px);
+	plotlayout->insertWidget(rx,pn);
 }
 
 void NVBGraphView::showGrid( bool gshow )

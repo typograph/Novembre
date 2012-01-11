@@ -481,8 +481,11 @@ void NVBFileWindow::addSource(NVBDataSource * page, NVBVizUnion viz)
 {
   if (!page) return;
 
-	pageListView->topSelection()->select(viewmodel->index(widgetmodel->addSource(page,viz)),QItemSelectionModel::ClearAndSelect);
-	if (!viz.valid)
+	int row = viewmodel->addSource(page);
+	pageListView->topSelection()->select(viewmodel->index(row),QItemSelectionModel::ClearAndSelect);
+	if (viz.valid)
+		vizmodel->setVisualizer(viz,row);
+	else
 		tools->activateDefaultVisualizer(page,this);
 
 }
@@ -501,7 +504,8 @@ void NVBFileWindow::addSource(const QModelIndex & index)
  */
 NVBViewController * NVBFileWindow::openInNewWindow(NVBDataSource * page, NVBVizUnion viz, NVB::ViewType vtype)
 {
-  NVBFileWindow * c = new NVBFileWindow(parent_area,page,vtype,viz);
+
+	NVBFileWindow * c = new NVBFileWindow(parent_area,page,vtype,viz);
   area()->addWindow(c);
   return c;
 }
@@ -666,8 +670,10 @@ void NVBFileWindow::showPageOperationsMenu(const QModelIndex & index, const QPoi
     openInNewWindow(index);
     }
   else if (a->text() == "Move up") {
+		viewmodel->swapItems(index.row(),index.row()-1);
     }
   else if (a->text() == "Move down") {
+		viewmodel->swapItems(index.row(),index.row()+1);
     }
   else if (a->text() == "Remove") {
     viewmodel->removeRow(index.row());

@@ -16,6 +16,7 @@
 
 NVBWidgetStackModel::NVBWidgetStackModel(NVBVizModel * model):pagemodel(model)
 {
+	connect(pagemodel,SIGNAL(itemsSwapped(int,int)),SLOT(swapItems(int,int)));
 	connect(pagemodel,SIGNAL(rowsAboutToBeRemoved(const QModelIndex&,int,int)),SLOT(pagesAboutToBeRemoved(const QModelIndex&,int,int)));
 	connect(pagemodel,SIGNAL(rowsInserted(const QModelIndex&,int,int)),SLOT(pagesInserted(const QModelIndex&,int,int)));
 //  connect(pagemodel,SIGNAL(dataChanged(const QModelIndex& , const QModelIndex& )),SLOT(pagesChanged(const QModelIndex&, const QModelIndex& )));
@@ -55,14 +56,6 @@ QModelIndex NVBWidgetStackModel::index(int row, int column, const QModelIndex & 
 }
 
 /**
- * Adds @p page to the underlying model.
- * 
- */
-int NVBWidgetStackModel::addSource(NVBDataSource *page, NVBVizUnion viz) {
-	return pagemodel->addSource(page,viz);
-	}
-
-/**
  * Swaps two widget stacks at @p row1 and @p row2
  */
 void NVBWidgetStackModel::swapItems(int row1, int row2) {
@@ -72,7 +65,6 @@ void NVBWidgetStackModel::swapItems(int row1, int row2) {
 		}
 	emit layoutAboutToBeChanged();
 	widgets.swap(row1,row2);
-	pagemodel->swapItems(row1,row2);
 	emit layoutChanged();
 	}
 

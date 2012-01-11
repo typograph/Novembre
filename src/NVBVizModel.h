@@ -32,8 +32,6 @@ private:
 	NVB::ViewType viewtype;
 	/// All the visualizers.
 	QList<NVBVizUnion> vizs;
-	/// Helper list for inserting visualizers
-	QList<QPair<NVBDataSource*,NVBVizUnion> > future;
 protected:
 	/// NVBPageViewModel this model is sitting on top of
 	NVBPageViewModel * pagemodel;
@@ -55,19 +53,15 @@ public:
 	/// Set a visualizer for the page at @p index
 	virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
 
-	/// Swap two pages at @p row1 and @p row2
-	void swapItems(int row1, int row2);
-
 //  void addViz(NVBVizUnion u = NVBVizUnion(), int row = 1);
 
 public slots:
-	/// Add @p page to the underlying NVBPageViewModel with visualizer @p viz in this model
-	int addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
-
 	/// Set a visualizer for page at @p index
 	void setVisualizer(NVBVizUnion visualizer, const QModelIndex& index);
 	/// Set a visualizer for page at @p row	
 	void setVisualizer(NVBVizUnion visualizer, int row = 0);
+	/// Swap two pages at @p row1 and @p row2
+	void swapItems(int row1, int row2);
 
 protected slots:
 	/// Prepare for pages being removed from the list
@@ -80,6 +74,10 @@ protected slots:
 	virtual void pagesInserted ( const QModelIndex & parent, int start, int end );
 	/// Request new visualizers if page type changed
 	virtual void pagesChanged ( const QModelIndex & topLeft, const QModelIndex & bottomRight );
+	
+signals:
+	/// Emitted after swapItems
+	void itemsSwapped(int row, int row2);
 };
 
 
