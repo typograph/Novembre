@@ -51,7 +51,7 @@ public:
 //   static QVariant pageData(NVBDataSource* page, int role);
 
   /// Adds a page to the end of file.
-  virtual void addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
+  virtual void addSource(NVBDataSource * page);
 	/// Adds pages to the end of file.
 	virtual void addSources(QList<NVBDataSource *> pages);
 //  /// Sets an icon for the last page

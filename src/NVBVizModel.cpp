@@ -15,6 +15,8 @@
 
 NVBVizModel::NVBVizModel(NVBPageViewModel * model, NVB::ViewType vtype):QAbstractListModel(),viewtype(vtype),pagemodel(model)
 {
+	connect(pagemodel,SIGNAL(itemsSwapped(int,int)),
+											SLOT(swapItems(int,int)));
 	connect(pagemodel,SIGNAL(rowsAboutToBeRemoved(const QModelIndex&,int,int)),
 											SLOT(pagesAboutToBeRemoved(const QModelIndex&,int,int)));
 	connect(pagemodel,SIGNAL(rowsRemoved(const QModelIndex&,int,int)),
@@ -54,19 +56,8 @@ void NVBVizModel::pagesInserted(const QModelIndex & parent, int start, int end)
 	if (parent.isValid()) return;
 
 	for (int i = start; i <= end; i++) {
-		int j=0;
 		NVBDataSource * page = parent.child(i,0).data(PageRole).value<NVBDataSource*>();
-		for(j = 0; j < future.size(); j++) {
-			if (future.at(j).first == page) {
-				vizs.insert(i,future.at(j).second);
-				future.removeAt(j);
-				break;
-				}
-			}
-		if (j == future.size()) {
-//			NVBOutputError("Cannot insert no viz.");
-			vizs.insert(i,NVBVizUnion());
-			}
+		vizs.insert(i,NVBVizUnion());
 		}
 
 	endInsertRows();
@@ -134,14 +125,6 @@ NVBVizModel::~ NVBVizModel()
 		}
 }
 
-/**
- * The model caches \p viz until the rowsInserted signal from the underlying model. 
- */
-int NVBVizModel::addSource(NVBDataSource *page, NVBVizUnion viz) {
-	future << QPair<NVBDataSource*,NVBVizUnion>(page,viz);
-	return pagemodel->addSource(page);
-}
-
 void NVBVizModel::setVisualizer(NVBVizUnion visualizer, const QModelIndex & index)
 {
 	setVisualizer(visualizer,index.row());
@@ -154,30 +137,17 @@ void NVBVizModel::setVisualizer(NVBVizUnion visualizer, int row)
 	emit dataChanged(index(row),index(row));
 }
 
-void NVBVizModel::swapItems(int row1, int row2) {
+void NVBVizModel::swapItems(int row1, int row2)
+{
 	if (!(row1 >= 0 && row2 >= 0 && row1 < rowCount() && row2 < rowCount())) {
 		NVBOutputError("Swap targets not in model");
 		return;
 		}
 	emit layoutAboutToBeChanged();
 	vizs.swap(row1,row2);
-	if (viewtype == NVB::TwoDView) { // Change Z index
-		NVBVizUnion u1 = vizs.at(row1);
-		NVBVizUnion u2 = vizs.at(row2);
-		if (u1.isValid() && u2.isValid()) {
-			qreal z1 = u1.TwoDViz->zValue();
-			qreal z2 = u2.TwoDViz->zValue();
-			// FIXME this code breaks incapsulation. NVB2DView should listen to layout changes
-			if (z1 < 0)
-				u1.TwoDViz->setZValue(-row2);
-			if (z2 < 0)
-				u2.TwoDViz->setZValue(-row1);
-			}
-		}
-	pagemodel->swapItems(row1,row2);
 	emit layoutChanged();
-
-	}
+	emit itemsSwapped(row1,row2);
+}
 
 void NVBVizModel::pagesAboutToBeInserted(const QModelIndex & parent, int start, int end)
 {

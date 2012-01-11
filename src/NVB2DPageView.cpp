@@ -33,6 +33,7 @@ NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsVie
   connect(vizmodel,SIGNAL(rowsAboutToBeRemoved(const QModelIndex&,int,int)),SLOT(rowsAboutToBeRemoved(const QModelIndex&,int,int)));
   connect(vizmodel,SIGNAL(rowsInserted(const QModelIndex&,int,int)),SLOT(rowsInserted(const QModelIndex&,int,int)));
   connect(vizmodel,SIGNAL(dataChanged(const QModelIndex&,const QModelIndex&)),SLOT(updateVizs(const QModelIndex&,const QModelIndex&)));
+  connect(vizmodel,SIGNAL(itemsSwapped(int,int)),SLOT(swapItems(int,int)));
 
 //  setGeometry(QRect(geometry().topLeft(),QSize(400,400)));
 //  setMinimumSize(QSize(64,64));
@@ -138,6 +139,14 @@ void NVB2DPageView::rowsAboutToBeRemoved( const QModelIndex &, int start, int en
 {
   if (currentIndex >= start && currentIndex <= end && activeViz.valid != 0)
     emit activeVizEOL();
+	for (int i = start; i <= end; i++)
+		theScene->removeItem(getVizAt(i).TwoDViz);
+  foreach(QGraphicsItem* item, theScene->items()) {
+    if (item->zValue() <= -end-1)
+      item->setZValue(item->zValue()+end-start+1);
+		else if (item->zValue() <= -start)
+			theScene->removeItem(item);
+    }
 }
 
 
@@ -159,7 +168,6 @@ void NVB2DPageView::rowsInserted( const QModelIndex & parent, int start, int end
   if (currentIndex >= start) currentIndex += end-start+1;
 
   foreach(QGraphicsItem* item, theScene->items()) {
-		NVBOutputError(QString::number(item->zValue()));
     if (item->zValue() <= -start)
       item->setZValue(item->zValue()-end+start-1);
     }
@@ -276,32 +284,8 @@ void NVB2DPageView::select(const QModelIndex & index)
   if (!index.isValid()) return;
   if (index.row() == currentIndex) return;
   emit activeVizEOL();
-//   removeActiveViz();
-/*
-#if QT_VERSION >= 0x040400
-  QGraphicsItem * i = scene()->mouseGrabberItem();
-  if (i) {
-    i->ungrabMouse();
-    i->ungrabKeyboard();
-    }
 
-  NVBVizUnion tmp = vizmodel->index(index.row()).data(PageVizItemRole).value<NVBVizUnion>();
-  if (tmp.valid && tmp.vtype == NVB::TwoDView) {
-    tmp.TwoDViz->grabMouse();
-    tmp.TwoDViz->grabKeyboard();
-    }
-#else
-  NVBVizUnion tmp = vizmodel->index(currentIndex).data(PageVizItemRole).value<NVBVizUnion>();
-  if (tmp.valid && tmp.vtype == NVB::TwoDView) {
-    tmp.TwoDViz->setZValue(-currentIndex);
-    }
-  tmp = vizmodel->index(index.row()).data(PageVizItemRole).value<NVBVizUnion>();
-  if (tmp.valid && tmp.vtype == NVB::TwoDView) {
-    tmp.TwoDViz->setZValue(1);
-    }
-#endif
-*/
-  currentIndex = index.row();
+	currentIndex = index.row();
   activateViz(getVizFromSelection());
 }
 
@@ -435,13 +419,18 @@ bool NVB2DPageView::eventFilter(QObject * watched, QEvent * event)
   return false;
 }
 
-NVBVizUnion NVB2DPageView::getVizFromSelection()
+NVBVizUnion NVB2DPageView::getVizAt(int row)
 {
-  NVBVizUnion tmp = vizmodel->index(currentIndex).data(PageVizItemRole).value<NVBVizUnion>();
+  NVBVizUnion tmp = vizmodel->index(row).data(PageVizItemRole).value<NVBVizUnion>();
   if (tmp.valid && tmp.vtype == NVB::TwoDView)
     return tmp;
   else
     return NVBVizUnion();
+}
+
+NVBVizUnion NVB2DPageView::getVizFromSelection()
+{
+	return getVizAt(currentIndex);
 }
 
 void NVB2DPageView::activateViz(NVBVizUnion viz)
@@ -497,3 +486,13 @@ void NVB2DPageView::rebuildRect( )
     }
 }
 
+void NVB2DPageView::swapItems(int row1, int row2)
+{
+	// Now we have to remember that the items have been swapped already in the model
+	NVBVizUnion v1 = getVizAt(row1), v2 = getVizAt(row2);
+	// The conditions are checking for raised items
+	if (v1.TwoDViz->zValue() == -row2)
+		v1.TwoDViz->setZValue(-row1);
+	if (v2.TwoDViz->zValue() == -row1)
+		v2.TwoDViz->setZValue(-row2);
+}

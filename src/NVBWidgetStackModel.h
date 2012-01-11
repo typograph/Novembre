@@ -53,12 +53,7 @@ public:
 	/// Returns the widget at @p index as QVariant
 	virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 
-	/// Swaps two items together with their widget stacks
-	void swapItems(int row1, int row2);
-
 public slots:
-	/// Adds a \a page to the list of pages and propagates further
-	int addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
 	/// Add a \a widget to the page at @p index
 	void addWidget(QWidget * widget, const QModelIndex & index);
 
@@ -66,6 +61,9 @@ public slots:
 	void pagesInserted(const QModelIndex & index, int start, int end);
 	/// Removes pages deleted from a parent model
 	void pagesAboutToBeRemoved(const QModelIndex & index, int start, int end);
+
+	/// Swaps two items together with their widget stacks
+	void swapItems(int row1, int row2);
 
 protected slots:
 	/// Delete the reference to @p widget if it was deleted
