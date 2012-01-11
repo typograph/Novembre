@@ -449,24 +449,19 @@ void NVBFileWindow::setGraphView()
 }
 #endif
 
+/**
+ * Tries to activate the plugin referenced to by \a action, on the top page
+ */
 void NVBFileWindow::installDelegate( QAction * action )
 {
   tools->activateDelegate(action->data().toInt(),pageListView->selectedTopPage().data(PageRole).value<NVBDataSource*>(),this);
 }
 
-/*
-void NVBFileWindow::setVisualizer(NVBVizUnion visualizer, QWidget * controlWidget)
-{
-  vizmodel->setVisualizer(visualizer,pageListView->selectedTopPage());
-  widgetmodel->setVizWidget(controlWidget,pageListView->selectedTopPage());
-}
-
-void NVBFileWindow::addController(NVBVizUnion visualizer, QWidget * controlWidget)
-{
-  vizmodel->setVisualizer(visualizer);
-  widgetmodel->addControlWidget(controlWidget);
-}
-*/
+/**
+ * If the \a page is not the selected page, replaces the selected page with \a page
+ * If a valid visualizer is supplied, uses it to display the selected page,
+ * otherwise if a visualizer is needed, uses a default visualizer.
+ */
 void NVBFileWindow::setSource(NVBDataSource * page, NVBVizUnion viz)
 {
   if (viewmodel->data(pageListView->selectedTopPage(),PageRole).value<NVBDataSource*>() != page)
@@ -477,6 +472,11 @@ void NVBFileWindow::setSource(NVBDataSource * page, NVBVizUnion viz)
     tools->activateDefaultVisualizer(page,this);
 }
 
+/**
+ *
+ * Adds a page to the top of the stack and selects it
+ *
+ */
 void NVBFileWindow::addSource(NVBDataSource * page, NVBVizUnion viz)
 {
   if (!page) return;
@@ -485,24 +485,20 @@ void NVBFileWindow::addSource(NVBDataSource * page, NVBVizUnion viz)
 	if (!viz.valid)
 		tools->activateDefaultVisualizer(page,this);
 
-//  disconnect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),this,SLOT(activateVisualizers(const QModelIndex &,int,int)));
-//  viewmodel->addSource(page);
-//  pageListView->topSelection()->select(viewmodel->index(0),QItemSelectionModel::ClearAndSelect);
-//  connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
-
-
-/*
-  if (activate) {
-    stackView->setSelectedIndex(viewmodel->index(0));
-    }
-*/
 }
 
+/**
+ * Adds a page from another source to the window. The inserted page is a permanent link
+ * \sa NVBToolsFactory::hardlinkDataSource
+ */
 void NVBFileWindow::addSource(const QModelIndex & index)
 {
   addSource(NVBToolsFactory::hardlinkDataSource(index.data(PageRole).value<NVBDataSource*>()));
 }
 
+/**
+ * Opens \a page in a new window in the same workspace that this one exists in
+ */
 NVBViewController * NVBFileWindow::openInNewWindow(NVBDataSource * page, NVBVizUnion viz, NVB::ViewType vtype)
 {
   NVBFileWindow * c = new NVBFileWindow(parent_area,page,vtype,viz);
@@ -510,25 +506,37 @@ NVBViewController * NVBFileWindow::openInNewWindow(NVBDataSource * page, NVBVizU
   return c;
 }
 
+/**
+ * Opens the page from \a index in a new window in the same workspace that this one exists in
+ */
 NVBViewController * NVBFileWindow::openInNewWindow(const QModelIndex & index, NVB::ViewType vtype)
 {
-   // The const_cast construction is safe, because we are not going to use any non-const model function in the lifetime of the index
-   NVBFileWindow * c = new NVBFileWindow(parent_area,index,dynamic_cast<NVBFile*>(const_cast<QAbstractItemModel*>(index.model())),vtype);
+  // The const_cast construction is safe, because we are not going to use any non-const model function in the lifetime of the index
+  NVBFileWindow * c = new NVBFileWindow(parent_area,index,dynamic_cast<NVBFile*>(const_cast<QAbstractItemModel*>(index.model())),vtype);
   area()->addWindow(c);
   return c;
 }
 
+/**
+ * Adds a widget to the widget stack for the currently selected page
+ */
 void NVBFileWindow::addControlWidget(QWidget * controlWidget)
 {
   if (controlWidget)
     widgetmodel->addWidget(controlWidget,pageListView->selectedTopPage());
 }
 
+/**
+ * Sets the visualizer for the selected page
+ */
 void NVBFileWindow::setVisualizer(NVBVizUnion visualizer)
 {
   vizmodel->setVisualizer(visualizer, pageListView->selectedTopPage());
 }
 
+/**
+ * Sets the 'active' modal visualizer for the selected page
+ */
 void NVBFileWindow::setActiveVisualizer(NVBVizUnion visualizer)
 { // this one emits signals because of the unknown nature of the view
   emit activateVisualizer(visualizer,pageListView->selectedTopPage());

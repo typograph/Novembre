@@ -1,22 +1,22 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov   *
- *   Timofey.Balashov@pi.uka.de   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+*   Copyright (C) 2006 by Timofey Balashov   *
+*   Timofey.Balashov@pi.uka.de   *
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+*   This program is distributed in the hope that it will be useful,       *
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+*   GNU General Public License for more details.                          *
+*                                                                         *
+*   You should have received a copy of the GNU General Public License     *
+*   along with this program; if not, write to the                         *
+*   Free Software Foundation, Inc.,                                       *
+*   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+***************************************************************************/
 #ifndef NVB_MAIN_H
 #define NVB_MAIN_H
 
@@ -56,131 +56,155 @@
 // using namespace NVBErrorCodes;
 
 #if QT_VERSION >= 0x040300
+/*!
+ * Persistent MdiSubWindow that closes instead of hiding.
+ * This class is used by NVBMain to implement addPersistentWindow.
+ */
 class NVBPersistentMdiSubWindow : public QMdiSubWindow {
 Q_OBJECT
 public:
-  NVBPersistentMdiSubWindow(QWidget * widget, QWidget * parent = 0):QMdiSubWindow(parent) {
-    setWidget(widget);
-    widget->show();
-    show();
-    connect(widget,SIGNAL(shown()),SLOT(show()));
-//    connect(this,SIGNAL(hidden()),widget,SLOT(hide()));
-    }
-  virtual ~NVBPersistentMdiSubWindow() {;}
+	/*!
+	 * Create a persistent window containing @p widget in @p parent.
+	 */
+	NVBPersistentMdiSubWindow(QWidget * widget, QWidget * parent = 0):QMdiSubWindow(parent) {
+		setWidget(widget);
+		widget->show();
+		show();
+		connect(widget,SIGNAL(shown()),SLOT(show()));
+	//    connect(this,SIGNAL(hidden()),widget,SLOT(hide()));
+		}
+	/// Destroy the persistent window
+	virtual ~NVBPersistentMdiSubWindow() {;}
 public slots:
-  virtual void closeEvent ( QCloseEvent * event ) {
-    widget()->close();
-    if (widget()->isHidden()) {
-      event->accept();
-      hide();
-      emit hidden();
-      }
-    }
+	/// Instead of closing this window will hide
+	virtual void closeEvent ( QCloseEvent * event ) {
+		widget()->close();
+		if (widget()->isHidden()) {
+			event->accept();
+			hide();
+			emit hidden();
+			}
+		}
 signals:
-  void hidden();
+	/// Emitted when the closeEvent lead to successful hiding.
+	void hidden();
 };
 #endif
 
+/*!
+ * Main window in Novembre. This window contains all menus and toolbars.
+ */
 class NVBMain: public QMainWindow, public NVBWorkingArea {
 Q_OBJECT
 private:
-    bool browserForceClosed;
-    // actions
-    
-    QAction * fileBrowseAction;
-    QAction * fileOpenAction;
-    QAction * fileSaveAction;
-    QAction * fileExportAction;
-    QAction * fileExitAction;
-    
-    QAction * editUndoRawAction;
-    QAction * editUndoAction;
-    QAction * editRedoAction;
-
-    QAction * helpAboutAction;
+	/// Browser was closed by user
+	bool browserForceClosed;
+	// actions
+	
+	QAction * fileBrowseAction;
+	QAction * fileOpenAction;
+	QAction * fileExitAction;
+	
+	QAction * helpAboutAction;
 #ifdef NVB_ENABLE_LOG
-    QAction * helpLogAction;
+	QAction * helpLogAction;
 #endif
-        
-    // interface
-        
-    NVBBrowser * fileBrowser;
+	
+	// interface
+	/// The browser object
+	NVBBrowser * fileBrowser;
+	/// Workspace, containg windows. Class depends on Qt version
 #if QT_VERSION >= 0x040300
-    QMdiArea * workspace;
+	QMdiArea * workspace;
 #else
-    QWorkspace * workspace;
+	QWorkspace * workspace;
 #endif
-    QMenu *fileMenu, *editMenu, *topoMenu, *specMenu, *helpMenu;
-    QToolBar *fileTools, *editTools, *topoTools, *specTools;
+	QMenu *fileMenu, *editMenu, *topoMenu, *specMenu, *helpMenu;
+	QToolBar *fileTools, *editTools, *topoTools, *specTools;
 
-    NVBFileFactory * files;
+	/// File factory to load files
+	NVBFileFactory * files;
 #ifdef NVB_ENABLE_LOG
-    NVBLogWidgetDock * log;
+	/// Widget with log events
+	NVBLogWidgetDock * log;
 #endif
 
 #ifdef NVB_NO_FWDOCKS
-    NVBAutoDock<false> * pageDock;
-    NVBAutoDock<true> * toolsDock;
+	NVBAutoDock<false> * pageDock;
+	NVBAutoDock<true> * toolsDock;
 #endif
-
+	/// Directory from which the last directly opened file came from.
 	QDir fileOpenDir;
 
-    void createMenus();
+	void createMenus();
 protected:
 
-  virtual void dragEnterEvent ( QDragEnterEvent * event );
-//   virtual void dragLeaveEvent ( QDragLeaveEvent * event );
-//   virtual void dragMoveEvent ( QDragMoveEvent * event );
-  virtual void dropEvent ( QDropEvent * event );
+	virtual void dragEnterEvent ( QDragEnterEvent * event );
+	virtual void dropEvent ( QDropEvent * event );
 
 public:
 
-    QSettings * conf;
+	QSettings * conf;
 
-    NVBMain();
-    ~NVBMain();
+	NVBMain();
+	~NVBMain();
 
-    void addPersistentWindow(QWidget * window);
-    void addWindow(QWidget * window);
+	void addPersistentWindow(QWidget * window);
+	void addWindow(QWidget * window);
 
-    virtual QWidget * newWindowParentWidget() const { return workspace; }
+	virtual QWidget * newWindowParentWidget() const { return workspace; }
 
 public slots:
-    void showInfo();
+	/// Show QMessageBox with Novembre icon and version information
+	void showInfo();
 
-    void openPage(NVBDataSource*);
-    void openPage(QString , int);
-		void openPage(const NVBAssociatedFilesInfo &, int);
-		void openFile(QString , QList<int> = QList<int>());
-		void openFile(const NVBAssociatedFilesInfo &, QList<int> = QList<int>());
-		void callFileOpenDialog();
-    void callBrowser();
-    void closeBrowser();
-    void browserDestroyed();
-    void browserCloseRequest();
-    
-    void fileSave();
-    void fileExport();
-    void editUndo();
-    void editRedo();
-    void editUndoRaw();
+	/// Open @p page in new NVBFileWindow
+	void openPage(NVBDataSource* page);
+	/// Open page number @p index from file @p filename in new NVBFileWindow
+	void openPage(QString filename, int index);
+	/// Open page number @p index from data defined by @p info in new NVBFileWindow
+	void openPage(const NVBAssociatedFilesInfo & info , int index);
+	/// Open a list of pages at @p indexes from file @p filename. By default opens all pages
+	void openFile(QString filename, QList<int> indexes = QList<int>());
+	/// Open a list of pages at @p indexes from data defined by @p info. By default opens all pages
+	void openFile(const NVBAssociatedFilesInfo & info, QList<int> indexes = QList<int>());
+	
+	/// Open a file open dialog
+	void callFileOpenDialog();
+	/// Open browser
+	/**
+	 * If the browser was not opened yet, it gets created. Otherwise,
+	 * we just show it if it's hidden, or raise it if it is not the top window.
+	 */
+	void callBrowser();
+	/*!
+	 * Close browser window. The browser is really closed and destroyed.
+	 */
+	void closeBrowser();
 
-    void redirectAction( QAction * );
-    void actualizeCurrentPage(NVBDataSource * );
+private slots:
+	/// Guard against actual closing of the browser window
+	void browserDestroyed();
+	/// Called when the user tries to close the browser
+	void browserCloseRequest();
+	
+	/// When an action is trigged by user, this method redirects the request to the active window
+	void redirectAction( QAction * );
+	/// When a different window is activated, this method notifies the actions that the page type changed
+	void actualizeCurrentPage(NVBDataSource * );
 
-//    virtual void level3Pts();
+	/// Gets called when user switched between window, and emits viewTypeChanged.
 #if QT_VERSION >= 0x040300
-    virtual void actualize(QMdiSubWindow* = 0);
+	virtual void actualize(QMdiSubWindow* = 0);
 #else
-    virtual void actualize(QWidget* = 0);
+	virtual void actualize(QWidget* = 0);
 #endif
-    
-//    NVB_wincontrol* newWindow(QString filename, unsigned int page);
-//    void deleteWindow(NVB_cwindow*);
-
+	
 signals:
-  void viewTypeChanged(NVB::ViewType);
-  void pageTypeChanged(NVB::PageType);
+	/// Emitted when the view type of active window changes
+	void viewTypeChanged(NVB::ViewType);
+	/// Emitted when the page type in the active window changes (including changes due to switching between windows)
+	void pageTypeChanged(NVB::PageType);
 
 };
 
