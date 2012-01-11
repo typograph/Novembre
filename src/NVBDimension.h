@@ -33,15 +33,15 @@ public:
     Construct NVBDimension by deciphering the string into power and unit.
     If scalable is false, the string will not be deciphered, and the unit will be declared absolute.
 
-    \example NVBDimension("kHz") // kilo Herz
-    \example NVBDimension("DAC",false) // DAC units
+    example NVBDimension("kHz") // kilo Herz
+    example NVBDimension("DAC",false) // DAC units
     */
   NVBDimension( const QString& s, bool scalable = true );
   /**
     Construct NVBDimension by using the provided string as unit and the multiplier.
 
-    \example NVBDimension("Hz",1000) // kilo Herz
-    \example NVBDimension("m",1) // meters
+    example NVBDimension("Hz",1000) // kilo Herz
+    example NVBDimension("m",1) // meters
     */
   NVBDimension( const QString& s, double multiplier):base(s),mult(multiplier) {;}
   ~NVBDimension() {;}

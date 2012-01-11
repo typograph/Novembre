@@ -23,55 +23,49 @@
 #include <QAction>
 #include "NVBSettings.h"
 
-class NVBToolsFactory : public QObject
-{
-  Q_OBJECT
+/**
+ *  Aggregates and provides plugins to modify the data (or do whatever you want)
+ *  The plugin's capabilities are not limited to modifying data, but include
+ *  creating and deleting windows, setting visualizers, adding control vidgets etc. 
+ *  \sa NVBDelegateProvider
+ */
+class NVBToolsFactory : public QObject {
+Q_OBJECT
 
-  QHash<quint16,NVBDelegateProvider*> plugins; 
+	QHash<quint16,NVBDelegateProvider*> plugins; 
 
 #ifdef WITH_2DVIEW
-  quint32 DPID_2T, DPID_2S;
+	quint32 DPID_2T, DPID_2S;
 #endif
 #ifdef WITH_3DVIEW
-  quint32 DPID_3T, DPID_3S;
+	quint32 DPID_3T, DPID_3S;
 #endif
 #ifdef WITH_GRAPHVIEW
-  quint32 DPID_GT, DPID_GS;
+	quint32 DPID_GT, DPID_GS;
 #endif
-  quint32 DPID_IT, DPID_IS;
+	quint32 DPID_IT, DPID_IS;
 
-  QSettings * conf;
+	QSettings * conf;
 
 public:
-  NVBToolsFactory();
-  ~NVBToolsFactory();
+	NVBToolsFactory();
+	~NVBToolsFactory();
 
-  QList<NVBPageToolbar*> generateToolbars(NVB::ViewType vtype);
-  NVB::ViewType getDefaultPageViewType( NVB::PageType ptype);
-/*
-  NVBGeneralDelegate * getDefaultDelegate( NVB::PageType page, NVBGeneralDelegate::DelegateViewType view);
-  NVBGeneralDelegate * getDummyDelegate(NVBGeneralDelegate::DelegateViewType view);
-*/
-//  getDefaultPainter * ();
-//  QGraphicsItem * getDefault2DPainter(NVBDataSource * source);
-//  NVB3DVizDelegate * getDefault3DPainter(NVBDataSource * source);
-//  QwtPlotItem * getDefaultSpecPainter(NVBDataSource * source);
+	QList<NVBPageToolbar*> generateToolbars(NVB::ViewType vtype);
+	 NVB::ViewType getDefaultPageViewType( NVB::PageType ptype);
 
-//  NVBVizUnion getDefaultVizForViewType(NVBDataSource * source, NVB::ViewType vtype);
+	bool isPIDValid( quint32 pluginID );
 
-  bool isPIDValid( quint32 pluginID );
-
-  static NVBDataSource * hardlinkDataSource(NVBDataSource * source);
+	/// Create a stable link to a \a source, that will not be affected by masking the source through filters
+	static NVBDataSource * hardlinkDataSource(NVBDataSource * source);
 
 	// QUICKFIX
 	QIcon getDefaultIcon(NVBDataSource * source);
 
 public slots:
-  void activateDelegate(quint32 pluginID, NVBDataSource * source, NVBViewController * wnd);
-  void activateDefaultVisualizer(NVBDataSource * source, NVBViewController * wnd);
+	void activateDelegate(quint32 pluginID, NVBDataSource * source, NVBViewController * wnd);
+	void activateDefaultVisualizer(NVBDataSource * source, NVBViewController * wnd);
 
-protected :
-//  void addPlugins(NVBDelegateProvider* provider);
 };
 
 Q_DECLARE_METATYPE(NVBToolsFactory*);

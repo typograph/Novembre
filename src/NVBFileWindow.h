@@ -141,45 +141,62 @@ protected :
 
 public :
 
-  NVBFileWindow( NVBWorkingArea * area, NVBDataSource* page, NVB::ViewType stateMode = NVB::DefaultView, NVBVizUnion viz = NVBVizUnion());
-  NVBFileWindow( NVBWorkingArea * area, const QModelIndex & index, NVBFile * model, NVB::ViewType stateMode = NVB::DefaultView );
+	/// Create the window displaying the provided \a page
+	NVBFileWindow( NVBWorkingArea * area, NVBDataSource* page, NVB::ViewType stateMode = NVB::DefaultView, NVBVizUnion viz = NVBVizUnion());
+	/// Create the window displaying a page at \a index from a file \a model
+	NVBFileWindow( NVBWorkingArea * area, const QModelIndex & index, NVBFile * model, NVB::ViewType stateMode = NVB::DefaultView );
 
-  virtual ~NVBFileWindow();
+	/// Destroy the window
+	virtual ~NVBFileWindow();
 
-  void setToolsFactory(NVBToolsFactory * toolsFactory) { tools = toolsFactory;}
+	/// Make the window use the tool factory \a toolsFactory
+	void setToolsFactory(NVBToolsFactory * toolsFactory) { tools = toolsFactory;}
+	
+	/// The type of the view (2D, 3D, Graph,...)
+	virtual NVB::ViewType viewType() { return viewtype;}
 
-  virtual NVB::ViewType viewType() { return viewtype;}
-
-  QWidget * pageView() { return pageListView; }
-  QWidget * toolsView() { return stackView; }
+	/// The left 'dock', with the list of the pages
+	QWidget * pageView() { return pageListView; }
+	/// The right 'dock', with the list of control widgets
+	QWidget * toolsView() { return stackView; }
 
 public slots :
 
-  void installDelegate(QAction * action);
+	/// Use an action from a plugin
+	void installDelegate(QAction * action);
 
-  virtual void setSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
-  virtual void addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
+	/// Replace the selected page and/or visualizer with \a page and \a viz
+	virtual void setSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
 
-  virtual NVBViewController * openInNewWindow(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion(), NVB::ViewType vtype = NVB::DefaultView);
-  NVBViewController * openInNewWindow(const QModelIndex & index, NVB::ViewType vtype = NVB::DefaultView);
+	/// Add new page to the window, optionally using \a viz as a visualizer \callgraph
+	virtual void addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion());
 
-  virtual void setVisualizer(NVBVizUnion visualizer);
-  virtual void addControlWidget(QWidget * controlWidget);
-  virtual void setActiveVisualizer(NVBVizUnion visualizer);
+	/// Reimplemented from \class NVBViewController
+	virtual NVBViewController * openInNewWindow(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion(), NVB::ViewType vtype = NVB::DefaultView);
 
-  virtual void selectionChanged( const QItemSelection & , const QItemSelection & );
+	/// Open page at \a index in a new file window
+	NVBViewController * openInNewWindow(const QModelIndex & index, NVB::ViewType vtype = NVB::DefaultView);
+
+	/// Set visualizer for the selected page to \a visualizer
+	virtual void setVisualizer(NVBVizUnion visualizer);
+	/// Add a control widget \a controlWidget for the selected page
+	virtual void addControlWidget(QWidget * controlWidget);
+	/// Set a model 'active' visualizer that will allow direct user interaction with the page
+	virtual void setActiveVisualizer(NVBVizUnion visualizer);
+
+	virtual void selectionChanged( const QItemSelection & , const QItemSelection & );
 
 #if QT_VERSION >= 0x040300
 	void copyView();
 #endif
 	
 signals :
-  void selectionChanged( const QModelIndex & selected , const QModelIndex & deselected);
-  void activateVisualizer(NVBVizUnion viz, const QModelIndex &);
-  void pageSelected(NVB::PageType);
-/*  void newWindowRequest(const QModelIndex & index);
-  void newWindowRequest(int pagenum);
-*/
+	/// Signals that the selected page was changed from \a deselected to \a selected
+	void selectionChanged( const QModelIndex & selected , const QModelIndex & deselected);
+	/// Weird signal
+	void activateVisualizer(NVBVizUnion viz, const QModelIndex &);
+	/// Signals that a page of a sertain type (topo,spec) was selected
+	void pageSelected(NVB::PageType);
 
 protected:
 
