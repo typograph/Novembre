@@ -184,8 +184,8 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 	version = ((header.version[8]-0x30)*10 + header.version[9]-0x30)*10 + header.version[10]-0x30;
 	version_minor = ((header.version[12]-0x30)*10 + header.version[13]-0x30)*10 + header.version[14]-0x30;
 
-	if (version != 3) {
-		NVBOutputError("Only RHK v3 files are supported by this plugin");
+	if (version != 4) {
+		NVBOutputError("Only RHK v4 files are supported by this plugin");
 		delete fi;
 		return NULL;
 		}
