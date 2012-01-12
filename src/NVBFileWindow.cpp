@@ -232,11 +232,13 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, NVBDataSource * page, NVB::
 
 	if (page->owner)
 		setWindowTitle(page->owner->sources().name());
-	else
+	else {
 		NVBOutputError("NVBDataSource has no owner");
+		setWindowTitle(page->name());
+		}
   if (stateMode == NVB::DefaultView)
     stateMode = (NVB::ViewType)(page->type());
-  createView(stateMode);
+  createView(stateMode,page->owner);
   addSource(page,viz);
   show();
   area->addWindow(this);

@@ -38,6 +38,7 @@ NVBDirView::NVBDirView(QWidget * parent):QAbstractItemView(parent)
 	soft_shift = 0;
 	voffset = 0;
 	setGridSize(iconSize()+QSize(20,20));	
+	setDragEnabled(true);
 }
 	
 NVBDirView::~ NVBDirView()
@@ -429,11 +430,7 @@ void NVBDirView::drawItems(int index, int y, QPainter * painter) const
 	option.locale.setNumberOptions(QLocale::OmitGroupSeparator);
 	option.widget = this;
 #endif	
-	
-	option.decorationPosition = QStyleOptionViewItem::Top;
-	option.displayAlignment = Qt::AlignCenter;
-	option.showDecorationSelected = false;
-	
+
 	for (int i=0; i<nitems; i++) {
 		QModelIndex dindex = model()->index(i,0,fi);
 		option.rect = QRect(QPoint(leftMargin()+(i%pages_per_row)*gridSize.width(),y+(i/pages_per_row)*gridSize.height()),gridSize);
@@ -445,6 +442,16 @@ void NVBDirView::drawItems(int index, int y, QPainter * painter) const
 
 		itemDelegate()->paint(painter, option, dindex);
 		}
+}
+
+QStyleOptionViewItem NVBDirView::viewOptions() const
+{
+	QStyleOptionViewItem option = QAbstractItemView::viewOptions();
+
+	option.decorationPosition = QStyleOptionViewItem::Top;
+	option.displayAlignment = Qt::AlignCenter;
+	option.showDecorationSelected = false;
+	return option;
 }
 
 void NVBDirView::setModel(QAbstractItemModel * m)
