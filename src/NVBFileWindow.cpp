@@ -395,7 +395,7 @@ void NVBFileWindow::createView( NVB::ViewType vtype,  QAbstractListModel * model
 
   }
 
-	if (viewmodel) connect(viewmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
+	if (vizmodel) connect(vizmodel,SIGNAL(rowsInserted(const QModelIndex &,int,int)),SLOT(activateVisualizers(const QModelIndex &,int,int)));
 
 
 //   resize(sizeHint());
@@ -487,8 +487,8 @@ void NVBFileWindow::addSource(NVBDataSource * page, NVBVizUnion viz)
 	pageListView->topSelection()->select(viewmodel->index(row),QItemSelectionModel::ClearAndSelect);
 	if (viz.valid)
 		vizmodel->setVisualizer(viz,row);
-	else
-		tools->activateDefaultVisualizer(page,this);
+// 	else // The default viz was already added through activateVisualizers()
+// 		tools->activateDefaultVisualizer(page,this);
 
 }
 
@@ -566,11 +566,11 @@ void NVBFileWindow::selectionChanged(const QItemSelection & selected, const QIte
 void NVBFileWindow::activateVisualizers(const QModelIndex & parent, int start, int end)
 {
   if (parent.isValid()) return;
-  while (start <= end) { // FIXME
-    pageListView->topSelection()->select(viewmodel->index(start),QItemSelectionModel::ClearAndSelect);
-    tools->activateDefaultVisualizer(viewmodel->index(start).data(PageRole).value<NVBDataSource*>(),this);
-    start += 1;
-    }
+	for (int i=start; i <= end; i++)
+		if (!parent.child(i,0).data(PageVizItemRole).value<NVBVizUnion>().isValid()) {
+			pageListView->topSelection()->select(viewmodel->index(i),QItemSelectionModel::ClearAndSelect);
+			tools->activateDefaultVisualizer(viewmodel->index(i).data(PageRole).value<NVBDataSource*>(),this);
+		}
 }
 
 void NVBFileWindow::dragEnterEvent(QDragEnterEvent * event)

@@ -188,7 +188,7 @@ void NVB2DPageView::rowsInserted( const QModelIndex & parent, int start, int end
 			tmp.TwoDViz->setZValue(-i);
 			}
     }
-
+    
   autoFocus();
 
 //  show();
@@ -277,6 +277,7 @@ void NVB2DPageView::updateVizs(const QModelIndex & start, const QModelIndex & en
       activateViz(getVizFromSelection());
     }
   autoFocus();
+	
 }
 
 void NVB2DPageView::select(const QModelIndex & index)
