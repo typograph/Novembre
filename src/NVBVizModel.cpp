@@ -133,7 +133,9 @@ void NVBVizModel::setVisualizer(NVBVizUnion visualizer, const QModelIndex & inde
 void NVBVizModel::setVisualizer(NVBVizUnion visualizer, int row)
 {
 	if (row < 0 || row >= rowCount()) return;
+	NVBVizUnion old = vizs.at(row);
 	vizs.replace(row,visualizer);
+	old.clear();
 	emit dataChanged(index(row),index(row));
 }
 
