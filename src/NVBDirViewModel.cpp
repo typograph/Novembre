@@ -169,6 +169,8 @@ NVBDirViewModel::NVBDirViewModel(NVBFileFactory * factory, NVBDirModel * model, 
 	connect(dirModel,SIGNAL(rowsRemoved (const QModelIndex &,int,int)), this, SLOT(parentRemovedRows(const QModelIndex &,int,int)));
 //  connect(dirModel,SIGNAL(layoutAboutToBeChanged()), this, SLOT(parentChangingLayout()));
 //  connect(dirModel,SIGNAL(layoutChanged()), this, SLOT(parentChangedLayout()));
+	
+	setSupportedDragActions(Qt::CopyAction);
 }
 
 NVBDirViewModel::~NVBDirViewModel()
@@ -200,8 +202,8 @@ void NVBDirViewModel::setDisplayItems(QModelIndexList items) {
 
 	files.fill(0,indexes.count());
 	unloadables.clear();
-				inprogress.clear();
-				cacheRowCounts();
+	inprogress.clear();
+	cacheRowCounts();
 	endResetModel();
 }
 
@@ -219,8 +221,8 @@ bool NVBDirViewModel::loadFile(int index) const
 	if (files.at(index)) return true;
 	if (unloadables.contains(index)) return false;
 
-	fileFactory->openFile(dirModel->getAllFiles(indexes[index]),this);
 	inprogress.append(index);
+	fileFactory->openFile(dirModel->getAllFiles(indexes[index]),this);
 	return false;
 /*
 	NVBFile * f = fileFactory->openFile(dirModel->getAllFiles(indexes[index]));
@@ -265,6 +267,7 @@ void NVBDirViewModel::fileLoaded(QString name, NVBFile * file)
 	if (file) {
 		file->use();
 		files[index] = file;
+		inprogress.removeOne(index);
 		}
 	else
 		unloadables << index;

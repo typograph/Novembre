@@ -79,7 +79,7 @@ protected:
   virtual void setSelection ( const QRect & rect, QItemSelectionModel::SelectionFlags flags );
   virtual QRegion visualRegionForSelection ( const QItemSelection & selection ) const;
   virtual void scrollContentsBy(int dx, int dy);
-
+	virtual QStyleOptionViewItem viewOptions() const;
 private:
 
   QRect visualRect (int index) const;
