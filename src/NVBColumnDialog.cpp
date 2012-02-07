@@ -109,7 +109,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
   gridLayout->addWidget(commentOption, 3, 0, 1, 1);
 
   commentChoice = new QComboBox(this);
-//	commentChoice->setEditable(true);
+	commentChoice->setEditable(true);
   commentChoice->addItems(qApp->property("filesFactory").value<NVBFileFactory*>()->availableInfoFields());
 	commentChoice->setAutoCompletion(true);
   gridLayout->addWidget(commentChoice, 3, 1, 1, 1);
@@ -705,7 +705,7 @@ void NVBColumnInputWidget::tokenListToLayout( NVBTokenList l )
 			}
 		case NVBToken::Verbatim : {
 			textOption->setChecked(true);
-			textOption->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);          
+			textChoice->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);
 			}
 		case NVBToken::Goto :
 		case NVBToken::Invalid :
