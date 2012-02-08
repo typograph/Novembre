@@ -382,7 +382,8 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	*/
   piview = new NVBPageInfoView(vSplitter);
   connect(fileList,SIGNAL(activated(const QModelIndex&)), piview, SLOT(clearView()));
-  connect(dirView,SIGNAL(clicked(const QModelIndex &)),piview,SLOT(showPage(const QModelIndex &)));
+//  connect(dirView,SIGNAL(clicked(const QModelIndex &)),piview,SLOT(showPage(const QModelIndex &)));
+	connect(dirView->selectionModel(),SIGNAL(currentChanged(QModelIndex,QModelIndex)),piview,SLOT(showPage(const QModelIndex &)));
 
   dirView->insertAction(0,showPageInfoAction);
   connect(showPageInfoAction,SIGNAL(toggled(bool)),piview,SLOT(setVisible(bool)));
