@@ -19,8 +19,8 @@ win32:CONFIG += NVBStatic
 # CONFIG += NVBGlobalDocks
 
 # Don't compile debugging information in
-CONFIG += debug
-CONFIG -= release
+CONFIG -= debug
+CONFIG += release
 
 # Use qwt from these locations
 unix { 
