@@ -35,8 +35,9 @@ NVBQtiExportView::NVBQtiExportView( NVBWorkingArea * area, QString filename )
 //   c_line = new QLineEdit(this);
 //   c_line->setReadOnly(true);
 
-  QVBoxLayout * vlayout = new QVBoxLayout(this);
-  vlayout->addWidget(list);
+//  QVBoxLayout * vlayout = new QVBoxLayout(this);
+	setWidget(list);
+//  vlayout->addWidget(list);
 //   vlayout->addWidget(c_line);
 
 /*
@@ -54,7 +55,8 @@ else {*/
 
 
 //  }
-
+	show();
+	area->addWindow(this);
 }
 
 
