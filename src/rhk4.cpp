@@ -191,7 +191,7 @@ NVBFileInfo * RHK4FileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & inf
 			switch(pi->object_list[j].id) {
 				case  3: // Page header
 					file.seek(pi->object_list[j].offset);
-					file.read((char*)&header,qMin(pi->object_list[j].data_size,sizeof(header)));
+					file.read((char*)&header,qMin((qint64)(pi->object_list[j].data_size),(qint64)sizeof(header)));
 					header.object_list = loadObjectList(file,header.object_list_count);
 					if (!header.object_list) header.object_list_count = 0;
 					break;
@@ -305,7 +305,7 @@ RHK4TopoPage::RHK4TopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 		switch(index->object_list[j].id) {
 			case  3: // Page header
 				file.seek(index->object_list[j].offset);
-				file.read((char*)&header,qMin(index->object_list[j].data_size,sizeof(header)));
+				file.read((char*)&header,qMin((qint64)(index->object_list[j].data_size),(qint64)sizeof(header)));
 				header.object_list = RHK4FileGenerator::loadObjectList(file,header.object_list_count);
 				if (!header.object_list) header.object_list_count = 0;
 				break;
@@ -440,7 +440,7 @@ RHK4SpecPage::RHK4SpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
 		switch(index->object_list[j].id) {
 			case  3: // Page header
 				file.seek(index->object_list[j].offset);
-				file.read((char*)&header,qMin(index->object_list[j].data_size,sizeof(header)));
+				file.read((char*)&header,qMin((qint64)(index->object_list[j].data_size),(qint64)sizeof(header)));
 				header.object_list = RHK4FileGenerator::loadObjectList(file,header.object_list_count);
 				if (!header.object_list) header.object_list_count = 0;
 				break;
@@ -831,7 +831,7 @@ RHKFile RHK4FileGenerator::getRHKHeader(QFile & file)
 					}
 				else {
 					file.seek(fileheader.header.object_list[i].offset);
-					file.read((char*)&fileheader.page_index,qMin(fileheader.header.object_list[i].data_size,sizeof(fileheader.page_index)));
+					file.read((char*)&fileheader.page_index,qMin((qint64)(fileheader.header.object_list[i].data_size),(qint64)sizeof(fileheader.page_index)));
 					fileheader.page_index.object_list = loadObjectList(file,fileheader.page_index.object_list_count);
 					if (!fileheader.page_index.object_list) fileheader.page_index.object_list_count = 0;
 					}
