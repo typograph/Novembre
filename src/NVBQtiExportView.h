@@ -15,6 +15,7 @@
 #include "NVBViewController.h"
 #include <QListWidget>
 #include <QFile>
+#include "NVBQtiTableDialog.h"
 #if QT_VERSION >= 0x040300
   #include <QMdiSubWindow>
 #endif
@@ -33,6 +34,7 @@ class NVBQtiExportView : public QWidget, public NVBViewController
 private:
   QFile * qti_file;
   QListWidget * list;
+	NVBQtiTableDialog dialog;
 //   QLineEdit * c_line;
 
 public:
@@ -46,7 +48,7 @@ public:
 
   virtual void setVisualizer(NVBVizUnion ) {;}
   virtual void addControlWidget(QWidget * ) {;}
-  virtual void setActiveVisualizer(NVBVizUnion ) {;};
+	virtual void setActiveVisualizer(NVBVizUnion ) {;}
 
 /*
   virtual void addControlWidget(QWidget * widget) =0;
