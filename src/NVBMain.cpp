@@ -260,6 +260,9 @@ void NVBMain::createMenus( )
 	fileTools->addAction( fileBrowseAction );
 
 
+	winMenu = menuBar()->addMenu(QString("&Window"));
+	connect(winMenu, SIGNAL(aboutToShow()), this, SLOT(updateWindowMenu()));
+
 #ifdef NVB_ENABLE_LOG
 	helpLogAction = new QAction("&Log", this);
 	connect( helpLogAction, SIGNAL( triggered() ), log, SLOT( show() ) );
@@ -301,6 +304,49 @@ void NVBMain::createMenus( )
 		connect(this,SIGNAL(pageTypeChanged(NVB::PageType)),tBar,SLOT(switchPageType(NVB::PageType)));
 		connect(this,SIGNAL(viewTypeChanged(NVB::ViewType)),tBar,SLOT(switchViewType(NVB::ViewType)));
 		}
+
+}
+
+void NVBMain::updateWindowMenu()
+{
+	winMenu->clear();
+//	winMenu->addAction(closeAct);
+//	winMenu->addAction(closeAllAct);
+//	winMenu->addSeparator();
+//	winMenu->addAction(tileAct);
+//	winMenu->addAction(cascadeAct);
+//	winMenu->addSeparator();
+//	winMenu->addAction(nextAct);
+//	winMenu->addAction(previousAct);
+//	winMenu->addAction(separatorAct);
+
+	foreach(QMdiSubWindow* w, workspace->subWindowList()) {
+		QAction *action  = winMenu->addAction(w->windowTitle());
+		action->setCheckable(true);
+		action->setChecked(w == workspace->activeSubWindow());
+		action->setData(qVariantFromValue(qobject_cast<QWidget*>(w)));
+		connect(action, SIGNAL(triggered()), this, SLOT(activateSubWindow()));
+//		windowMapper->setMapping(action, w);
+	}
+}
+
+void NVBMain::activateSubWindow()
+{
+	QAction * a = qobject_cast<QAction*>(sender());
+	if (!a) return;
+	QMdiSubWindow * w = qobject_cast<QMdiSubWindow*>(a->data().value<QWidget*>());
+	if (!w) return;
+
+//	if (!(w->widget()))
+//		delete w;
+//		return;
+
+//	w->widget()->show();
+	w->show();
+	w->raise();
+	workspace->setActiveSubWindow(w);
+	if (!(workspace->rect().contains(w->frameGeometry())))
+		w->move(0,0);
 
 }
 

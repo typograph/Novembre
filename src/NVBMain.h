@@ -119,7 +119,7 @@ private:
 #else
 	QWorkspace * workspace;
 #endif
-	QMenu *fileMenu, *editMenu, *topoMenu, *specMenu, *helpMenu;
+	QMenu *fileMenu, *editMenu, *topoMenu, *specMenu, *helpMenu, *winMenu;
 	QToolBar *fileTools, *editTools, *topoTools, *specTools;
 
 	/// File factory to load files
@@ -192,6 +192,11 @@ private slots:
 	void redirectAction( QAction * );
 	/// When a different window is activated, this method notifies the actions that the page type changed
 	void actualizeCurrentPage(NVBDataSource * );
+
+	/// When the list of windows is requested, this method updates the list
+	void updateWindowMenu();
+	/// Raises the window to the top, activates it and checks if it is visible
+	void activateSubWindow();
 
 	/// Gets called when user switched between window, and emits viewTypeChanged.
 #if QT_VERSION >= 0x040300
