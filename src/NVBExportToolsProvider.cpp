@@ -76,6 +76,7 @@ void NVBExportToolsProvider::activateDelegate(quint16 delegateID, NVBDataSource 
       break;
       }
     case 0x5171 : { // 'Qp'
+			if (source->type() != NVB::SpecPage) break;
       if (!qtiwnd) {     
 				QString filename = source->owner->sources().name() + ".qti";
         filename = QFileDialog::getSaveFileName ( 0, "QtiPlot Project", exportPath +filename, "Qtiplot files (*.qti);;All files (*)");
