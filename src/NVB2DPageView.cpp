@@ -2,6 +2,7 @@
 #include <QIcon>
 #include <QFileDialog>
 #include <QImageWriter>
+#include <QMessageBox>
 #include "../icons/icons_2Dview.xpm"
 
 NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsView(parent),keepRatio(true),activeFilter(0),vizmodel(model),currentIndex(-1),activeViz(NVBVizUnion())
@@ -457,20 +458,27 @@ void NVB2DPageView::deactivateFilter()
 void NVB2DPageView::exportImage( )
 {
   QStringList sl;
+	sl << "All files (*.*)";
   foreach (QByteArray b, QImageWriter::supportedImageFormats()) {
     QString a(b);
     sl << a.toUpper() + " files (*." + a + ")";
     };
 
-  QString filename = QFileDialog::getSaveFileName( 0, "Export image", QString(), sl.join(";;"));
-  
+	QString selected = "All files (*.*)";
+	QString filename = QFileDialog::getSaveFileName( 0, "Export image", QString(), sl.join(";;"),&selected);
+
   if (filename.isEmpty()) return;
   
   QImage i(1024,1024,QImage::Format_RGB32);
   QPainter p(&i);
-  scene()->render(&p);
-  p.end();
-  i.save(filename);
+	scene()->render(&p,QRectF(),sceneRect());
+	p.end();
+	if (i.save(filename)) return;
+	int ix = sl.indexOf(selected);
+	if (ix > 0 && i.save(filename + '.' + QImageWriter::supportedImageFormats().at(ix-1))) return;
+
+	QMessageBox::warning(this,"Image export failed","Couldn't save " + filename);
+
 }
 
 void NVB2DPageView::rebuildRect( )
