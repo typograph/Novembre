@@ -189,12 +189,14 @@ void NVBDoubleListView::setCurrentTopIndex(const QModelIndex & index)
 
 NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, const QModelIndex & index, NVBFile * model, NVB::ViewType stateMode)
 #if QT_VERSION >= 0x040300
-  : QMdiSubWindow(area->newWindowParentWidget())
+	: QMdiSubWindow(area->newWindowParentWidget())
 #else
-  : QFrame(area->newWindowParentWidget())
+	: QFrame(area->newWindowParentWidget())
 #endif
   , NVBViewController(area),file(model),view(0)
 {
+	setAttribute(Qt::WA_DeleteOnClose);
+
   tools = qApp->property("toolsFactory").value<NVBToolsFactory*>();
 
   NVBDataSource * page = NVBToolsFactory::hardlinkDataSource(index.data(PageRole).value<NVBDataSource*>());
@@ -222,12 +224,14 @@ NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, const QModelIndex & index, 
 
 NVBFileWindow::NVBFileWindow( NVBWorkingArea * area, NVBDataSource * page, NVB::ViewType stateMode, NVBVizUnion viz)
 #if QT_VERSION >= 0x040300
-  : QMdiSubWindow(area->newWindowParentWidget())
+	: QMdiSubWindow(area->newWindowParentWidget())
 #else
-  : QFrame(parent)
+	: QFrame(parent)
 #endif
   , NVBViewController(area),file(0),view(0)
 {
+	setAttribute(Qt::WA_DeleteOnClose);
+
   tools = qApp->property("toolsFactory").value<NVBToolsFactory*>();
 
 	if (page->owner)
