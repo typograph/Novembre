@@ -371,6 +371,13 @@ void NVBMain::addWindow(QWidget * window)
 	NVBFileWindow * w = qobject_cast<NVBFileWindow*>(window);
 	if (w) {
 		connect(w,SIGNAL(pageSelected(NVB::PageType)),this,SIGNAL(pageTypeChanged(NVB::PageType)));
+		switch(w->viewType()) {
+			case NVB::GraphView :
+				w->resize(700,400);
+				break;
+			default:
+				w->resize(300,300);
+			}
 		}
 
 	if (fileBrowser) fileBrowser->lower();
