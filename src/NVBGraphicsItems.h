@@ -23,7 +23,6 @@ QTransform invertQTransform(const QTransform & t);
 class NVBFullGraphicsItem : public QGraphicsItem {
 private :
 //  QGraphicsItem ** subcontrol;
-		bool paintSizeMarker;
 public :
   NVBFullGraphicsItem();
   virtual ~NVBFullGraphicsItem() {;}
@@ -36,9 +35,7 @@ public :
 		protect = false;
 		return rect;
 		}
-  virtual void paint ( QPainter * , const QStyleOptionGraphicsItem * , QWidget *  = 0 );
-
-	void showSizeMarker(bool show = true) { paintSizeMarker = show; }
+	virtual void paint ( QPainter * , const QStyleOptionGraphicsItem * , QWidget *  = 0 );
 
 protected :
   virtual bool sceneEvent ( QEvent * event );

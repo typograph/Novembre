@@ -18,8 +18,9 @@ Q_OBJECT
 private:
 
 /*  bool dragging;
-  QPoint dragStart;
-  bool zooming;*/
+	QPoint dragStart;*/
+	bool paintSizeMarker;
+	bool zooming;
   bool keepRatio;
   QGraphicsItem * activeFilter;
   NVBFullGraphicsItem * eventCatcher;
@@ -31,6 +32,7 @@ private:
   NVBVizUnion activeViz ;
   bool externalVizActive;
   QRectF itemsRect; // the actual bounding rect of all pages in the scene
+	QRectF zoomRect;  // the rect we plan to show
 /*
   NVB2DViewDelegate * topoDlg;
   NVB2DSpecViewDelegate * specDlg;
@@ -93,7 +95,7 @@ public:
 public slots :
   void select( const QModelIndex & index);
   void setActiveVisualizer( NVBVizUnion, const QModelIndex & );
-	void setShowMarker(bool show);
+	void setShowMarker(bool show) { paintSizeMarker = show; viewport()->update(); }
 
 /// Connect to this slot to tell the view the active visualizer is not needed.
 /// Delete the visualizer afterwards
@@ -102,7 +104,7 @@ public slots :
   void exportImage();
 //   void setMouseCursor(const QCursor & cursor);
 //  void enableZooming();
-//   void setZooming(bool _zooming) {zooming = _zooming;}
+	void setZooming(bool _zooming) {zooming = _zooming;}
 //   void setCarefulZooming(bool _keepRatio) { keepRatio = _keepRatio; }
 //   void setShowTicks(bool _showTicks) { showTicks = _showTicks; update(); }
 	/// Swaps graphic items at row1 and row2
@@ -111,6 +113,9 @@ public slots :
 protected :
 //   QRectF visibleArea();
 //  void drawTicks(QPainter * painter);
+	virtual void paintEvent ( QPaintEvent * event );
+
+	virtual void wheelEvent( QWheelEvent *event );
 
   virtual void resizeEvent ( QResizeEvent * event );
   virtual void keyReleaseEvent ( QKeyEvent * event );
