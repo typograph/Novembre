@@ -13,7 +13,7 @@
 #include "NVBIconVizDelegates.h"
 #include "NVBContColoring.h"
 
-QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page) {
+QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page, const QSize & size = QSize()) {
 	const double * pdata = page->getData();
 
 	double xnorm = 0, ynorm = 0;
@@ -44,7 +44,7 @@ QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page) {
 	NVBRescaleColorModel * rm = new NVBRescaleColorModel(page->getColorModel());
 	rm->setLimits(zmin,zmax);
 
-	QImage * i = dynamic_cast<NVBContColorModel*>(rm)->colorize( ndata , page->resolution() );
+	QImage * i = dynamic_cast<NVBContColorModel*>(rm)->colorize( ndata , page->resolution(), size );
 	delete rm;
 	free(ndata);
 	return i;
@@ -54,15 +54,26 @@ NVBTopoIconDelegate::NVBTopoIconDelegate(NVBDataSource * source):NVBIconVizDeleg
 {
 	if (source->type() != NVB::TopoPage)
 		NVBOutputError("Not a topography page");
-
-	setSource(source);
+	else {
+		cache = new QImage();
+		setSource(source);
+	}
 }
 
-void NVBTopoIconDelegate::redrawCache()
+void NVBTopoIconDelegate::paint(QPainter * painter, const QRect & rect, QIcon::Mode mode, QIcon::State state)
+{
+	if (cache)
+		if (rect.size().width() > cache->size().width() || rect.size().height() > cache->size().height())
+			if (cache->size().width() < page->resolution().width() || cache->size().height() < page->resolution().height())
+				redrawCache(QSize(qMin(rect.size().width(),page->resolution().width()),qMin(rect.size().height(),page->resolution().height())));
+	NVBIconVizDelegate::paint(painter, rect, mode, state);
+}
+
+void NVBTopoIconDelegate::redrawCache(const QSize & size)
 {
 	if (!page) return;
   if (cache) delete cache;
-	cache = colorizeWithPlaneSubtraction(page);
+	cache = colorizeWithPlaneSubtraction(page,size);
 }
 
 void NVBTopoIconDelegate::setSource(NVBDataSource * source)

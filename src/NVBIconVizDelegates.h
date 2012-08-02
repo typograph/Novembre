@@ -76,8 +76,13 @@ private:
 public:
   NVBTopoIconDelegate(NVBDataSource * source);
   virtual ~NVBTopoIconDelegate() {;}
+	virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State state);
 protected slots:
-  virtual void redrawCache();
+	virtual void redrawCache(const QSize & size);
+	virtual void redrawCache() {
+		if (cache)
+			redrawCache(cache->size());
+		}
 public slots:
   virtual void setSource( NVBDataSource * );
 };
