@@ -41,7 +41,7 @@ const char * _2Dview_marker[] = {
 "                                "
 };
 
-const char * _2Dview_zoom[] = {
+const char * _2Dview_zoomlock[] = {
 /* columns rows colors chars-per-pixel */
 "32 32 4 1",
 "  c None",
@@ -213,3 +213,45 @@ const char * _2Dview_export[] = {
 " XXXXXXXXXXXXXXXXXXXXXXXXX      ",
 "                                "
 };
+
+const char * _2Dview_zoom[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 3 1",
+"  c None",
+". c gray50",
+"X c black",
+/* pixels */
+"                                ",
+"                                ",
+"             XXXXXX             ",
+"           XX......XX           ",
+"        X..          ..X        ",
+"      X..              ..X      ",
+"      .                  .      ",
+"     X                   .X     ",
+"     .                    .     ",
+"    X                     .X    ",
+"    .                      .    ",
+"    X                      X    ",
+"    X                      X    ",
+"   X.                      .X   ",
+"   X.                      .X   ",
+"   X.                      .X   ",
+"   X.                      .X   ",
+"   X.                      .X   ",
+"   X.                      .X   ",
+"    X                      X    ",
+"    X                      X    ",
+"    .                      .    ",
+"    X.                     X    ",
+"     .                    .     ",
+"     X                    X     ",
+"      .                  XX     ",
+"      X                 XXXX    ",
+"       X..           ..X  XXX   ",
+"           XX......XX      XXX  ",
+"             XXXXXX         XXX ",
+"                             XX ",
+"                                "
+};
+

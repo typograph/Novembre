@@ -3,9 +3,10 @@
 #include <QFileDialog>
 #include <QImageWriter>
 #include <QMessageBox>
+#include "NVBDimension.h"
 #include "../icons/icons_2Dview.xpm"
 
-NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsView(parent),keepRatio(true),activeFilter(0),vizmodel(model),currentIndex(-1),activeViz(NVBVizUnion())
+NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsView(parent),paintSizeMarker(false),zooming(false),keepRatio(true),activeFilter(0),vizmodel(model),currentIndex(-1),activeViz(NVBVizUnion())
 {
 //  connect(this,SIGNAL(scalerChanged(Q2DScaler*)),&debugger,SLOT(printScalerInfo(Q2DScaler*)));
 //  connect(this,SIGNAL(scalerChanged(Q2DScaler*)),this,SLOT(normalizeScaler()));
@@ -19,6 +20,7 @@ NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsVie
   theScene->addItem(eventCatcher = new NVBFullGraphicsItem());
   eventCatcher->setVisible(true);
 
+	zoomRect = QRectF(); //theScene->itemsBoundingRect();
 //   connect(theScene,SIGNAL(changed(const QList<QRectF> &)),SLOT(checkForDesactivatedVizs()));
   connect(theScene,SIGNAL(changed(const QList<QRectF> &)),SLOT(rebuildRect()));
 
@@ -36,12 +38,9 @@ NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsVie
   connect(vizmodel,SIGNAL(dataChanged(const QModelIndex&,const QModelIndex&)),SLOT(updateVizs(const QModelIndex&,const QModelIndex&)));
   connect(vizmodel,SIGNAL(itemsSwapped(int,int)),SLOT(swapItems(int,int)));
 
-//  setGeometry(QRect(geometry().topLeft(),QSize(400,400)));
-//  setMinimumSize(QSize(64,64));
   QSizePolicy sp(QSizePolicy::Expanding,QSizePolicy::Expanding);
   sp.setHeightForWidth(true);
   setSizePolicy(sp);
-  resize(256,256);
 /*  zooming = false;
   keepRatio = true;
   showTicks = false;
@@ -73,10 +72,6 @@ QToolBar * NVB2DPageView::generateToolbar(QWidget * parent) const
   QAction * act;
   
 /*
-  act = tBar->addAction(QIcon(_2Dview_zoom),"Zoom view with window",this,SLOT(setZooming(bool)));
-  act->setCheckable(true);
-  act->setChecked(zooming);
-  
   act = tBar->addAction(QIcon(_2Dview_keepar),"Keep aspect ratio",this,SLOT(setCarefulZooming(bool)));
   act->setCheckable(true);
   act->setChecked(keepRatio);
@@ -93,20 +88,86 @@ QToolBar * NVB2DPageView::generateToolbar(QWidget * parent) const
 	act->setCheckable(true);
 	act->setChecked(false);
 
+	act = tBar->addAction(QIcon(_2Dview_zoom),"Zoom view on ctrl+wheel, scroll with wheel",this,SLOT(setZooming(bool)));
+	act->setCheckable(true);
+	act->setChecked(zooming);
+
   return tBar;
 }
 
-void NVB2DPageView::setShowMarker(bool show) {
-	if (eventCatcher) {
-		eventCatcher->showSizeMarker(show);
-		if (scene()) scene()->update();
-		}
+//void NVB2DPageView::setShowMarker(bool show) {
+//	if (eventCatcher) {
+//		eventCatcher->showSizeMarker(show);
+//		if (scene()) scene()->update();
+//		}
+//}
+
+void NVB2DPageView::paintEvent ( QPaintEvent * event ) {
+
+	QGraphicsView::paintEvent(event);
+
+	if (paintSizeMarker) {
+		QPainter painter(viewport());
+
+		// We suppose zooming preserve ratio.
+
+		qreal ww = qMax(fabs(zoomRect.width()),fabs(zoomRect.height()))/5;
+		qreal o = exp10(floor(log10(ww)));
+		qreal w = floor(ww/o);
+
+		qreal ov = mapFromScene(QRectF(0,0,o,o)).boundingRect().width();
+
+		QPen pen(Qt::black);
+		pen.setWidth(2);
+		pen.setDashPattern(QVector<qreal>() << 1 << 3);
+		pen.setDashOffset(0);
+		painter.setPen(pen);
+
+//		QRectF marker = QRectF(zoomRect.right()-w*o*1.5,zoomRect.bottom()-w*o*1.5,w*o,w*o);
+//		QRectF submarker = mapFromScene(QRectF(marker.bottomRight()-QPointF(o/2,o/2),QSizeF(o,o))).boundingRect();
+//		marker = mapFromScene(marker).boundingRect(); // submarker uses marker
+
+		QRectF marker = QRectF(viewport()->width()*0.95-w*ov,viewport()->height()*0.95-w*ov,w*ov,w*ov);
+		QRectF submarker = QRectF(marker.bottomRight()-QPointF(ov/2,ov/2),QSizeF(ov,ov));
+
+		painter.drawRect(marker);
+		if (w > 1) painter.drawRect(submarker);
+
+		pen.setDashOffset(2);
+		pen.setColor(Qt::white);
+		painter.setPen(pen);
+		painter.drawRect(marker);
+		if (w > 1) painter.drawRect(submarker);
+
+		pen.setWidth(0);
+		pen.setColor(Qt::black);
+		pen.setStyle(Qt::SolidLine);
+		painter.setPen(pen);
+		painter.setBrush(Qt::white);
+
+		QPainterPath path;
+		QFont f = this->font();
+		f.setPixelSize(marker.width()/5);
+		path.addText(0, 0, f, NVBPhysValue(w*o,NVBDimension("m")).toString(-1,1,1)); // QString::number(w,'f',0)
+
+		// Align to center
+		QRectF text = path.boundingRect();
+		qreal m11 = marker.width()/text.width();
+		qreal m22 = marker.height()/text.height();
+		qreal m = qMin(m11,m22)/1.2;
+		qreal dx = marker.center().x()-m*text.center().x();
+		qreal dy = marker.center().y()-m*text.center().y();
+		painter.setTransform(QTransform(m,0,0,0,m,0,dx,dy,1));
+		painter.drawPath(path);
+	}
+
+
 }
 
 int NVB2DPageView::heightForWidth(int w) const
 {
   if (keepRatio) {
-    return (int) (w*itemsRect.height()/itemsRect.width());
+		return (int) (w*itemsRect.height()/itemsRect.width());
     }
   else return -1;
 }
@@ -181,10 +242,13 @@ void NVB2DPageView::rowsInserted( const QModelIndex & parent, int start, int end
     if (tmp.valid && tmp.vtype == NVB::TwoDView) {
 			theScene->addItem(tmp.TwoDViz);
 #if QT_VERSION >= 0x040500
-      itemsRect |= tmp.TwoDViz->mapRectToScene(tmp.TwoDViz->boundingRect());
+			QRectF itemSceneRect = tmp.TwoDViz->mapRectToScene(tmp.TwoDViz->boundingRect());
 #else
-      itemsRect |= tmp.TwoDViz->mapToScene(tmp.TwoDViz->boundingRect()).boundingRect();
+			QRectF itemSceneRect = tmp.TwoDViz->mapToScene(tmp.TwoDViz->boundingRect()).boundingRect();
 #endif
+			itemsRect |= itemSceneRect;
+			zoomRect |= itemSceneRect;
+
 //       tmp.TwoDViz->setSelected(false);
 			tmp.TwoDViz->setZValue(-i);
 			}
@@ -249,10 +313,14 @@ QSize NVB2DPageView::sizeHint( ) const
 }
 */
 
+//#include <QDebug>
+
 void NVB2DPageView::autoFocus()
 {
-  fitInView(itemsRect,Qt::KeepAspectRatio);
+	fitInView(zoomRect & itemsRect,Qt::KeepAspectRatio);
 //  fitInView(theScene->itemsBoundingRect(),Qt::KeepAspectRatio);
+//	zoomRect = mapToScene(viewport()->rect()).boundingRect();
+//	qDebug() << zoomRect;
 }
 
 void NVB2DPageView::resizeEvent(QResizeEvent * event)
@@ -493,6 +561,8 @@ void NVB2DPageView::rebuildRect( )
       itemsRect |= tmp.TwoDViz->mapToScene(tmp.TwoDViz->boundingRect()).boundingRect();
 #endif
     }
+	if (!itemsRect.contains(zoomRect))
+		zoomRect = itemsRect;
 }
 
 void NVB2DPageView::swapItems(int row1, int row2)
@@ -504,4 +574,53 @@ void NVB2DPageView::swapItems(int row1, int row2)
 		v1.TwoDViz->setZValue(-row1);
 	if (v2.TwoDViz->zValue() == -row1)
 		v2.TwoDViz->setZValue(-row2);
+}
+
+void NVB2DPageView::wheelEvent(QWheelEvent *event)
+{
+	if (!zooming) {
+		QGraphicsView::wheelEvent(event);
+		return;
+		}
+
+	QRectF newrect = zoomRect;
+
+	if (event->modifiers() & Qt::ControlModifier) { // zoom
+		QPointF stable = mapToScene(event->pos());
+
+		qreal factor = pow(0.9,event->delta()/120.0);
+		qreal newW = newrect.width()*factor;
+		qreal newH = newrect.height()*factor;
+
+		qreal newX = (newrect.x() - stable.x())*factor + stable.x();
+		qreal newY = (newrect.y() - stable.y())*factor + stable.y();
+
+		newrect = QRectF(newX,newY,newW,newH);
+		}
+	else if (event->modifiers() & Qt::ShiftModifier) { // shift h
+		qreal shift = -newrect.width()*0.1*event->delta()/120.0;
+		newrect.moveLeft(newrect.x() + shift);
+		}
+	else { // shift v
+		qreal shift = -newrect.height()*0.1*event->delta()/120.0;
+		newrect.moveTop(newrect.y() + shift);
+		}
+
+ // Correct edges
+	if (newrect.contains(itemsRect))
+		newrect = itemsRect;
+	else if (!itemsRect.contains(newrect)) {
+		if (newrect.x() < itemsRect.x())
+			newrect.moveLeft(itemsRect.x());
+		if (newrect.right() > itemsRect.right())
+			newrect.moveRight(itemsRect.right());
+		if (newrect.y() < itemsRect.y())
+			newrect.moveTop(itemsRect.y());
+		if (newrect.bottom() > itemsRect.bottom())
+			newrect.moveBottom(itemsRect.bottom());
+		}
+
+	zoomRect = newrect;
+	autoFocus();
+
 }
