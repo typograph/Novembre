@@ -5,6 +5,8 @@ CONFIG += qt opengl
 
 QT += opengl
 
+LIBS += -lGLU
+
 # THIS HAS TO WAIT TO WIN32 TESTS
 # win32:CONFIG         += dll exceptions
 # win32:dll:DEFINES    += QT_DLL QWT3D_DLL QWT3D_MAKEDLL
