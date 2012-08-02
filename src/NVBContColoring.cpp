@@ -95,17 +95,17 @@ QRgb NVBHSVWheelContColorModel::colorize( double z ) const
   
     switch( i ) {
       case 0:
-        return 0xFF000000 + (v << 16) + (t << 8) + p; 
+				return 0xFF000000 | (v << 16) | (t << 8) | p;
       case 1:
-        return 0xFF000000 + (q << 16) + (v << 8) + p;
+				return 0xFF000000 | (q << 16) | (v << 8) | p;
       case 2:
-        return 0xFF000000 + (p << 16) + (v << 8) + t;
+				return 0xFF000000 | (p << 16) | (v << 8) | t;
       case 3:
-        return 0xFF000000 + (p << 16) + (q << 8) + v;
+				return 0xFF000000 | (p << 16) | (q << 8) | v;
       case 4:
-        return 0xFF000000 + (t << 16) + (p << 8) + v;
+				return 0xFF000000 | (t << 16) | (p << 8) | v;
       case 5:
-        return 0xFF000000 + (v << 16) + (p << 8) + q; 
+				return 0xFF000000 | (v << 16) | (p << 8) | q;
       default: {
 				NVBOutputError("Color conversion error");
 				NVBOutputError(QString("%1 (%2,%3)\nwas converted to\n(%4->%5) -- your computer is crazy!").arg(z,6).arg(cInfo.z_min).arg(cInfo.z_max).arg(hf,3).arg(i));
