@@ -16,6 +16,7 @@
 #include "NVBContColoring.h"
 
 #include <QHash>
+#include <QPainter>
 
 #if QT_VERSION >= 0x040300
 #include <QIconEngineV2>
