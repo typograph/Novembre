@@ -73,9 +73,11 @@ public slots:
   
   virtual void setSource(NVBDataSource * source);
 
-  void moveYtoZero();
-  void moveXtoZero();
-  void resetShifts();
+	void moveYtoCenterZero();
+	void moveXtoCenterZero();
+	void addBias();
+	void subtractBias();
+	void resetShifts();
 
 private :
   void connectSignals();
@@ -92,6 +94,8 @@ signals:
   void delegateReset();
   void smashY();
   void smashX();
+	void subtractBias();
+	void addBias();
 };
 
 #endif
