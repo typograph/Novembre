@@ -41,6 +41,16 @@ void NVBCurveBunch::clear()
   while(!curves.isEmpty()) delete curves.takeFirst();
 }
 
+void NVBCurveBunch::recalculateRect()
+{
+	rect = QRectF();
+	if (!curves.empty())
+		rect = curves.first()->boundingRect();
+
+	foreach(QwtPlotCurve* c,curves)
+		rect = rect.united(c->boundingRect());
+}
+
 NVBCurveBunch::~ NVBCurveBunch()
 {
   clear();
@@ -48,11 +58,19 @@ NVBCurveBunch::~ NVBCurveBunch()
 
 NVBCurveVizDelegate::NVBCurveVizDelegate(NVBDataSource * source):QObject(),NVBCurveBunch(),page(0)
 {
+//	connect(this,SIGNAL(dataChanged()),this,SLOT(recalculateRect()));
   setSource(source);
 }
 
 NVBCurveVizDelegate::~ NVBCurveVizDelegate()
 {
+}
+
+void NVBCurveVizDelegate::refresh()
+{
+	recalculateRect();
+	itemChanged();
+	emit dataChanged();
 }
 
 NVBVizUnion NVBCurveVizDelegate::getVizItem()
@@ -129,6 +147,7 @@ void NVBCurveVizDelegate::generateCurves()
     addCurveFromData(arrays.at(i),colors.at(i));
 
   itemChanged();
+	emit dataChanged();
 
 //  if (plot() && !plot()->autoReplot()) plot()->replot();
 }
@@ -142,7 +161,8 @@ void NVBCurveVizDelegate::paintCurves()
     for (int i = 0; i<curves.size(); i++) {
       curves[i]->setPen(QPen(colors.at(i)));
       }
-    itemChanged();
+
+		itemChanged();
 //    if (plot()) plot()->replot();
     }
 }
@@ -160,7 +180,7 @@ void NVBCurveVizDelegate::setSource(NVBDataSource * source)
   
     connect(page,SIGNAL(dataAboutToBeChanged()),SLOT(clear()));
     connect(page,SIGNAL(dataAdjusted()),SLOT(refresh()));
-    connect(page,SIGNAL(dataChanged()),SLOT(generateCurves()));
+		connect(page,SIGNAL(dataChanged()),SLOT(generateCurves()));
 //     connect(page,SIGNAL(colorsAboutToBeChanged()),SLOT(parentColorsAboutToBeChanged()));
     connect(page,SIGNAL(colorsAdjusted()),SLOT(paintCurves()));
     connect(page,SIGNAL(colorsChanged()),SLOT(paintCurves()));

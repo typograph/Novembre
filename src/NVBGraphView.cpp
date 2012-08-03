@@ -174,7 +174,18 @@ void NVBGraphView::addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource 
   tmp.GraphViz->attach(plot);
 	tmp.GraphViz->setZ(0);
 
+	connect(dynamic_cast<QObject*>(tmp.GraphViz),SIGNAL(dataChanged()),this,SLOT(rezoom()));
+
 	zoomers[(plotlayout->indexOf(plot))]->setZoomBase(tmp.GraphViz->boundingRect());
+}
+
+void NVBGraphView::rezoom()
+{
+	QwtPlotItem * item = dynamic_cast<QwtPlotItem*>(QObject::sender());
+	if (!item) return;
+	QwtPlotZoomer * z = zoomers[(plotlayout->indexOf(item->plot()))];
+	z->zoom(item->boundingRect());
+	z->setZoomBase(item->boundingRect());
 }
 
 void NVBPhysScaleDraw::updateMultiplier()
