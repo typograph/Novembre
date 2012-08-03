@@ -188,11 +188,11 @@ bool NVBApplication::notify( QObject * receiver, QEvent * event )
 void NVBApplication::message(NVB::LogEntryType type, QString issuer, QString text)
 {
   if (type == NVB::CriticalErrorEntry)
-    QMessageBox::critical(0,issuer,text);
+		QMessageBox::critical(0,issuer,text);
   else if (type == NVB::ErrorEntry)
-    qDebug() << issuer << "->" << text;
+		qDebug() << issuer << "->" << text;
   else if (type == NVB::DebugEntry)
-    qDebug() << text;
+		qDebug() << issuer << ":" << text;
 }
 #endif
 
