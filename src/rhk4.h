@@ -297,6 +297,8 @@ Q_OBJECT
 Q_INTERFACES(NVBFileGenerator);
 
 private:
+	bool subtractBias;
+
 	static RHKObject * loadObjectList(QFile & file, quint32 object_count);
 	static QString loadRHKString(QFile & file);
 	static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
@@ -316,7 +318,7 @@ private:
   friend class RHK4SpecPage;
 
 public:
-  RHK4FileGenerator():NVBFileGenerator() {;}
+	RHK4FileGenerator();
   virtual ~RHK4FileGenerator() {;}
 
 	virtual inline QString moduleName() const { return QString("RHK XPMPro2 files");}
@@ -357,7 +359,7 @@ protected:
   double * ys;
   double * xs;
 public:
-	RHK4SpecPage(RHKPageIndex * index, QFile & file);
+	RHK4SpecPage(RHKPageIndex * index, QFile & file, bool subtractBias = false);
   virtual ~RHK4SpecPage();
 public slots:
   virtual void commit() {;}

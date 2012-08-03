@@ -23,6 +23,7 @@
 #include "NVBFile.h"
 #include "rhk4.h"
 #include "NVBLogger.h"
+#include <QSettings>
 
 QStringList RHK4FileGenerator::availableInfoFields() const {
     return QStringList() \
@@ -48,6 +49,11 @@ QStringList RHK4FileGenerator::availableInfoFields() const {
             ;
 }
 
+RHK4FileGenerator::RHK4FileGenerator()
+	: NVBFileGenerator()
+{
+	subtractBias = qApp->property("NVBSettings").value<QSettings*>()->value("Plugins/RHK-SUBTRACT-BIAS",false).toBool();
+}
 
 NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
@@ -103,7 +109,7 @@ NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const
 				f->addSource(new RHK4TopoPage(pi,file));
 				break;
 			case 1:
-				f->addSource(new RHK4SpecPage(pi,file));
+				f->addSource(new RHK4SpecPage(pi,file,subtractBias));
 				break;
 			default:
 				NVBOutputError(QString("%1 : data type unsupported").arg(getPageTypeString(pi->page_data_type)));
@@ -425,7 +431,7 @@ RHK4TopoPage::RHK4TopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 		}
 }
 
-RHK4SpecPage::RHK4SpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
+RHK4SpecPage::RHK4SpecPage(RHKPageIndex * index, QFile & file, bool subtractBias):NVBSpecPage()
 {
 	RHKPageHeader header;
 	RHKObject * data_obj = 0;
@@ -545,19 +551,15 @@ RHK4SpecPage::RHK4SpecPage(RHKPageIndex * index, QFile & file):NVBSpecPage()
 
   xs = (double*)calloc(sizeof(double),header.x_size);
   if (header.x_scale > 0)
-    for (int i = 0; i<header.x_size; i++)
-#ifdef RHK_SUBSTRACT_BIAS
-      xs[i] = header.x_offset+i*header.x_scale+header.bias;
-#else      
-      xs[i] = header.x_offset+i*header.x_scale;
-#endif
+		for (int i = 0; i<header.x_size; i++)
+			xs[i] = header.x_offset+i*header.x_scale;
   else
-    for (int i = 0; i<header.x_size; i++)
-#ifdef RHK_SUBSTRACT_BIAS
-      xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale+header.bias;
-#else      
-      xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale;
-#endif
+		for (int i = 0; i<header.x_size; i++)
+			xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale;
+
+	if (subtractBias)
+		for (int i = 0; i<header.x_size; i++)
+			xs[i]+=header.bias;
 
   ys = (double*)calloc(sizeof(double),header.x_size*header.y_size);
 	file.seek(data_obj->offset);

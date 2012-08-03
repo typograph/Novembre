@@ -124,7 +124,10 @@ Q_OBJECT
 Q_INTERFACES(NVBFileGenerator);
 
 private:
-  static NVBDataSource * loadNextPage(QFile & file);
+
+	bool subtractBias;
+
+	NVBDataSource * loadNextPage(QFile & file) const;
   static TRHKHeader getRHKHeader(QFile & file);
   static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
   static QString getPageTypeString(qint32 type);
@@ -138,7 +141,7 @@ private:
   friend class RHKSpecPage;
 
 public:
-  RHKFileGenerator():NVBFileGenerator() {;}
+	RHKFileGenerator();
   virtual ~RHKFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("RHK XPMPro files");}
@@ -179,7 +182,7 @@ protected:
   double * ys;
   double * xs;
 public:
-  RHKSpecPage(QFile & file);
+	RHKSpecPage(QFile & file, bool subtractBias = false);
   virtual ~RHKSpecPage();
 public slots:
   virtual void commit() {;}

@@ -98,6 +98,11 @@ QStringList RHKFileGenerator::availableInfoFields() const {
             ;
 }
 
+RHKFileGenerator::RHKFileGenerator()
+	: NVBFileGenerator()
+{
+	subtractBias = qApp->property("NVBSettings").value<QSettings*>()->value("Plugins/RHK-SUBTRACT-BIAS",false).toBool();
+}
 
 NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const throw()
 {
@@ -265,7 +270,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   return fi;
 }
 
-NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file)
+NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file) const
 {
   const char MAGIC[] = {  0x53, 0x00,
   0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
@@ -287,7 +292,7 @@ NVBDataSource * RHKFileGenerator::loadNextPage(QFile & file)
       }
     case 1 : {
 			NVBOutputVPMsg("Spectroscopy page found");
-      return new RHKSpecPage(file);
+			return new RHKSpecPage(file,subtractBias);
       }
     case 3 : {
 			NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
@@ -398,7 +403,7 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
     }
 }
 
-RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
+RHKSpecPage::RHKSpecPage(QFile & file, bool subtractBias):NVBSpecPage()
 {
   
   header = RHKFileGenerator::getRHKHeader(file);
@@ -454,19 +459,15 @@ RHKSpecPage::RHKSpecPage(QFile & file):NVBSpecPage()
 
   xs = (double*)calloc(sizeof(double),header.x_size);
   if (header.x_scale > 0)
-    for (int i = 0; i<header.x_size; i++)
-#ifdef RHK_SUBSTRACT_BIAS
-      xs[i] = header.x_offset+i*header.x_scale+header.bias;
-#else      
-      xs[i] = header.x_offset+i*header.x_scale;
-#endif
+		for (int i = 0; i<header.x_size; i++)
+			xs[i] = header.x_offset+i*header.x_scale;
   else
-    for (int i = 0; i<header.x_size; i++)
-#ifdef RHK_SUBSTRACT_BIAS
-      xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale+header.bias;
-#else      
-      xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale;
-#endif
+		for (int i = 0; i<header.x_size; i++)
+			xs[i] = header.x_offset+(header.x_size-1-i)*header.x_scale;
+
+	if (subtractBias)
+		for (int i = 0; i<header.x_size; i++)
+			xs[i] += header.bias;
 
   ys = (double*)calloc(sizeof(double),header.x_size*header.y_size);
   switch (header.line_type) {
