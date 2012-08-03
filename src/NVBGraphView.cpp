@@ -93,9 +93,8 @@ void NVBGraphView::rowsInserted(const QModelIndex & parent, int start, int end)
     
     grid->attach(plot);
 
-		QwtPlotZoomer * zoomer = new QwtPlotZoomer(plot->canvas());
+		NVBPlotZoomer * zoomer = new NVBPlotZoomer(plot->canvas());
 		zoomer->setEnabled(d_active_zoom);
-		connect(zoomer,SIGNAL(zoomed(QwtDoubleRect)),this,SLOT(deactivateZoom()));
 		zoomers.prepend(zoomer);
 
 		NVBVizUnion tmp = vizmodel->index(i).data(PageVizItemRole).value<NVBVizUnion>();
@@ -137,9 +136,9 @@ QToolBar * NVBGraphView::generateToolbar(QWidget * parent) const
   connect(act,SIGNAL(toggled(bool)),this,SLOT(showGrid(bool)));  
 
 	act = tBar->addAction(QIcon(_Gview_zoom),"Zoom");
-//  act->setCheckable(false);
-//  act->setChecked(false);
-	connect(act,SIGNAL(triggered()),this,SLOT(activateZoom()));
+	act->setCheckable(true);
+	act->setChecked(false);
+	connect(act,SIGNAL(toggled(bool)),this,SLOT(activateZoom(bool)));
 
 	return tBar;
 }
@@ -173,19 +172,6 @@ void NVBGraphView::addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource 
 //   tmp.GraphViz->setItemAttribute(QwtPlotItem::AutoScale);
   tmp.GraphViz->attach(plot);
 	tmp.GraphViz->setZ(0);
-
-	connect(dynamic_cast<QObject*>(tmp.GraphViz),SIGNAL(dataChanged()),this,SLOT(rezoom()));
-
-	zoomers[(plotlayout->indexOf(plot))]->setZoomBase(tmp.GraphViz->boundingRect());
-}
-
-void NVBGraphView::rezoom()
-{
-	QwtPlotItem * item = dynamic_cast<QwtPlotItem*>(QObject::sender());
-	if (!item) return;
-	QwtPlotZoomer * z = zoomers[(plotlayout->indexOf(item->plot()))];
-	z->zoom(item->boundingRect());
-	z->setZoomBase(item->boundingRect());
 }
 
 void NVBPhysScaleDraw::updateMultiplier()
@@ -315,22 +301,12 @@ void NVBGraphView::showGrid( bool gshow )
   d_show_grids = gshow;
 }
 
-void NVBGraphView::activateZoom() {
-	if (d_active_zoom) return;
+void NVBGraphView::activateZoom(bool zoom) {
+	if (d_active_zoom == zoom) return;
 
-	foreach(QwtPlotZoomer * z, zoomers) {
-		z->setEnabled(true);
+	foreach(NVBPlotZoomer * z, zoomers) {
+		z->setEnabled(zoom);
 		}
 
-	d_active_zoom = true;
-}
-
-void NVBGraphView::deactivateZoom() {
-	if (!d_active_zoom) return;
-
-	foreach(QwtPlotZoomer * z, zoomers) {
-		z->setEnabled(false);
-		}
-
-	d_active_zoom = false;
+	d_active_zoom = zoom;
 }

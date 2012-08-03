@@ -64,8 +64,6 @@ public :
   virtual NVBVizUnion getVizItem();
 public slots:
   virtual void setSource( NVBDataSource * );
-signals:
-	void dataChanged();
 };
 
 // /**

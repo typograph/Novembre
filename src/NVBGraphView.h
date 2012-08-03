@@ -18,6 +18,7 @@
 #include "NVBDataView.h"
 #include "NVBPageViewModel.h"
 #include "NVBVizModel.h"
+#include "NVBPlotZoomer.h"
 #include <qwt_plot.h>
 #include <qwt_plot_item.h>
 #include <qwt_plot_grid.h>
@@ -25,7 +26,6 @@
 #include <qwt_scale_draw.h>
 #include <qwt_scale_widget.h>
 #include <qwt_scale_engine.h>
-#include <qwt_plot_zoomer.h>
 
 /*
 class NVBNarrowLinearScaleEngine : public QwtLinearScaleEngine {
@@ -85,7 +85,7 @@ private:
 
   QList<NVBVizUnion> supraVizs;
   QList<QwtPlotGrid*> grids;
-	QList<QwtPlotZoomer*> zoomers;
+	QList<NVBPlotZoomer*> zoomers;
 
   QwtPlot * plotAt(int row);
 
@@ -107,8 +107,7 @@ public:
 public slots:
   void setActiveVisualizer( NVBVizUnion viz, const QModelIndex & index);
   void showGrid(bool);
-	void activateZoom();
-	void deactivateZoom();
+	void activateZoom(bool);
 	void swapItems(int row1, int row2);
 	
 protected slots:
@@ -117,7 +116,6 @@ protected slots:
   virtual void rowsAboutToBeRemoved ( const QModelIndex & parent, int start, int end );
   virtual void rowsInserted ( const QModelIndex & parent, int start, int end );
   void updateVizs(const QModelIndex& start, const QModelIndex& end);
-	void rezoom();
 
 signals : 
   void activeVisualizerDeactivated();

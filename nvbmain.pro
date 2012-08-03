@@ -100,8 +100,10 @@ contains(CONFIG,NVB2DView){
 
 contains(CONFIG,NVBGraphView){
 	HEADERS += \
+		src/NVBPlotZoomer.h \
 		src/NVBGraphView.h
 	SOURCES += \
+		src/NVBPlotZoomer.cpp \
 		src/NVBGraphView.cpp
 }
 
@@ -186,3 +188,5 @@ contains(CONFIG,NVBStatic) {
 target.path = $$NVB_BIN_INSTALL_PATH
 
 INSTALLS += target
+
+

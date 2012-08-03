@@ -58,7 +58,6 @@ NVBCurveBunch::~ NVBCurveBunch()
 
 NVBCurveVizDelegate::NVBCurveVizDelegate(NVBDataSource * source):QObject(),NVBCurveBunch(),page(0)
 {
-//	connect(this,SIGNAL(dataChanged()),this,SLOT(recalculateRect()));
   setSource(source);
 }
 
@@ -70,7 +69,6 @@ void NVBCurveVizDelegate::refresh()
 {
 	recalculateRect();
 	itemChanged();
-	emit dataChanged();
 }
 
 NVBVizUnion NVBCurveVizDelegate::getVizItem()
@@ -147,7 +145,6 @@ void NVBCurveVizDelegate::generateCurves()
     addCurveFromData(arrays.at(i),colors.at(i));
 
   itemChanged();
-	emit dataChanged();
 
 //  if (plot() && !plot()->autoReplot()) plot()->replot();
 }
