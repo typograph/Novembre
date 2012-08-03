@@ -96,15 +96,28 @@ NVBSpecShiftWidget::NVBSpecShiftWidget( QWidget * parent ):QWidget(parent)
   
 //   NVBDimensionedSpinBox * sb = new NVBDimensionedSpinBox();
   
-  QPushButton * btn = new QPushButton("y -> 0",this);
+	QPushButton * btn = new QPushButton("y -> y(0) = 0",this);
   connect(btn,SIGNAL(clicked(bool)),this,SIGNAL(smashY()));
   
   l->addWidget(btn);
   
-  btn = new QPushButton("x -> 0",this);
+	btn = new QPushButton("x -> y(0) = 0",this);
   connect(btn,SIGNAL(clicked(bool)),this,SIGNAL(smashX()));
   
   l->addWidget(btn);
+
+	QHBoxLayout * h = new QHBoxLayout();
+	l->addLayout(h);
+
+	btn = new QPushButton("Add bias",this);
+	connect(btn,SIGNAL(clicked(bool)),this,SIGNAL(addBias()));
+
+	h->addWidget(btn);
+
+	btn = new QPushButton("Subtract bias",this);
+	connect(btn,SIGNAL(clicked(bool)),this,SIGNAL(subtractBias()));
+
+	h->addWidget(btn);
 
   btn = new QPushButton("Clear",this);
   connect(btn,SIGNAL(clicked(bool)),this,SIGNAL(delegateReset()));
@@ -143,9 +156,11 @@ QAction * NVBSpecShift::action()
 QWidget * NVBSpecShift::widget()
 {
   NVBSpecShiftWidget * widget = new NVBSpecShiftWidget( );
-  connect(widget,SIGNAL(smashY()),this,SLOT(moveYtoZero()));
-  connect(widget,SIGNAL(smashX()),this,SLOT(moveXtoZero()));
-  connect(widget,SIGNAL(delegateReset()),this,SLOT(resetShifts()));
+	connect(widget,SIGNAL(smashY()),this,SLOT(moveYtoCenterZero()));
+	connect(widget,SIGNAL(smashX()),this,SLOT(moveXtoCenterZero()));
+	connect(widget,SIGNAL(addBias()),this,SLOT(addBias()));
+	connect(widget,SIGNAL(subtractBias()),this,SLOT(subtractBias()));
+	connect(widget,SIGNAL(delegateReset()),this,SLOT(resetShifts()));
 //   connect(widget,SIGNAL(mathModeActivated( int )),SLOT(setMode( int )));
   return widget;
 }
@@ -202,7 +217,7 @@ void NVBSpecShift::buildFData( )
     fdata << new NVBShiftCPtData(d,&xshift,&yshift);
 }
 
-void NVBSpecShift::moveYtoZero( )
+void NVBSpecShift::moveYtoCenterZero( )
 {
   QwtData * fs = sprovider->getData().first();
   double px = fs->x(0);
@@ -217,7 +232,7 @@ void NVBSpecShift::moveYtoZero( )
     }   
 }
 
-void NVBSpecShift::moveXtoZero( )
+void NVBSpecShift::moveXtoCenterZero( )
 {
   QwtData * fs = sprovider->getData().first();
   double py = fs->y(0);
@@ -230,6 +245,22 @@ void NVBSpecShift::moveXtoZero( )
     xshift = - fs->x(i-1) + py*(fs->x(i)-fs->x(i-1))/(fs->y(i)-py);
     emit dataAdjusted();
     }   
+}
+
+void NVBSpecShift::subtractBias()
+{
+	if (sprovider->tDim().isComparableWith(NVBDimension("V")) && sprovider->getComment("Bias").isValid()) {
+		xshift -= sprovider->getComment("Bias").toPhysValue().getValue(sprovider->tDim());
+		emit dataAdjusted();
+	}
+}
+
+void NVBSpecShift::addBias()
+{
+	if (sprovider->tDim().isComparableWith(NVBDimension("V")) && sprovider->getComment("Bias").isValid()) {
+		xshift += sprovider->getComment("Bias").toPhysValue().getValue(sprovider->tDim());
+		emit dataAdjusted();
+	}
 }
 
 void NVBSpecShift::resetShifts( )
