@@ -36,6 +36,8 @@ public:
   virtual void draw (QPainter *painter, const QwtScaleMap &xMap, const QwtScaleMap &yMap, const QRect &canvasRect) const;
   virtual QwtDoubleRect boundingRect() const {return rect;}
 
+	void recalculateRect();
+
 };
 
 /**
@@ -47,10 +49,12 @@ Q_OBJECT
 private:
   NVBSpecDataSource * page;
 private slots:
-  void refresh() { itemChanged(); }
+	void refresh();
   void generateCurves();
   void paintCurves();
   void clear() {NVBCurveBunch::clear();}
+	void recalculateRect() {NVBCurveBunch::recalculateRect();}
+
 //   void parentColorsAboutToBeChanged();
 //   void parentColorsChanged();
 public :
@@ -60,6 +64,8 @@ public :
   virtual NVBVizUnion getVizItem();
 public slots:
   virtual void setSource( NVBDataSource * );
+signals:
+	void dataChanged();
 };
 
 // /**
