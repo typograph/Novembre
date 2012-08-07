@@ -265,7 +265,10 @@ void NVBMain::createMenus( )
 
 #ifdef NVB_ENABLE_LOG
 	helpLogAction = new QAction("&Log", this);
-	connect( helpLogAction, SIGNAL( triggered() ), log, SLOT( show() ) );
+	helpLogAction->setCheckable(true);
+	helpLogAction->setChecked(false);
+	connect( helpLogAction, SIGNAL(triggered(bool)), log, SLOT(setShown(bool)) );
+	connect(log,SIGNAL(visibilityChanged(bool)),helpLogAction, SLOT(setChecked(bool)));
 #endif
 
 	helpAboutAction = new QAction("&About Novembre", this);
