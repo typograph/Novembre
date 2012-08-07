@@ -373,10 +373,20 @@ void NVBMain::addWindow(QWidget * window)
 		connect(w,SIGNAL(pageSelected(NVB::PageType)),this,SIGNAL(pageTypeChanged(NVB::PageType)));
 		switch(w->viewType()) {
 			case NVB::GraphView :
-				w->resize(700,400);
+				if (!conf->contains("DefaultGraphWindowSize"))
+					conf->setValue("DefaultGraphWindowSize",QSize(700,400));
+				w->resize(conf->value("DefaultGraphWindowSize").toSize());
+				break;
+			case NVB::TwoDView :
+				if (!conf->contains("Default2DWindowSize"))
+					conf->setValue("Default2DWindowSize",QSize(300,300));
+				w->resize(conf->value("Default2DWindowSize").toSize());
 				break;
 			default:
-				w->resize(300,300);
+				if (!conf->contains("DefaultWindowSize"))
+					conf->setValue("DefaultWindowSize",QSize(300,300));
+				w->resize(conf->value("DefaultWindowSize").toSize());
+				break;
 			}
 		}
 
