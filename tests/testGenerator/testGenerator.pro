@@ -11,10 +11,7 @@ DEFINES += TESTGENERATOR=$${GCLASSNAME}
 
 # end of serviceable part
 
-DEFINES += \
-	NVB_DEBUG \
-	NVB_ENABLE_LOG \
-	NVB_VERBOSE_LOG 
+DEFINES += FILEGENERATOR_NO_GUI NVB_ENABLE_LOG
 
 HEADERS += \
 	../../src/NVBDataSource.h \
@@ -33,7 +30,8 @@ HEADERS += \
 	../../src/NVBDataCore.h \
 	../../src/NVBUnits.h \
 	../../src/NVBVariant.h \
-	../../src/NVBTokens.h \
+        ../../src/NVBSettings.h \
+        ../../src/NVBTokens.h \
 	../../src/NVBDatasetIcons.h \
 	../../src/NVBMimeData.h \
 	../../src/NVBCoreApplication.h \
@@ -54,36 +52,22 @@ SOURCES += \
 	../../src/NVBDataCore.cpp \
 	../../src/NVBUnits.cpp \
 	../../src/NVBVariant.cpp \
-	../../src/NVBTokens.cpp \
+        ../../src/NVBSettings.cpp \
+        ../../src/NVBTokens.cpp \
 	../../src/NVBDatasetIcons.cpp \
 	../../src/NVBMimeData.cpp \
 	../../src/NVBCoreApplication.cpp \
 	testGenerator.cpp
 
-
-HEADERS += \
-	../../src/NVBPosLabel.h \
-	../../src/NVBSingle2DView.h \
-	../../src/NVBPlotCurves.h \
-	../../src/NVBPhysScaleDraw.h \
-	../../src/NVBSingleGraphView.h \
-	../../src/NVBSingleView.h
-		
-
-SOURCES += \
-	../../src/NVBPosLabel.cpp \
-	../../src/NVBSingle2DView.cpp \
-	../../src/NVBPlotCurves.cpp \
-	../../src/NVBPhysScaleDraw.cpp \
-	../../src/NVBSingleGraphView.cpp \
-	../../src/NVBSingleView.cpp
-
-
 CONFIG += qt debug
+QT = core
 
 INCLUDEPATH += /usr/include/qwt6
+INCLUDEPATH += ../../src
 LIBS += -lqwt6
 
+OBJECTS_DIR = build
 MOC_DIR = build
-DESTDIR = build
+DESTDIR = .
+
 
