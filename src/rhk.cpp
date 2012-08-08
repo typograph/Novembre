@@ -44,34 +44,37 @@
 #ifndef FILEGENERATOR_NO_GUI
 class RHKSettingsWidget : public NVBSettingsWidget {
 public:
-	explicit RHKSettingsWidget(RHKFileGenerator * g, QWidget* parent = 0) : NVBSettingsWidget(parent) {
+	explicit RHKSettingsWidget(QWidget * parent = 0) : NVBSettingsWidget(parent)
+		{
 		setGroup("RHK");
 		addCheckBox("subtractBias","Subtract bias voltage","In case 'Bias mode' was not selected in XPMPro, I(U) spectroscopy voltage is shifted by the applied bias. This setting will apply to any spectroscopic data with X axis in volts.");
-		}
-		
-private:
-	void onWrite() {
-		// TODO : think about what happens with threads... (this is probably atomic, so it's fine)
-		g->subtractBias = entries.first().checkBox->isChecked();
 		}
 };
 
 NVBSettingsWidget* RHKFileGenerator::configurationPage() const
 {
-	static NVBSettingsWidget * w = new RHKSettingsWidget();
+	static NVBSettingsWidget * w = 0;
+	if (!w) {
+		w = new RHKSettingsWidget();
+		if (w) connect(w,SIGNAL(dataSynced()),this,SLOT(loadSettings()));
+		}
 	return w;
 }
 #endif
 
 RHKFileGenerator::RHKFileGenerator() :NVBFileGenerator()
 {
+	loadSettings();
+}
+
+void RHKFileGenerator::loadSettings() {
 	// Load subtractBias from settings;
 	QSettings * conf = NVBSettings::getGlobalSettings();
 	if (!conf)
 		subtractBias = false;
 	else {
 		conf->beginGroup(NVBSettings::pluginGroup());
-		subtractBias = conf->value("RHK/subtractBias",false);
+		subtractBias = conf->value("RHK/subtractBias",false).toBool();
 		conf->endGroup();
 		}
 }
@@ -223,7 +226,7 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 // The logical way would be to load datasets one-by-one.
 // While the axes are the same, we keep the same datasource.
 
-	while(!file.atEnd() && loadNextPage(file,f));
+	while(!file.atEnd() && loadNextPage(file,f,subtractBias));
 
 	if (!f->isEmpty())
 	return f;
@@ -398,7 +401,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 	return fi;
 }
 
-bool RHKFileGenerator::loadNextPage(QFile& file, NVBFile * sources)
+bool RHKFileGenerator::loadNextPage(QFile& file, NVBFile * sources, bool subtract_bias)
 {
 	const char MAGIC[] = {  0x53, 0x00,
 	0x54, 0x00, 0x69, 0x00, 0x4D, 0x00, 0x61, 0x00,
@@ -428,7 +431,7 @@ bool RHKFileGenerator::loadNextPage(QFile& file, NVBFile * sources)
 			}
 		case 1 : {
 			NVBOutputVPMsg("Spectroscopy page found");
-			return loadSpecPage(file,sources);
+			return loadSpecPage(file,sources, subtract_bias);
 			}
 		case 3 : {
 			NVBOutputError(QString("Annotated spectroscopy page found. No information on such a page exists. Please send the file %1 to the developer").arg(file.fileName()));
@@ -584,7 +587,7 @@ bool RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 	return true;
 }
 
-bool RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources)
+bool RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources, bool subtract_bias )
 {
 	
 	TRHKHeader header = RHKFileGenerator::getRHKHeader(file);
@@ -708,8 +711,8 @@ bool RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources)
 		// For some reason, this axis gets name "X" by default, which is unfortunate,
 		// as it clashes with grid and anyway is not very descriptive
 		QString nameT = strings.at(10);
+		NVBUnits tu = NVBUnits(strings.at(7));
 		if (nameT.isEmpty() || nameT == "X") { // TODO it might be interesting to move this method to NVBUnits
-			NVBUnits tu = NVBUnits(strings.at(7));
 			if (tu.isComparableWith("V"))
 				nameT = "Voltage";
 			else if (tu.isComparableWith("sec"))
@@ -720,7 +723,7 @@ bool RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources)
 				nameT = "T";
 			}
 		ds->addAxis(nameT,header.x_size);
-		if (subtractBias && tu.isComparableWith("V"))
+		if (subtract_bias && tu.isComparableWith("V"))
 			ds->addAxisMap(new NVBAxisPhysMap(header.x_offset + header.bias,header.x_scale,NVBUnits(strings.at(7))));
 		else
 			ds->addAxisMap(new NVBAxisPhysMap(header.x_offset,header.x_scale,NVBUnits(strings.at(7))));

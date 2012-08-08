@@ -106,9 +106,12 @@ class NVBDataSource;
 
 class RHKFileGenerator: public QObject, public NVBFileGenerator {
 Q_OBJECT
-Q_INTERFACES(NVBFileGenerator);
+Q_INTERFACES(NVBFileGenerator)
 
 private:
+
+	bool subtractBias;
+
   static TRHKHeader getRHKHeader(QFile & file);
   static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
   static QString getPageTypeString(qint32 type);
@@ -120,15 +123,18 @@ private:
 
 	static bool RHKHeaderIsSane(const TRHKHeader &, QString);
 
-	static bool loadNextPage(QFile & file, NVBFile * sources );
+	static bool loadNextPage(QFile & file, NVBFile * sources, bool subtract_bias );
 	static bool loadTopoPage(QFile & file, NVBFile * sources );
-	static bool loadSpecPage(QFile & file, NVBFile * sources );
+	static bool loadSpecPage(QFile & file, NVBFile * sources, bool subtract_bias );
 	static void CommentsFromString(NVBDataComments & comments, const QStringList & strings);
 	static void CommentsFromHeader(NVBDataComments & comments, const TRHKHeader & header);
 	
 	static void detectGrid(const TRHKHeader& header, const float* xposdata, const float* yposdata, int& np, int& nx, int& ny);
 	
 	static QList<QPointF> pointsFromXY(int length, float * x, float * y);
+	
+private slots:
+	void loadSettings();
 	
 public:
   RHKFileGenerator();
@@ -154,8 +160,6 @@ public:
 	//- Using super's method, since RHK only uses one file per measurement.
 	// virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 
-	bool subtractBias;	
-	
 };
 
 #endif
