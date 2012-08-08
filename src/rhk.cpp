@@ -25,9 +25,12 @@
 #include "NVBAxisMaps.h"
 #include "NVBColorMaps.h"
 #include "NVBAxisSelector.h"
-#include "NVBSettingsWidget.h"
 #include "rhk.h"
 #include <stdlib.h>
+
+#ifndef FILEGENERATOR_NO_GUI
+#include "NVBSettingsWidget.h"
+#endif
 
 #include <QtCore/QDateTime>
 #include "NVBSettings.h"
@@ -38,6 +41,7 @@
 #define RHK_UNKPAGE 2
 #define RHK_ANNOTATEDSPECPAGE 3
 
+#ifndef FILEGENERATOR_NO_GUI
 class RHKSettingsWidget : public NVBSettingsWidget {
 public:
 	explicit RHKSettingsWidget(RHKFileGenerator * g, QWidget* parent = 0) : NVBSettingsWidget(parent) {
@@ -57,6 +61,7 @@ NVBSettingsWidget* RHKFileGenerator::configurationPage() const
 	static NVBSettingsWidget * w = new RHKSettingsWidget();
 	return w;
 }
+#endif
 
 RHKFileGenerator::RHKFileGenerator() :NVBFileGenerator()
 {

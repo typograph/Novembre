@@ -135,7 +135,9 @@ public:
   virtual inline QString moduleName() const { return QString("RHK XPMPro files");}
   virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for SM3 files"); }
 
+#ifndef FILEGENERATOR_NO_GUI
 	virtual NVBSettingsWidget* configurationPage() const;
+#endif
 
   virtual inline QStringList extFilters() const {
       static QStringList exts = QStringList() << "*.SM3" ; // FIXME << "*.SM2" << "*.SM4";
