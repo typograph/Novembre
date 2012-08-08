@@ -40,8 +40,10 @@ public:
   virtual QString moduleName() const =0;
   /// A thourough description of the module
   virtual QString moduleDesc() const =0;
+#ifndef FILEGENERATOR_NO_GUI
 	/// A configuration page for plugin features (if any)
 	virtual NVBSettingsWidget* configurationPage() const { return 0; }
+#endif
 
   /// Get the nameFilter for use in QFileDialog
   virtual QString nameFilter() const {
