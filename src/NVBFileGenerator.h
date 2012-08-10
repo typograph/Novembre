@@ -18,7 +18,8 @@
 #include <QtCore/QStringList>
 #include "NVBFileInfo.h"
 
-class NVBFileInfo;
+class NVBFile;
+class NVBSettingsWidget;
 
 /**
   * NVBFileGenerator is a base class for loading physical files into internal data format
@@ -39,6 +40,10 @@ public:
   virtual QString moduleName() const =0;
   /// A thourough description of the module
   virtual QString moduleDesc() const =0;
+#ifndef FILEGENERATOR_NO_GUI
+	/// A configuration page for plugin features (if any)
+	virtual NVBSettingsWidget* configurationPage() const { return 0; }
+#endif
 
   /// Get the nameFilter for use in QFileDialog
   virtual QString nameFilter() const {
@@ -47,10 +52,6 @@ public:
 
   /// The list of supported filenames, using wildcards \sa QDir::setNameFilers. Filters are case-insensitive
   virtual QStringList extFilters() const =0; // wildcards
-
-// OBSOLETE
-// This function replaced by checking extensions in QFileFactory
-// >> virtual bool canLoadFile(QString filename) =0;
 
   /// Load full file data from \param file
 	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw() = 0;

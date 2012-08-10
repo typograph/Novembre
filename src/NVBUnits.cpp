@@ -252,7 +252,7 @@ QString NVBPhysValue::toString(int min1Pos, int max1Pos, int nSDig) const
 
   if (nSDig == 0) { // autoadjust
     if ( min1Pos < 0 )
-      p = abs(h + m) + 2;
+			p = ::abs(h + m) + 2;
     else
       p = 0;
     }

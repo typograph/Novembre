@@ -106,9 +106,12 @@ class NVBDataSource;
 
 class RHKFileGenerator: public QObject, public NVBFileGenerator {
 Q_OBJECT
-Q_INTERFACES(NVBFileGenerator);
+Q_INTERFACES(NVBFileGenerator)
 
 private:
+
+	bool subtractBias;
+
   static TRHKHeader getRHKHeader(QFile & file);
   static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
   static QString getPageTypeString(qint32 type);
@@ -118,22 +121,31 @@ private:
   static QString getDirectionString(qint32 type);
   static QString getImageTypeString(qint32 type);
 
-	static void loadNextPage(QFile & file, NVBFile * sources );
-	static void loadTopoPage(QFile & file, NVBFile * sources );
-	static void loadSpecPage(QFile & file, NVBFile * sources );
+	static bool RHKHeaderIsSane(const TRHKHeader &, QString);
+
+	static bool loadNextPage(QFile & file, NVBFile * sources, bool subtract_bias );
+	static bool loadTopoPage(QFile & file, NVBFile * sources );
+	static bool loadSpecPage(QFile & file, NVBFile * sources, bool subtract_bias );
 	static void CommentsFromString(NVBDataComments & comments, const QStringList & strings);
 	static void CommentsFromHeader(NVBDataComments & comments, const TRHKHeader & header);
 	
 	static void detectGrid(const TRHKHeader& header, const float* xposdata, const float* yposdata, int& np, int& nx, int& ny);
 	
 	static QList<QPointF> pointsFromXY(int length, float * x, float * y);
-
+	
+private slots:
+	void loadSettings();
+	
 public:
-  RHKFileGenerator():NVBFileGenerator() {;}
+  RHKFileGenerator();
   virtual ~RHKFileGenerator() {;}
 
   virtual inline QString moduleName() const { return QString("RHK XPMPro files");}
   virtual inline QString moduleDesc() const { return QString("RHK Technology STM file format. Works for SM3 files"); }
+
+#ifndef FILEGENERATOR_NO_GUI
+	virtual NVBSettingsWidget* configurationPage() const;
+#endif
 
   virtual inline QStringList extFilters() const {
       static QStringList exts = QStringList() << "*.SM3" ; // FIXME << "*.SM2" << "*.SM4";
@@ -147,6 +159,7 @@ public:
 
 	//- Using super's method, since RHK only uses one file per measurement.
 	// virtual inline NVBAssociatedFilesInfo associatedFiles(QString filename) const;
+
 };
 
 #endif

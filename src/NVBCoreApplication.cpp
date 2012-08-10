@@ -34,10 +34,12 @@
 #include <QtCore/QVariant>
 
 NVBCoreApplication::NVBCoreApplication( int & argc, char ** argv )
-: QApplication(argc,argv)
+: QApplication(argc,argv), quiet(false)
 {
 	setApplicationVersion(NVB_VERSION);
 	setQuitOnLastWindowClosed(true);
+
+	commandLine = arguments();
 	
 #ifdef NVB_ENABLE_LOG
 // For threads, we have to do that
@@ -46,6 +48,8 @@ NVBCoreApplication::NVBCoreApplication( int & argc, char ** argv )
 	setProperty("Logger",QVariant::fromValue(l));
  	connect(l,SIGNAL(message(NVB::LogEntryType, QString, QString, QTime)),this,SLOT(message(NVB::LogEntryType, QString, QString)));
 #endif
+
+	processCommandLine();
 
 }
 
@@ -68,6 +72,7 @@ bool NVBCoreApplication::notify( QObject * receiver, QEvent * event )
 #ifdef NVB_ENABLE_LOG
 void NVBCoreApplication::message(NVB::LogEntryType type, QString issuer, QString text)
 {
+	if (quiet) return;
   if (type == NVB::CriticalErrorEntry)
     QMessageBox::critical(0,issuer,text);
 #ifdef NVB_DEBUG
@@ -85,5 +90,12 @@ NVBCoreApplication::~ NVBCoreApplication()
 {
 #ifdef NVB_ENABLE_LOG
   delete property("Logger").value<NVBLogger*>();
+#endif
+}
+
+void NVBCoreApplication::processCommandLine() {
+#ifdef NVB_ENABLE_LOG
+	if (commandLine.contains("--quiet") || commandLine.contains("-q"))
+		quiet = true;
 #endif
 }

@@ -74,6 +74,7 @@ QMap<NVBAxisParamToken::NVBAxisParam,NVBDescrPair > NVBTokenList::initAxisParamN
 	anames.insert(NVBAxisParamToken::Name,NVBDescrPair("axisName","Name"));
   anames.insert(NVBAxisParamToken::Length,NVBDescrPair("axisLength","Length"));
   anames.insert(NVBAxisParamToken::Units,NVBDescrPair("axisUnits","Units"));
+	anames.insert(NVBAxisParamToken::Span,NVBDescrPair("axisSpan","Span"));
 
 //  fnames.insert(NVBAxisParamToken::,NVBDescrPair("",""));
 

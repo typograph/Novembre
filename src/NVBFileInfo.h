@@ -75,9 +75,13 @@ public:
 struct NVBAxisInfo {
 	QString name;
 	axissize_t length;
-	NVBUnits units;
+	NVBPhysValue span;
 	
-	NVBAxisInfo(QString n, axissize_t l, NVBUnits u = NVBUnits()):name(n),length(l),units(u) {;}
+	NVBAxisInfo(QString n, axissize_t l, NVBPhysValue s = NVBPhysValue())
+	 : name(n)
+	 , length(l)
+	 , span(s.getDimension().isValid() ? s.abs() : NVBPhysValue(l,NVBUnits()))
+	{;}
 };
 
 struct NVBDataInfo {
@@ -88,7 +92,7 @@ struct NVBDataInfo {
 		dimension = source->dimension();
 		for(axisindex_t i = 0; i < source->nAxes(); i++) {
 			const NVBAxis & a = source->axisAt(i);
-			axes << NVBAxisInfo(a.name(),a.length(),a.physMap() ? a.physMap()->units() : NVBUnits());
+			axes << NVBAxisInfo(a.name(),a.length(),a.physMap() ? (a.physMap()->value(a.length()-1) - a.physMap()->value(0)).abs() : NVBPhysValue());
 			}
 		comments = source->getAllComments();
 		}

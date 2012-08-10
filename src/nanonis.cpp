@@ -387,11 +387,24 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 		axissize_t npts = (axissize_t)round((file.size() - file.pos())/12.0/channels.count());
 
 		QList<NVBAxisInfo> axes;
+
+		QVector<double> data;
+
+		// Get measurement range:
+		while (!file.atEnd()) {
+			QStringList datastr =  QString(file.readLine(500)).trimmed().split('\t',QString::SkipEmptyParts);
+			if (datastr.count() != channels.count()) {
+				NVBOutputError("Wrong amount of data columns");
+				continue;
+				}
+			data.append(datastr.takeFirst().toDouble());
+		}
+
 		
 		if (channels.first().first.right(4) == "calc") // Let's assume this is always a marker for equally-spaced data
-			axes << NVBAxisInfo(channels.first().first.left(channels.first().first.length()-5),npts,channels.first().second);
+			axes << NVBAxisInfo(channels.first().first.left(channels.first().first.length()-5),npts, NVBPhysValue(data.last()-data.first(),channels.first().second));
 		else
-			axes << NVBAxisInfo(channels.first().first,npts,channels.first().second);
+			axes << NVBAxisInfo(channels.first().first,npts,NVBPhysValue(data.last()-data.first(),channels.first().second));
 		
 		for(int i = 1; i < channels.count(); i++)
 			fi->append(NVBDataInfo(channels.at(i).first,channels.at(i).second,axes,c,NVBDataSet::Spectroscopy));
@@ -409,8 +422,14 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 		QList<NVBAxisInfo> axes;
 		ifHeaderParam("SCAN_PIXELS") {
 			QStringList px = h.value("SCAN_PIXELS").split(' ',QString::SkipEmptyParts);
-			axes << NVBAxisInfo("X",px.first().toInt(),"m")
-			     << NVBAxisInfo("Y",px.last().toInt(),"m");
+			ifHeaderParam("SCAN_RANGE") {
+				QStringList rg = h.value("SCAN_RANGE").split(' ',QString::SkipEmptyParts);
+				axes << NVBAxisInfo("X",px.first().toInt(),NVBPhysValue(rg.first().toDouble(),"m"))
+					 << NVBAxisInfo("Y",px.last().toInt(),NVBPhysValue(rg.at(1).toDouble(),"m"));
+				}
+			else
+				axes << NVBAxisInfo("X",px.first().toInt())
+						 << NVBAxisInfo("Y",px.last().toInt());
 			}
 		else {
 			NVBOutputError(QString("No scan size data in file %1").arg(ffname));
@@ -484,7 +503,19 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 			delete fi;
 			return 0;
 			}
-	
+
+		QStringList gparams = h.value("Grid settings").split(';');
+		double gw = gparams.at(2).toDouble(&ok);
+		if (!ok) {
+			NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(2)));
+			return 0;
+			}
+		double gh = gparams.at(3).toDouble(&ok);
+		if (!ok) {
+			NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(3)));
+			return 0;
+			}
+
 		QPair<QString, NVBUnits> sweep;
 		QList< QPair<QString, NVBUnits> > fixed_params;
 		QList< QPair<QString, NVBUnits> > exp_params;
@@ -526,21 +557,29 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 		for(int j = 0; j < fixed_params.count(); j++)
 //			if (exp_params.at(j).first != "X" && exp_params.at(j).first != "Y") // Skip useless X and Y
 			fi->comments.insert(fixed_params.at(j).first,NVBPhysValue(fxParams[j],fixed_params.at(j).second));
-		
-		free(fxParams);
 
 		int nPoints = h.value("Points").toInt();	
 
 		QList<NVBAxisInfo> tAxes, sAxes;
-		tAxes << NVBAxisInfo("X",nx,"m")
-		      << NVBAxisInfo("Y",ny,"m"); // Axes for topography pages
+		tAxes << NVBAxisInfo("X",nx,NVBPhysValue(gw,"m"))
+					<< NVBAxisInfo("Y",ny,NVBPhysValue(gh,"m")); // Axes for topography pages
 
 		ifHeaderParam("Sweep Signal") {
+			int iSweepStart = fixed_params.indexOf(QPair<QString, NVBUnits>("Sweep Start",NVBUnits()));
+			int iSweepEnd = fixed_params.indexOf(QPair<QString, NVBUnits>("Sweep End",NVBUnits()));
+			if (iSweepStart < 0 || iSweepEnd < 0) {
+				NVBOutputError("Sweep limits not in fixed parameters");
+				delete fi;
+				return 0;
+				}
+
 			QPair<QString,NVBUnits>	sweep = channelFromStr(h.value("Sweep Signal"));
-			sAxes << NVBAxisInfo(sweep.first,nPoints,sweep.second)
+			sAxes << NVBAxisInfo(sweep.first,nPoints,NVBPhysValue(fxParams[iSweepEnd]-fxParams[iSweepStart],sweep.second))
 						<< tAxes; // Axes for spectroscopy pages
 			}
 			
+		free(fxParams);
+
 		for(int j = 0; j < exp_params.count(); j++)
 			if (exp_params.at(j).first != "X" && exp_params.at(j).first != "Y") // Skip useless X and Y
 				fi->append(NVBDataInfo(exp_params.at(j).first,exp_params.at(j).second,tAxes,c,NVBDataSet::Topography));

@@ -212,6 +212,10 @@ public:
 	NVBPhysValue &  operator*=( double mult ) { value *= mult; return *this; }
 	NVBPhysValue &  operator/=( double div )  {  value /= div; return *this; }
 
+	NVBPhysValue abs() const {
+		return NVBPhysValue(fabs(value)*dim.mult,dim.base);
+		}
+
 };
 
 Q_DECLARE_METATYPE(NVBPhysValue);

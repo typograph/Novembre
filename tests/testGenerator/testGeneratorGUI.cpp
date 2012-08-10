@@ -1,4 +1,10 @@
-#include "testGenerator.h"
+#include "testGeneratorGUI.h"
+
+#include <QtCore/QDebug>
+#include <QtCore/QTextStream>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QDir>
 
 #include <QtGui/QWidget>
 #include <QtGui/QTreeWidget>
@@ -7,20 +13,15 @@
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QFileDialog>
 #include <QtGui/QMessageBox>
-#include <QtCore/QDebug>
-#include <QtCore/QTextStream>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-#include <QtCore/QDir>
 #include <QtGui/QFont>
 #include <QtGui/QListView>
 #include <QtGui/QCompleter>
 
-#include "../NVBFileGenerator.h"
-#include "../NVBFile.h"
-#include "../NVBDataSourceModel.h"
-#include "../NVBforeach.h"
-#include "../NVBSingleView.h"
+#include "NVBFileGenerator.h"
+#include "NVBFile.h"
+#include "NVBforeach.h"
+#include "NVBDataSourceModel.h"
+#include "NVBSingleView.h"
 
 int main(int argc, char** argv) {
 
@@ -70,7 +71,7 @@ int main(int argc, char** argv) {
 		}
 	
 	return app.exec();
-	
+
 }
 
 NVBTestGenApplication::NVBTestGenApplication( int & argc, char ** argv )
@@ -111,7 +112,7 @@ void NVBTestGenApplication::openFile(QString name) {
 	
 	if (!generator) return;
 
-	NVBAssociatedFilesInfo inf = generator->associatedFiles(name.isEmpty() ? files->text() : name);
+	NVBAssociatedFilesInfo inf = generator->associatedFiles( name.isEmpty() ? files->text() :	name );
 	
 	NVBFileInfo * fi = inf.loadFileInfo();
 	if (!fi) { delete generator; return; }
@@ -119,6 +120,7 @@ void NVBTestGenApplication::openFile(QString name) {
 	tree->setHeaderLabel(fi->files.name());
 
 	addFileInfoToTree(tree->invisibleRootItem(),fi);
+
 	delete fi;
 	
 	NVBFile * fl = generator->loadFile(inf);
@@ -133,6 +135,7 @@ void NVBTestGenApplication::openFile(QString name) {
 	
 
 	if (m) delete m;
+
 	delete generator;
 
 }
@@ -172,12 +175,14 @@ void NVBTestGenApplication::openFolder(QString dirname)
 		fitem->setText(0,fi->files.name());
 		
 		addFileInfoToTree(fitem,fi);
+
 		delete fi;
 		
 		NVBFile * fl = generator->loadFile(inf);
 		if (!fl) continue;
 
 		addFileToTree(fitem,fl);
+
 		delete fl;
 	}
 	
@@ -201,7 +206,7 @@ void NVBTestGenApplication::addFileInfoToTree(QTreeWidgetItem* parent, NVBFileIn
 	NVB_FOREACH(NVBDataInfo i, info) {
 		QTreeWidgetItem * di = new QTreeWidgetItem(item,QStringList(QString("%1 [%2]").arg(i.name,i.dimension.baseUnit())));
 		foreach(NVBAxisInfo ai, i.axes)
-			new QTreeWidgetItem(di,QStringList(QString("%1 [%2] x%3").arg(ai.name).arg(ai.units.toStr()).arg(ai.length)));
+			new QTreeWidgetItem(di,QStringList(QString("%1 [%2] x%3 = %4").arg(ai.name).arg(ai.span.getDimension().toStr()).arg(ai.length).arg(ai.span.toSIString())));
 		cmnt = new QTreeWidgetItem(di,QStringList(QString("Comments")));
 		foreach(QString key, i.comments.keys())
 			new QTreeWidgetItem(cmnt,QStringList(QString("%1 : %2").arg(key,i.comments.value(key).toString())));		
