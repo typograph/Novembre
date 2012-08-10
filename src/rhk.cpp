@@ -185,6 +185,7 @@ void RHKFileGenerator::detectGrid(const TRHKHeader& header, const float * xposda
 		if (header.grid_xsize > 0 && header.grid_xsize <= header.y_size && header.grid_ysize > 0 && header.grid_ysize <= header.y_size && header.grid_xsize * header.grid_ysize <= header.y_size) {
 			nx = header.grid_xsize;
 			ny = header.grid_ysize;
+			np = header.y_size/header.grid_xsize/header.grid_ysize;
 			}
 		else {
 			for(np = 1; np < header.y_size && xposdata[np] == xposdata[0]; np++) {;}
@@ -430,7 +431,7 @@ bool RHKFileGenerator::loadNextPage(QFile& file, NVBFile * sources, bool subtrac
 	file.peek((char*)&h,44);
 
 	if (memcmp(h.version, MAGIC, 28) != 0) {
-		NVBOutputError(QString("Page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to the developer").arg(file.fileName()));
+		NVBOutputError(QString("Page does not have recognizable RHK format. File %1 is probably corrupted.").arg(file.fileName()));
 		return false;
 		}
 	switch (h.type) {
@@ -925,12 +926,22 @@ QString RHKFileGenerator::getPageTypeString(qint32 type) {
 TRHKHeader RHKFileGenerator::getRHKHeader(QFile & file)
 {
 	TRHKHeader header;
-	file.read((char*)&header.parameter_size,2); // read header size
-	file.read((char*)header.version,header.parameter_size);
+	memset(&header,0,sizeof(header));
+	if (file.read((char*)&header.parameter_size,2) != 2) { // read header size
+		NVBOutputFileError(&file);
+		return header;
+		}
+	if (header.parameter_size < 50 || header.parameter_size > 250) {
+		NVBOutputError(QString("Header size doesn't follow spec. File %1 probably corrupted").arg(file.fileName()));
+		return header;
+		}
+	if (file.read((char*)header.version,header.parameter_size) != header.parameter_size) {
+		NVBOutputFileError(&file);
+		header.page_data_size = 0; // make header invalid
+		return header;
+		}
 	if (header.parameter_size+2 > (int)sizeof(TRHKHeader))
 		file.seek(file.pos() + header.parameter_size+2-sizeof(TRHKHeader));
-	else
-		memset(((char*)header.version)+header.parameter_size,0,sizeof(TRHKHeader) - header.parameter_size - 2);
 	int version = header.version[14]-0x30;
 	if (version == 1) {
 		header.colorinfo_count = 1;
@@ -969,10 +980,18 @@ QStringList RHKFileGenerator::loadRHKStrings(QFile & file, qint16 nstrings)
 
 // Check X and Y labels
 
+	if (nstrings < 12) {
+		for (int ns=nstrings ; ns<10 ; ns++)
+			r.append(QString());
+		r.append("X");
+		r.append("Y");
+		}
+	else {
 	if (r.at(10).isEmpty())
 		r[10] = "X";
 	if (r.at(11).isEmpty())
 		r[11] = "Y";
+		}
 
 return r;
 }
