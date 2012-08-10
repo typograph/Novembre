@@ -50,7 +50,7 @@ NVBMainWindow::NVBMainWindow() : QMainWindow()
 
 	// Initialisation
 
-	conf = getGlobalSettings();
+	conf = NVBSettings::getGlobalSettings();
 	if (!conf)
 		NVBCriticalError("Configuration missing");
 

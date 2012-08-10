@@ -116,7 +116,7 @@ NVBBrowser::NVBBrowser( QWidget *parent, Qt::WindowFlags flags)
 	NVBCriticalError("Browser cannot access the file factory");
 	}
 
-	confile = getGlobalSettings();
+	confile = NVBSettings::getGlobalSettings();
 	if (!confile) NVBCriticalError("Browser cannot access the configuration file");
 
 	setWindowTitle("Novembre File Browser");

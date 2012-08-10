@@ -134,7 +134,7 @@ public:
 	virtual void init(QSettings * settings) {
 			}
 
-	virtual void write(QSettings * settings) {
+	virtual bool write(QSettings * settings) {
 			}
 };
 
@@ -221,7 +221,7 @@ void NVBSettingsSectionDelegate::drawFocus( QPainter *painter, const QStyleOptio
 NVBSettingsDialog::NVBSettingsDialog()
 : QDialog()
 {
-	conf = getGlobalSettings();
+	conf = NVBSettings::getGlobalSettings();
 	if (!conf)
 		NVBCriticalError("Configuration missing");
 

@@ -16,13 +16,13 @@
 #include <QtCore/QList>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
-#include <QtCore/QSignalMapper>
 #include <QtCore/QMutex>
 
 #include "NVBLogger.h"
 #include "NVBFile.h"
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
+#include "NVBFilePluginModel.h"
 
 class QAction;
 class QSettings;
@@ -73,13 +73,8 @@ private:
 		NVBFile * retrieveLoadedFile( QString filename );
 		NVBFile * retrieveLoadedFile( const NVBAssociatedFilesInfo & info);
 
-	/// Available generators (selected by user)
-		QList<const NVBFileGenerator*> generators;
-	/// All available generators
-		QList<const NVBFileGenerator*> allGenerators;
-	///
-		QList<QAction*> gActions;
-		QSignalMapper actMapper;
+	/// Model with generators
+		NVBFilePluginModel gmodel;
 
 		QSettings * confile;
 
@@ -141,15 +136,15 @@ public:
 		QStringList availableInfoFields() const { return commentNames; }
 		
 	/// 
-		QList<QAction*> generatorActions() const { return gActions;}
+		QList<QAction*> generatorActions() const { return gmodel.actions(); }
 
 private slots:
 	/// Put file in the dead tree
 		void bury(NVBFile *);
 	/// Removes the file associated with \a filename from all caches
 		void release(QString filename);
-	/// Enables/disables a generator. The object will be cast to NVBFileGenerator
-		void changeGenerator(QObject * go);
+	/// Follows changes in the model
+		void updateGeneratorSettings(QModelIndex, QModelIndex);
 	/// Updates wildcard list
 		void updateWildcards();
 };

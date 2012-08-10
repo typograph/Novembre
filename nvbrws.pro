@@ -41,10 +41,14 @@ contains(CONFIG,NVBStatic) {
 
 # STMFile tools
 HEADERS += \
-  src/NVBFileBundle.h \
-  src/NVBFileFactory.h
+	src/NVBFileBundle.h \
+	src/NVBGeneratorsSettingsWidget.h \
+	src/NVBFilePluginModel.h \
+	src/NVBFileFactory.h
 SOURCES += \
-  src/NVBFileBundle.cpp \
+	src/NVBFileBundle.cpp \
+	src/NVBGeneratorsSettingsWidget.cpp \
+	src/NVBFilePluginModel.cpp \
 	src/NVBFileFactory.cpp
 
 # FileBrowser
@@ -96,7 +100,6 @@ HEADERS += \
   src/NVBStandardIcons.h \
   src/NVBSettings.h \
   src/NVBSettingsDialog.h \
-  src/NVBSettingsWidget.h \
   src/NVBMainWindow.h \
   src/NVBMainDocks.h \
   src/NVBCoreApplication.h \
@@ -106,7 +109,6 @@ SOURCES += \
   src/NVBStandardIcons.cpp \
   src/NVBSettings.cpp \
   src/NVBSettingsDialog.cpp \
-  src/NVBSettingsWidget.cpp \
   src/NVBMainWindow.cpp \
   src/NVBMainDocks.cpp \
   src/NVBCoreApplication.cpp \

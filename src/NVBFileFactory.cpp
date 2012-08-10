@@ -43,35 +43,11 @@ NVBFileFactory::NVBFileFactory()
 // QPluginLoader::instance is, the actions are
 // created on load
 	
-	NVBFileBundle * fbPlugin = new NVBFileBundle(this);
-	allGenerators << fbPlugin;
+	gmodel.addGenerator(new NVBFileBundle(this));
 
-	QAction * tAct;
-	tAct = new QAction(fbPlugin->moduleName(),this);
-	tAct->setToolTip(fbPlugin->moduleDesc());
-	tAct->setCheckable(true);
-	tAct->setChecked(true);
-	actMapper.setMapping(tAct,fbPlugin);
-	connect(tAct,SIGNAL(triggered()),&actMapper,SLOT(map()));
-	gActions << tAct;
-
-	foreach (QObject *plugin, QPluginLoader::staticInstances()) {
-		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(plugin);
-		if (generator) {
+	foreach (QObject *plugin, QPluginLoader::staticInstances())
+		if (gmodel.addGenerator(qobject_cast<NVBFileGenerator*>(plugin)))
 			NVBOutputPMsg("Static plugin loaded");
-			allGenerators << generator;
-
-			tAct = new QAction(generator->moduleName(),this);
-			tAct->setToolTip(generator->moduleDesc());
-			tAct->setCheckable(true);
-			tAct->setChecked(true);
-			actMapper.setMapping(tAct,plugin);
-			connect(tAct,SIGNAL(triggered()),&actMapper,SLOT(map()));
-
-			gActions << tAct;
-
-		}
-	}
 
 #ifndef NVB_STATIC
 #ifdef Q_WS_MAC
@@ -86,46 +62,34 @@ NVBFileFactory::NVBFileFactory()
 	else foreach (QString fileName, dir.entryList(QDir::Files)) {
 		QPluginLoader loader(dir.absoluteFilePath(fileName));
 		NVBOutputPMsg(QString("Loading plugin %1").arg(fileName));
-		NVBFileGenerator *generator = qobject_cast<NVBFileGenerator*>(loader.instance());
-		if (generator) {
-			allGenerators.append(generator);
+		if (gmodel.addGenerator(qobject_cast<NVBFileGenerator*>(loader.instance()),fileName))
 			NVBOutputPMsg("Dynamic plugin loaded");
-			tAct = new QAction(generator->moduleName(),this);
-			tAct->setToolTip(generator->moduleDesc());
-			tAct->setCheckable(true);
-			tAct->setChecked(true);
-			actMapper.setMapping(tAct,loader.instance());
-			connect(tAct,SIGNAL(toggled(bool)),&actMapper,SLOT(map()));
-			gActions << tAct;
-			}
 		else NVBOutputError(loader.errorString());
 	}
 #endif
 
-	confile = getGlobalSettings();
-	if (!confile) {
+	if (gmodel.rowCount() < 2) // FileBundle is always there
+		NVBCriticalError(QString("No valid plugins found"));
+
+	confile = NVBSettings::getGlobalSettings();
+	if (!confile)
 		NVBOutputError("FileFactory cannot access the configuration file");
-		generators = allGenerators;
-		}
 	else {
 		confile->beginGroup("Plugins");
-		for(int i = 0; i < allGenerators.count(); i++) {
-			if (confile->value(allGenerators.at(i)->moduleName(),true).toBool())
-				generators << allGenerators.at(i);
-			else
-				gActions[i]->setChecked(false);
-			}
+		for(int i = 0; i < gmodel.rowCount(); i++)
+			if (!confile->value(gmodel.availableGenerators().at(i)->moduleName(),true).toBool())
+				gmodel.setGeneratorActive(i,false);
 		confile->endGroup();
 		}
 
-	connect(&actMapper,SIGNAL(mapped(QObject*)),this,SLOT(changeGenerator(QObject*)));
+	foreach (const NVBFileGenerator * generator, gmodel.availableGenerators()) {
+		commentNames << generator->availableInfoFields();
+		}
 
-	if (generators.size() < 2)
-		NVBCriticalError(QString("No valid plugins found"));
-	else
-		foreach (const NVBFileGenerator * g, generators)
-			commentNames << g->availableInfoFields();
 	updateWildcards();
+	connect(&gmodel,SIGNAL(dataChanged(QModelIndex,QModelIndex)),this,SLOT(updateWildcards()));
+	connect(&gmodel,SIGNAL(dataChanged(QModelIndex,QModelIndex)),this,SLOT(updateGeneratorSettings(QModelIndex,QModelIndex)));
+
 	if (!commentNames.isEmpty()) {
 		commentNames.sort();
 		QString cache = commentNames.first();
@@ -144,50 +108,29 @@ NVBFileFactory::NVBFileFactory()
 
 void NVBFileFactory::updateWildcards() {
 	wildcards.clear();
-	foreach (const NVBFileGenerator * g, generators)
+	foreach (const NVBFileGenerator * g, gmodel.activeGenerators())
 		foreach (QString e, g->extFilters())
 			wildcards.insertMulti(e,g);
 }
 
-void NVBFileFactory::changeGenerator(QObject * go) {
+void NVBFileFactory::updateGeneratorSettings(QModelIndex start, QModelIndex end) {
 
-	NVBFileGenerator * generator = qobject_cast<NVBFileGenerator*>(go);
-	
-	if (!generator) {
-		NVBOutputError("Object is not a generator");
-		return;
-		}
-
-	if (!allGenerators.contains(generator)) { // Note - if this check is removed, we could forget about allGenerators
-		NVBOutputError(QString("Generator %1 is not a known generator").arg(generator->moduleName()));
-		return;
-		}
-
-	int gi = generators.indexOf(generator);
-	if (gi >= 0)
-		generators.removeAt(gi);
-	else
-		generators << generator;
-
-	if (confile) {
+	if (start.column() == 0 && confile) {
 		confile->beginGroup("Plugins");
-		confile->setValue(generator->moduleName(),gi < 0);
+		for (int gi=start.row(); gi<= end.row(); gi++)
+			confile->setValue(gmodel.data(gmodel.index(gi,1)).toString(), gmodel.isGeneratorActive(gi));
 		confile->endGroup();
 		}
-	
-	updateWildcards();
+
 }
 
 NVBFileFactory::~NVBFileFactory()
 {
 	while(not files.isEmpty()) delete files.takeFirst();
 	if (deadTree) delete deadTree;
-	while (not generators.isEmpty()) delete generators.takeFirst();
 }
 
 QList<const NVBFileGenerator*> NVBFileFactory::getGeneratorsFromFilename(QString filename) const {
-
-	// TODO 0.1 :: Wildcards should be in an additional list to avoid creating them every time 
 
 	QList<QString> wcks = wildcards.keys();
 	QListIterator<QString> wcki(wcks);
@@ -370,20 +313,23 @@ NVBFile * NVBFileFactory::openFile( const NVBAssociatedFilesInfo& info, bool tra
 
 QStringList NVBFileFactory::getDirFilters( ) const
 {
-	// TODO 0.1 :: This should possibly be cached
-	QStringList s;
-	foreach(const NVBFileGenerator * g, allGenerators)
+	// We don't add generators while the program is running - this never changes
+	static QStringList s;
+
+	if (s.isEmpty()) {
+		foreach(const NVBFileGenerator * g, gmodel.availableGenerators())
 		s += g->extFilters();
+		}
+
 	return s;
 }
 
 QString NVBFileFactory::getDialogFilter( )
 {
-	// TODO 0.1 :: make it a class mutable variable and clear on adding more generators;
 	static QString filter;
 	if (filter.isNull()) {
 		QString s;
-		foreach(const NVBFileGenerator * g, allGenerators) {
+		foreach(const NVBFileGenerator * g, gmodel.availableGenerators()) {
 			s += ";;" + g->nameFilter();
 		}
 		filter = QString("All supported formats (%1);;All files (*.*)").arg(getDirFilters().join(" ")) + s;
