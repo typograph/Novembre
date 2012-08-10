@@ -358,6 +358,8 @@ CreatecHeader CreatecFileGenerator::getCreatecHeader( QFile & file )
       if (ok) {
         if (dimstr.isEmpty())
           tval = dval;
+				else if (dimstr == "A")
+					tval = NVBPhysValue(dval,NVBUnits(QString("m"),1e-10));
         else
           tval = NVBPhysValue(dval,NVBUnits(dimstr));
           } 
@@ -477,8 +479,8 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	QString ext = filename.right(filename.size()-filename.lastIndexOf('.')-1).toLower();
 	if (ext == "dat") {
 		QList<NVBAxisInfo> axes;
-		axes << NVBAxisInfo("X", header.value("Num.X").toInt(), NVBUnits("m"))
-		     << NVBAxisInfo("Y", header.value("Num.Y").toInt(), NVBUnits("m"));
+		axes << NVBAxisInfo("X", header.value("Num.X").toInt(), header.value("Length x").toPhysValue())
+				 << NVBAxisInfo("Y", header.value("Num.Y").toInt(), header.value("Length y").toPhysValue());
 
 		if (header.value("Scantype").toInt() == SCANTYPE_MULTIVOLTAGE) {
 			int multiVoltagePages = 0;
@@ -487,7 +489,8 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 					multiVoltagePages += 1;
 				else
 					break; // A single 0 blocks all the rest
-			axes << NVBAxisInfo("Bias", multiVoltagePages, NVBUnits("V"));
+			axes << NVBAxisInfo("Bias", multiVoltagePages,
+				NVBPhysValue(abs(header.value("MVolt_1").toDouble() - header.value(QString("MVolt_%1").arg(multiVoltagePages)).toDouble()),NVBUnits("V")));
 		}
 
 
@@ -547,13 +550,13 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 
 		QList<NVBAxisInfo> axes;
 
-		axes << NVBAxisInfo("Time",npts,NVBUnits("sec"));
+		axes << NVBAxisInfo("Time",npts,NVBPhysValue(npts*header.value("Vertmandelay").toDouble()/header.value("DSP_Clock").toDouble(),NVBUnits("sec")));
 		if (nr != 0)
 			axes << NVBAxisInfo("Measurement",nr);
 		if (nx != 0) {
-			axes << NVBAxisInfo("X",nx,NVBUnits("m")); // X
+			axes << NVBAxisInfo("X",nx,header.value("Length x").toPhysValue()); // X
 			if (ny != 0)
-				axes << NVBAxisInfo("Y",ny,NVBUnits("m")); // Y
+				axes << NVBAxisInfo("Y",ny,header.value("Length y").toPhysValue()); // Y
 			}
 		if (np != 0)
 			axes << NVBAxisInfo("Point",np); // "Point"
@@ -611,7 +614,8 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 		file.seek(0x4006);
 		int npts = QString(file.readLine(200)).split(' ',QString::SkipEmptyParts).first().toInt();
 		QList<NVBAxisInfo> axes;
-		axes << NVBAxisInfo("Motion",npts,"s");
+		axes << NVBAxisInfo("Motion",npts,
+			NVBPhysValue(npts*header.value("Latmandelay").toDouble()/header.value("DSP_Clock").toDouble(),"s"));
 		fi->append(NVBDataInfo("Z",NVBUnits("nm"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 		fi->append(NVBDataInfo("I",NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 		}
@@ -619,7 +623,8 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 		file.seek(0x4002);
 		int nparam = file.readLine(800).split('\t').count()-3;
 		QList<NVBAxisInfo> axes;
-		axes << NVBAxisInfo("Time", header.value("FFTPoints").toInt(),"s");
+		axes << NVBAxisInfo("Time", header.value("FFTPoints").toInt(),
+			NVBPhysValue(header.value("FFTPoints").toInt()/header.value("SpecFreq").toDouble(),"s"));
 		
 		fi->append(NVBDataInfo("Z", NVBUnits("nm"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));
 		fi->append(NVBDataInfo("I", NVBUnits("A"),axes,NVBDataComments(),NVBDataSet::Spectroscopy));

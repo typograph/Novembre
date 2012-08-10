@@ -98,6 +98,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Name),NVBAxisParamToken::Name);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Length),NVBAxisParamToken::Length);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Units),NVBAxisParamToken::Units);
+	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Span),NVBAxisParamToken::Span);
 
 	axisChoice->setCurrentIndex(0);
   gridLayout->addWidget(axisChoice, 2, 1, 1, 1);
@@ -699,13 +700,18 @@ void NVBColumnInputWidget::tokenListToLayout( NVBTokenList l )
 			return;
 			}
 		case NVBToken::DataComment : {
-			commentOption->setChecked(true);
-			commentChoice->lineEdit()->setText(static_cast<NVBPCommentToken*>(l.last())->sparam);          
-			return;
+			int ix = commentChoice->findText(static_cast<NVBPCommentToken*>(l.last())->sparam);
+			if (ix > -1) {
+				commentOption->setChecked(true);
+				commentChoice->setCurrentIndex(ix);
+				return;
+				}
+			// Else fall through
 			}
 		case NVBToken::Verbatim : {
 			textOption->setChecked(true);
 			textChoice->setText(static_cast<NVBVerbatimToken*>(l.last())->sparam);
+			return;
 			}
 		case NVBToken::Goto :
 		case NVBToken::Invalid :

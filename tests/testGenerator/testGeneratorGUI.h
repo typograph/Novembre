@@ -5,15 +5,15 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QModelIndex>
-#include "../NVBLogger.h"
-#include "../NVBCoreApplication.h"
+#include "NVBLogger.h"
+#include "NVBCoreApplication.h"
 
 class QTreeWidgetItem;
-class NVBFileGenerator;
 class QLineEdit;
 class QTreeWidget;
 class QListView;
 class NVBSingleView;
+class NVBFileGenerator;
 class NVBFile;
 class NVBFileInfo;
 
@@ -30,7 +30,7 @@ public:
 
 	void addFileInfoToTree(QTreeWidgetItem * parent, NVBFileInfo * info);
 	void addFileToTree(QTreeWidgetItem * parent, NVBFile * file);
-	
+
 public slots:
 	void openFile(QString = QString());
 	void openFolder(QString);

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include "NvBrowserApp.h"
+#include "NVBSettingsDialog.h"
 #include "NVBSettings.h"
 #include "NVBBrowser.h"
 #include "NVBFileFactory.h"
@@ -88,27 +89,26 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 	// Start logging
 
 #ifdef NVB_ENABLE_LOG
-	if (conf->contains("LogFile"))
-		while (true) {
-			NVBLogFile * lf =	new NVBLogFile(conf->value("LogFile").toString(),this);
-			if (!lf) {
-				QMessageBox::critical(0,"Log error","Cannot access the logfile. Please check the settings");
-				if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
-				}
-			else
-				break;
+	if (conf->contains("LogFile") && !new NVBLogFile(conf->value("LogFile").toString(),this)) {
+		QMessageBox::critical(0,"Log error","Cannot access the logfile. Please check the settings");
+		NVBSettingsDialog::showGeneralSettings();
+		if (conf->contains("LogFile") && !new NVBLogFile(conf->value("LogFile").toString(),this)) {
+			NVBOutputError("Cannot access the logfile. Disable file logging.");
+			conf->remove("LogFile"); // This part should not be reachable
 			}
+		}
 #endif
 
 #ifdef NVB_STATIC
 	if (firstrun)
-		NVBSettings::showGeneralSettings();
+		NVBSettingsDialog::showGeneralSettings();
 #else
 	if (firstrun || !conf->contains("PluginPath"))
 		conf->setValue("PluginPath",NVB_PLUGINS);
-	if (!QFile::exists(conf->value("PluginPath").toString()))
-		if (NVBSettings::showGeneralSettings() == QDialog::Rejected)
-			throw;
+	if (!QFile::exists(conf->value("PluginPath").toString())) {
+		NVBSettingsDialog::showGeneralSettings();
+		if (!QFile::exists(conf->value("PluginPath").toString()))	throw;
+		}
 #endif
 
 //	while (true) {
@@ -116,20 +116,9 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 		setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
 #endif
 		qApp->setProperty("filesFactory",QVariant::fromValue(new NVBFileFactory()));
-//		break;
-//		}
-//	QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
-//	if (NVBSettings::showGeneralSettings() == QDialog::Rejected) exit(1);
 
 }
 
-/*
-void NVBBrowserApplication::setMainWindow(NVBBrowser * widget) {
-	mainWindow = widget;
-	NVBMainWindow * mw = new QMainWindow(this);
-	
-	}
-*/
 NVBBrowserApplication::~ NVBBrowserApplication()
 {
 	QSettings * conf = property("NVBSettings").value<QSettings*>();

@@ -120,8 +120,10 @@ NVBVariant NVBFileInfo::axisParam(const NVBDataInfo& pi, int index, NVBAxisParam
 		case NVBAxisParamToken::Length :
 			return pi.axes.at(index).length;
 		case NVBAxisParamToken::Units :
-			return pi.axes.at(index).units;
-    default :
+			return pi.axes.at(index).span.getDimension();
+		case NVBAxisParamToken::Span :
+			return pi.axes.at(index).span;
+		default :
       return NVBVariant();
     }
 }
@@ -135,7 +137,7 @@ NVBVariant NVBFileInfo::getInfo(const NVBTokenList & list) const {
 		else {   
 			NVBVariantList ans, pans;
 			ans.setSeparator(" : ");
-			pans.setSeparator(" : ");
+			pans.setSeparator("");
 			foreach(NVBDataInfo pi, *this) {
 				
 				pans.clear();
