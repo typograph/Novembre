@@ -34,7 +34,8 @@ NVBTestGenApplication::~ NVBTestGenApplication()
 }
 
 void NVBTestGenApplication::openFile() {
-	printf("%s ",filename.toLatin1().constData());
+	if (!quiet)
+		printf("%s ",filename.toLatin1().constData());
 	int r = openFile(filename);
 	switch(r) {
 		case status_SUCCESS:
