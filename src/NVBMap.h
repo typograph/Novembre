@@ -87,6 +87,7 @@ class NVBColorInstance {
 		void overrideLimits(double zmin, double zmax);
 
 		QPixmap colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
+		QPixmap colorizeFlipped(const double * zs, bool flipX, bool flipY, QSize d_wxh, QSize i_wxh = QSize()) const;
 };
 
 /**

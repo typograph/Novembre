@@ -541,16 +541,17 @@ bool RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 		return false;
 		}
 	else {
-		double * tdata = (double*)calloc(sizeof(double),header.x_size*header.y_size);
+//		double * tdata = (double*)calloc(sizeof(double),header.x_size*header.y_size);
+		// RHK y axis is inverted with respect to Qt's y axis
+		// Not needed anymore - should be taken care of by the axes
+		// flipMem<double>(data, tdata, header.x_size, header.y_size, !(header.x_scale > 0), header.y_scale > 0 );
+//		free(tdata);
+		data = (double*)calloc(sizeof(double),header.x_size*header.y_size);
 
 		NVBValueScaler<qint32,double> intscaler(header.z_offset,header.z_scale);
-		scaleMem<qint32,double>(tdata,intscaler,dataRHK,header.x_size*header.y_size);
+		scaleMem<qint32,double>(data,intscaler,dataRHK,header.x_size*header.y_size);
 		free(dataRHK);
 
-		data = (double*)calloc(sizeof(double),header.x_size*header.y_size);
-		// RHK y axis is inverted with respect to Qt's y axis
-		flipMem<double>(data, tdata, header.x_size, header.y_size, !(header.x_scale > 0), header.y_scale > 0 );
-		free(tdata);
 		}
 
 	ds->filterAddComments(comments);

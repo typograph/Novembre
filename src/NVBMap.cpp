@@ -50,6 +50,28 @@ QPixmap NVBColorInstance::colorize(const double * zs, QSize d_wxh, QSize i_wxh) 
 	return QPixmap::fromImage(result);
 }
 
+QPixmap NVBColorInstance::colorizeFlipped(const double *zs, bool flipX, bool flipY, QSize d_wxh, QSize i_wxh) const
+{
+	if (!flipX && !flipY)
+		return colorize(zs,d_wxh,i_wxh);
+
+	if (!zs) return QPixmap();
+
+	double * zs_flipped = (double*)calloc(sizeof(double),d_wxh.width()*d_wxh.height());
+	if (!zs_flipped) {
+		NVBOutputError("Out of memory");
+		return QPixmap();
+		}
+
+	flipMem<double>(zs_flipped, zs, d_wxh.width(), d_wxh.height(), flipX, flipY);
+
+	QPixmap r = colorize(zs_flipped,d_wxh,i_wxh);
+
+	free(zs_flipped);
+
+	return r;
+}
+
 void NVBColorInstance::setLimits ( double vmin, double vmax ) {
 	// It is impossible to set reasonable values if vmin == vmax
 	if (vmin != vmax) {
@@ -195,7 +217,14 @@ QPixmap NVBDataColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh) c
 	if (i_wxh.isEmpty())
 		i_wxh = QSize(data->sizeAt(xyAxes.first()),data->sizeAt(xyAxes.last()));
 	double * tdata = sliceDataSet(data,sliceAxes,slice,xyAxes);
-	QPixmap timg = NVBColorInstance::colorize(tdata,QSize(data->sizeAt(xyAxes.first()),data->sizeAt(xyAxes.last())),i_wxh);
+
+	NVBAxisPhysMap * xmap = data->axisAt(xyAxes.first()).physMap();
+	bool flipX = xmap && (xmap->value(0) > xmap->value(data->sizeAt(xyAxes.first())-1));
+
+	NVBAxisPhysMap * ymap = data->axisAt(xyAxes.last()).physMap();
+	bool flipY = !ymap || (ymap->value(0) < ymap->value(data->sizeAt(xyAxes.last())-1));
+
+	QPixmap timg = NVBColorInstance::colorizeFlipped(tdata,flipX,flipY,QSize(data->sizeAt(xyAxes.first()),data->sizeAt(xyAxes.last())),i_wxh);
 	free(tdata);
 	return timg;
 }

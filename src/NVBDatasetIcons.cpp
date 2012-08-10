@@ -206,11 +206,23 @@ void NVB2DIconEngine::setSource(const NVBDataSet * dataset) {
 			dset = 0;
 			return;
 			}
+
+		setFlip();
+
 		ci = dset->colorInstance();
 		connect(dset, SIGNAL(dataChanged()), SLOT(redrawCache()) );
 		connect(dset, SIGNAL(destroyed()), SLOT(setSource()) );
 		}
 	redrawCache();
+}
+
+void NVB2DIconEngine::setFlip()
+{
+	NVBAxisPhysMap * xmap = si.matchedAxis(0).physMap();
+	flipX = xmap && (xmap->value(0) > xmap->value(si.matchedAxis(0).length()-1));
+
+	NVBAxisPhysMap * ymap = si.matchedAxis(1).physMap();
+	flipY = !ymap || (ymap->value(0) < ymap->value(si.matchedAxis(1).length()-1));
 }
 
 void NVB2DIconEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State) {
@@ -242,7 +254,7 @@ void NVB2DIconEngine::redrawCache()
 	if (dset && ci) {
 		// get slice at (0,0) and draw it
 		forSingleSliceAlong(si) {
-			cache[QIcon::Normal] = ((NVBColorInstance*)ci)->colorize(SLICE.data,QSize(si.matchedAxis(0).length(),si.matchedAxis(1).length()));
+			cache[QIcon::Normal] = ((NVBColorInstance*)ci)->colorizeFlipped(SLICE.data,flipX,flipY,QSize(si.matchedAxis(0).length(),si.matchedAxis(1).length()));
 			}
 		}
 }
