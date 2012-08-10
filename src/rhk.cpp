@@ -128,8 +128,8 @@ QStringList RHKFileGenerator::availableInfoFields() const {
 
 void RHKFileGenerator::detectGrid(const TRHKHeader& header, const float * xposdata, const float * yposdata, int& np, int& nx, int& ny)
 {
-	nx = 1;
-	ny = 1;
+	nx = 0;
+	ny = 0;
 	np = 1;
 
 // Basically, we can go on on two things
@@ -181,8 +181,8 @@ void RHKFileGenerator::detectGrid(const TRHKHeader& header, const float * xposda
 			break;
 		}
 
-	if (nx == 1) {
-		if (header.grid_xsize > 0) {
+	if (nx == 0) {
+		if (header.grid_xsize > 0 && header.grid_xsize <= header.y_size && header.grid_ysize > 0 && header.grid_ysize <= header.y_size && header.grid_xsize * header.grid_ysize <= header.y_size) {
 			nx = header.grid_xsize;
 			ny = header.grid_ysize;
 			}
@@ -338,8 +338,8 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 				file.peek((char*)&cs,2);
 				file.seek(file.pos() + header.colorinfo_count*(cs+2));
 				type = NVBDataSet::Topography;
-				axes << NVBAxisInfo(strings.at(10).isEmpty() ? "X" : strings.at(10),header.x_size,NVBUnits(strings.at(7)))
-				     << NVBAxisInfo(strings.at(11).isEmpty() ? "Y" : strings.at(11),header.x_size,NVBUnits(strings.at(8)));
+				axes << NVBAxisInfo(strings.at(10).isEmpty() ? "X" : strings.at(10),header.x_size,NVBPhysValue(header.x_size*header.x_scale,NVBUnits(strings.at(7))))
+						 << NVBAxisInfo(strings.at(11).isEmpty() ? "Y" : strings.at(11),header.y_size,NVBPhysValue(header.y_size*header.y_scale,NVBUnits(strings.at(8))));
 				break;
 				}
 			case 1 : { // Spectroscopy
@@ -359,22 +359,31 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 					else
 						nameT = "T";
 					}
-				axes << NVBAxisInfo(nameT,header.x_size,NVBUnits(strings.at(7)));
+				axes << NVBAxisInfo(nameT,header.x_size,NVBPhysValue(header.x_size*header.x_scale,NVBUnits(strings.at(7))));
 
 				int np=1,nx=1,ny=1;
-				
+				float * posdata;
 				// Skip curve position data
 				if (header.page_type != 7 && header.page_type != 31) {
-					float * posdata = (float*)malloc(2*sizeof(float)*header.y_size);
+					posdata = (float*)malloc(2*sizeof(float)*header.y_size);
 					file.read((char*)posdata,2*sizeof(float)*header.y_size);
 					detectGrid(header,posdata,posdata + header.y_size,np,nx,ny);
 					}
 
-				if (np > 1) axes << NVBAxisInfo("Samples",np);
-				if (nx > 1) axes << NVBAxisInfo("X",nx,NVBUnits(strings.at(7)));
-				if (ny > 1) axes << NVBAxisInfo("Y",ny,NVBUnits(strings.at(8)));;
+				// Axis span is defined differently for incremental
+				// and fixed axes. Here we emulate this behaviour
+
+				if (np > 1)
+					axes << NVBAxisInfo("Samples",np);
+				if (nx > 1)
+					axes << NVBAxisInfo("X",nx,
+						NVBPhysValue((posdata[header.y_size-1] - posdata[0])*nx/(nx-1),"m"));
+				if (ny > 1)
+					axes << NVBAxisInfo("Y",ny,
+						NVBPhysValue((posdata[2*header.y_size-1] - posdata[header.y_size])*ny/(ny-1),"m"));
 				if (nx < 2 && ny < 2 && (header.y_size / np) > 1)
-						axes << NVBAxisInfo("Points", header.y_size / np, NVBUnits("Point",false));
+						axes << NVBAxisInfo("Points", header.y_size / np,
+							NVBPhysValue(header.y_size / np, NVBUnits("Point",false)));
 				
 				type = NVBDataSet::Spectroscopy;
 				break;
@@ -732,9 +741,9 @@ bool RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources, bool subtra
 			ds->addAxis("Samples",np);
 		if (status & 2) {
 			ds->addAxis("X",nx);
-			ds->addAxisMap(new NVBAxisPhysMap(xposdata[0],xposdata[np] - xposdata[0],NVBUnits(strings.at(7))));
+			ds->addAxisMap(new NVBAxisPhysMap(xposdata[0],xposdata[np] - xposdata[0],"m"));
 			ds->addAxis("Y",ny);
-			ds->addAxisMap(new NVBAxisPhysMap(yposdata[0],yposdata[nx*np] - yposdata[0],NVBUnits(strings.at(8))));
+			ds->addAxisMap(new NVBAxisPhysMap(yposdata[0],yposdata[nx*np] - yposdata[0],"m"));
 			}
 		else {
 			ds->addAxis("Points", header.y_size / np);

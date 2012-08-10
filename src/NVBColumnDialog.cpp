@@ -98,6 +98,7 @@ NVBColumnInputWidget::NVBColumnInputWidget(NVBTokenList l, QWidget * parent):QWi
 	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Name),NVBAxisParamToken::Name);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Length),NVBAxisParamToken::Length);
   axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Units),NVBAxisParamToken::Units);
+	axisChoice->addItem(NVBTokenList::nameAxisParam(NVBAxisParamToken::Span),NVBAxisParamToken::Span);
 
 	axisChoice->setCurrentIndex(0);
   gridLayout->addWidget(axisChoice, 2, 1, 1, 1);

@@ -47,6 +47,7 @@
  * 
  * axisName   : axis name
  * axisLength : axis length
+ * axisSpan   : axis length in units
  * axisUnits  : axis units
  */
 
@@ -99,7 +100,7 @@ struct NVBDataParamToken : NVBToken {
 };
 
 struct NVBAxisParamToken : NVBToken {
-	enum NVBAxisParam {Invalid = 0, Exists, Name, Length, Units} aparam;
+	enum NVBAxisParam {Invalid = 0, Exists, Name, Length, Units, Span} aparam;
 	QString nparam;
 	int ixparam;
   NVBAxisParamToken(QString name, NVBAxisParam a):NVBToken(AxisParam),aparam(a),nparam(name) {;}
