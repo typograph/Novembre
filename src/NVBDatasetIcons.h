@@ -28,6 +28,10 @@ class NVB2DIconEngine : public QObject, public QIconEngineV2 {
 		QList<QPixmap> cache;
 		NVBAxisSelector selector;
 		NVBSelectorDataInstance si;
+		bool flipX, flipY;
+
+		void setFlip();
+
 	public :
 		
 		NVB2DIconEngine(const NVBDataSet* dataset);
