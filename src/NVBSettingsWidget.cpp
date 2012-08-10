@@ -30,8 +30,8 @@
 
 NVBSettingsWidget::NVBSettingsWidget(QWidget* parent)
 : QFrame(parent)
-, parentSettings(0)
 , uncommitted(false)
+, parentSettings(0)
 {
 	vlayout = new QVBoxLayout(this);
 	vlayout->setMargin(10);
@@ -197,4 +197,6 @@ bool NVBSettingsWidget::write(QSettings* settings)
 	
 	onWrite();
 	emit dataSynced();
+	uncommitted = false;
+	return true;
 }
