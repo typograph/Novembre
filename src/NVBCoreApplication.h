@@ -30,6 +30,7 @@
 
 #include "NVBLogger.h"
 #include <QtGui/QApplication>
+#include <QtCore/QStringList>
 
 class NVBCoreApplication : public QApplication {
 Q_OBJECT
@@ -38,6 +39,13 @@ public:
   virtual ~NVBCoreApplication();
 	//virtual bool notify ( QObject * receiver, QEvent * event ) ;
 	
+protected:
+#ifdef NVB_ENABLE_LOG
+	bool quiet;
+#endif
+	QStringList commandLine;
+	virtual void processCommandLine();
+
 #ifdef NVB_ENABLE_LOG
 private slots:
   void message(NVB::LogEntryType type, QString issuer, QString text);
