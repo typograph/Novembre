@@ -23,7 +23,7 @@ class NVBAxisTMap : public NVBAxisMap {
 		T value(axissize_t i) const {
 			if (i < (axissize_t) vs.size())
 				return vs.at(i);
-			return T();
+			return vs.at( (axissize_t)vs.size() - 1);
 			}
 
 		virtual NVBAxisTMap<T> * copy() { return new NVBAxisTMap<T>(vs); }
