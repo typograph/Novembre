@@ -15,7 +15,11 @@
 #include <QAbstractListModel>
 #include "NVBGeneralDelegate.h"
 #include "NVBViewController.h"
+#ifndef FILEGENERATOR_NO_GUI
 #include "NVBToolsFactory.h"
+#else
+class NVBToolsFactory;
+#endif
 #include "NVBMimeData.h"
 
 /*!

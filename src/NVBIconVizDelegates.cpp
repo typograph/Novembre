@@ -15,6 +15,7 @@
 
 QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page, const QSize & size = QSize()) {
 	const double * pdata = page->getData();
+	if (!pdata) return 0;
 
 	double xnorm = 0, ynorm = 0;
 

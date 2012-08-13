@@ -13,7 +13,9 @@
 
 NVBPageViewModel::NVBPageViewModel():QAbstractListModel(),lastAddedRow(-1)
 {
+#ifndef FILEGENERATOR_NO_GUI
 	tools = qApp->property("toolsFactory").value<NVBToolsFactory*>();
+#endif
 	setSupportedDragActions(Qt::CopyAction);
 }
 
@@ -198,8 +200,11 @@ void NVBPageViewModel::addSource(NVBDataSource* page, int row)
 
 	pages.insert(row,page);
 
+#ifdef FILEGENERATOR_NO_GUI
+	icons.insert(row,QIcon());
+#else
 	icons.insert(row,tools->getDefaultIcon(page));
-
+#endif
 	endInsertRows();
 
 	connect(page,SIGNAL(objectPushed(NVBDataSource *, NVBDataSource* )),SLOT(updateSource(NVBDataSource*, NVBDataSource*)));
@@ -245,6 +250,9 @@ void NVBPageViewModel::updateSource(NVBDataSource * newobj, NVBDataSource * oldo
  */
 QMimeData * NVBPageViewModel::mimeData(const QModelIndexList & indexes) const
 {
+#ifdef FILEGENERATOR_NO_GUI
+	return 0;
+#else
 	if (indexes.count() > 1) {
 		NVBOutputError("Dragging more than one object");
 		return 0;
@@ -253,6 +261,7 @@ QMimeData * NVBPageViewModel::mimeData(const QModelIndexList & indexes) const
 	if (indexes.isEmpty()) return 0;
 
 	return new NVBDataSourceMimeData(NVBToolsFactory::hardlinkDataSource(indexes.at(0).data(PageRole).value<NVBDataSource*>()));
+#endif
 }
 
 Qt::DropActions NVBPageViewModel::supportedDropActions() const
