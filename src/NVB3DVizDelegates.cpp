@@ -6,7 +6,7 @@ private:
 
 public:
   NVBProjectionColor3D(NVB3DDataSource * source):Qwt3D::Color(),cprovider(source) {;}
-  virtual Qwt3D::RGBA   operator() (double x, double y, double z) const {
+	virtual Qwt3D::RGBA   operator() (double, double, double z) const {
     Qwt3D::RGBA color;
     QColor(cprovider->getColorModel()->colorize(z)).getRgbF(&color.r,&color.g,&color.b,&color.a);
     return color;

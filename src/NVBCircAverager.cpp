@@ -55,7 +55,7 @@ NVBBullsEyeViz::NVBBullsEyeViz(NVB3DDataSource * data):QObject(),NVBFilteringGra
 
 }
 
-void NVBBullsEyeViz::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+void NVBBullsEyeViz::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 {
   painter->save();
 

@@ -17,7 +17,7 @@
 #include <QLabel>
 #include <QSettings>
 
-Q_DECLARE_METATYPE(QSettings*);
+Q_DECLARE_METATYPE(QSettings*)
 
 class NVBSettings : public QDialog {
 Q_OBJECT

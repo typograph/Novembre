@@ -28,7 +28,7 @@ private:
 
   QwtArray<double> xPoints();
   double wrap(double center, const QwtData * data);
-  double envelope(double x);
+	double envelope(double x);
 
   QList<QwtData*> fdata;
 
