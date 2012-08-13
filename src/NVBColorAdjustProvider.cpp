@@ -24,7 +24,7 @@ bool NVBColorAdjustProvider::hasDelegate(quint16 DID)
 #ifdef WITH_2DVIEW
     case 0x5350 : // 'SP' /Spectroscopy paint
 #endif
-    case 0x5353 : // 'SS' /Spectroscopy slice
+//    case 0x5353 : // 'SS' /Spectroscopy slice
       return true; 
     default : return false;
     }
@@ -51,19 +51,19 @@ void NVBColorAdjustProvider::activateDelegate(quint16 delegateID, NVBDataSource 
       break;
       }
 #endif
-    case 0x5353 : { // 'SS'
-      if (source->type() == NVB::SpecPage) {
-        NVBSlicePainter * spainter = new NVBSlicePainter((NVBSpecDataSource*)source,new NVBGrayRampContColorModel(0,1,0,1));
-        wnd->setSource(spainter);
-        wnd->addControlWidget(spainter->widget());
-        }
-      break;
-      }
-    default : return;
-    }
+//    case 0x5353 : { // 'SS'
+//      if (source->type() == NVB::SpecPage) {
+//        NVBSlicePainter * spainter = new NVBSlicePainter((NVBSpecDataSource*)source,new NVBGrayRampContColorModel(0,1,0,1));
+//        wnd->setSource(spainter);
+//        wnd->addControlWidget(spainter->widget());
+//        }
+//      break;
+//      }
+		default : return;
+		}
 }
 
-void NVBColorAdjustProvider::populateToolbar(NVB::ViewType vtype, NVBPageToolbar * toolbar)
+void NVBColorAdjustProvider::populateToolbar(NVB::ViewType /*vtype*/, NVBPageToolbar * toolbar)
 {
   QAction * a = NVBContColorScaler::action();
   a->setData(((int)id() << 16) + 0x5441);
@@ -75,9 +75,9 @@ void NVBColorAdjustProvider::populateToolbar(NVB::ViewType vtype, NVBPageToolbar
   toolbar->addActionWithType(a,NVB::SpecPage,NVB::TwoDView);
 #endif
 
-  a = NVBSlicePainter::action();
-  a->setData(((int)id() << 16) + 0x5353);
-  toolbar->addActionWithType(a,NVB::SpecPage,NVB::AnyView);
+//  a = NVBSlicePainter::action();
+//  a->setData(((int)id() << 16) + 0x5353);
+//  toolbar->addActionWithType(a,NVB::SpecPage,NVB::AnyView);
 
 }
 

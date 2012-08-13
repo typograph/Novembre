@@ -16,13 +16,14 @@ HEADERS += \
           src/NVBDiscrColoring.h \
           src/NVBColorAdjustProvider.h \
           src/NVBContColorScaler.h \
-          src/NVBSlicePainter.h \
           src/NVBColorButton.h
 
 SOURCES += \
           src/NVBColorAdjustProvider.cpp \
-          src/NVBContColorScaler.cpp \
-          src/NVBSlicePainter.cpp
+		  src/NVBContColorScaler.cpp
+
+#          src/NVBSlicePainter.h
+#          src/NVBSlicePainter.cpp
 
 TARGET = lib/tools/nvbcolor
 
