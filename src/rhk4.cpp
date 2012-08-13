@@ -78,6 +78,11 @@ NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const
 		return 0;
 		}
 
+	if (file.atEnd()) {
+		NVBOutputError("Empty file");
+		return 0;
+		}
+
 	QMap<QString,NVBVariant> comments;
 	RHKFile fileheader = getRHKHeader(file);
 	QStringList strings;
@@ -143,6 +148,11 @@ NVBFileInfo * RHK4FileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & inf
 
 	if (!file.open(QIODevice::ReadOnly)) {
 		NVBOutputFileError(&file);
+		return 0;
+		}
+
+	if (file.atEnd()) {
+		NVBOutputError("Empty file");
 		return 0;
 		}
 
