@@ -11,7 +11,8 @@ HEADERS += \
     src/NVBSpecShift.h \
     src/NVBSpecExcluder.h \
     src/NVBSpecSmooth.h \
-    src/NVBPhysSpinBox.h
+	src/NVBPhysSpinBox.h \
+	src/NVBSpecSlicer.h
 
 SOURCES += \
     src/NVBSpecAverager.cpp \
@@ -21,10 +22,8 @@ SOURCES += \
     src/NVBSpecMath.cpp \
     src/NVBSpecShift.cpp \
     src/NVBSpecExcluder.cpp \
-    src/NVBSpecSmooth.cpp
-
-#    src/NVBSpecSlicer.cpp
-#    src/NVBSpecSlicer.h
+	src/NVBSpecSmooth.cpp \
+	src/NVBSpecSlicer.cpp
 
 TARGET = lib/tools/nvbspec
 

@@ -451,7 +451,9 @@ void NVBFileWindow::setGraphView()
     return;
     }
 
-  view = gview;
+	connect(this,SIGNAL(activateVisualizer( NVBVizUnion, const QModelIndex & )), gview,SLOT(setActiveVisualizer( NVBVizUnion, const QModelIndex & )));
+
+	view = gview;
 }
 #endif
 
