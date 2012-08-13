@@ -129,7 +129,8 @@ private:
 
 	NVBDataSource * loadNextPage(QFile & file) const;
   static TRHKHeader getRHKHeader(QFile & file);
-  static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
+	static bool RHKHeaderIsSane(const TRHKHeader &, QString);
+	static QStringList loadRHKStrings(QFile & file, qint16 nstrings);
   static QString getPageTypeString(qint32 type);
 	static QString getGUIDString(RHK_GUID id);
   static QString getLineTypeString(qint32 type);
