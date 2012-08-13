@@ -183,7 +183,7 @@ double NVBSpecSmoother::wrap(double center, const QwtData * data)
   return y/n;
 }
 
-double NVBSpecSmoother::envelope(double x)
+double NVBSpecSmoother::envelope(double /*x*/)
 {
   return 0;
 }

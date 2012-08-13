@@ -36,7 +36,7 @@ public:
   NVBBullsEyeViz(NVB3DDataSource * leveler);
   virtual ~NVBBullsEyeViz() {;}
 
-  virtual void paint ( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0 );
+	virtual void paint (QPainter * painter, const QStyleOptionGraphicsItem *, QWidget * = 0);
   virtual QRectF boundingRect () const { return QRectF(QPointF(),provider->resolution()); }
 
 protected:

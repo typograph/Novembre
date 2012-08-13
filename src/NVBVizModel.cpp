@@ -56,7 +56,7 @@ void NVBVizModel::pagesInserted(const QModelIndex & parent, int start, int end)
 	if (parent.isValid()) return;
 
 	for (int i = start; i <= end; i++) {
-		NVBDataSource * page = parent.child(i,0).data(PageRole).value<NVBDataSource*>();
+//		NVBDataSource * page = parent.child(i,0).data(PageRole).value<NVBDataSource*>();
 		vizs.insert(i,NVBVizUnion());
 		}
 
