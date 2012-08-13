@@ -12,18 +12,20 @@
 
 #include "NVBSpecToolsProvider.h"
 #include "NVBSpecAverager.h"
-// #include "NVBSpecSlicer.h"
+#include "NVBSpecSlicer.h"
 #include "NVBSpecSubstractor.h"
 #include "NVBSpecExcluder.h"
 #include "NVBSpecMath.h"
 #include "NVBSpecShift.h"
 #include "NVBSpecSmooth.h"
+#include "NVBToolsFactory.h"
+#include <QMessageBox>
 
 bool NVBSpecToolsProvider::hasDelegate(quint16 DID)
 {
   switch(DID) {
     case 0x4176 : // 'Av' -- averager
-//    case 0x536C : // 'Sl' -- slicing
+		case 0x536C : // 'Sl' -- slicing
     case 0x4273 : // 'Bs' -- background substract
     case 0x4365 : // 'Ce' -- Curve exclusion
     case 0x436D : // 'Cm' -- Curve mathematics
@@ -63,32 +65,37 @@ void NVBSpecToolsProvider::activateDelegate(quint16 delegateID, NVBDataSource * 
       break;
       }
       
-/*    case 0x536C : { // 'Sl'
+		case 0x536C : { // 'Sl'
       if (source->type() != NVB::SpecPage) break;
       NVBSpecDataSource * page = (NVBSpecDataSource*)source;
+			if (!NVBSpecSlicerDelegate::hasGrid(page)) {
+				QMessageBox::warning(0,"Slicing impossible","The data was not taken on a rectangular grid.");
+				break;
+				}
       if (wnd->viewType() == NVB::TwoDView) {
         NVBSpecSlicerWidget * topowidget  = new NVBSpecSlicerWidget(page);
         NVBSpecSlicerDelegate * newpage = new NVBSpecSlicerDelegate(page);
-        connect(topowidget,SIGNAL(posChanged(double)),newpage,SLOT(setPos(double)));
+				connect(topowidget,SIGNAL(posChanged(int)),newpage,SLOT(setPos(int)));
         wnd->setSource(newpage);
         wnd->addControlWidget(topowidget);
         }
       else if (wnd->viewType() == NVB::GraphView) {
         NVBSpecSlicerWidget * specwidget  = new NVBSpecSlicerWidget(page);
         NVBSpecSlicerPosTracker * postracker = new NVBSpecSlicerPosTracker(page);
-        connect(specwidget,SIGNAL(posChanged(double)),postracker,SLOT(setPos(double)));
-        connect(postracker,SIGNAL(posChanged(double)),specwidget,SLOT(setPos(double)));
+				connect(specwidget,SIGNAL(posChanged(int)),postracker,SLOT(setPos(int)));
+				connect(postracker,SIGNAL(posChanged(int)),specwidget,SLOT(setPos(int)));
         NVBSpecSlicerWidget * topowidget  = new NVBSpecSlicerWidget(page);
-        NVBSpecSlicerDelegate * newpage = new NVBSpecSlicerDelegate(page);
-        connect(specwidget,SIGNAL(posChanged(double)),topowidget,SLOT(setPos(double)));
-        connect(topowidget,SIGNAL(posChanged(double)),specwidget,SLOT(setPos(double)));
-        connect(topowidget,SIGNAL(posChanged(double)),newpage,SLOT(setPos(double)));
+				NVBSpecSlicerDelegate * newpage = new NVBSpecSlicerDelegate((NVBSpecDataSource*)NVBToolsFactory::hardlinkDataSource(page));
+				connect(specwidget,SIGNAL(posChanged(int)),topowidget,SLOT(setPos(int)));
+				connect(topowidget,SIGNAL(posChanged(int)),specwidget,SLOT(setPos(int)));
+				connect(topowidget,SIGNAL(posChanged(int)),newpage,SLOT(setPos(int)));
         wnd->addControlWidget(specwidget);
-        wnd->setActiveVisualizer(NVBVizUnion(NVB::SpecPage,postracker));
+				wnd->setActiveVisualizer(NVBVizUnion(NVB::SpecPage,postracker));
         wnd->openInNewWindow(newpage)->addControlWidget(topowidget);
+				specwidget->setPos(0);
         }
       break;
-      }*/
+			}
     case 0x4273 : { // 'Bs' -- background substract
       if (source->type() == NVB::SpecPage) {
         NVBSpecSubstractor * filtered = new NVBSpecSubstractor((NVBSpecDataSource*)source);
@@ -144,6 +151,9 @@ void NVBSpecToolsProvider::populateToolbar(NVB::ViewType vtype, NVBPageToolbar *
   a->setData(0x4E531111);
   toolbar->addActionWithType(a,NVB::SpecPage,NVB::AnyView);
 
+	a = NVBSpecSlicerDelegate::action();
+	a->setData(0x4E53536C);
+	toolbar->addActionWithType(a,NVB::SpecPage,NVB::AnyView);
 }
 
 Q_EXPORT_PLUGIN2(nvbspec, NVBSpecToolsProvider)

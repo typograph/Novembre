@@ -58,7 +58,7 @@ template<typename T>
 void arrayTranslateRow(T* dest, const T* src, uint row, uint width, uint height);
 
 template<typename T>
-void getMemMinMax(T* mem, unsigned long size, T & min, T & max);
+void getMemMinMax(const T* const mem, unsigned long size, T & min, T & max);
 
 template<typename fromT, typename toT>
 void scaleMem(toT * dest, const scaler<fromT,toT> &_scaler, const fromT* src, unsigned long size);
@@ -176,7 +176,7 @@ void arrayCopyRowtoCol( T* dest, const T* src, unsigned int row, unsigned int co
 }
 
 template <typename T>
-void getMemMinMax(T* mem, unsigned long size, T & min, T & max) {
+void getMemMinMax(const T* const mem, unsigned long size, T & min, T & max) {
   min = max = mem[0];
   for (unsigned long i = 1; i<size; i++) {
     if (mem[i] > max) max = mem[i];

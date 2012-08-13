@@ -275,17 +275,17 @@ public:
 	QIcon icon;
 	virtual NVB::ViewType viewType() { return NVB::IconView;}
 
-	virtual void setSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion()) {}
-	virtual void addSource(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion()) {}
+	virtual void setSource(NVBDataSource * /*page*/, NVBVizUnion /*viz*/ = NVBVizUnion()) {}
+	virtual void addSource(NVBDataSource * /*page*/, NVBVizUnion /*viz*/ = NVBVizUnion()) {}
 
 	virtual void setVisualizer(NVBVizUnion visualizer) {
 		if (visualizer.valid)
 			icon = QIcon(*visualizer.IconViz);
 		}
-	virtual void addControlWidget(QWidget * controlWidget) {}
-	virtual void setActiveVisualizer(NVBVizUnion visualizer) {}
+	virtual void addControlWidget(QWidget * /*controlWidget*/) {}
+	virtual void setActiveVisualizer(NVBVizUnion /*visualizer*/) {}
 
-	virtual NVBViewController * openInNewWindow(NVBDataSource * page, NVBVizUnion viz = NVBVizUnion(), NVB::ViewType vtype = NVB::DefaultView)
+	virtual NVBViewController * openInNewWindow(NVBDataSource * /*page*/, NVBVizUnion /*viz*/ = NVBVizUnion(), NVB::ViewType /*vtype*/ = NVB::DefaultView)
 		{ return 0; }
 	};
 

@@ -209,7 +209,7 @@ Extension of NVBDataSource for spectroscopy pages
 */
 class NVBSpecDataSource : public NVBDataSource
 {
-// Q_OBJECT
+ Q_OBJECT
 public:
 	NVBSpecDataSource():NVBDataSource() {;}
 	virtual ~NVBSpecDataSource() {;}
