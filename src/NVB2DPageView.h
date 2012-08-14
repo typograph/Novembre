@@ -13,6 +13,8 @@
 #include "NVBGraphicsItems.h"
 #include "NVBDataView.h"
 
+class QRubberBand;
+
 class NVB2DPageView : public QGraphicsView, public NVBDataView {
 Q_OBJECT
 private:
@@ -22,6 +24,8 @@ private:
 	bool paintSizeMarker;
 	bool zooming;
   bool keepRatio;
+	QPoint zoomRCpos; // right-click spot
+	QRubberBand * zoomRubberBand;
   QGraphicsItem * activeFilter;
   NVBFullGraphicsItem * eventCatcher;
 /*  bool showTicks;
@@ -119,6 +123,10 @@ protected :
 
   virtual void resizeEvent ( QResizeEvent * event );
   virtual void keyReleaseEvent ( QKeyEvent * event );
+
+	virtual void mousePressEvent(QMouseEvent *event);
+	virtual void mouseMoveEvent(QMouseEvent *event);
+	virtual void mouseReleaseEvent(QMouseEvent *event);
 //   virtual bool viewportEvent ( QEvent * event );
 
 protected slots:

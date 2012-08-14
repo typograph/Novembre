@@ -3,10 +3,11 @@
 #include <QFileDialog>
 #include <QImageWriter>
 #include <QMessageBox>
+#include <QRubberBand>
 #include "NVBDimension.h"
 #include "../icons/icons_2Dview.xpm"
 
-NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsView(parent),paintSizeMarker(false),zooming(false),keepRatio(true),activeFilter(0),vizmodel(model),currentIndex(-1),activeViz(NVBVizUnion())
+NVB2DPageView::NVB2DPageView(NVBVizModel* model, QWidget * parent): QGraphicsView(parent),paintSizeMarker(false),zooming(false),keepRatio(true),zoomRubberBand(0),activeFilter(0),vizmodel(model),currentIndex(-1),activeViz(NVBVizUnion())
 {
 //  connect(this,SIGNAL(scalerChanged(Q2DScaler*)),&debugger,SLOT(printScalerInfo(Q2DScaler*)));
 //  connect(this,SIGNAL(scalerChanged(Q2DScaler*)),this,SLOT(normalizeScaler()));
@@ -247,7 +248,8 @@ void NVB2DPageView::rowsInserted( const QModelIndex & parent, int start, int end
 			QRectF itemSceneRect = tmp.TwoDViz->mapToScene(tmp.TwoDViz->boundingRect()).boundingRect();
 #endif
 			itemsRect |= itemSceneRect;
-			zoomRect |= itemSceneRect;
+			if (!zooming && !zoomRect.contains(itemSceneRect))
+					zoomRect = itemsRect;
 
 //       tmp.TwoDViz->setSelected(false);
 			tmp.TwoDViz->setZValue(-i);
@@ -336,7 +338,16 @@ void NVB2DPageView::updateVizs(const QModelIndex & start, const QModelIndex & en
 //    tmp->setZValue(z->scale(i));
     if (tmp.valid && tmp.vtype == NVB::TwoDView) {
       theScene->addItem(tmp.TwoDViz);
-      tmp.TwoDViz->setZValue(-i);
+#if QT_VERSION >= 0x040500
+			QRectF itemSceneRect = tmp.TwoDViz->mapRectToScene(tmp.TwoDViz->boundingRect());
+#else
+			QRectF itemSceneRect = tmp.TwoDViz->mapToScene(tmp.TwoDViz->boundingRect()).boundingRect();
+#endif
+			itemsRect |= itemSceneRect;
+			if (!zooming && !zoomRect.contains(itemSceneRect))
+					zoomRect = itemsRect;
+
+			tmp.TwoDViz->setZValue(-i);
 //       tmp.TwoDViz->setSelected(false);
       }
     }
@@ -443,7 +454,60 @@ void NVB2DPageView::keyReleaseEvent(QKeyEvent * event)
     emit activeVizEOL();
     }
   else
-    QGraphicsView::keyReleaseEvent(event);
+		QGraphicsView::keyReleaseEvent(event);
+}
+
+void NVB2DPageView::mousePressEvent(QMouseEvent *event)
+{
+	if (zooming) {
+		if (event->button() == Qt::RightButton) {
+			zoomRCpos = event->pos();
+			event->accept();
+			}
+		else if (event->button() == Qt::LeftButton) {
+			if (zoomRubberBand) delete zoomRubberBand;
+			zoomRubberBand = new QRubberBand(QRubberBand::Rectangle,this);
+			zoomRubberBand->setGeometry(QRect(event->pos(), QSize()));
+			zoomRubberBand->show();
+			return;
+			}
+
+		}
+	QGraphicsView::mousePressEvent(event);
+}
+
+void NVB2DPageView::mouseMoveEvent(QMouseEvent *event)
+{
+	if (zoomRubberBand) {
+		event->accept();
+		zoomRubberBand->setGeometry(QRect(zoomRubberBand->pos(),event->pos()));
+		}
+	else
+		QGraphicsView::mouseMoveEvent(event);
+}
+
+void NVB2DPageView::mouseReleaseEvent(QMouseEvent *event)
+{
+	if (zooming) {
+		if (event->button() == Qt::RightButton) {
+			if ((zoomRCpos - event->pos()).manhattanLength() < 4) {
+				zoomRect = itemsRect;
+
+				autoFocus();
+				event->accept();
+				return;
+				}
+			}
+		else if (event->button() == Qt::LeftButton && zoomRubberBand) {
+			event->accept();
+			zoomRect = mapToScene(zoomRubberBand->geometry()).boundingRect();
+			delete zoomRubberBand;
+			zoomRubberBand = 0;
+			autoFocus();
+			return;
+			}
+		}
+	QGraphicsView::mouseReleaseEvent(event);
 }
 
 /*
