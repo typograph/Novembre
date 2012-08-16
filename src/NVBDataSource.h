@@ -178,7 +178,7 @@ Extension of NVBDataSource for topography pages
 */
 class NVB3DDataSource : public NVBDataSource
 {
-// Q_OBJECT
+Q_OBJECT
 public:
 	/// constructs an empty topography source
 	NVB3DDataSource():NVBDataSource() {;}

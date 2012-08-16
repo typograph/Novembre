@@ -394,15 +394,28 @@ NVBFileInfo * WinSPMFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & i
   comments.insert("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
   comments.insert("Setpoint",NVBPhysValue(QString("%1 nA").arg(header.reference_value)));
   
-  fi->pages.append(NVBPageInfo("Topography",NVB::TopoPage,QSize(header.xres,header.yres),comments));
+	fi->pages.append(NVBPageInfo("Topography",NVB::TopoPage,QSize(header.xres,header.yres),NVBPhysValue(header.xreal,NVBDimension("nm")),NVBPhysValue(header.yreal,NVBDimension("nm")),comments));
 
 	if (header.sps_offset) {
 		// FIXME: Spectroscopy format unknown at that point
-		fi->pages.append(NVBPageInfo("Spectroscopy",NVB::SpecPage,QSize(header.xres,header.yres),comments));
+		fi->pages.append(NVBPageInfo("Spectroscopy",NVB::SpecPage,QSize(header.xres,header.yres),NVBPhysValue(),NVBPhysValue(),comments));
 		}
 	else if (info.count() > 1) {
-		fi->pages.append(NVBPageInfo("Spectroscopy",NVB::SpecPage,QSize(header.xres,info.count()-1),comments));
+		fi->pages.append(NVBPageInfo("Spectroscopy",NVB::SpecPage,QSize(header.xres,info.count()-1),NVBPhysValue(),NVBPhysValue(),comments));
 		}
+
+//	file.seek(data_offset);
+
+//	QwtArray<double> xs(header.xres), ys(header.xres);
+//	float * raw_data = (float*)malloc(4*header.xres);
+
+//	file.read((char*)raw_data,header.xres*4);
+//	for (int i = 0; i < header.xres; i++)
+//		ys << raw_data[i];
+
+//	file.read((char*)raw_data,header.xres*4);
+//	for (int i = 0; i < header.xres; i++)
+//		xs << raw_data[i];
 
 
 	file.close();

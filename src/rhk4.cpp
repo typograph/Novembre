@@ -284,21 +284,26 @@ NVBFileInfo * RHK4FileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & inf
 		comments.insert("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
 		comments.insert("GUID",getGUIDString(pi->page_ID));
 
+		NVBPhysValue xspan, yspan;
+
 		switch (pi->page_data_type) {
 			case 0 : { // Topography
 				type = NVB::TopoPage;
 				comments.insert("Page type",getPageTypeString(header.page_type));
 				comments.insert("Scan direction",getDirectionString(header.scan));
+				xspan = NVBPhysValue(fabs(header.x_scale*header.x_size),strings.at(7));
+				yspan = NVBPhysValue(fabs(header.y_scale*header.y_size),strings.at(8));
 				break;
 				}
 			case 1 : { // Spectroscopy
 				type = NVB::SpecPage;
 				comments.insert("Line type",getLineTypeString(header.line_type));
+				xspan = NVBPhysValue(fabs(header.x_scale*header.x_size),strings.at(7));
 				break;
 				}
 			}
 
-		fi->pages.append(NVBPageInfo(strings.at(0),type,QSize(header.x_size,header.y_size),comments));
+		fi->pages.append(NVBPageInfo(strings.at(0),type,QSize(header.x_size,header.y_size),xspan,yspan,comments));
 		}
 
 	destroyRHKHeader(fileheader);
