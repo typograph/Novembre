@@ -234,12 +234,19 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
     if (h.contains("COMMENT") && !h.value("COMMENT").isEmpty())
       comments.insert("User comment",h.value("COMMENT").first());
 
+		NVBPhysValue xspan, yspan;
+		if (h.contains("SCAN_RANGE") && !h.value("SCAN_RANGE").isEmpty()) {
+			QStringList s_range = h.value("SCAN_RANGE").first().split(' ',QString::SkipEmptyParts);
+			xspan = NVBPhysValue(s_range.at(0).toDouble(),NVBDimension("m"));
+			yspan = NVBPhysValue(s_range.at(1).toDouble(),NVBDimension("m"));
+			}
+
     if (e.at(dirIndex) == "both") {
-      fi->pages.append(NVBPageInfo(e.at(headers.indexOf("Name")),NVB::TopoPage,psize,comments));
-      fi->pages.append(NVBPageInfo(e.at(headers.indexOf("Name")),NVB::TopoPage,psize,comments));
+			fi->pages.append(NVBPageInfo(e.at(headers.indexOf("Name")),NVB::TopoPage,psize,xspan,yspan,comments));
+			fi->pages.append(NVBPageInfo(e.at(headers.indexOf("Name")),NVB::TopoPage,psize,xspan,yspan,comments));
       }
     else
-      fi->pages.append(NVBPageInfo(e.at(headers.indexOf("Name")),NVB::TopoPage,psize,comments));
+			fi->pages.append(NVBPageInfo(e.at(headers.indexOf("Name")),NVB::TopoPage,psize,xspan,yspan,comments));
     }
 
   return fi;
@@ -416,7 +423,7 @@ NVBFileInfo * NanonisFileGenerator::loadSpecAggregationInfo(const NVBAssociatedF
     nxs += 1;
     }
   for(int i = 1; i < names.count(); i++)
-    fi->pages.append(NVBPageInfo(names.at(i),NVB::SpecPage,QSize(nxs,info.count()),QMap<QString,NVBVariant>()));
+		fi->pages.append(NVBPageInfo(names.at(i),NVB::SpecPage,QSize(nxs,info.count()),NVBPhysValue(nxs,NVBDimension()),NVBPhysValue(),QMap<QString,NVBVariant>()));
 
   f.close();
 

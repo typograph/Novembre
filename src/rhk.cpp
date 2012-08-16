@@ -259,12 +259,16 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   
     file.seek(file.pos() + header.page_data_size);
 
+		NVBPhysValue xspan, yspan;
+
     switch (header.type) {
       case 0 : { // Topography
         type = NVB::TopoPage;
         comments.insert("Page type",getPageTypeString(header.page_type));
         comments.insert("Scan direction",getDirectionString(header.scan));
-        if (header.colorinfo_count > 1)
+				xspan = NVBPhysValue(fabs(header.x_scale*header.x_size),strings.at(7));
+				yspan = NVBPhysValue(fabs(header.y_scale*header.y_size),strings.at(8));
+				if (header.colorinfo_count > 1)
 					NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
         quint16 cs;
         file.peek((char*)&cs,2);
@@ -274,6 +278,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
       case 1 : { // Spectroscopy
         type = NVB::SpecPage;
         comments.insert("Line type",getLineTypeString(header.line_type));
+				xspan = NVBPhysValue(fabs(header.x_scale*header.x_size),strings.at(7));
 /* // Silently ignore this -- all RHK spec pages I encountered have colorinfo_count == 1
         if (header.colorinfo_count != 0) 
 					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
@@ -293,7 +298,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
         type = NVB::InvalidPage;
         }
       }
-    fi->pages.append(NVBPageInfo(strings.at(0),type,QSize(header.x_size,header.y_size),comments));
+		fi->pages.append(NVBPageInfo(strings.at(0),type,QSize(header.x_size,header.y_size),xspan,yspan,comments));
     }
 
   return fi;

@@ -44,10 +44,13 @@ QMap<NVBPageParamToken::NVBPageParam,NVBDescrPair > NVBTokenList::initPageParamN
   
   fnames.insert(NVBPageParamToken::Name,NVBDescrPair("pageName","Page name"));
   fnames.insert(NVBPageParamToken::DataSize,NVBDescrPair("pageDataSize","Page dimensions"));
-  fnames.insert(NVBPageParamToken::IsSpec,NVBDescrPair("isSpec","Page is a spectroscopy page"));
+	fnames.insert(NVBPageParamToken::XSize,NVBDescrPair("XSize","X resolution"));
+	fnames.insert(NVBPageParamToken::YSize,NVBDescrPair("YSize","Y resolution"));
+	fnames.insert(NVBPageParamToken::DataSpan,NVBDescrPair("pageSize","Physical dimensions"));
+	fnames.insert(NVBPageParamToken::XSpan,NVBDescrPair("XSpan","X span"));
+	fnames.insert(NVBPageParamToken::YSpan,NVBDescrPair("YSpan","Y span"));
+	fnames.insert(NVBPageParamToken::IsSpec,NVBDescrPair("isSpec","Page is a spectroscopy page"));
   fnames.insert(NVBPageParamToken::IsTopo,NVBDescrPair("isTopo","Page is a topography page"));
-  fnames.insert(NVBPageParamToken::XSize,NVBDescrPair("XSize","X resolution"));
-  fnames.insert(NVBPageParamToken::YSize,NVBDescrPair("YSize","Y resolution"));
 
 //  fnames.insert(NVBPageParamToken::,NVBDescrPair("",""));
 

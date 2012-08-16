@@ -76,25 +76,39 @@ struct NVBPageInfo {
 	NVBPageInfo(const NVBDataSource * source) {
 		name = source->name();
 		type = source->type();
-		if (type == NVB::TopoPage)
-			datasize = ((NVB3DDataSource*)source)->resolution();
-		else if (type == NVB::SpecPage)
-			datasize = ((NVBSpecDataSource*)source)->datasize();
+		comments = source->getAllComments();
+		if (type == NVB::TopoPage) {
+			const NVB3DDataSource * tsource = qobject_cast<const NVB3DDataSource*>(source);
+			if (tsource) {
+				datasize = tsource->resolution();
+				xSpan = NVBPhysValue(fabs(tsource->position().width()),tsource->xDim());
+				ySpan = NVBPhysValue(fabs(tsource->position().height()),tsource->yDim());
+				}
+			}
+		else if (type == NVB::SpecPage) {
+			const NVBSpecDataSource * ssource = qobject_cast<const NVBSpecDataSource*>(source);
+			if (ssource) {
+				datasize = ssource->datasize();
+				xSpan = NVBPhysValue(fabs(ssource->boundingRect().width()),ssource->tDim());
+				}
+			}
 		else
 			datasize = QSize();
-		comments = source->getAllComments();
 		}
 
-	NVBPageInfo(QString _name, NVB::PageType _type, QSize size, QMap<QString,NVBVariant> _comments)
+	NVBPageInfo(QString _name, NVB::PageType _type, QSize size, NVBPhysValue xspan, NVBPhysValue yspan, QMap<QString,NVBVariant> _comments)
 	:	name(_name)
 	, type(_type)
 	,	datasize(size)
+	, xSpan(xspan)
+	, ySpan(yspan)
 	, comments( _comments)
 	{;}
 
 	QString name;
 	NVB::PageType type;
 	QSize datasize;
+	NVBPhysValue xSpan, ySpan;
 	QMap<QString,NVBVariant> comments;
 };
 

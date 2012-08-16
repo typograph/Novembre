@@ -40,7 +40,7 @@ struct NVBFileParamToken : NVBToken {
 };  
 
 struct NVBPageParamToken : NVBToken {
-  enum NVBPageParam {Invalid = 0, Name, DataSize, IsTopo, IsSpec, XSize, YSize} pparam;
+	enum NVBPageParam {Invalid = 0, Name, DataSize, DataSpan, IsTopo, IsSpec, XSize, YSize, XSpan, YSpan} pparam;
   NVBPageParamToken(NVBPageParam p):NVBToken(PageParam),pparam(p) {;}
 };
 

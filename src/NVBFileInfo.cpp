@@ -80,14 +80,30 @@ NVBVariant NVBFileInfo::pageParam(NVBPageInfo pi, NVBPageParamToken::NVBPagePara
       }
     case NVBPageParamToken::DataSize : {
       return NVBVariantList() << pi.datasize.width() << QString("x") << pi.datasize.height();
-      }
+			}
+		case NVBPageParamToken::DataSpan : {
+			switch(pi.type) {
+				case NVB::TopoPage:
+					return NVBVariantList() << pi.xSpan << QString("x") << pi.ySpan;
+				case NVB::SpecPage:
+					return pi.xSpan;
+				default:
+					return NVBVariant();
+				}
+			}
     case NVBPageParamToken::XSize : {
       return pi.datasize.width();
       }
     case NVBPageParamToken::YSize : {
       return pi.datasize.height();
       }
-    default :
+		case NVBPageParamToken::XSpan : {
+			return pi.xSpan;
+			}
+		case NVBPageParamToken::YSpan : {
+			return pi.ySpan;
+			}
+		default :
       return NVBVariant();
     }
 

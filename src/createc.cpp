@@ -239,6 +239,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	comments.insert("LockinMode",header.value("LockinMode").toInt());
 
 	comments.insert("DAC resolution",NVBPhysValue(header.value("DAC-Type").toString(),false));
+	/*
 	//	Titel=default            //----- Never saw that set. Theoretically could be used to name pages
 	//	Delta X = 512            //-[]--- Dac step in X
 	//	Delta Y = 512            //-[]--- Dac step in Y
@@ -252,8 +253,10 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	//	GainY = 10               //-[]--- Y Gain
 	//	GainZ = 3                //-[]--- Z Gain
 	//	Rotation = 0             //--[]-- Rotation angle
+	*/
 	comments.insert("Bias",header.value("BiasVoltage").toPhysValue());
 	comments.insert("Amplifier setting",header.value("Gainpreamp").toInt());
+	/*
 	//	Chan(1,2,4) = 1          //-[]--- Channel number. Already used in number of pages
 	//	PlanDx = 0.0000          //----- X Plane subtract param. Not very useful
 	//	PlanDy = 0.0000          //----- X Plane subtract param. Not very useful
@@ -328,6 +331,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	//	VerttreshImax = 20000
 	//	VerttreshImin = -20000
 	//	VertAvrgdelay = 100
+	*/
 	if (type == NVB::SpecPage)
 		switch(header.value("VertFBMode").toInt()) {
 			case 4:
@@ -340,6 +344,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 				NVBOutputError(QString("Unknown VertFBMode value: %1").arg(header.value("VertFBMode").toInt()));
 			}
 	comments.insert("z(V) setpoint current",NVBPhysValue(header.value("VertFBLogiset").toDouble()*exp10(-header.value("Vertmangain").toInt()),NVBDimension("mA")));
+	/*
 	//	Imageframe = 0
 	//	Imagegrayfactor = 32.416
 	//	Zoom = 2.00
@@ -422,6 +427,7 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 	//	YPiezoconst = 100.00
 	//	T_ADC2[K]=  0.000
 	//	T_ADC3[K]=  0.000
+	*/
 
 	int nchannels = header.value("Channels").toInt();
 	if (type == NVB::SpecPage) {
@@ -445,8 +451,21 @@ NVBFileInfo * CreatecFileGenerator::loadFileInfo( const NVBAssociatedFilesInfo &
 		}
 	else
 		dataSize = QSize(header.value("Num.X",0).toInt(),header.value("Num.Y",0).toInt());
+
+	NVBPhysValue xspan, yspan;
+
+	if (type == NVB::TopoPage) {
+		xspan = header.value("Length x",0).toPhysValue();
+		yspan = header.value("Length y",0).toPhysValue();
+		}
+	else if (type == NVB::SpecPage) {
+		file.seek(0x4006);
+		QStringList sizes(QString(file.readLine(200)).split(' ',QString::SkipEmptyParts));
+		if (sizes.count()) xspan = NVBPhysValue(sizes.at(0).toInt(),NVBDimension());
+		}
+
 	for (int i = 0; i < nchannels; i++)	
-		fi->pages.append(NVBPageInfo(chnames.at(i),type,dataSize,comments));
+		fi->pages.append(NVBPageInfo(chnames.at(i),type,dataSize,xspan,yspan,comments));
 
 	return fi;
 }
