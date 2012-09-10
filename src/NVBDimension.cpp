@@ -253,7 +253,19 @@ int NVBPhysValue::getPosMult(double nvalue, int minSignPos, int maxSignPos)
   return m;
 }
 
-double NVBPhysValue::getValue( NVBDimension dim ) const
+bool NVBPhysValue::operator <(const NVBPhysValue &v) const
 {
-  return value / dim.purify();
+	if (dim.isComparableWith(v.getDimension())) {
+	 return getValue() < v.getValue(dim);
+}
+	else
+		return dim.toStr() < v.getDimension().toStr();
+}
+
+double NVBPhysValue::getValue( NVBDimension _dim ) const
+{
+	if (dim.isComparableWith(_dim))
+		return value / _dim.purify();
+	else
+		return 0;
 }
