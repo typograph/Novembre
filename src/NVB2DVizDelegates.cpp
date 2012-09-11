@@ -161,44 +161,14 @@ void NVB2DPtsVizDelegate::initEllipses()
 
   prepareGeometryChange();
 
-  QList<uint> r,g,b,cnt;
-  positions.clear();
-  colors.clear();
+	positions.setRect(page->occupiedArea());
+	int ipt = 0;
+	foreach(QPointF pt, page->positions()) {
+		positions.insert(pt,ipt);
+		ipt += 1;
+		}
 
-//  int j;
-  QColor c = page->colors().at(0);
-  positions.append(page->positions().at(0));
-  r.append(c.red());
-  g.append(c.green());
-  b.append(c.blue());
-  cnt.append(1);
-
-
-  for(int i = 1; i < page->positions().size(); i++) {
-    c = page->colors().at(i);
-    QPointF spos = page->positions().at(i);
-//    j = positions.indexOf();
-//    if (j >= 0) {
-    if (positions.last() == spos) {
-      r.last() += c.red();
-      g.last() += c.green();
-      b.last() += c.blue();
-      cnt.last() += 1;
-      }
-    else {
-      positions.append(spos);
-      r.append(c.red());
-      g.append(c.green());
-      b.append(c.blue());
-      cnt.append(1);
-      }
-    }
-
-  for(int i = 0; i < positions.size(); i++) {
-    colors.append(QColor(r.at(i)/cnt.at(i),g.at(i)/cnt.at(i),b.at(i)/cnt.at(i)));
-    }
-
-  update();
+	update();
 
 }
 
@@ -208,22 +178,45 @@ void NVB2DPtsVizDelegate::paint(QPainter * painter, const QStyleOptionGraphicsIt
 
   painter->save();
   painter->setPen(QPen(Qt::NoPen));
-  for(int i = positions.size()-1; i>=0; i--) {
-    painter->setBrush(QBrush(colors.at(i)));
-#if QT_VERSION >= 0x040400
-    painter->drawEllipse(positions.at(i),radius,radius);
-#else
-    painter->drawEllipse(QRectF(positions.at(i)-QPointF(radius,radius),QSizeF(2*radius,2*radius)));
-#endif
-    }
+
+	const NVBDiscrColorModel * clrs = page->getColorModel();
+
+	QRectF e;
+	e.setWidth(radius*2);
+	e.setHeight(radius*2);
+
+	foreach(NVBQuadTree::PointData pair, positions.points()) {
+		e.moveCenter(pair.first);
+		int i=0;
+		int span = 360*16/pair.second.size();
+		foreach(QVariant v, pair.second) {
+			int ie = v.toInt();
+			painter->setBrush(clrs->colorize(ie));
+			painter->drawPie(e,i*span,span);
+			i+=1;
+			}
+		}
+
   painter->restore();
 }
+
 
 void NVB2DPtsVizDelegate::wheelEvent(QGraphicsSceneWheelEvent * event)
 {
   prepareGeometryChange();
+
   radius += radius*event->delta()/400.0;
-  update();
+
+//	QRectF e;
+//	e.setWidth(radius*2);
+//	e.setHeight(radius*2);
+//	foreach(NVBQuadTree::PointData pair, positions.points()) {
+//		e.moveCenter(pair.first);
+//		foreach(QVariant v, pair.second)
+//			ellipses[v.toInt()]->setRect(e);
+//		}
+
+	update();
 }
 
 void NVB2DPtsVizDelegate::setSource(NVBDataSource * source)
@@ -232,8 +225,6 @@ void NVB2DPtsVizDelegate::setSource(NVBDataSource * source)
 
   if (source->type() != NVB::SpecPage) {
     page = 0;
-    positions.clear();
-    colors.clear();
     }
   else {
     page = (NVBSpecDataSource*)source;
@@ -245,13 +236,12 @@ void NVB2DPtsVizDelegate::setSource(NVBDataSource * source)
     connect(page,SIGNAL(objectPushed(NVBDataSource *, NVBDataSource* )),SLOT(setSource(NVBDataSource*)));
     connect(page,SIGNAL(objectPopped(NVBDataSource *, NVBDataSource* )),SLOT(setSource(NVBDataSource*)),Qt::QueuedConnection);
 
-    initEllipses();
-
     if (radius == 0) {
 /*      qreal pw = page->occupiedArea().width()/sqrt(positions.size())/10;
       qreal ph = page->occupiedArea().height()/sqrt(positions.size())/10;
       radius = qMin(pw,ph);*/
-      radius = (page->occupiedArea().width() + page->occupiedArea().height())/sqrt(positions.size())/3;
+			QRectF oa = page->occupiedArea();
+			radius = (oa.width() + oa.height())/sqrt(page->datasize().height())/3;
 //       if (radius == 0) radius = (pw == 0) ? ph : pw;
       if (radius == 0) {
 				if (scene()) radius = scene()->sceneRect().width()/50;
@@ -260,6 +250,7 @@ void NVB2DPtsVizDelegate::setSource(NVBDataSource * source)
 //       NVBOutputError(QString("w: %1, h: %2, r: %3").arg(pw).arg(ph).arg(radius));
       }
     }
+	initEllipses();
 }
 
 
