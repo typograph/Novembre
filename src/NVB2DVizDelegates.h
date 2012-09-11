@@ -63,8 +63,9 @@ public slots:
 
 /**
  * Visualisation as a QGraphicsItem for a specpage.
- * Been there, done that.
  */
+
+class QPicture;
 
 class NVB2DPtsVizDelegate : public QObject, public NVBFilteringGraphicsItem {
 Q_OBJECT
@@ -73,6 +74,7 @@ private:
   qreal radius;
 
 	NVBQuadTree positions;
+	QPicture * cache;
 
 private slots:
   void initEllipses();
@@ -91,7 +93,7 @@ protected:
 
 public slots:
   virtual void setSource( NVBDataSource * );
-//  void redraw();
+	void redraw();
 };
 
 #endif
