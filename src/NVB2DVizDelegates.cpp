@@ -11,6 +11,7 @@
 //
 
 #include "NVB2DVizDelegates.h"
+#include <QtGui/QPicture>
 
 #if QT_VERSION > 0x040299 && QT_VERSION < 0x040400
 
@@ -132,7 +133,7 @@ void NVB2DMapVizDelegate::setSource(NVBDataSource * source)
 }
 // ===============
 
-NVB2DPtsVizDelegate::NVB2DPtsVizDelegate(NVBDataSource * source):QObject(),NVBFilteringGraphicsItem(),page(0),radius(0)
+NVB2DPtsVizDelegate::NVB2DPtsVizDelegate(NVBDataSource * source):QObject(),NVBFilteringGraphicsItem(),page(0),radius(0),cache(0)
 {
 	if (source->type() != NVB::SpecPage)
 		NVBOutputError("Not a spectroscopy page");
@@ -152,7 +153,7 @@ NVBVizUnion NVB2DPtsVizDelegate::getVizItem()
 
 QRectF NVB2DPtsVizDelegate::boundingRect() const
 {
-  return page->occupiedArea().adjusted(-radius,-radius,radius,radius);
+	return positions.rect().adjusted(-radius,-radius,radius,radius);
 }
 
 void NVB2DPtsVizDelegate::initEllipses()
@@ -168,16 +169,25 @@ void NVB2DPtsVizDelegate::initEllipses()
 		ipt += 1;
 		}
 
+	redraw();
+
 	update();
 
 }
 
 void NVB2DPtsVizDelegate::paint(QPainter * painter, const QStyleOptionGraphicsItem * , QWidget * )
 {
-	if (!page) return;
+	if (!page || !cache) return;
+	cache->play(painter);
+}
 
-  painter->save();
-  painter->setPen(QPen(Qt::NoPen));
+void NVB2DPtsVizDelegate::redraw() {
+	QPainter painter;
+	cache->setData(0,0);
+
+	painter.begin(cache);
+
+	painter.setPen(QPen(Qt::NoPen));
 
 	const NVBDiscrColorModel * clrs = page->getColorModel();
 
@@ -191,13 +201,16 @@ void NVB2DPtsVizDelegate::paint(QPainter * painter, const QStyleOptionGraphicsIt
 		int span = 360*16/pair.second.size();
 		foreach(QVariant v, pair.second) {
 			int ie = v.toInt();
-			painter->setBrush(clrs->colorize(ie));
-			painter->drawPie(e,i*span,span);
+			painter.setBrush(clrs->colorize(ie));
+			painter.drawPie(e,i*span,span);
 			i+=1;
 			}
 		}
 
-  painter->restore();
+	painter.end();
+
+	update();
+
 }
 
 
@@ -216,23 +229,26 @@ void NVB2DPtsVizDelegate::wheelEvent(QGraphicsSceneWheelEvent * event)
 //			ellipses[v.toInt()]->setRect(e);
 //		}
 
-	update();
+	redraw();
+
 }
 
 void NVB2DPtsVizDelegate::setSource(NVBDataSource * source)
 {
   if (page) page->disconnect(this);
+	if (cache) delete cache;
 
   if (source->type() != NVB::SpecPage) {
     page = 0;
     }
   else {
     page = (NVBSpecDataSource*)source;
+		cache = new QPicture();
 
     //connect(page,SIGNAL(dataAdjusted()),SLOT(initEllipses())); // Changes in the curves do not matter
     connect(page,SIGNAL(dataChanged()),SLOT(initEllipses()));
-    connect(page,SIGNAL(colorsAdjusted()),SLOT(initEllipses())); // TODO Think of just recoloring w/o repositioning
-    connect(page,SIGNAL(colorsChanged()),SLOT(initEllipses()));
+		connect(page,SIGNAL(colorsAdjusted()),SLOT(redraw()));
+		connect(page,SIGNAL(colorsChanged()),SLOT(redraw()));
     connect(page,SIGNAL(objectPushed(NVBDataSource *, NVBDataSource* )),SLOT(setSource(NVBDataSource*)));
     connect(page,SIGNAL(objectPopped(NVBDataSource *, NVBDataSource* )),SLOT(setSource(NVBDataSource*)),Qt::QueuedConnection);
 
