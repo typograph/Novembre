@@ -31,6 +31,10 @@ TreeQuad* TreeQuad::insert(QPointF point, QVariant data) {
 	return insert(point,QVariantList() << data);
 	}
 
+TreeQuad* TreeQuad::insert(NVBQuadTree::PointData data) {
+	return insert(data.first, data.second );
+	}
+
 TreeQuad* TreeQuad::insert(QPointF point, QVariantList data) {
 	if (hasChildren()) { // delegate to children
 		TreeQuad * q = children[p2q(r,point)]->insert(point,data);
@@ -63,32 +67,61 @@ unsigned char TreeQuad::p2q(const QRectF & r, const QPointF & p) {
 	return i;
 }
 
-QVariantList TreeQuad::pointsInRect(const QRectF & rect) const {
-			if (!r.intersects(rect)) return QVariantList();
-			if (hasChildren())
-					return QVariantList() << children[0]->pointsInRect(rect) << children[1]->pointsInRect(rect) << children[2]->pointsInRect(rect) << children[3]->pointsInRect(rect);
-			else if (rect.contains(p))
-		return ds;
-			return QVariantList();
+NVBQuadTree::PointDataList TreeQuad::pointsInRect(const QRectF & rect) const {
+	NVBQuadTree::PointDataList res;
+	if (hasChildren()) {
+		bool nw = true;
+		bool ne = true;
+		bool sw = true;
+		bool se = true;
+
+		QPointF c = r.center();
+		if (rect.bottom() <= c.y()) { sw = false; se = false; }
+		if (rect.top() >= c.y()) { nw = false; ne = false; }
+		if (rect.left() >= c.x()) { nw = false; sw = false; }
+		if (rect.right() <= c.x()) { ne = false; se = false; }
+
+		if (nw) res << children[0]->pointsInRect2(rect);
+		if (ne) res << children[1]->pointsInRect2(rect);
+		if (sw) res << children[2]->pointsInRect2(rect);
+		if (se) res << children[3]->pointsInRect2(rect);
+		return res;
+		}
+	else if (rect.contains(p))
+		res << NVBQuadTree::PointData(p,ds);
+	return res;
 	}
 
-QVariantList TreeQuad::pointsInCircle(const QRectF & rect) const {
-	if (!r.intersects(rect)) return QVariantList();
-	if (hasChildren())
-		return QVariantList() << children[0]->pointsInCircle(rect) << children[1]->pointsInCircle(rect) << children[2]->pointsInCircle(rect) << children[3]->pointsInCircle(rect);
-	else if (ds.isEmpty())
-		return QVariantList();
-	else {
-		QPointF d = rect.center()-p;
+NVBQuadTree::PointDataList TreeQuad::pointsInCircle(const QRectF & rect) const {
+	NVBQuadTree::PointDataList res;
+	if (hasChildren()) {
+		bool nw = true;
+		bool ne = true;
+		bool sw = true;
+		bool se = true;
+
+		QPointF c = r.center();
+		if (rect.bottom() <= c.y()) { sw = false; se = false; }
+		if (rect.top() >= c.y()) { nw = false; ne = false; }
+		if (rect.left() >= c.x()) { nw = false; sw = false; }
+		if (rect.right() <= c.x()) { ne = false; se = false; }
+
+		if (nw) res << children[0]->pointsInRect2(rect);
+		if (ne) res << children[1]->pointsInRect2(rect);
+		if (sw) res << children[2]->pointsInRect2(rect);
+		if (se) res << children[3]->pointsInRect2(rect);
+		return res;
+		}
+	else if (!ds.isEmpty()) {
+		QPointF d = rect.center() - p;
 		qreal rd = 4*d.x()*d.x()/rect.width()/rect.width() + 4*d.y()*d.y()/rect.height()/rect.height();
 		if (rd <= 1)
-			return ds;
-		else
-			return QVariantList();
+			res << NVBQuadTree::PointData(p,ds);
 		}
+	return res;
 	}
 
-QList<NVBQuadTree::PointData> TreeQuad::points() const {
+NVBQuadTree::PointDataList TreeQuad::points() const {
 	if (!pts_calculated) recalcinsidepts();
 	return insidepts;
 	}
@@ -111,22 +144,27 @@ void NVBQuadTree::setRect(QRectF r) {
 	root = new TreeQuad(r);
 	}
 
+QRectF NVBQuadTree::rect() const {
+	if (!root) return QRectF();
+	return root->r;
+	}
+
 void NVBQuadTree::insert(const QPointF & p, QVariant data) {
 	if (!root) return;
 	root->insert(p,data);
 	}
 
-QVariantList NVBQuadTree::pointsInRect(QRectF rect) const {
-	if (!root) return QVariantList();
+NVBQuadTree::PointDataList NVBQuadTree::pointsInRect(QRectF rect) const {
+	if (!root) return NVBQuadTree::PointDataList();
 	return root->pointsInRect(rect);
 	}
 
-QVariantList NVBQuadTree::pointsInCircle(QRectF rect) const {
-	if (!root) return QVariantList();
+NVBQuadTree::PointDataList NVBQuadTree::pointsInCircle(QRectF rect) const {
+	if (!root) return NVBQuadTree::PointDataList();
 	return root->pointsInCircle(rect);
 	}
 
-QList<NVBQuadTree::PointData> NVBQuadTree::points() const {
-	if (!root) return QList<QPair<QPointF,QVariantList> >();
+NVBQuadTree::PointDataList NVBQuadTree::points() const {
+	if (!root) return NVBQuadTree::PointDataList();
 	return root->points();
 	}

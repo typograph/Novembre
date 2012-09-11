@@ -37,6 +37,7 @@ class TreeQuad;
 class NVBQuadTree {
 public:
 	typedef QPair<QPointF,QVariantList> PointData;
+	typedef QList<PointData> PointDataList;
 
 	TreeQuad* root;
 
@@ -44,16 +45,17 @@ public:
 	NVBQuadTree(QRectF r): root(0) { setRect(r); }
 	~NVBQuadTree();
 
+	QRectF rect() const;
 	void setRect(QRectF r);
 
 	void insert(const QPointF & p, QVariant data);
+	void insert(const PointData & data);
 
 	//	QVariant closestPoint(QPointF point);
-	QVariantList pointsInRect(QRectF rect) const;
-	QVariantList pointsInCircle(QRectF rect) const;
+	PointDataList pointsInRect(QRectF rect) const;
+	PointDataList pointsInCircle(QRectF rect) const;
 
-	QList<PointData> points() const;
-
+	PointDataList points() const;
 };
 
 class TreeQuad {
@@ -62,7 +64,7 @@ private:
 	TreeQuad(const TreeQuad & ) {;}
 
 	mutable bool pts_calculated;
-	mutable QList<NVBQuadTree::PointData> insidepts;
+	mutable NVBQuadTree::PointDataList insidepts;
 	void recalcinsidepts() const ;
 
 public:
@@ -82,13 +84,14 @@ public:
 
 	TreeQuad* insert(QPointF point, QVariant data);
 	TreeQuad* insert(QPointF point, QVariantList data);
+	TreeQuad* insert(NVBQuadTree::PointData data);
 
 	static unsigned char p2q(const QRectF & r, const QPointF & p);
 
-	QVariantList pointsInRect(const QRectF & rect) const;
-	QVariantList pointsInCircle(const QRectF & rect) const;
+	NVBQuadTree::PointDataList pointsInRect(const QRectF & rect) const;
+	NVBQuadTree::PointDataList pointsInCircle(const QRectF & rect) const;
 
-	QList<NVBQuadTree::PointData> points() const;
+	NVBQuadTree::PointDataList points() const;
 
 };
 

@@ -343,7 +343,7 @@ void NVBDiscrBrushPainterViz::refresh()
 
   prepareGeometryChange();
 
-	rect = points.root->r;
+	rect = points.rect();
 
   QPointF pt = mouserect.center();
   mouserect.setSize(QSizeF(rect.size().width(),rect.size().width())/10);
@@ -361,7 +361,7 @@ void NVBDiscrRectPainterViz::refresh()
 
   prepareGeometryChange();
 
-	QRectF trect = points.root->r;
+	QRectF trect = points.rect();
   brect = QRectF(QPointF(),trect.size()*1.2);
   brect.moveCenter(trect.center());
 
@@ -422,13 +422,14 @@ void NVBDiscrBrushPainterViz::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
     QList<int> pl;
 
-		foreach(QVariant v, points.pointsInCircle(mouserect)) {
-			int i = v.toInt();
-			if (!touched.at(i)) {
-				pl << i;
-				touched[i] = true;
+		foreach(NVBQuadTree::PointData pt, points.pointsInCircle(mouserect))
+			foreach(QVariant v,pt.second) {
+				int i = v.toInt();
+				if (!touched.at(i)) {
+					pl << i;
+					touched[i] = true;
+					}
 				}
-			}
 
 		if (!pl.isEmpty())
 			emit pointsTouched(pl);
@@ -509,13 +510,14 @@ void NVBDiscrRectPainterViz::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 #endif
   QList<int> pl;
 
-	foreach(QVariant v, points.pointsInRect(rect)) {
-		int i = v.toInt();
-		if (!touched.at(i)) {
-			pl << i;
-			touched[i] = true;
+	foreach(NVBQuadTree::PointData pt, points.pointsInRect(rect))
+		foreach (QVariant v, pt.second) {
+			int i = v.toInt();
+			if (!touched.at(i)) {
+				pl << i;
+				touched[i] = true;
+				}
 			}
-		}
 
 	if (!pl.isEmpty())
 		emit pointsTouched(pl);
