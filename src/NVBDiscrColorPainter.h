@@ -16,6 +16,7 @@
 #include "NVBDiscrColoring.h"
 #include "NVBViewController.h"
 #include "NVBColorButton.h"
+#include "NVBQuadTree.h"
 #include <QList>
 #include <QAction>
 #include <QWidget>
@@ -53,9 +54,9 @@ public slots:
 class NVBDiscrPainterViz : public QObject, public NVBFilteringGraphicsItem {
 Q_OBJECT
 protected:
-  QList<QPointF> uniqpoints;
-  QList< QList<int> > curves;
-  QVector< bool > touched;
+
+	NVBQuadTree points;
+	QVector< bool > touched;
   QBrush brush;
   NVBSpecDataSource * sprovider;
 
@@ -79,6 +80,7 @@ signals:
 class NVBDiscrBrushPainterViz : public NVBDiscrPainterViz {
 Q_OBJECT
 private:
+	bool active;
   QRectF rect;
   QRectF mouserect;
   bool showmouse;

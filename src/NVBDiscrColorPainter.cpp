@@ -305,26 +305,18 @@ NVBDiscrColorPainter::~ NVBDiscrColorPainter( )
 
 void NVBDiscrPainterViz::refresh()
 {
-  uniqpoints.clear();
-  curves.clear();
-  touched.clear();
+	int ncurv = sprovider->datasize().height();
+	touched.fill(false,ncurv);
 
-  int ncurv = sprovider->positions().size();
+	points.setRect(sprovider->occupiedArea());
 
-  for(int i = 0; i < ncurv ; i++) {
-    int j = uniqpoints.indexOf(sprovider->positions().at(i));
-    if (j >= 0) {
-      curves[j] << i;
-      }
-    else {
-      uniqpoints.append(sprovider->positions().at(i));
-      curves.append(QList<int>());
-      curves.last() << i;
-      touched << false;
-      }
-    }
+	int i=0;
 
-  touched.squeeze();
+	foreach(QPointF pt, sprovider->positions()) {
+		points.insert(pt,i);
+		i += 1;
+		}
+
 }
 
 void NVBDiscrPainterViz::setSource(NVBDataSource * source)
@@ -351,7 +343,7 @@ void NVBDiscrBrushPainterViz::refresh()
 
   prepareGeometryChange();
 
-  rect = sprovider->occupiedArea();
+	rect = points.root->r;
 
   QPointF pt = mouserect.center();
   mouserect.setSize(QSizeF(rect.size().width(),rect.size().width())/10);
@@ -369,7 +361,7 @@ void NVBDiscrRectPainterViz::refresh()
 
   prepareGeometryChange();
 
-  QRectF trect = sprovider->occupiedArea();
+	QRectF trect = points.root->r;
   brect = QRectF(QPointF(),trect.size()*1.2);
   brect.moveCenter(trect.center());
 
@@ -430,16 +422,16 @@ void NVBDiscrBrushPainterViz::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
     QList<int> pl;
 
-    for(int i = 0; i< uniqpoints.size(); i++) {
-      if (!touched.at(i) && mouserect.contains(uniqpoints.at(i))) {
-        QPointF rvec = mouserect.center() - uniqpoints.at(i);
-        if (sqrt(pow(rvec.x(), 2) + pow(rvec.y(), 2)) < mouserect.width()/2) {
-          touched[i] = true;
-          pl << curves.at(i);
-          }
-        }
-      }
-    emit pointsTouched(pl);
+		foreach(QVariant v, points.pointsInCircle(mouserect)) {
+			int i = v.toInt();
+			if (!touched.at(i)) {
+				pl << i;
+				touched[i] = true;
+				}
+			}
+
+		if (!pl.isEmpty())
+			emit pointsTouched(pl);
     }
 /*  else if (showmouse) {
     showmouse = false;
@@ -516,12 +508,17 @@ void NVBDiscrRectPainterViz::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
   QRectF rect = QRectF(scorigin.x(),scorigin.y(),event->scenePos().x() - scorigin.x(), event->scenePos().y() - scorigin.y()).normalized();
 #endif
   QList<int> pl;
-  for(int i = 0; i< uniqpoints.size(); i++)
-    if (!touched.at(i) && rect.contains(uniqpoints.at(i))) {
-      touched[i] = true;
-      pl << curves.at(i);
-      }
-  emit pointsTouched(pl);
+
+	foreach(QVariant v, points.pointsInRect(rect)) {
+		int i = v.toInt();
+		if (!touched.at(i)) {
+			pl << i;
+			touched[i] = true;
+			}
+		}
+
+	if (!pl.isEmpty())
+		emit pointsTouched(pl);
 }
 
 void NVBDiscrRectPainterViz::paint(QPainter * painter, const QStyleOptionGraphicsItem * , QWidget * )
