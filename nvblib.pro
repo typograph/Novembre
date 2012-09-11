@@ -28,6 +28,7 @@ HEADERS += \
            src/dimension.h \
            src/NVBDimension.h \
            src/NVBVariant.h \
+           src/NVBQuadTree.h \
            src/NVBDataSource.h \
            src/NVBGeneralDelegate.h \
            src/NVBViewController.h \
@@ -50,6 +51,7 @@ HEADERS += \
 SOURCES += \
            src/NVBDimension.cpp \
            src/NVBVariant.cpp \
+           src/NVBQuadTree.cpp \
            src/NVBDataSource.cpp \
            src/NVBPageToolbar.cpp \
            src/NVBContColoring.cpp \

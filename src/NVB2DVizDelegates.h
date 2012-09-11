@@ -15,9 +15,10 @@
 
 #include "NVBDataSource.h"
 #include "NVBGeneralDelegate.h"
+#include "NVBQuadTree.h"
 #include <QGraphicsItem>
 #include <QStyleOptionGraphicsItem>
-#include <QGraphicsItemGroup>
+//#include <QGraphicsItemGroup>
 #include <QPen>
 #include <QBrush>
 #include <QPainter>
@@ -71,8 +72,7 @@ private:
   NVBSpecDataSource* page;
   qreal radius;
 
-  QList<QPointF> positions;
-  QList<QColor> colors;
+	NVBQuadTree positions;
 
 private slots:
   void initEllipses();
@@ -84,7 +84,7 @@ public :
   virtual NVBVizUnion getVizItem();
 
   virtual QRectF boundingRect () const;
-  virtual void paint ( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0 );
+	virtual void paint ( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0 );
 
 protected:
   virtual void wheelEvent ( QGraphicsSceneWheelEvent * event );
