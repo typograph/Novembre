@@ -4,7 +4,7 @@
 #include <QtCore/QPointF>
 #include <QtCore/QVariant>
 
-#include <math.h>
+//#include <math.h>
 
 TreeQuad::TreeQuad(QRectF rect): pts_calculated(false), r(rect), ds(QVariantList()) {
 	for(int i = 0; i < 4; i++)
@@ -75,10 +75,12 @@ QVariantList TreeQuad::pointsInRect(const QRectF & rect) const {
 QVariantList TreeQuad::pointsInCircle(const QRectF & rect) const {
 	if (!r.intersects(rect)) return QVariantList();
 	if (hasChildren())
-		return QVariantList() << children[0]->pointsInRect(rect) << children[1]->pointsInRect(rect) << children[2]->pointsInRect(rect) << children[3]->pointsInRect(rect);
+		return QVariantList() << children[0]->pointsInCircle(rect) << children[1]->pointsInCircle(rect) << children[2]->pointsInCircle(rect) << children[3]->pointsInCircle(rect);
+	else if (ds.isEmpty())
+		return QVariantList();
 	else {
-		QPointF c = rect.center();
-		qreal rd = pow(2*(c.x()-p.x())/rect.width(),2)+pow(2*(c.y()-p.y())/rect.height(),2);
+		QPointF d = rect.center()-p;
+		qreal rd = 4*d.x()*d.x()/rect.width()/rect.width() + 4*d.y()*d.y()/rect.height()/rect.height();
 		if (rd <= 1)
 			return ds;
 		else
