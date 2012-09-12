@@ -81,10 +81,10 @@ NVBQuadTree::PointDataList TreeQuad::pointsInRect(const QRectF & rect) const {
 		if (rect.left() >= c.x()) { nw = false; sw = false; }
 		if (rect.right() <= c.x()) { ne = false; se = false; }
 
-		if (nw) res << children[0]->pointsInRect2(rect);
-		if (ne) res << children[1]->pointsInRect2(rect);
-		if (sw) res << children[2]->pointsInRect2(rect);
-		if (se) res << children[3]->pointsInRect2(rect);
+		if (nw) res << children[0]->pointsInRect(rect);
+		if (ne) res << children[1]->pointsInRect(rect);
+		if (sw) res << children[2]->pointsInRect(rect);
+		if (se) res << children[3]->pointsInRect(rect);
 		return res;
 		}
 	else if (rect.contains(p))
@@ -106,10 +106,10 @@ NVBQuadTree::PointDataList TreeQuad::pointsInCircle(const QRectF & rect) const {
 		if (rect.left() >= c.x()) { nw = false; sw = false; }
 		if (rect.right() <= c.x()) { ne = false; se = false; }
 
-		if (nw) res << children[0]->pointsInRect2(rect);
-		if (ne) res << children[1]->pointsInRect2(rect);
-		if (sw) res << children[2]->pointsInRect2(rect);
-		if (se) res << children[3]->pointsInRect2(rect);
+		if (nw) res << children[0]->pointsInCircle(rect);
+		if (ne) res << children[1]->pointsInCircle(rect);
+		if (sw) res << children[2]->pointsInCircle(rect);
+		if (se) res << children[3]->pointsInCircle(rect);
 		return res;
 		}
 	else if (!ds.isEmpty()) {
