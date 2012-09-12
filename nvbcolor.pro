@@ -4,10 +4,12 @@ contains(CONFIG,NVB2DView) {
 
 HEADERS += \
           src/NVBGraphicsItems.h \
-          src/NVBDiscrColorPainter.h
+		  src/NVBDiscrColorPainter.h \
+		  src/NVBCurveClassifier.h
 
 SOURCES += \
-          src/NVBDiscrColorPainter.cpp
+		  src/NVBDiscrColorPainter.cpp \
+		  src/NVBCurveClassifier.cpp
 
 }
 
