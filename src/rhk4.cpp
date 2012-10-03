@@ -83,9 +83,7 @@ NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const
 		return 0;
 		}
 
-	QMap<QString,NVBVariant> comments;
 	RHKFile fileheader = getRHKHeader(file);
-	QStringList strings;
 	int version, version_minor, unicode;
 
 	if (memcmp(fileheader.header.version, MAGIC, 16) != 0) { // Comparing "STiMage "
@@ -110,12 +108,24 @@ NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const
 
 		RHKPageIndex * pi = fileheader.page_index.page_index_array + i;
 		switch (pi->page_data_type) {
-			case 0:
-				f->addSource(new RHK4TopoPage(pi,file));
+			case 0: {
+				RHK4TopoPage * p = new RHK4TopoPage(pi,file);
+				if (!p) break;
+				if (p->getData())
+					f->addSource(p);
+				else
+					delete p;
 				break;
-			case 1:
-				f->addSource(new RHK4SpecPage(pi,file,subtractBias));
+				}
+			case 1: {
+				RHK4SpecPage * p = new RHK4SpecPage(pi,file,subtractBias);
+				if (!p) break;
+				if (!p->getData().isEmpty())
+					f->addSource(p);
+				else
+					delete p;
 				break;
+				}
 			default:
 				NVBOutputError(QString("%1 : data type unsupported").arg(getPageTypeString(pi->page_data_type)));
 				break;
@@ -319,7 +329,7 @@ RHK4TopoPage::RHK4TopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 
 	if (!index->object_list) {
 		NVBOutputError("Object list empty");
-		throw;
+		return;
 		}
 	
 	for (quint32 j=0; j < index->object_list_count;j++)
@@ -351,11 +361,11 @@ RHK4TopoPage::RHK4TopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
 
 	if (!header.object_list_count) {
 		NVBOutputError("Page header not found");
-		throw;
+		return;
 		}
 	if (!header.object_list) {
 		NVBOutputError("Page header object list empty");
-		throw;
+		return;
 		}
 
 	for (quint32 j=0; j<header.object_list_count;j++)
@@ -454,7 +464,7 @@ RHK4SpecPage::RHK4SpecPage(RHKPageIndex * index, QFile & file, bool subtractBias
 
 	if (!index->object_list) {
 		NVBOutputError("Object list empty");
-		throw;
+		return;
 		}
 
 	for (quint32 j=0; j < index->object_list_count;j++)
@@ -487,11 +497,11 @@ RHK4SpecPage::RHK4SpecPage(RHKPageIndex * index, QFile & file, bool subtractBias
 
 	if (!header.object_list_count) {
 		NVBOutputError("Page header not found");
-		throw;
+		return;
 		}
 	if (!header.object_list) {
 		NVBOutputError("Page header object list empty");
-		throw;
+		return;
 		}
 
 	for (quint32 j=0; j<header.object_list_count;j++)
