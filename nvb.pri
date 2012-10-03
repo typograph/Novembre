@@ -17,6 +17,7 @@ contains(CONFIG,NVBStatic) {
 
 contains(CONFIG,NVBStatic) {
   DEFINES += NVB_STATIC
+win32: QMAKE_LFLAGS += -static-libgcc
 }
 
 contains(CONFIG,debug) {
