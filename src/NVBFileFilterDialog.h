@@ -7,6 +7,8 @@
 #define NVBFILEFILTERDIALOG_H
 
 #include <QtGui/QDialog>
+#include <QtCore/QRegExp>
+#include "NVBUnits.h"
 
 class QVBoxLayout;
 class QHBoxLayout;
@@ -14,17 +16,29 @@ class QLabel;
 class QPushButton;
 class QComboBox;
 class QLineEdit;
-class QRegExp;
 class QToolButton;
 class QAbstractItemModel;
 
 struct NVBFileFilter {
-  enum FilterBinding {And, AndNot, Or, OrNot};
-  int column;
-  QRegExp match;
-  FilterBinding binding;
-  NVBFileFilter(int _column = 0, QRegExp _match = QRegExp(), FilterBinding _binding = And):
-    column(_column),match(_match),binding(_binding) {;}
+	enum FilterBinding {And = 0, AndNot = 1, Or = 2, OrNot = 3};
+	enum FilterDirection {Less, Equal, Greater};
+	int column;
+	NVBPhysValue limit;
+	QRegExp match;
+	FilterBinding binding;
+	FilterDirection direction;
+	NVBFileFilter(int _column = 0, QRegExp _match = QRegExp(), FilterBinding _binding = And)
+	 : column(_column)
+	 , match(_match)
+	 , binding(_binding)
+	 , direction(Equal)
+	{;}
+	NVBFileFilter(int _column, NVBPhysValue _limit, FilterDirection _direction = Less, FilterBinding _binding = And)
+	 : column(_column)
+	 , limit(_limit)
+	 , binding(_binding)
+	 , direction(_direction)
+	{;}
 };
 
 class NVBFileFilterWidget : public QWidget

@@ -97,6 +97,11 @@ template <>
   bool operator<= ( const NVBVariant & v ) const;
   bool operator<  ( const NVBVariant & v ) const;
 
+	bool operator>= ( const NVBPhysValue & v ) const;
+	bool operator>  ( const NVBPhysValue & v ) const;
+	bool operator<= ( const NVBPhysValue & v ) const;
+	bool operator<  ( const NVBPhysValue & v ) const;
+
   operator QVariant() const { return QVariant::fromValue(*this); }
   operator NVBVariantList() const { return toList(); }
   operator NVBPhysValue() const { return toPhysValue(); }
