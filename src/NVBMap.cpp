@@ -1,4 +1,5 @@
 #include "NVBMap.h"
+#include "NVBAxisMaps.h"
 #include "NVBDataCore.h"
 #include <QtGui/QImage>
 #include <QtGui/QPixmap>
