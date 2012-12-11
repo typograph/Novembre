@@ -33,7 +33,7 @@ NVBFileFilterWidget::NVBFileFilterWidget( int w_index, QAbstractItemModel * colu
   
   logic_box = new QComboBox(this);
   logic_box->clear();
-  logic_box->insertItems(0, QStringList() << "and" << "or");
+  logic_box->insertItems(0, QStringList() << "and" << "and not" << "or" << "or not");
   logic_box->setCurrentIndex(1);
   logic_box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   logic_box->setCurrentIndex(0);
@@ -61,7 +61,7 @@ NVBFileFilterWidget::NVBFileFilterWidget( int w_index, QAbstractItemModel * colu
   horizontalLayout->addWidget(column_box);
 
   match_box = new QComboBox(this);
-  match_box->insertItems(0, QStringList() << "contains" << "doesn't contain" << "matches" << "doesn't match");
+  match_box->insertItems(0, QStringList() << "contains" << "matches" << "is less than" << "is greater than");
 
   horizontalLayout->addWidget(match_box);
 
@@ -82,54 +82,66 @@ NVBFileFilterWidget::NVBFileFilterWidget( int w_index, QAbstractItemModel * colu
 
 void NVBFileFilterWidget::initFromStruct(NVBFileFilter f)
 {
-  switch (f.binding) {
-    case NVBFileFilter::And :
-    case NVBFileFilter::AndNot : {
-      logic_box->setCurrentIndex(0);
-      break;
-      }
-    case NVBFileFilter::Or :
-    case NVBFileFilter::OrNot : {
-      logic_box->setCurrentIndex(1);
-      break;
-      }
-    }
+	switch (f.binding) {
+		case NVBFileFilter::And : {
+			logic_box->setCurrentIndex(0);
+			break;
+			}
+		case NVBFileFilter::AndNot : {
+			logic_box->setCurrentIndex(1);
+			break;
+			}
+		case NVBFileFilter::Or : {
+			logic_box->setCurrentIndex(2);
+			break;
+			}
+		case NVBFileFilter::OrNot : {
+			logic_box->setCurrentIndex(3);
+			break;
+			}
+		}
 
-  column_box->setCurrentIndex(f.column);
+	column_box->setCurrentIndex(f.column);
 
-  switch (f.binding) {
-    case NVBFileFilter::And :
-    case NVBFileFilter::Or : {
-      match_box->setCurrentIndex(f.match.patternSyntax() == QRegExp::RegExp ? 2 : 0);
-      break;
-      }
-    case NVBFileFilter::AndNot :
-    case NVBFileFilter::OrNot : {
-      match_box->setCurrentIndex(f.match.patternSyntax() == QRegExp::RegExp ? 3 : 1);
-      break;
-      }
-    }
+	if (!f.match.isEmpty() || f.direction == NVBFileFilter::Equal) {
+		match_box->setCurrentIndex(f.match.patternSyntax() == QRegExp::RegExp ? 1 : 0);
+		match_line->setText(f.match.isEmpty() ? f.limit.toString() : f.match.pattern());
+		}
+	else {
+		if (f.direction == NVBFileFilter::Less)
+			match_box->setCurrentIndex(2);
+		else if (f.direction == NVBFileFilter::Greater)
+			match_box->setCurrentIndex(3);
+		match_line->setText(f.limit.toFullString());
+		}
 
-  match_line->setText(f.match.pattern());
 }
 
 NVBFileFilter NVBFileFilterWidget::getState()
 {
-  NVBFileFilter f;
-   
-  if (logic_box->currentIndex())
-    f.binding = (match_box->currentIndex() % 2) ? NVBFileFilter::OrNot : NVBFileFilter::Or;
-  else
-    f.binding = (match_box->currentIndex() % 2) ? NVBFileFilter::AndNot : NVBFileFilter::And;
+	NVBFileFilter f;
 
-  f.column = column_box->currentIndex();
+	f.binding = (NVBFileFilter::FilterBinding) (logic_box->currentIndex());
+	f.column = column_box->currentIndex();
 
-  if (match_box->currentIndex() / 2)
-    f.match = QRegExp(match_line->text(),Qt::CaseSensitive,QRegExp::RegExp);
-  else
-    f.match = QRegExp(match_line->text(),Qt::CaseInsensitive,QRegExp::Wildcard);
+	switch (match_box->currentIndex()) {
+		case 0:
+			f.match = QRegExp(match_line->text(),Qt::CaseInsensitive,QRegExp::Wildcard);
+			break;
+		case 1:
+			f.match = QRegExp(match_line->text(),Qt::CaseSensitive,QRegExp::RegExp);
+			break;
+		case 2:
+			f.direction = NVBFileFilter::Less;
+			f.limit = NVBPhysValue(match_line->text());
+			break;
+		case 3:
+			f.direction = NVBFileFilter::Greater;
+			f.limit = NVBPhysValue(match_line->text());
+			break;
+		}
 
-  return f;
+	return f;
 }
 
 NVBFileFilterDialog::NVBFileFilterDialog(QAbstractItemModel * columns, const QList<NVBFileFilter> & filters, QWidget * parent ):QDialog(parent),columnModel(columns)

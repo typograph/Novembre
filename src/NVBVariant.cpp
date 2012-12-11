@@ -137,6 +137,85 @@ bool NVBVariant::operator<(const NVBVariant & v) const
 	return false;
 }
 
+/*
+ * NVBVariantList is less(greater) than an NVBPhysValue
+ * if it contains at least one value of type NVBPhysValue
+ * and all the NVBPhysValue-s it contains are less(greater)
+ * than the given value;
+ */
+
+void listOpPhys(const NVBVariantList & ls, NVBPhysValue v, bool (NVBPhysValue::*op)(const NVBPhysValue &) const, bool & result, bool & comparable) {
+
+	result = true;
+	comparable = false;
+
+	foreach(NVBVariant l, ls) {
+		if (l.userType() == qMetaTypeId<NVBPhysValue>()) {
+			result &= (l.toPhysValue().*op)(v);
+			comparable = true;
+			}
+		else if (l.userType() == qMetaTypeId<NVBVariantList>()) {
+			bool _r, _c;
+			listOpPhys(l.value<NVBVariantList>(),v,op,_r,_c);
+			if (_c) {
+				result &= _r;
+				comparable = true;
+				}
+			}
+		}
+
+}
+
+bool NVBVariant::operator >=(const NVBPhysValue &v) const
+{
+	if (userType() == qMetaTypeId<NVBPhysValue>())
+		return toPhysValue() >= v;
+	if (userType() != qMetaTypeId<NVBVariantList>())
+		return false;
+
+	bool _r, _c;
+	listOpPhys(value<NVBVariantList>(),v,&NVBPhysValue::operator >=,_r,_c);
+	return _r;
+}
+
+bool NVBVariant::operator >(const NVBPhysValue &v) const
+{
+	if (userType() == qMetaTypeId<NVBPhysValue>())
+		return toPhysValue() > v;
+	if (userType() != qMetaTypeId<NVBVariantList>())
+		return false;
+
+	bool _r, _c;
+	listOpPhys(value<NVBVariantList>(),v,&NVBPhysValue::operator >,_r,_c);
+	return _r;
+
+}
+
+bool NVBVariant::operator <=(const NVBPhysValue &v) const
+{
+	if (userType() == qMetaTypeId<NVBPhysValue>())
+		return toPhysValue() <= v;
+	if (userType() != qMetaTypeId<NVBVariantList>())
+		return false;
+
+	bool _r, _c;
+	listOpPhys(value<NVBVariantList>(),v,&NVBPhysValue::operator <=,_r,_c);
+	return _r;
+}
+
+bool NVBVariant::operator <(const NVBPhysValue &v) const
+{
+	if (userType() == qMetaTypeId<NVBPhysValue>())
+		return toPhysValue() < v;
+	if (userType() != qMetaTypeId<NVBVariantList>())
+		return false;
+
+	bool _r, _c;
+	listOpPhys(value<NVBVariantList>(),v,&NVBPhysValue::operator <,_r,_c);
+	return _r;
+
+}
+
 bool NVBVariant::operator<=(const NVBVariant & v) const
 {
 	if (userType() != v.userType())

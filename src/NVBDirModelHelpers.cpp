@@ -59,7 +59,18 @@ bool NVBDirModelFileInfoFilter::operator()(const NVBFileInfo * fi) const {
 
 	bool accept = true;
 	foreach (NVBFileFilter f, filters) {
-		bool filter_pass = fi->getInfoAsString(columns->key(f.column)).contains(f.match);
+		bool filter_pass;
+		switch (f.direction) {
+			case NVBFileFilter::Equal:
+				filter_pass = fi->getInfoAsString(columns->key(f.column)).contains(f.match);
+				break;
+			case NVBFileFilter::Less:
+				filter_pass = fi->getInfo(columns->key(f.column)) < f.limit;
+				break;
+			case NVBFileFilter::Greater:
+				filter_pass = fi->getInfo(columns->key(f.column)) > f.limit;
+				break;
+			}
 		switch (f.binding) {
 			case NVBFileFilter::And : {
 				accept &= filter_pass;
