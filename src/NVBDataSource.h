@@ -191,6 +191,9 @@ public:
 	virtual QSize resolution() const =0;
 	/// \returns the position of the page in real-world coordinates with dimensions given by xDim and yDim
 	virtual QRectF position() const =0;
+	
+	/// \returns the angle of rotation around the center of \a position()
+	virtual double rotation() const =0;
 
 	/// \returns a pointer to the color model for this page.
 	/// Note, that the pointer will become invalid after the \a colorsAboutToBeChanged() signal.

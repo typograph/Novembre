@@ -32,6 +32,7 @@ protected:
   virtual void getMinMax();
   QSize _resolution;
   QRectF _position;
+  double _angle;
   NVBDimension xd,yd,zd;
 
   /// The name of the source
@@ -63,6 +64,7 @@ public:
 
   virtual inline QSize resolution() const { return _resolution; }
   virtual inline QRectF position() const { return _position; }
+  virtual inline double rotation() const { return _angle; }
 
   virtual inline const NVBContColorModel * getColorModel() const { return colors; }
 

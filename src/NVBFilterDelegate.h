@@ -38,6 +38,7 @@
   NVB_FORWARD_TOPODIM(source); \
   virtual inline QSize resolution() const { return (source)->resolution(); } \
   virtual inline QRectF position() const { return (source)->position(); } \
+  virtual inline double rotation() const { return (source)->rotation(); } \
   virtual inline const double * getData() const { return (source)->getData(); } \
   virtual inline double getData(int x, int y) const { return (source)->getData(x,y); } \
 

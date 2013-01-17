@@ -121,6 +121,10 @@ void NVB2DMapVizDelegate::setSource(NVBDataSource * source)
         page->position().height()/page->resolution().height()
         );
 */
+
+    setTransformOriginPoint(page->resolution().width()/2,page->resolution().height()/2);
+    setRotation(page->rotation());
+
     connect(page,SIGNAL(dataChanged()),SLOT(redraw()));
     connect(page,SIGNAL(dataAdjusted()),SLOT(redraw()));
     connect(page,SIGNAL(colorsChanged()),SLOT(redraw()));
