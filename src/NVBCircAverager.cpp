@@ -46,6 +46,9 @@ NVBBullsEyeViz::NVBBullsEyeViz(NVB3DDataSource * data):QObject(),NVBFilteringGra
     );
 #endif
 
+  setTransformOriginPoint(provider->resolution().width()/2,provider->resolution().height()/2);
+  setRotation(provider->rotation());
+	
   setVisible(true);
 #if QT_VERSION >= 0x040400
   setAcceptHoverEvents(true);

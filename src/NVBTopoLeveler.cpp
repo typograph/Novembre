@@ -440,8 +440,6 @@ void NVBTopoLeveler::setMode(Mode new_mode)
     }
 }
 
-
-
 QAction * NVBTopoLeveler::action()
 {
   return new QAction(QIcon(_lv_3ptslv),QString("Leveling"),0);
@@ -768,6 +766,9 @@ NVBTopoLevelerViz::NVBTopoLevelerViz(NVB3DDataSource * page): QObject(),NVBFilte
       )
     );
 #endif
+	
+  setTransformOriginPoint(page->resolution().width()/2,page->resolution().height()/2);
+  setRotation(page->rotation());
 
 }
 #endif
