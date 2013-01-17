@@ -101,6 +101,7 @@ public:
 
 	virtual inline QSize resolution() const { return datasize; }
 	virtual QRectF position() const { return rect;}
+	virtual double rotation() const { return 0; }
 
 	virtual const NVBContColorModel * getColorModel() const;
   virtual inline bool canSetColorModel()  { return true; }

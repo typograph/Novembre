@@ -194,6 +194,7 @@ public:
 
   virtual inline QSize resolution() const { return tprovider->resolution(); }
   virtual inline QRectF position() const { return tprovider->position(); }
+  virtual inline double rotation() const { return tprovider->rotation(); }
 
   static QAction * action();
   QWidget * widget();
