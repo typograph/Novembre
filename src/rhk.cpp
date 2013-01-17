@@ -408,6 +408,7 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
   _resolution = QSize(header.x_size,header.y_size);
   _position = QRectF(0,0,fabs(header.x_scale*header.x_size),fabs(header.y_scale*header.y_size));
   _position.moveCenter(QPointF(header.x_offset, -header.y_offset));
+  angle = -header.angle;
 
   setComment("Source type",RHKFileGenerator::getSourceTypeString(header.source_type));
   setComment("Image type",RHKFileGenerator::getImageTypeString(header.image_type));
@@ -418,8 +419,6 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
   setComment("Time per point",NVBPhysValue(QString("%1 s").arg(header.period)));
   setComment("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
   setComment("Setpoint",NVBPhysValue(QString("%1 A").arg(header.current)));
-
-  // TODO Angle in topography
 
   setComment("GUID",RHKFileGenerator::getGUIDString(header.page_ID));
 
