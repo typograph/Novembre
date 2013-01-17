@@ -284,7 +284,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
         if (header.colorinfo_count != 0) 
 					NVBOutputError(QString("Coloring specified for a spectroscopy page. The file %1 might be corrupted. If not, please, send a copy of %1 to Timofey").arg(file.fileName()));
 */
-        if (header.page_type != 7 && header.page_type != 31)
+        if (header.page_type != 7 && header.page_type != 31 && header.line_type != 21 && header.line_type != 4)
           file.seek(file.pos() + 2*sizeof(float)*header.y_size);
         break;
         }
@@ -658,7 +658,7 @@ RHKSpecPage::RHKSpecPage(QFile & file, bool subtractBias):NVBSpecPage()
   float * posdata = (float*)calloc(sizeof(float),2*header.y_size);
   float * xposdata = posdata;
   float * yposdata = posdata + header.y_size;
-  if ( header.page_type != 7 && header.page_type != 31  &&  file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
+	if ( header.page_type != 7 && header.line_type != 4 && header.line_type != 21 && header.page_type != 31  &&  file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
 		NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
     }
     for (int i = 0; i<header.y_size; i++) {
