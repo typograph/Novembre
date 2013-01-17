@@ -26,7 +26,7 @@ QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page, const QSize & size
 	for(int i=0; i < sz; i += iw)
 		xnorm += pdata[i] - pdata[i+iw-1];
 	for(int i=0; i < iw; i += 1)
-		ynorm += pdata[i] - pdata[i+sz-ih];
+		ynorm += pdata[i] - pdata[i+sz-iw];
 
 	xnorm /= (iw-1)*ih;
 	ynorm /= iw*iw*(ih-1);
