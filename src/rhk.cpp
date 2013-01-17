@@ -133,8 +133,11 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 	NVBFile * f = new NVBFile(info);
 	if (!f) return 0;
 
-	while(!file.atEnd())
-		f->addSource(loadNextPage(file));
+	while(!file.atEnd()) {
+		NVBDataSource * page = loadNextPage(file);
+		if (!page) break;
+		f->addSource(page);
+		}
 
 	if (f->rowCount() == 0) {
 		delete f;
@@ -606,12 +609,11 @@ RHKSpecPage::RHKSpecPage(QFile & file, bool subtractBias):NVBSpecPage()
   if ( header.page_type != 7 && header.page_type != 31  &&  file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
 		NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
     }
-  else {
     for (int i = 0; i<header.y_size; i++) {
       _positions.append(QPointF(xposdata[i],-yposdata[i]));
       _data.append(new QwtCPointerData(xs,ys+i*header.x_size,header.x_size));
       }
-    }
+
   free(posdata);
 
   setColorModel(new NVBRandomDiscrColorModel(header.y_size));
