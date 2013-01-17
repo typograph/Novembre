@@ -271,8 +271,6 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
         comments.insert("Scan direction",getDirectionString(header.scan));
 				xspan = NVBPhysValue(fabs(header.x_scale*header.x_size),strings.at(7));
 				yspan = NVBPhysValue(fabs(header.y_scale*header.y_size),strings.at(8));
-				if (header.colorinfo_count > 1)
-					NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
         quint16 cs;
         file.peek((char*)&cs,2);
         file.seek(file.pos() + header.colorinfo_count*(cs+2));
@@ -448,7 +446,62 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
     getMinMax();
     }
 
-  if (header.colorinfo_count == 1) {
+	/*
+48 00
+	00 00 00 40  88 BA 77 3F  C8 D2 A7 3E // Start HSV
+	00 00 30 42  72 C0 02 3F  00 00 80 3F //   End HSV
+
+	01 00 00 00  00 01 00 00 // Direction #Entries
+	00 00 00 00  8C 2E BA 3E // %start %end
+
+	00 00 80 3F  00 00 80 3F // Gamma  Alpha
+	00 00 00 00  00 00 80 3F // X Start/Stop
+	00 00 00 00  00 00 80 3F // Y Start/Stop
+
+	00 00 00 00  01 00 00 00 // Mode   Invert
+
+48 00
+	00 00 00 40  88 BA 77 3F  C8 D2 A7 3E
+	00 00 6C 42  2F C0 66 3F  00 00 80 3F
+
+	01 00 00 00  00 01 00 00
+	8C 2E BA 3E  0D EC 1D 3F
+
+	00 00 80 3F  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+
+	00 00 00 00  00 00 00 00
+
+48 00
+	00 00 4D 43  12 69 4F 3F  C8 D2 A7 3E
+	00 80 91 43  99 2D 99 3E  00 00 80 3F
+
+	01 00 00 00  00 01 00 00
+	0D EC 1D 3F  D8 3B 66 3F
+
+	B4 D4 CB 3E  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+
+	01 00 00 00  00 00 00 00
+
+48 00
+	00 00 00 40  88 BA 77 3F  C8 D2 A7 3E
+	00 00 6C 42  2F C0 66 3F  00 00 80 3F
+
+	01 00 00 00  00 01 00 00
+	D8 3B 66 3F  00 00 80 3F
+
+	00 00 80 3F  CD CC CC 3D
+	00 00 00 00  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+
+	02 00 00 00  00 00 00 00
+
+	 *
+	 */
+
     TRHKColorInfo cInfo;
 
 		if (file.read((char*)&(cInfo.parameter_count),2) != 2) { // read header size
@@ -473,11 +526,10 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
     if (data) {
       setColorModel(new NVBHSVWheelContColorModel(cInfo.start_h/360, cInfo.end_h/360, cInfo.start_s, cInfo.end_s, cInfo.start_b, cInfo.end_b,zMin,zMax));
       }
-    }
-  else {
-		NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
-// FIXME    NVBSetContColorModel * m = new NVBSetContColorModel();
-    for (int i = 0; i < header.colorinfo_count; i++) {
+
+	if (header.colorinfo_count > 1) {
+		NVBOutputError(QString("Multiple coloring not implemented, the coloring in %1 will be approximate").arg(file.fileName()));
+		for (int i = 1; i < header.colorinfo_count; i++) {
       qint16 len;
 			if (file.read((char*)&len,2) != 2 || len < 2) {
 				NVBOutputError(QString("Colorinfo doesn't conform to spec. File %1 probably corrupted.").arg(file.fileName()));
