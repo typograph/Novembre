@@ -174,9 +174,9 @@ void NVBFileFactory::changeGenerator(QObject * go) {
 
 NVBFileFactory::~NVBFileFactory()
 {
-	while(not files.isEmpty()) delete files.takeFirst();
+    while(!files.isEmpty()) delete files.takeFirst();
 	if (deadTree) delete deadTree;
-	while (not generators.isEmpty()) delete generators.takeFirst();
+    while (!generators.isEmpty()) delete generators.takeFirst();
 }
 
 

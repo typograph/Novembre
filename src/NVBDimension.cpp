@@ -14,6 +14,10 @@
 #include <QtCore/QRegExp>
 #include "NVBDimension.h"
 
+#ifndef round
+inline double round(double val) { return floor(val + 0.5); }
+#endif
+
 QChar NVBDimension::charFromOrder(int order, int * neworder)
 {
   int no;
