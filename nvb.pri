@@ -3,6 +3,7 @@ include(Novembre.pri)
 #
 # No need to expose that to end users
 #
+
 # qwtplot3d has been changed from upstream -> do not use official version
 INCLUDEPATH += src/qwtplot3d
 
@@ -17,7 +18,7 @@ contains(CONFIG,NVBStatic) {
 
 contains(CONFIG,NVBStatic) {
   DEFINES += NVB_STATIC
-win32: QMAKE_LFLAGS += -static-libgcc
+  win32-g++: QMAKE_LFLAGS += -static-libgcc
 }
 
 contains(CONFIG,debug) {
@@ -51,11 +52,14 @@ contains(CONFIG,NVB3DView) {
 #
 contains(CONFIG,NVBLib) {
 } else {
- contains(CONFIG,debug) {
-	win32:  LIBS += -Ldebug/lib -lnvb
- } else {
-	win32:  LIBS += -Lrelease/lib -lnvb
- }
- unix:   LIBS += -Llib -lnvb
+ unix: LIBS += -Llib
+ win32 {
+   contains(CONFIG,debug) {
+     LIBS += -Ldebug/lib
+   } else {
+     LIBS += -Lrelease/lib
+   }
+   }
+ LIBS += -lnvb
 }
 

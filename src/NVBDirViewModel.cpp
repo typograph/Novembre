@@ -368,7 +368,7 @@ bool NVBDirViewModel::hasChildren( const QModelIndex & parent ) const
 {
 	if (!parent.isValid()) return true;
 
-	return not unloadables.contains(parent.row());
+    return !unloadables.contains(parent.row());
 }
 
 QModelIndex NVBDirViewModel::index( int row, int column, const QModelIndex & parent ) const

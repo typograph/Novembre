@@ -32,6 +32,10 @@
 #ifndef uint
 typedef unsigned int uint;
 #endif
+#ifndef round
+inline double round(double val) { return floor(val + 0.5); }
+#endif
+
 #include "NVBLogger.h"
 
 /*
@@ -75,7 +79,6 @@ void calcOM(T & offset, T & mult, T imin, T imax, T omin, T omax) {
 /*!
   \brief Provides scaling for different data
  */
-
 template<typename fromT, typename toT>
 class scaler {
 private:
