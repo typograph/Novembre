@@ -46,7 +46,7 @@ protected:
 	virtual bool setData(double * newdata);
 
 public:
-  NVB3DPage():NVB3DDataSource(),colors(0),data(0) { getMinMax(); }
+  NVB3DPage():NVB3DDataSource(),colors(0),data(0),_angle(0) { getMinMax(); }
   virtual ~NVB3DPage();
 
   bool setComment(const QString & key, const NVBVariant & value) {
