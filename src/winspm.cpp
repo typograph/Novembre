@@ -438,6 +438,7 @@ WinSPMTopoPage::WinSPMTopoPage( QFile & file, const TWinSPM::Header & _header, q
 
   _resolution = QSize(header.xres,header.yres);
   _position = QRectF(0,0,header.xreal,header.yreal);
+	_angle = -header.spm_param.rotation;
 
   setComment("Bias",NVBPhysValue(QString("%1 V").arg(header.bias)));
   setComment("Setpoint",NVBPhysValue(QString("%1 nA").arg(header.reference_value)));

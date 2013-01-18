@@ -434,6 +434,7 @@ RHK4TopoPage::RHK4TopoPage(RHKPageIndex * index, QFile & file):NVB3DPage()
   _resolution = QSize(header.x_size,header.y_size);
   _position = QRectF(0,0,fabs(header.x_scale*header.x_size),fabs(header.y_scale*header.y_size));
   _position.moveCenter(QPointF(header.x_offset, -header.y_offset));
+	_angle = -header.angle;
 
 	if (dataRHK) {
 		double * tdata = (double*)calloc(sizeof(double),header.x_size*header.y_size);

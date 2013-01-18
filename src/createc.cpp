@@ -608,6 +608,7 @@ CreatecDatPage::CreatecDatPage( CreatecHeader file_header, int channel, double *
 								header.value("Length y",0).toPhysValue().getValue()*1e-10
                 );
   _position.translate(-_position.width()/2,0);
+	_angle = -header.value("Rotation",0).toDouble(); // FIXME test this rotation angle and origin!
 
   int data_points = _resolution.width()*_resolution.height();
 

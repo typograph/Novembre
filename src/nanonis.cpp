@@ -284,6 +284,11 @@ NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStri
                 s_offset.at(0).toDouble() - s_range.at(0).toDouble()/2, - s_offset.at(1).toDouble() - s_range.at(1).toDouble()/2,
                 s_range.at(0).toDouble(), s_range.at(1).toDouble()
                 );
+	
+  if (header.contains("SCAN_ANGLE") && !header.value("SCAN_ANGLE").isEmpty())
+		_angle = -header.value("SCAN_ANGLE").first().toDouble(); // FIXME check direction and origin
+	else
+		_angle = 0;
 
   xd = NVBDimension("m");
   yd = NVBDimension("m");
