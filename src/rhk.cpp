@@ -409,7 +409,7 @@ RHKTopoPage::RHKTopoPage(QFile & file):NVB3DPage()
   _resolution = QSize(header.x_size,header.y_size);
   _position = QRectF(0,0,fabs(header.x_scale*header.x_size),fabs(header.y_scale*header.y_size));
   _position.moveCenter(QPointF(header.x_offset, -header.y_offset));
-  angle = -header.angle;
+  _angle = -header.angle;
 
   setComment("Source type",RHKFileGenerator::getSourceTypeString(header.source_type));
   setComment("Image type",RHKFileGenerator::getImageTypeString(header.image_type));
