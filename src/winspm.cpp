@@ -124,8 +124,8 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
 	file.seek(tiff_header.dir_start);
   
   qint16 num_tags;
-  TIFF_tag tag, make_tag, model_tag, hostpc_tag, color_map_tag;
-	quint32 strip_offset = 0, strip_rows, strip_bytes;
+  TIFF_tag tag, color_map_tag ;// FIXME unused , make_tag, model_tag, hostpc_tag;
+  quint32 strip_offset = 0; // FIXME unused, strip_rows, strip_bytes;
   
 	file.read((char*)&num_tags,2);
   for (int i = 0; i<num_tags; i++) {
@@ -185,7 +185,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
           NVBOutputError("Make tag inconsistent with format");
 					return 0;
 					}
-        make_tag = tag;
+        // FIXME unused make_tag = tag;
         break;
         }
       case TT_MODEL : {
@@ -193,7 +193,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
           NVBOutputError("Model tag inconsistent with format");
 					return 0;
 					}
-        model_tag = tag;
+        // FIXME unused model_tag = tag;
         break;
         }
       case TT_STRIP_OFFSET : {
@@ -218,7 +218,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
           NVBOutputError("Strip offset tag inconsistent with format");
 					return 0;
 					}
-        strip_rows = tag.data;
+        // FIXME unused strip_rows = tag.data;
         break;
         }
       case TT_STRIP_BYTE_COUNT : {
@@ -226,7 +226,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
           NVBOutputError("Strip offset tag inconsistent with format");
 					return 0;
 					}
-        strip_bytes = tag.data;
+        // FIXME unused strip_bytes = tag.data;
         break;
         }
       case TT_X_RESOLUTION : 
@@ -249,7 +249,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
           NVBOutputError("Host computer tag inconsistent with format");
 					return 0;
 					}
-        hostpc_tag = tag;
+        // FIXME unused hostpc_tag = tag;
         break;
         }
       case TT_COLOR_MAP : {
@@ -258,7 +258,7 @@ NVBFile * WinSPMFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) con
           NVBOutputError("Color map tag inconsistent with format");
 					return 0;
 					}
-        color_map_tag = tag;
+        // FIXME unused color_map_tag = tag;
         break;
         }
       default : break;
