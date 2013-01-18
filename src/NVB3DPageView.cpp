@@ -26,10 +26,7 @@ NVB3DPageView::~ NVB3DPageView()
 QToolBar * NVB3DPageView::generateToolbar(QWidget * parent) const
 {
   QToolBar * tBar = new QToolBar(parent);
-  QAction * act;
-
-  act = tBar->addAction(QIcon(_3Dview_export),"Export view",this,SLOT(exportImage()));
-
+	tBar->addAction(QIcon(_3Dview_export),"Export view",this,SLOT(exportImage()));
   return tBar;
 }
 

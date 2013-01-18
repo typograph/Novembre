@@ -84,7 +84,7 @@ NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const
 		}
 
 	RHKFile fileheader = getRHKHeader(file);
-	int version, version_minor, unicode;
+	int version; // FIXME never used: version_minor, unicode;
 
 	if (memcmp(fileheader.header.version, MAGIC, 16) != 0) { // Comparing "STiMage "
 		NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
@@ -92,14 +92,14 @@ NVBFile * RHK4FileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const
 	}
 
 	version = ((fileheader.header.version[8]-0x30)*10 + fileheader.header.version[9]-0x30)*10 + fileheader.header.version[10]-0x30;
-	version_minor = ((fileheader.header.version[12]-0x30)*10 + fileheader.header.version[13]-0x30)*10 + fileheader.header.version[14]-0x30;
+//	version_minor = ((fileheader.header.version[12]-0x30)*10 + fileheader.header.version[13]-0x30)*10 + fileheader.header.version[14]-0x30;
 
 	if (version != 5) {
 		NVBOutputError("Only RHK v4 files are supported by this plugin");
 		return NULL;
 		}
-
-	unicode = fileheader.header.version[16]-0x30; // FIXME unicode is never used
+ // FIXME unicode is never used
+//	unicode = fileheader.header.version[16]-0x30;
 
 	NVBFile * f = new NVBFile(info);
 	if (!f) return 0;
@@ -167,12 +167,12 @@ NVBFileInfo * RHK4FileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & inf
 		}
 
 //  QString name;
-	NVB::PageType type;
+	NVB::PageType type = NVB::InvalidPage;
 //  QSize size;
   QMap<QString,NVBVariant> comments;
 	RHKFile fileheader = getRHKHeader(file);
   QStringList strings;
-	int version, version_minor, unicode;
+	int version; // FIXME never used: version_minor, unicode;
 
 	if (memcmp(fileheader.header.version, MAGIC, 16) != 0) { // Comparing "STiMage "
 		NVBOutputError(QString("New page does not have recognizable RHK format. A shift must have been introduced due to incorect format implementation. Please, send the file %1 to Timofey").arg(file.fileName()));
@@ -187,7 +187,7 @@ NVBFileInfo * RHK4FileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & inf
 		}
 
 	version = ((fileheader.header.version[8]-0x30)*10 + fileheader.header.version[9]-0x30)*10 + fileheader.header.version[10]-0x30;
-	version_minor = ((fileheader.header.version[12]-0x30)*10 + fileheader.header.version[13]-0x30)*10 + fileheader.header.version[14]-0x30;
+//	version_minor = ((fileheader.header.version[12]-0x30)*10 + fileheader.header.version[13]-0x30)*10 + fileheader.header.version[14]-0x30;
 
 	if (version != 5) {
 		NVBOutputError("Only RHK v4 files are supported by this plugin");
@@ -195,7 +195,8 @@ NVBFileInfo * RHK4FileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & inf
 		return NULL;
 		}
 
-	unicode = fileheader.header.version[16]-0x30; // FIXME unicode is never used
+	// FIXME unicode is never used
+//	unicode = fileheader.header.version[16]-0x30;
 
 	for (quint32 i=0;i<fileheader.page_index.page_count;i++) {
 

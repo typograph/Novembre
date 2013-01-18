@@ -33,7 +33,7 @@
 
 // using namespace NVBErrorCodes;
 
-const char TIFF_HEADER[] = {
+const unsigned char TIFF_HEADER[] = {
   0x49, 0x49, 0x2A, 0x00, 0xD4, 0x17, 0x00, 0x00
   };
 

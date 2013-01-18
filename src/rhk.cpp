@@ -191,7 +191,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
   QMap<QString,NVBVariant> comments;
   TRHKHeader header;
   QStringList strings;
-	int version, version_minor, unicode;
+	int version, version_minor; // FIXME unicode;
 
   while(!file.atEnd()) {
 
@@ -227,7 +227,9 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 		header.grid_xsize = 0;
 		}
 
-		unicode = header.version[16]-0x30; // FIXME unicode is never used
+	// FIXME unicode is never used
+//		unicode = header.version[16]-0x30;
+
 
     strings = loadRHKStrings(file,header.string_count);
 		if (strings.isEmpty()) {

@@ -703,39 +703,7 @@ QList<NVBDataSource*> CreatecVertPage::loadAllChannels(QStringList filenames) {
 	filenames.sort();
 
 	QString reffname = filenames.last();
-	int nx=0, ny=0, nr=0;
 
-	int nameX = reffname.lastIndexOf("/");
-	if (reffname.length()-nameX > 20) {
-		QStringList tokens = reffname.mid(nameX+16,reffname.length()-nameX-21).split('.');
-		foreach (QString token, tokens) {
-			bool ok = false;
-			int value = token.mid(1).toInt(&ok,10)+1;
-			if (ok)
-				switch (token[0].toLatin1()) {
-					case 'R' : {
-						nr = value;
-						break;
-						}
-					case 'X' : {
-						nx = value;
-						break;
-						}
-					case 'Y' : {
-						ny = value;
-						break;
-						}
-					case 'M' :
-					case 'L' : {
-						nx = value;
-						break;
-						}
-					}
-			else
-				NVBOutputError(QString("Unknown token in filename: %1").arg(token));
-			}
-		}
-// Actually all that was rather unnecessary - this information is only needed for the new NVBAxedData
 	QList<CreatecVertPage*> result;
 	QVector<QColor> pcolors(12); // Colors are taken from the STMAFM program by Createc
 
