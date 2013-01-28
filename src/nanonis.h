@@ -55,6 +55,9 @@ private:
   NVBFile * loadSpecAggregation(const NVBAssociatedFilesInfo & info) const;
   NVBFileInfo * loadSpecAggregationInfo(const NVBAssociatedFilesInfo & info) const;
 
+  NVBFile * load3DS(const NVBAssociatedFilesInfo & info) const;
+  NVBFileInfo * load3DSInfo(const NVBAssociatedFilesInfo & info) const;
+
 public:
   NanonisFileGenerator():NVBFileGenerator() {;}
   virtual ~NanonisFileGenerator() {;}
@@ -66,6 +69,7 @@ public:
 			static QStringList exts \
 					= QStringList() \
 					<< "*.sxm" \
+					<< "*.3ds" \
 					<< "*.dat" \
 					;
 			return exts;
