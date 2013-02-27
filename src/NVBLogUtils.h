@@ -97,7 +97,7 @@ private:
 #endif
 
   NVBLogFilterModel * model;
-  QTreeView * v;
+  QTreeView * view;
 private slots:
   void err_toggled(bool);
   void pmsg_toggled(bool);
@@ -112,9 +112,9 @@ public slots:
   virtual void showEvent ( QShowEvent * event ) {
     event->accept();
     emit shown();
-    v->resizeColumnToContents(0);
-    v->resizeColumnToContents(1);
-    v->resizeColumnToContents(2);
+    view->resizeColumnToContents(0);
+    view->resizeColumnToContents(1);
+    view->resizeColumnToContents(2);
     }
 signals:
   void shown();

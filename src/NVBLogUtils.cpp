@@ -119,16 +119,16 @@ NVBLogWidget::NVBLogWidget(QString title, QWidget * parent):QFrame(parent)
 
   l->addWidget(tb);
 
-  v = new QTreeView(this);
-  l->addWidget(v);
+  view = new QTreeView(this);
+  l->addWidget(view);
 
   model = new NVBLogFilterModel(new NVBLogModel());
   model->setLogLevel(NVB::PMsgEntry);
-  v->setModel(model);
-  v->setAllColumnsShowFocus(true);
-  v->setRootIsDecorated(false);
-  v->sortByColumn (0, Qt::AscendingOrder);
-  v->show();
+  view->setModel(model);
+  view->setAllColumnsShowFocus(true);
+  view->setRootIsDecorated(false);
+  view->sortByColumn (0, Qt::AscendingOrder);
+  view->show();
   hide();
 }
 
