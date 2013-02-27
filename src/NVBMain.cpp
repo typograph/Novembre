@@ -398,8 +398,8 @@ void NVBMain::addWindow(QWidget * window)
 	window->show();
 	window->raise();
 
-	if (!workspace->contentsRect().contains(w->geometry())) {
-		w->move(QPoint(qMin(qMax(0,workspace->contentsRect().width() - w->width()),w->geometry().left()),qMin(qMax(0,workspace->contentsRect().height() - w->height()),w->geometry().top())));
+	if (!workspace->contentsRect().contains(window->geometry())) {
+		window->move(QPoint(qMin(qMax(0,workspace->contentsRect().width() - window->width()),window->geometry().left()),qMin(qMax(0,workspace->contentsRect().height() - window->height()),window->geometry().top())));
 		}
 }
 
