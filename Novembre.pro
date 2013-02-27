@@ -1,5 +1,3 @@
-include( Novembre.pri )
-
 TEMPLATE = subdirs
 SUBDIRS = \
           nvblib.pro \
