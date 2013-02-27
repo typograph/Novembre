@@ -33,14 +33,13 @@ QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page, const QSize & size
 
 	double * ndata = (double *) malloc(sz*sizeof(double));
 
-	double zmin = pdata[0], zmax = pdata[0];
+	double zmin, zmax;
 
 	for(int i=0; i < iw; i += 1)
-		for(int j=0; j < sz; j += iw) {
+		for(int j=0; j < sz; j += iw)
 			ndata[i+j] = pdata[i+j] + xnorm*i + ynorm*j;
-			zmin = qMin(zmin,ndata[i+j]);
-			zmax = qMax(zmax,ndata[i+j]);
-			}
+
+	getMemMinMax<double>(ndata,sz,zmin,zmax);
 
 	NVBRescaleColorModel * rm = new NVBRescaleColorModel(page->getColorModel());
 	rm->setLimits(zmin,zmax);
