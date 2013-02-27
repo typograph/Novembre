@@ -22,16 +22,17 @@ win32:CONFIG += NVBStatic
 CONFIG -= debug
 CONFIG += release
 
+ZLIB_INCLUDE =
+ZLIB_LIB =
+
 # Use qwt from these locations
 unix { 
     INCLUDEPATH += /usr/include/qwt5
     LIBS += -lqwt
 }
 win32 { 
-    INCLUDEPATH += ../qwt-5.2.2/src/
-    win32-g++: LIBS += -L../build-0.0.5-gcc-qwt/lib
-# INCLUDEPATH += C:/Qt/qtcreator-2.4.1/mingw/include
-    win32-msvc2010: LIBS += -L../build-0.0.5-MSVC-qwt/lib
+    INCLUDEPATH += -I../3rdparty/qwt5/src
+    LIBS += -L../3rdparty/qwt5/lib
 }
 
 LIBS += -lqwt

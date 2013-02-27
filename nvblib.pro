@@ -2,7 +2,7 @@ CONFIG += NVBLib
 
 include(nvb.pri)
 
-contains(CONFIG,NVB3DView) {
+NVB3DView {
 #  CONFIG += gl2ps // Uncomment if you want export to vector formats
   include(qwtplot3d.pro)
   QT += opengl
@@ -12,12 +12,9 @@ contains(CONFIG,NVB3DView) {
 
 HEADERS += src/NVBLogger.h
 
-contains(CONFIG,NVBLog){
-    SOURCES += src/NVBLogger.cpp
-}
+NVBLog: SOURCES += src/NVBLogger.cpp
 
-
-contains(CONFIG,NVB2DView) {
+NVB2DView {
 HEADERS += \
            src/NVBGraphicsItems.h
 SOURCES += \
@@ -49,6 +46,7 @@ HEADERS += \
            src/NVBPhysStepSpinBox.h
 
 SOURCES += \
+           src/dimension.cpp \
            src/NVBDimension.cpp \
            src/NVBVariant.cpp \
            src/NVBQuadTree.cpp \
@@ -67,7 +65,7 @@ SOURCES += \
 
 CONFIG += qt
 
-contains(CONFIG,NVBStatic) {
+NVBStatic {
   CONFIG -= dll
   CONFIG += static
 } else {
@@ -84,7 +82,7 @@ VERSION = 0.0.5
 
 QT += core gui
 
-contains(CONFIG,NVBShared) {
+NVBShared {
   unix {
     target.path = /usr/lib
   } else {

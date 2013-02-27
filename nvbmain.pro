@@ -3,7 +3,7 @@ include(nvb.pri)
 # Log
 HEADERS += src/NVBLogger.h
 
-contains(CONFIG,NVBLog){
+NVBLog {
 	HEADERS += \
 		src/NVBLogUtils.h
 	SOURCES += \
@@ -30,7 +30,7 @@ HEADERS += \
 SOURCES += \
 	src/NVBToolsFactory.cpp
 
-contains(CONFIG,debug) {
+debug {
 	win32 : LIBS += -Ldebug/lib/tools -lnvbdviz
 } else {
 	win32 : LIBS += -Lrelease/lib/tools -lnvbdviz
@@ -38,7 +38,7 @@ contains(CONFIG,debug) {
 
 unix : LIBS += -Llib/tools -lnvbdviz
 
-contains(CONFIG,NVBStatic) {
+NVBStatic {
 
 	LIBS += \
 		-lnvbexport \
@@ -46,7 +46,7 @@ contains(CONFIG,NVBStatic) {
 		-lnvbtopo \
 		-lnvbcolor
 
-	contains(CONFIG,debug) {
+	debug {
 		win32 : LIBS += -Ldebug/lib/files
 	} else {
 		win32 : LIBS += -Lrelease/lib/files
@@ -55,6 +55,7 @@ contains(CONFIG,NVBStatic) {
 	unix : LIBS += -Llib/files
 	LIBS += \
 		-lrhk \
+		-lrhk4 \
 		-lcreatec \
 		-lwinspm \
 		-lnanonis
@@ -91,14 +92,14 @@ SOURCES += \
 	src/NVBFileWindowLayout.cpp \
 	src/NVBFileWindow.cpp
 
-contains(CONFIG,NVB2DView){
+NVB2DView {
 	HEADERS += \
 		src/NVB2DPageView.h
 	SOURCES += \
 		src/NVB2DPageView.cpp
 }
 
-contains(CONFIG,NVBGraphView){
+NVBGraphView {
 	HEADERS += \
 		src/NVBPlotZoomer.h \
 		src/NVBGraphView.h
@@ -107,7 +108,7 @@ contains(CONFIG,NVBGraphView){
 		src/NVBGraphView.cpp
 }
 
-contains(CONFIG,NVB3DView){
+NVB3DView {
 	HEADERS += \
 		src/NVB3DPageView.h
 	SOURCES += \
@@ -147,7 +148,7 @@ SOURCES += \
 	src/NVBBrowserHelpers.cpp \
 	src/NVBBrowser.cpp
 
-contains(CONFIG,NVBGlobalDocs) {
+NVBGlobalDocks {
 	DEFINES += NVB_NO_FWDOCS
 }
 
@@ -165,9 +166,8 @@ SOURCES += \
 
 
 CONFIG += qt
-# CONFIG -= stl thread
-# win32: CONFIG += windows
 unix : CONFIG += x11
+
 TARGET = bin/novembre
 MOC_DIR = moc
 OBJECTS_DIR = obj
@@ -180,10 +180,7 @@ win32: RC_FILE = icons/novembre.rc
 
 macx : ICON = icons/nvb.icns
 
-contains(CONFIG,NVBStatic) {
-} else {
-	DEFINES += NVB_PLUGINS=\\\"$$NVB_PLUGIN_INSTALL_PATH\\\"
-}
+!NVBStatic: DEFINES += NVB_PLUGINS=\\\"$$NVB_PLUGIN_INSTALL_PATH\\\"
 
 target.path = $$NVB_BIN_INSTALL_PATH
 
