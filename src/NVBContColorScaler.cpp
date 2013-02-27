@@ -261,7 +261,9 @@ void NVBContColorScaler::mousePressEvent(QMouseEvent * event)
 void NVBContColorScaler::mouseMoveEvent(QMouseEvent * event)
 {
   if (movingrect) {
+    // The new X position
     int mousex = event->x();
+    // Restrict movement to rectangle
     if (mousex < minx()) {
       if (*movingrect == minx()) return;
       mousex = minx();
@@ -270,23 +272,33 @@ void NVBContColorScaler::mouseMoveEvent(QMouseEvent * event)
       if (*movingrect == maxx()) return;
       mousex = maxx();
       }
+    // Motion
     if (*movingrect - minx() == 0 && qMin(c1,c2) != qMin(z1,z2)) {
-      scaler<int,int> isc(mousex,maxx(),minx(),maxx());
-      int tmp = *movingrect;
+      // The marker is alone on the left, move others
+      *movingrect = mousex;
+     
+      // Find the new leftmost corner
+      int newmin = qMin(qMin(z1,z2), qMin(c1,c2));
+      scaler<int,int> isc(newmin,maxx(),minx(),maxx());
+
+      // Move corners
       z1 = qMax(qMin(isc.scaleInt(z1),maxx()),minx());
       z2 = qMax(qMin(isc.scaleInt(z2),maxx()),minx());
       c1 = qMax(qMin(isc.scaleInt(c1),maxx()),minx());
       c2 = qMax(qMin(isc.scaleInt(c2),maxx()),minx());
-      *movingrect = tmp;
       }
     else if (maxx() - *movingrect == 0 && qMax(c1,c2) != qMax(z1,z2)) {
-      scaler<int,int> isc(minx(),mousex,minx(),maxx());
-      int tmp = *movingrect;
+      // The marker is alone on the right, move others
+      *movingrect = mousex;
+      
+      // Find the new rightmost corner
+      int newmax = qMax(qMax(z1,z2), qMax(c1,c2));
+      scaler<int,int> isc(minx(),newmax,minx(),maxx());
+
       z1 = qMax(qMin(isc.scaleInt(z1),maxx()),minx());
       z2 = qMax(qMin(isc.scaleInt(z2),maxx()),minx());
       c1 = qMax(qMin(isc.scaleInt(c1),maxx()),minx());
       c2 = qMax(qMin(isc.scaleInt(c2),maxx()),minx());
-      *movingrect = tmp;
       }
     else {
       int movingdir = (*movingrect > mousex) ? 1 : -1;
