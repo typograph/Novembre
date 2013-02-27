@@ -848,8 +848,6 @@ NVBFileInfo * NanonisFileGenerator::load3DSInfo(const NVBAssociatedFilesInfo & i
 
 	for(int j = 0; j < fixed_params.count(); j++)
 		comments.insert(fixed_params.at(j).first,NVBPhysValue(fxParams[j],fixed_params.at(j).second));
-	free(fxParams);
-
 	int nPoints = h.value("Points").first().toInt();	
 
 	NVBFileInfo * fi = new NVBFileInfo(info);
@@ -865,6 +863,7 @@ NVBFileInfo * NanonisFileGenerator::load3DSInfo(const NVBAssociatedFilesInfo & i
 		if (iSweepStart < 0 || iSweepEnd < 0) {
 		NVBOutputError("Sweep limits not in fixed parameters");
 			delete fi;
+			free(fxParams);
 			return 0;
 			}
 
@@ -887,6 +886,7 @@ NVBFileInfo * NanonisFileGenerator::load3DSInfo(const NVBAssociatedFilesInfo & i
 		if (exp_params.at(j).first != "X" && exp_params.at(j).first != "Y") // Skip useless X and Y
 			fi->pages.append(NVBPageInfo(exp_params.at(j).first,NVB::TopoPage, tSize, NVBPhysValue(gw,NVBDimension("m")), NVBPhysValue(gh,NVBDimension("m")), comments));
 
+	free(fxParams);
 
 	return fi;
 
