@@ -23,13 +23,23 @@ QImage * colorizeWithPlaneSubtraction(NVB3DDataSource * page, const QSize & size
 	int ih = page->resolution().height();
 	int sz = iw*ih;
 
+	int nx=0, ny=0;
+	
 	for(int i=0; i < sz; i += iw)
+		if (FINITE(pdata[i]) && FINITE(pdata[i+iw-1])) {
 		xnorm += pdata[i] - pdata[i+iw-1];
+			nx += 1;
+			}
 	for(int i=0; i < iw; i += 1)
+		if (FINITE(pdata[i]) && FINITE(pdata[i+sz-iw])) {
 		ynorm += pdata[i] - pdata[i+sz-iw];
+			ny += 1;
+			}
 
-	xnorm /= (iw-1)*ih;
-	ynorm /= iw*iw*(ih-1);
+	if (nx > 0)
+		xnorm /= (iw-1)*nx;
+	if (ny > 0)
+		ynorm /= ny*iw*(ih-1);
 
 	double * ndata = (double *) malloc(sz*sizeof(double));
 

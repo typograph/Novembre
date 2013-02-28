@@ -201,10 +201,14 @@ void NVBTopoLeveler::levelByLine()
   for ( int i = s.height()-1; i>=0; i--) {
     double offset = 0;
     int aoff = i*s.width();
-    for ( int j = s.width()-1; j>=0; j--) {
-      offset += tdata[j+aoff];
+    int cnt = 0;
+    for ( int j = s.width()-1; j>=0; j--)
+      if (FINITE(tdata[j+aoff])) {
+        offset += tdata[j+aoff];
+        cnt += 1;
       }
-    offset /= s.width();
+    if (cnt > 0)
+      offset /= cnt;
     for ( int j = s.width()-1; j>=0; j--) {
       fdata[j+aoff] = tdata[j+aoff] - offset;
       }
@@ -233,13 +237,15 @@ void NVBTopoLeveler::levelByOffset()
     double offset = 0;
     int aoff = i*s.width();
     int boff = (i-1)*s.width();
-    for ( int j = s.width()-1; j>=0; j--) {
-      offset += tdata[j+aoff] - tdata[j+boff];
-      }
-    offset /= s.width();
-    for ( int j = s.width()-1; j>=0; j--) {
+    int cnt = 0;
+    for ( int j = s.width()-1; j>=0; j--)
+      if (FINITE(tdata[j+aoff]) && FINITE(tdata[j+boff])) {
+        offset += tdata[j+aoff] - tdata[j+boff];
+        cnt += 1;
+        }
+    if (cnt > 0) offset /= cnt;
+    for ( int j = s.width()-1; j>=0; j--)
       fdata[j+boff] = tdata[j+boff] + offset;
-      }
     }
 
   mode = OffsetLeveling;
