@@ -46,13 +46,17 @@ public:
         scaler<int,int> h(0,i_wxh.height(),0,d_wxh.height());
         for (int i = 0; i<i_wxh.width(); i++)
           for (int j = 0; j<i_wxh.height(); j++) {
-              result->setPixel(i,j,colorize(zs[w.scaleInt(i)+ d_wxh.width()*h.scaleInt(j)]));
+            double z = zs[w.scaleInt(i)+ d_wxh.width()*h.scaleInt(j)];
+            if (FINITE(z))
+              result->setPixel(i,j,colorize(z));
             }
         }
       else {
         for (int i = 0; i<i_wxh.width(); i++)
           for (int j = 0; j<i_wxh.height(); j++) {
-              result->setPixel(i,j,colorize(zs[i+i_wxh.width()*j]));
+            double z = zs[i+i_wxh.width()*j];
+            if (FINITE(z))
+              result->setPixel(i,j,colorize(z));
             }
         }
         

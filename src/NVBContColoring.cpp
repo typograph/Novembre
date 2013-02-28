@@ -65,7 +65,7 @@ QRgb NVBHSVWheelContColorModel::colorize( double z ) const
     double hf,sf,vf;
     
     if (z>cInfo.z_max) z = cInfo.z_max;
-    else if (z<cInfo.z_min) z = cInfo.z_min;
+    else if (z<cInfo.z_min || isnan(z)) z = cInfo.z_min;
     
     sf = s->scale(z);
     vf = v->scale(z);
@@ -108,7 +108,7 @@ QRgb NVBHSVWheelContColorModel::colorize( double z ) const
 				return 0xFF000000 | (v << 16) | (p << 8) | q;
       default: {
 				NVBOutputError("Color conversion error");
-				NVBOutputError(QString("%1 (%2,%3)\nwas converted to\n(%4->%5) -- your computer is crazy!").arg(z,6).arg(cInfo.z_min).arg(cInfo.z_max).arg(hf,3).arg(i));
+				NVBOutputError(QString("%1 (%2,%3) was converted to (%4->%5) -- your computer is crazy!").arg(z,6).arg(cInfo.z_min).arg(cInfo.z_max).arg(hf,3).arg(i));
         return 0xFF000000;
         }
       }

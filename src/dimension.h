@@ -21,13 +21,23 @@
 #ifndef DIMENSION_H
 #define DIMENSION_H 1
 
+#include <sys/types.h>
+#include <math.h>
+
 #ifndef NULL
 #define NULL 0
 #endif
 
-
-#include <sys/types.h>
-#include <math.h>
+#ifdef isfinite
+#define FINITE isfinite
+#else
+#include <float.h>
+#ifdef _finite
+#define FINITE _finite
+#else
+#error "NaN values determination impossible"
+#endif
+#endif
 
 #ifndef uint
 typedef unsigned int uint;
@@ -187,6 +197,9 @@ void getMemMinMax(const T* const mem, unsigned long size, T & min, T & max) {
     }
 }
   
+template <>
+void getMemMinMax<double>(const double* const mem, unsigned long size, double & min, double & max);
+
 template <typename fromT, typename toT>
 void scaleMem(toT * dest, const scaler<fromT,toT> &_scaler, const fromT* src, unsigned long size) {
   for (unsigned long i = 0; i<size; i++)
