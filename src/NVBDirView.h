@@ -43,6 +43,11 @@ private:
  */
 	bool keepItemsOnModelChanges;
 	
+/** Since the view has a complicated scrollbar control,
+ * sometimes valueChanged() signal has to be ignored.
+ */
+	bool ignoreScroll;
+	
 /// Number of rows before \a top_row with corresponding number of pages
 	mutable QVector<int> counts_above;
 /// Total number of rows with corresponding number of pages
@@ -50,9 +55,11 @@ private:
 
 /// Total visual height of all items in the view, not including midMargin() at every end. For an empty view is equal to 0
 	int totalHeight();
-  void calculateVOffset();
+/// voffset is equal to the scrollbar value.
+	void calculateVOffset();
 	void updateTopRow(int rold, int rnew);
-
+/// Updates view when the number of pages per row changes
+	void updatePPR(int nppr);
 	
 public:
   NVBDirView( QWidget * parent = 0 );
@@ -111,7 +118,7 @@ private:
 	inline int viewportHeight() const { return viewport()->height() - 2*midMargin(); }
 
 private slots:
-	void updateScrollBars();
+	void updateBottom();
 	void invalidateCache();
 	virtual void	rowsAboutToBeRemoved ( const QModelIndex & parent, int start, int end );
 	virtual void	rowsRemoved ( const QModelIndex & parent, int start, int end );
