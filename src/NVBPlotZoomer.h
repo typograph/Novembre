@@ -1,3 +1,21 @@
+//
+// Copyright 2006 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 #ifndef NVBPLOTZOOMER_H
 #define NVBPLOTZOOMER_H
 
@@ -18,10 +36,9 @@
 
 */
 
-class NVBPlotZoomer : public QwtPlotPicker
-{
-    Q_OBJECT
-public:
+class NVBPlotZoomer : public QwtPlotPicker {
+		Q_OBJECT
+	public:
 		explicit NVBPlotZoomer(QwtPlotCanvas *, bool doReplot = true);
 		explicit NVBPlotZoomer(int xAxis, int yAxis, QwtPlotCanvas *, bool doReplot = true);
 		explicit NVBPlotZoomer(int xAxis, int yAxis, int selectionFlags, DisplayMode trackerMode, QwtPlotCanvas *,	bool doReplot = true);
@@ -32,13 +49,13 @@ public:
 
 		virtual void setAxis(int xAxis, int yAxis);
 
-public slots:
+	public slots:
 		virtual void zoom(const QwtDoubleRect &);
 
-signals:
+	signals:
 		void zoomed(const QwtDoubleRect &rect);
 
-protected:
+	protected:
 		virtual void rescale();
 
 //		virtual QwtDoubleSize minZoomSize() const;
@@ -51,11 +68,11 @@ protected:
 		virtual bool end(bool ok = true);
 		virtual bool accept(QwtPolygon &) const;
 
-private:
+	private:
 		QwtDoubleRect zrect;
 		void init(int selectionFlags, DisplayMode trackerMode, bool doReplot);
 
-};
+	};
 
 
 #endif // NVBPLOTZOOMER_H

@@ -1,14 +1,22 @@
 //
-// C++ Interface: NVBDiscrColoring
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre utility library.
 //
+// Novembre utility library is free software: you can redistribute it
+// and/or modify it  under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//
+
 
 #ifndef NVBDISCRCOLORING_H
 #define NVBDISCRCOLORING_H
@@ -19,15 +27,15 @@
 namespace NVBColoring {
 
 class NVBRandomDiscrColorModel : public NVBDiscrColorModel {
-private:
-  int nc;
-  mutable  QList<QColor> colors;
-  QColor newcolor() const;
-public:
-  NVBRandomDiscrColorModel(int ncolors = 0);
-  virtual ~NVBRandomDiscrColorModel() {;}
-  virtual QColor colorize(int) const;
-};
+	private:
+		int nc;
+		mutable  QList<QColor> colors;
+		QColor newcolor() const;
+	public:
+		NVBRandomDiscrColorModel(int ncolors = 0);
+		virtual ~NVBRandomDiscrColorModel() {;}
+		virtual QColor colorize(int) const;
+	};
 
 /*
 class NVBRGBRampDiscrColorModel : public NVBDiscrColorModel {
@@ -41,106 +49,109 @@ public:
 */
 
 class NVBConstDiscrColorModel : public NVBDiscrColorModel {
-protected:
-  QColor c;
-public:
-    NVBConstDiscrColorModel(QColor color):c(color) {;}
-    virtual ~NVBConstDiscrColorModel() {;}
-  
-    virtual QColor colorize(int) const { return c; }
+	protected:
+		QColor c;
+	public:
+		NVBConstDiscrColorModel(QColor color): c(color) {;}
+		virtual ~NVBConstDiscrColorModel() {;}
 
-};
+		virtual QColor colorize(int) const { return c; }
+
+	};
 
 class NVBRGBRampDiscrColorModel : public NVBDiscrColorModel {
-protected:
-  int uplimit;
-  QRgb cstart,cend;
+	protected:
+		int uplimit;
+		QRgb cstart, cend;
 
-  scaler<double,QRgb> * sc;
+		scaler<double, QRgb> * sc;
 
-  void initScaler() {
-    if (sc) delete sc;
-    sc = new scaler<double,QRgb>(0,1,cstart,cend);
-    emit adjusted();
-    }
+		void initScaler() {
+			if (sc) delete sc;
 
-public:
-    NVBRGBRampDiscrColorModel(int ncurves, QRgb start, QRgb end)
-      :NVBDiscrColorModel(),uplimit(ncurves),cstart(start),cend(end),sc(0) { initScaler(); }
-    NVBRGBRampDiscrColorModel(int ncurves, QColor start, QColor end)
-      :NVBDiscrColorModel(),uplimit(ncurves),cstart(start.rgba()),cend(end.rgba()),sc(0) { initScaler(); }
-    virtual ~NVBRGBRampDiscrColorModel() { if (sc) delete sc; }
-  
-    virtual QColor colorize(int index) const { return QColor(sc->scaleInt(index*1.0/uplimit)); }
+			sc = new scaler<double, QRgb>(0, 1, cstart, cend);
+			emit adjusted();
+			}
 
-  void setNCurves(int ncurves) { uplimit = ncurves; emit adjusted();}
+	public:
+		NVBRGBRampDiscrColorModel(int ncurves, QRgb start, QRgb end)
+			: NVBDiscrColorModel(), uplimit(ncurves), cstart(start), cend(end), sc(0) { initScaler(); }
+		NVBRGBRampDiscrColorModel(int ncurves, QColor start, QColor end)
+			: NVBDiscrColorModel(), uplimit(ncurves), cstart(start.rgba()), cend(end.rgba()), sc(0) { initScaler(); }
+		virtual ~NVBRGBRampDiscrColorModel() { if (sc) delete sc; }
 
-  void setStartColor(QRgb color) { cstart = color; initScaler(); }
-  void setStartColor(QColor color) { setStartColor(color.rgba());}
-  void setEndColor(QRgb color) { cend = color; initScaler(); }
-  void setEndColor(QColor color) { setEndColor(color.rgba()); }
+		virtual QColor colorize(int index) const { return QColor(sc->scaleInt(index * 1.0 / uplimit)); }
 
-};
+		void setNCurves(int ncurves) { uplimit = ncurves; emit adjusted();}
+
+		void setStartColor(QRgb color) { cstart = color; initScaler(); }
+		void setStartColor(QColor color) { setStartColor(color.rgba());}
+		void setEndColor(QRgb color) { cend = color; initScaler(); }
+		void setEndColor(QColor color) { setEndColor(color.rgba()); }
+
+	};
 
 class NVBIndexedDiscrColorModel : public NVBDiscrColorModel, protected QList<QColor> {
-Q_OBJECT
-private:
-  QColor defclr;
+		Q_OBJECT
+	private:
+		QColor defclr;
 //  QList<QColor> colors;
-public:
-    NVBIndexedDiscrColorModel(QColor default_color = Qt::black):NVBDiscrColorModel(),QList<QColor>(),defclr(default_color) {;}
-    NVBIndexedDiscrColorModel(const NVBDiscrColorModel * model, int nc, QColor default_color = Qt::black):NVBDiscrColorModel(),QList<QColor>(),defclr(default_color) { setModel(model,nc); }
-    virtual ~NVBIndexedDiscrColorModel() {;}
-  
-    virtual QColor colorize(int index) const {
-      if (index >=0 && index < size())
-        return at(index);
-      else
-        return defclr;
-      }
+	public:
+		NVBIndexedDiscrColorModel(QColor default_color = Qt::black): NVBDiscrColorModel(), QList<QColor>(), defclr(default_color) {;}
+		NVBIndexedDiscrColorModel(const NVBDiscrColorModel * model, int nc, QColor default_color = Qt::black): NVBDiscrColorModel(), QList<QColor>(), defclr(default_color) { setModel(model, nc); }
+		virtual ~NVBIndexedDiscrColorModel() {;}
 
-    virtual void setColor(QList<int> indexes, QColor color) {
-      foreach(int index, indexes) {
-        if (size() <= index) {
-          for (int i = size(); i <= index; i++)
-            append(defclr);
-          }
-        replace(index,color);
-        }
-      emit adjusted();
-      }
+		virtual QColor colorize(int index) const {
+			if (index >= 0 && index < size())
+				return at(index);
+			else
+				return defclr;
+			}
 
-    virtual void setColor(int index, QColor color) {
-      if (size() <= index) {
-        for (int i = size(); i <= index; i++)
-          append(defclr);
-        }
-      replace(index,color);
-      emit adjusted();
-      }
+		virtual void setColor(QList<int> indexes, QColor color) {
+			foreach(int index, indexes) {
+				if (size() <= index) {
+					for (int i = size(); i <= index; i++)
+						append(defclr);
+					}
 
-    virtual void setModel(const NVBDiscrColorModel * model, int nc) {
-        clear();
-        operator<<(model->colorize(0,nc-1));
-      }
+				replace(index, color);
+				}
+			emit adjusted();
+			}
 
-    void clear() { QList<QColor>::clear(); }
-/*
-  inline int size() const { return colors.size(); }
-*/
-  NVBIndexedDiscrColorModel & operator<< ( const QColor & color ) {
-    QList<QColor>::operator<<(color);
-    emit adjusted();
-    return *this;
-    }
+		virtual void setColor(int index, QColor color) {
+			if (size() <= index) {
+				for (int i = size(); i <= index; i++)
+					append(defclr);
+				}
 
-  NVBIndexedDiscrColorModel & operator<< ( const QList<QColor> & colors ) {
-    QList<QColor>::operator<<(colors);
-    emit adjusted();
-    return *this;
-    }
+			replace(index, color);
+			emit adjusted();
+			}
 
-};
+		virtual void setModel(const NVBDiscrColorModel * model, int nc) {
+			clear();
+			operator<<(model->colorize(0, nc - 1));
+			}
+
+		void clear() { QList<QColor>::clear(); }
+		/*
+		  inline int size() const { return colors.size(); }
+		*/
+		NVBIndexedDiscrColorModel & operator<< (const QColor & color) {
+			QList<QColor>::operator<<(color);
+			emit adjusted();
+			return *this;
+			}
+
+		NVBIndexedDiscrColorModel & operator<< (const QList<QColor> & colors) {
+			QList<QColor>::operator<<(colors);
+			emit adjusted();
+			return *this;
+			}
+
+	};
 
 }
 #endif

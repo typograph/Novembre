@@ -1,13 +1,20 @@
 //
-// C++ Interface: NVBTopoCurver
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre data analysis program.
 //
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
-//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #ifndef NVBTOPOCURVER_H
 #define NVBTOPOCURVER_H
@@ -19,63 +26,63 @@
 class NVBTopoCurverWidget;
 
 class NVBTopoCurver : public NVBSpecFilterDelegate {
-Q_OBJECT
-private:
-  enum Mode { XT, YT };
+		Q_OBJECT
+	private:
+		enum Mode { XT, YT };
 
-  NVB3DDataSource * tprovider;
-  QList<QPointF> spositions; 
-  QList<QwtData*> sdata; 
-  NVBRGBRampDiscrColorModel * scolors;
+		NVB3DDataSource * tprovider;
+		QList<QPointF> spositions;
+		QList<QwtData*> sdata;
+		NVBRGBRampDiscrColorModel * scolors;
 
-  Mode mode;
+		Mode mode;
 
-  friend class NVBTopoCurverWidget;
+		friend class NVBTopoCurverWidget;
 
-public :
-  NVBTopoCurver(NVB3DDataSource* source);
-  ~NVBTopoCurver();
+	public :
+		NVBTopoCurver(NVB3DDataSource* source);
+		~NVBTopoCurver();
 
-  virtual inline double getZMin() const {return tprovider->getZMin();}
-  virtual inline double getZMax() const {return tprovider->getZMax();}
+		virtual inline double getZMin() const {return tprovider->getZMin();}
+		virtual inline double getZMax() const {return tprovider->getZMax();}
 
-  NVB_FORWARD_TOPODIM(tprovider);
+		NVB_FORWARD_TOPODIM(tprovider);
 
-  virtual NVBDimension tDim() const;
+		virtual NVBDimension tDim() const;
 
-  virtual const NVBDiscrColorModel * getColorModel() const { return scolors; }
+		virtual const NVBDiscrColorModel * getColorModel() const { return scolors; }
 
-  virtual QList<QPointF> positions() const { return spositions; }
+		virtual QList<QPointF> positions() const { return spositions; }
 
-  virtual QList<QwtData*> getData() const { return sdata; }
+		virtual QList<QwtData*> getData() const { return sdata; }
 
-  virtual QSize datasize() const;
+		virtual QSize datasize() const;
 
-  virtual inline QRectF occupiedArea() const { return tprovider->position(); }
+		virtual inline QRectF occupiedArea() const { return tprovider->position(); }
 
-  NVBTopoCurverWidget * widget();
+		NVBTopoCurverWidget * widget();
 
-public slots:
-  virtual void setSource(NVBDataSource * source);
-  void setMode(NVBTopoCurver::Mode mode);
+	public slots:
+		virtual void setSource(NVBDataSource * source);
+		void setMode(NVBTopoCurver::Mode mode);
 
-private:
-  void connectSignals();
+	private:
+		void connectSignals();
 
-protected slots:
-  void generateCurves();
-  void invalidateColors();
-};
+	protected slots:
+		void generateCurves();
+		void invalidateColors();
+	};
 
 class NVBTopoCurverWidget : public QWidget {
-Q_OBJECT
-public :
-  NVBTopoCurverWidget();
-  virtual ~NVBTopoCurverWidget() {;}
-private slots:
-  void remapMode(int mode);
-signals:
-  void curvingModeActivated( NVBTopoCurver::Mode );
-};
+		Q_OBJECT
+	public :
+		NVBTopoCurverWidget();
+		virtual ~NVBTopoCurverWidget() {;}
+	private slots:
+		void remapMode(int mode);
+	signals:
+		void curvingModeActivated(NVBTopoCurver::Mode);
+	};
 
 #endif

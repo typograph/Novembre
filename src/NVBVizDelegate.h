@@ -1,15 +1,21 @@
 //
-// C++ Interface: NVBVizDelegate
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre data analysis program.
 //
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//
-
 #ifndef NVBVIZDELEGATE_H
 #define NVBVIZDELEGATE_H
 
@@ -33,13 +39,13 @@
  */
 
 union NVBVizUnion {
-  bool valid;
-  void * p;
-  QGraphicsItem* TwoDViz;
-  QwtPlotItem * GraphViz;
-  QIconEngine * IconViz;
+	bool valid;
+	void * p;
+	QGraphicsItem* TwoDViz;
+	QwtPlotItem * GraphViz;
+	QIconEngine * IconViz;
 // Qwt3D::Plot3D * ThreeDViz;
-  };
+	};
 
 Q_DECLARE_METATYPE(NVBVizUnion);
 
@@ -49,14 +55,14 @@ Q_DECLARE_METATYPE(NVBVizUnion);
  */
 
 class NVB2DVizDelegate : public QObject, public NVBGeneralDelegate {
-Q_OBJECT
-private:
-public :
-  NVB2DVizDelegate(NVBDataSource* source):NVBGeneralDelegate(source) {;}
-  virtual ~NVB2DVizDelegate() {;}
+		Q_OBJECT
+	private:
+	public :
+		NVB2DVizDelegate(NVBDataSource* source): NVBGeneralDelegate(source) {;}
+		virtual ~NVB2DVizDelegate() {;}
 
-  virtual QGraphicsItem* getVizItem() =0;
-};
+		virtual QGraphicsItem* getVizItem() = 0;
+	};
 
 Q_DECLARE_METATYPE(NVB2DVizDelegate*);
 
@@ -65,13 +71,13 @@ Q_DECLARE_METATYPE(NVB2DVizDelegate*);
  */
 
 class NVBSpecVizDelegate : public QObject, public NVBGeneralDelegate {
-Q_OBJECT
-public :
-  NVBSpecVizDelegate(NVBDataSource* source):NVBGeneralDelegate(source) {;}
-  virtual ~NVBSpecVizDelegate() {;}
+		Q_OBJECT
+	public :
+		NVBSpecVizDelegate(NVBDataSource* source): NVBGeneralDelegate(source) {;}
+		virtual ~NVBSpecVizDelegate() {;}
 
-  virtual QwtPlotItem * getVizItem() =0;
-};
+		virtual QwtPlotItem * getVizItem() = 0;
+	};
 
 Q_DECLARE_METATYPE(NVBSpecVizDelegate*);
 
@@ -80,13 +86,13 @@ Q_DECLARE_METATYPE(NVBSpecVizDelegate*);
  */
 
 class NVB3DVizDelegate : public QObject, public NVBGeneralDelegate {
-Q_OBJECT
-public :
-  NVB3DVizDelegate(NVBDataSource* _source):NVBGeneralDelegate(_source) {;}
-  virtual ~NVB3DVizDelegate() {;}
+		Q_OBJECT
+	public :
+		NVB3DVizDelegate(NVBDataSource* _source): NVBGeneralDelegate(_source) {;}
+		virtual ~NVB3DVizDelegate() {;}
 
 //  virtual Qwt3D::Plot3D* getVizItem() =0;
-};
+	};
 
 Q_DECLARE_METATYPE(NVB3DVizDelegate*);
 
@@ -99,22 +105,22 @@ class NVBIconVizDelegate : public QObject, public NVBGeneralDelegate, public QIc
 #else
 class NVBIconVizDelegate : public QObject, public NVBGeneralDelegate, public QIconEngine {
 #endif
-Q_OBJECT
-protected:
-  QImage* cache;
-public :
+		Q_OBJECT
+	protected:
+		QImage* cache;
+	public :
 #if QT_VERSION >= 0x040300
-  NVBIconVizDelegate(NVBDataSource* source):NVBGeneralDelegate(source),QIconEngineV2() {;}
+		NVBIconVizDelegate(NVBDataSource* source): NVBGeneralDelegate(source), QIconEngineV2() {;}
 #else
-  NVBIconVizDelegate(NVBDataSource* source):NVBGeneralDelegate(source),QIconEngine() {;}
+		NVBIconVizDelegate(NVBDataSource* source): NVBGeneralDelegate(source), QIconEngine() {;}
 #endif
-  virtual ~NVBIconVizDelegate() { if (cache) delete (cache);}
+		virtual ~NVBIconVizDelegate() { if (cache) delete(cache);}
 
-  virtual QIconEngine* getVizItem() {return this;}
+		virtual QIconEngine* getVizItem() {return this;}
 
-  virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode, QIcon::State) { if (cache) painter->drawImage(rect,*cache); }
+		virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode, QIcon::State) { if (cache) painter->drawImage(rect, *cache); }
 
-};
+	};
 
 Q_DECLARE_METATYPE(NVBIconVizDelegate*);
 

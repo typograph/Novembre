@@ -1,13 +1,20 @@
 //
-// C++ Implementation: NVBSpecSlicer
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre data analysis program.
 //
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
-//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include "NVBSpecSlicer.h"
 #include "dimension.h"
@@ -49,109 +56,111 @@
 // -------------------
 
 NVBSpecSlicerWidget::NVBSpecSlicerWidget(NVBSpecDataSource * source)
-	: QWidget(), sprovider(0)
-{
+	: QWidget(), sprovider(0) {
 	QVBoxLayout * lv = new QVBoxLayout(this);
 
-	valueBox = new NVBSpecSlicerLabel(source,this);
+	valueBox = new NVBSpecSlicerLabel(source, this);
 	lv->addWidget(valueBox);
-	slider = new QSlider(Qt::Horizontal,this);
-	slider->setRange(0,source->datasize().width()-1);
+	slider = new QSlider(Qt::Horizontal, this);
+	slider->setRange(0, source->datasize().width() - 1);
 	slider->setValue(0);
 	lv->addWidget(slider);
-	connect(slider,SIGNAL(valueChanged(int)),SIGNAL(posChanged(int)));
-	connect(slider,SIGNAL(valueChanged(int)),valueBox,SLOT(setPos(int)));
+	connect(slider, SIGNAL(valueChanged(int)), SIGNAL(posChanged(int)));
+	connect(slider, SIGNAL(valueChanged(int)), valueBox, SLOT(setPos(int)));
 
 	setLayout(lv);
 
 	resetParam(source);
-}
+	}
 
 void NVBSpecSlicerWidget::resetParam(NVBDataSource * page) {
 
 	if (!page) page = qobject_cast<NVBDataSource*>(QObject::sender());
+
 	NVBSpecDataSource * source = qobject_cast<NVBSpecDataSource*>(page);
 
 	if (!source) {
 		if (sprovider) sprovider->disconnect(this);
+
 		return;
 		}
 
 	int pos = slider->value();
 
 	valueBox->resetParam(source);
-	slider->setRange(0,source->datasize().width()-1);
+	slider->setRange(0, source->datasize().width() - 1);
 
-	if (pos > source->datasize().width()-1)
+	if (pos > source->datasize().width() - 1)
 		slider->setValue(0);
 
 	valueBox->setPos(slider->value());
 
 	if (source != sprovider) {
 		if (sprovider) sprovider->disconnect(this);
+
 		sprovider = source;
-		connect(source,SIGNAL(dataChanged()),this,SLOT(resetParam()));
-		connect(source,SIGNAL(dataAdjusted()),this,SLOT(resetParam()));
-		connect(source,SIGNAL(objectPopped(NVBDataSource*,NVBDataSource*)),this,SLOT(resetParam(NVBDataSource*)));
-		connect(source,SIGNAL(objectPushed(NVBDataSource*,NVBDataSource*)),this,SLOT(resetParam(NVBDataSource*)));
+		connect(source, SIGNAL(dataChanged()), this, SLOT(resetParam()));
+		connect(source, SIGNAL(dataAdjusted()), this, SLOT(resetParam()));
+		connect(source, SIGNAL(objectPopped(NVBDataSource*, NVBDataSource*)), this, SLOT(resetParam(NVBDataSource*)));
+		connect(source, SIGNAL(objectPushed(NVBDataSource*, NVBDataSource*)), this, SLOT(resetParam(NVBDataSource*)));
 		}
-}
+	}
 
 // -------------
 
-NVBSpecSlicerDelegate::NVBSpecSlicerDelegate(NVBSpecDataSource * source):NVB3DFilterDelegate(source),slicepos(0)
-{
-	colors = new NVBColoring::NVBGrayRampContColorModel(0,1,0,1);
+NVBSpecSlicerDelegate::NVBSpecSlicerDelegate(NVBSpecDataSource * source): NVB3DFilterDelegate(source), slicepos(0) {
+	colors = new NVBColoring::NVBGrayRampContColorModel(0, 1, 0, 1);
 	scolors = new NVBColoring::NVBRescaleColorModel(colors);
 
 	connectSignals();
 	followSource();
-}
+	}
 
-NVBSpecSlicerDelegate::~NVBSpecSlicerDelegate()
-{
- invalidateCache();
- if (scolors) delete scolors;
- if (colors) delete colors;
-}
+NVBSpecSlicerDelegate::~NVBSpecSlicerDelegate() {
+	invalidateCache();
 
-const NVBContColorModel *NVBSpecSlicerDelegate::getColorModel() const
-{
+	if (scolors) delete scolors;
+
+	if (colors) delete colors;
+	}
+
+const NVBContColorModel *NVBSpecSlicerDelegate::getColorModel() const {
 	return scolors;
-}
+	}
 
-bool NVBSpecSlicerDelegate::setColorModel(NVBContColorModel * colorModel)
-{
-  if (colorModel) {
-    colors = colorModel;
-    emit colorsChanged();
-    return true;
-    }
-  return false;
-}
+bool NVBSpecSlicerDelegate::setColorModel(NVBContColorModel * colorModel) {
+	if (colorModel) {
+		colors = colorModel;
+		emit colorsChanged();
+		return true;
+		}
 
-void NVBSpecSlicerDelegate::invalidateCache()
-{
-  foreach(double * data, cache) {
-    if(data) free(data);
-    }
-  cache.fill(NULL,page->datasize().width());
-	zlimits.fill(QPair<double,double>(),page->datasize().width());
+	return false;
+	}
+
+void NVBSpecSlicerDelegate::invalidateCache() {
+	foreach(double * data, cache) {
+		if (data) free(data);
+		}
+	cache.fill(NULL, page->datasize().width());
+	zlimits.fill(QPair<double, double>(), page->datasize().width());
 	fillCache();
 
 	emit dataChanged();
-}
+	}
 
-void NVBSpecSlicerDelegate::fillCache()
-{
+void NVBSpecSlicerDelegate::fillCache() {
 	if (!page) return;
+
 	if (slicepos < 0 || slicepos >= cache.size()) slicepos = 0;
-  if (cache.at(slicepos)) return;
+
+	if (cache.at(slicepos)) return;
 
 	int nx = resolution().width();
 	int ny = resolution().height();
 
-	double * sdata = (double*)calloc(sizeof(double),nx*ny);
+	double * sdata = (double*)calloc(sizeof(double), nx * ny);
+
 	if (!sdata) return;
 
 	cache[slicepos] = sdata;
@@ -159,59 +168,65 @@ void NVBSpecSlicerDelegate::fillCache()
 	double vmin = 1e+300;
 	double vmax = -1e+300;
 
-	for (int x=0; x < nx; x++)
-		for (int y=0; y < ny; y++)	{
+	for (int x = 0; x < nx; x++)
+		for (int y = 0; y < ny; y++)	{
 			double value = 0;
-			for (int p=0; p < mpp; p++)
-				value += page->getData().at(p + x*mpp + y*nx*mpp)->y(slicepos);
+
+			for (int p = 0; p < mpp; p++)
+				value += page->getData().at(p + x * mpp + y * nx * mpp)->y(slicepos);
+
 			if (vmin > value) vmin = value;
+
 			if (vmax < value) vmax = value;
-			sdata[x+y*nx] = value;
+
+			sdata[x + y * nx] = value;
 			}
 
-	zlimits[slicepos] = QPair<double,double>(vmin,vmax);
-}
+	zlimits[slicepos] = QPair<double, double>(vmin, vmax);
+	}
 
-void NVBSpecSlicerDelegate::initSize()
-{
-	Q_ASSERT(hasGrid(page,&mpp,&datasize.rwidth(),&datasize.rheight()));
-	rect = QRectF(page->positions().first(),page->positions().last());
+void NVBSpecSlicerDelegate::initSize() {
+	Q_ASSERT(hasGrid(page, &mpp, &datasize.rwidth(), &datasize.rheight()));
+	rect = QRectF(page->positions().first(), page->positions().last());
 
-	double dx = rect.width()/(datasize.width()-1)/2;
-	double dy = rect.height()/(datasize.height()-1)/2;
+	double dx = rect.width() / (datasize.width() - 1) / 2;
+	double dy = rect.height() / (datasize.height() - 1) / 2;
 
-	rect.adjust(-dx,-dy,dx,dy);
-}
+	rect.adjust(-dx, -dy, dx, dy);
+	}
 
 QAction * NVBSpecSlicerDelegate::action() {
-return new QAction(QIcon(_slice_icon),QString("Slice"),0);
-}
+	return new QAction(QIcon(_slice_icon), QString("Slice"), 0);
+	}
 
-bool NVBSpecSlicerDelegate::hasGrid(NVBSpecDataSource * source, int * np, int * nx, int * ny)
-{
+bool NVBSpecSlicerDelegate::hasGrid(NVBSpecDataSource * source, int * np, int * nx, int * ny) {
 	// Assume there are at most 3 axes - x, y and measurement;
 
 	if (!source) return false;
 
-	int nxl,nyl,npl;
+	int nxl, nyl, npl;
 
 	if (!np) np = &npl;
+
 	if (!nx) nx = &nxl;
+
 	if (!ny) ny = &nyl;
 
 	int ncurves = source->datasize().height();
 
-	for(*np = 1; *np < ncurves && source->positions().at(*np).x() == source->positions().at(0).x(); (*np)++) {;}
-	for(*nx = 1; (*nx)*(*np) < ncurves && source->positions().at((*nx)*(*np)).y() == source->positions().at(0).y(); (*nx)++) {;}
-	for(*ny = 1; (*ny)*(*nx)*(*np) < ncurves && source->positions().at((*ny)*(*nx)*(*np)).x() == source->positions().at(0).x(); (*ny)++) {;}
+	for (*np = 1; *np < ncurves && source->positions().at(*np).x() == source->positions().at(0).x(); (*np)++) {;}
 
-	if ((*nx > 1 || *ny > 1) && (*ny)*(*nx)*(*np) == ncurves)
+	for (*nx = 1; (*nx) * (*np) < ncurves && source->positions().at((*nx) * (*np)).y() == source->positions().at(0).y(); (*nx)++) {;}
+
+	for (*ny = 1; (*ny) * (*nx) * (*np) < ncurves && source->positions().at((*ny) * (*nx) * (*np)).x() == source->positions().at(0).x(); (*ny)++) {;}
+
+	if ((*nx > 1 || *ny > 1) && (*ny) * (*nx) * (*np) == ncurves)
 		return true;
-	return false;
-}
 
-void NVBSpecSlicerDelegate::connectSignals()
-{
+	return false;
+	}
+
+void NVBSpecSlicerDelegate::connectSignals() {
 	emit dataAboutToBeChanged();
 
 //	bool oldvalue = false;
@@ -253,30 +268,30 @@ void NVBSpecSlicerDelegate::connectSignals()
 	initSize();
 
 	invalidateCache();
-//	fillCache();
-if (scolors) scolors->setLimits(getZMin(), getZMax());
 
-	connect(provider,SIGNAL(dataAdjusted()),SLOT(invalidateCache()));
-	connect(page,SIGNAL(dataAboutToBeChanged()),SIGNAL(dataAboutToBeChanged()));
-	connect(page,SIGNAL(dataChanged()),SLOT(invalidateCache()));
+//	fillCache();
+	if (scolors) scolors->setLimits(getZMin(), getZMax());
+
+	connect(provider, SIGNAL(dataAdjusted()), SLOT(invalidateCache()));
+	connect(page, SIGNAL(dataAboutToBeChanged()), SIGNAL(dataAboutToBeChanged()));
+	connect(page, SIGNAL(dataChanged()), SLOT(invalidateCache()));
 
 	NVB3DFilterDelegate::connectSignals();
 
 	emit dataChanged();
 
-}
+	}
 
 //  ------
 
-NVBSpecSlicerPosTracker::NVBSpecSlicerPosTracker(NVBSpecDataSource * source):QObject(),QwtPlotMarker(),sprovider(0)
-{
+NVBSpecSlicerPosTracker::NVBSpecSlicerPosTracker(NVBSpecDataSource * source): QObject(), QwtPlotMarker(), sprovider(0) {
 //	setSymbol(QwtSymbol::VLine);
 	setLineStyle(QwtPlotMarker::VLine);
 	setZ(10000);
 
 	resetParam(source);
 	setPos(0);
-}
+	}
 
 //void NVBSpecSlicerPosTracker::draw(QPainter * painter, const QwtScaleMap & xMap, const QwtScaleMap & yMap, const QRect & canvasRect) const
 //{
@@ -292,49 +307,50 @@ NVBSpecSlicerPosTracker::NVBSpecSlicerPosTracker(NVBSpecDataSource * source):QOb
 //	painter->restore();
 //}
 
-void NVBSpecSlicerPosTracker::setPos(int value)
-{
+void NVBSpecSlicerPosTracker::setPos(int value) {
 //	pos = x0 + xstep*value;
 //	itemChanged();
-	setXValue(x0 + xstep*value);
-}
+	setXValue(x0 + xstep * value);
+	}
 
-void NVBSpecSlicerPosTracker::resetParam(NVBDataSource *page)
-{
+void NVBSpecSlicerPosTracker::resetParam(NVBDataSource *page) {
 	if (!page) page = qobject_cast<NVBDataSource*>(QObject::sender());
+
 	NVBSpecDataSource * source = qobject_cast<NVBSpecDataSource*>(page);
+
 	if (!source) {
 		if (sprovider) sprovider->disconnect(this);
+
 		return;
 		}
 
 	QRectF r = source->boundingRect();
 	x0 = r.left();
-	xstep = r.width()/(source->datasize().width()-1);
+	xstep = r.width() / (source->datasize().width() - 1);
 
 	if (source != sprovider) {
 		if (sprovider) sprovider->disconnect(this);
+
 		sprovider = source;
-		connect(source,SIGNAL(dataChanged()),this,SLOT(resetParam()));
-		connect(source,SIGNAL(dataAdjusted()),this,SLOT(resetParam()));
-		connect(source,SIGNAL(objectPopped(NVBDataSource*,NVBDataSource*)),this,SLOT(resetParam(NVBDataSource*)));
-		connect(source,SIGNAL(objectPushed(NVBDataSource*,NVBDataSource*)),this,SLOT(resetParam(NVBDataSource*)));
+		connect(source, SIGNAL(dataChanged()), this, SLOT(resetParam()));
+		connect(source, SIGNAL(dataAdjusted()), this, SLOT(resetParam()));
+		connect(source, SIGNAL(objectPopped(NVBDataSource*, NVBDataSource*)), this, SLOT(resetParam(NVBDataSource*)));
+		connect(source, SIGNAL(objectPushed(NVBDataSource*, NVBDataSource*)), this, SLOT(resetParam(NVBDataSource*)));
 		}
 
-}
+	}
 
 
 NVBSpecSlicerLabel::NVBSpecSlicerLabel(NVBSpecDataSource *source, QWidget *parent)
 	: QLabel(parent)
 	, x0(0)
-	, xstep(0)
-{
+	, xstep(0) {
 	resetParam(source);
-}
+	}
 
 void NVBSpecSlicerLabel::setPos(int value) {
-	setText(templt.arg(NVBPhysValue(x0 + value*xstep,dim).toString()));
-}
+	setText(templt.arg(NVBPhysValue(x0 + value * xstep, dim).toString()));
+	}
 
 void NVBSpecSlicerLabel::resetParam(NVBSpecDataSource * source) {
 	if (!source) return;
@@ -350,7 +366,8 @@ void NVBSpecSlicerLabel::resetParam(NVBSpecDataSource * source) {
 
 	QRectF r = source->boundingRect();
 	x0 = r.left();
-	int nsteps = source->datasize().width()-1;
-	xstep = r.width()/nsteps;
+	int nsteps = source->datasize().width() - 1;
+	xstep = r.width() / nsteps;
+
 	if (text().isEmpty()) setPos(0);
-}
+	}

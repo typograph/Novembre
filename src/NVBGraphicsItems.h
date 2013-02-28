@@ -1,14 +1,23 @@
 //
-// C++ Interface: NVBGraphicsItems
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre utility library.
 //
+// Novembre utility library is free software: you can redistribute it
+// and/or modify it  under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//
+
+
 #ifndef NVBGRAPHICSITEM_H
 #define NVBGRAPHICSITEM_H
 
@@ -21,39 +30,42 @@ QTransform invertQTransform(const QTransform & t);
 #endif
 
 class NVBFullGraphicsItem : public QGraphicsItem {
-private :
+	private :
 //  QGraphicsItem ** subcontrol;
-public :
-  NVBFullGraphicsItem();
-  virtual ~NVBFullGraphicsItem() {;}
-	virtual inline QRectF boundingRect () const {
-		static bool protect = false;
-		if (  protect ) return QRectF();
-		if ( !scene() ) return QRectF();
-		protect = true;
-		QRectF rect = scene()->sceneRect();
-		protect = false;
-		return rect;
-		}
-	virtual void paint ( QPainter * , const QStyleOptionGraphicsItem * , QWidget *  = 0 );
+	public :
+		NVBFullGraphicsItem();
+		virtual ~NVBFullGraphicsItem() {;}
+		virtual inline QRectF boundingRect() const {
+			static bool protect = false;
 
-protected :
-  virtual bool sceneEvent ( QEvent * event );
-/*
-  virtual bool sceneEvent ( QEvent * event ) {
-    if (!*subcontrol) return false;
-    return (*subcontrol)->sceneEvent(event);
-    }
-*/
-};
+			if (protect) return QRectF();
+
+			if (!scene()) return QRectF();
+
+			protect = true;
+			QRectF rect = scene()->sceneRect();
+			protect = false;
+			return rect;
+			}
+		virtual void paint(QPainter * , const QStyleOptionGraphicsItem * , QWidget *  = 0);
+
+	protected :
+		virtual bool sceneEvent(QEvent * event);
+		/*
+		  virtual bool sceneEvent ( QEvent * event ) {
+		    if (!*subcontrol) return false;
+		    return (*subcontrol)->sceneEvent(event);
+		    }
+		*/
+	};
 
 
 class NVBFilteringGraphicsItem : public QGraphicsItem {
-protected :
-  bool sceneEventFilter ( QGraphicsItem * watched, QEvent * event );
-public :
-  NVBFilteringGraphicsItem();
-  virtual ~NVBFilteringGraphicsItem() {;}
-};
+	protected :
+		bool sceneEventFilter(QGraphicsItem * watched, QEvent * event);
+	public :
+		NVBFilteringGraphicsItem();
+		virtual ~NVBFilteringGraphicsItem() {;}
+	};
 
 #endif

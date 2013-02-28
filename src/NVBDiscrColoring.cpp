@@ -1,40 +1,50 @@
 //
-// C++ Implementation: NVBDiscrColoring
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre utility library.
 //
+// Novembre utility library is free software: you can redistribute it
+// and/or modify it  under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//
+
+
 #include "NVBDiscrColoring.h"
 #include "NVBLogger.h"
 
-NVBColoring::NVBRandomDiscrColorModel::NVBRandomDiscrColorModel(int ncolors):NVBDiscrColorModel(),nc(ncolors)
-{
-  if (nc < 0) nc = 0;
-  qsrand(nc);
-  for(int i = 0; i < nc; i++)
-    colors.append(newcolor());
-}
+NVBColoring::NVBRandomDiscrColorModel::NVBRandomDiscrColorModel(int ncolors): NVBDiscrColorModel(), nc(ncolors) {
+	if (nc < 0) nc = 0;
 
-QColor NVBColoring::NVBRandomDiscrColorModel::colorize(int index) const
-{
-  if (index < 0 ) {
-    NVBOutputPMsg("Negative color queried for.");
-    return Qt::black;
-    }
-  else if ( index >= nc) {
-    NVBOutputPMsg("Expanding color base");
-    for( int i = nc; i <= index; i++)
-      colors.append(newcolor());
-    }
-  return colors.at(index);
-}
+	qsrand(nc);
 
-QColor NVBColoring::NVBRandomDiscrColorModel::newcolor() const
-{
-  return QColor::fromRgb(qrand()%255,qrand()%255,qrand()%255);
-}
+	for (int i = 0; i < nc; i++)
+		colors.append(newcolor());
+	}
+
+QColor NVBColoring::NVBRandomDiscrColorModel::colorize(int index) const {
+	if (index < 0) {
+		NVBOutputPMsg("Negative color queried for.");
+		return Qt::black;
+		}
+	else if (index >= nc) {
+		NVBOutputPMsg("Expanding color base");
+
+		for (int i = nc; i <= index; i++)
+			colors.append(newcolor());
+		}
+
+	return colors.at(index);
+	}
+
+QColor NVBColoring::NVBRandomDiscrColorModel::newcolor() const {
+	return QColor::fromRgb(qrand() % 255, qrand() % 255, qrand() % 255);
+	}

@@ -1,22 +1,21 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov   *
- *   Timofey.Balashov@pi.uka.de   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+//
+// Copyright 2006 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 #ifndef NVB_BROWSER_H
 #define NVB_BROWSER_H
 
@@ -79,95 +78,95 @@ class NVBBrowser: public QMdiSubWindow {
 #else
 class NVBBrowser: public QFrame {
 #endif
-Q_OBJECT
-private:
-  QToolBar * foldersToolBar;
+		Q_OBJECT
+	private:
+		QToolBar * foldersToolBar;
 //    QAction * plusRootAction;
 //    QAction * plusContainerAction;
-  QAction * addRootFolderAction;
-  QAction * addFolderAction;
-	QAction * editFolderAction;
-	QAction * removeFolderAction;
-  QAction * exportFolderAction;
-  QAction * adjustColumnsAction;
-  QAction * showFiltersAction;
-	QAction * clearFiltersAction;
-  QAction * showPageInfoAction;
-  QAction * setViewFileAction;
-  QAction * refreshFoldersContentsAction;
+		QAction * addRootFolderAction;
+		QAction * addFolderAction;
+		QAction * editFolderAction;
+		QAction * removeFolderAction;
+		QAction * exportFolderAction;
+		QAction * adjustColumnsAction;
+		QAction * showFiltersAction;
+		QAction * clearFiltersAction;
+		QAction * showPageInfoAction;
+		QAction * setViewFileAction;
+		QAction * refreshFoldersContentsAction;
 //     QToolButton * plusButton;
-  QActionGroup * iconSizeActionGroup;
+		QActionGroup * iconSizeActionGroup;
 
-	QMenu * foldersMenu;
-	QMenu * columnsMenu;
-	QMenu * remColumnsMenu;
+		QMenu * foldersMenu;
+		QMenu * columnsMenu;
+		QMenu * remColumnsMenu;
 
-  NVBFileFactory * files;
+		NVBFileFactory * files;
 
-	NVBFileListView * fileList;
-	NVBPageInfoView * piview;
-	NVBPageRefactorModel * pageRefactor;
-	NVBDirModel * fileModel;
-	NVBDirViewModel * dirViewModel;
-	NVBDirView * dirView;
+		NVBFileListView * fileList;
+		NVBPageInfoView * piview;
+		NVBPageRefactorModel * pageRefactor;
+		NVBDirModel * fileModel;
+		NVBDirViewModel * dirViewModel;
+		NVBDirView * dirView;
 
-	QModelIndex folderMenuTarget;
+		QModelIndex folderMenuTarget;
 
-	void fillFolders( QString index, QModelIndex parent);
+		void fillFolders(QString index, QModelIndex parent);
 
-protected:
-  Q_PROPERTY(unsigned short iconSize READ getIconSize());
-  unsigned short iconSize;
-  QSettings* confile;
+	protected:
+		Q_PROPERTY(unsigned short iconSize READ getIconSize());
+		unsigned short iconSize;
+		QSettings* confile;
 
-  void closeEvent(QCloseEvent *event);
-  void populateListLevel(int, QString = QString(), const QModelIndex& parent = QModelIndex());
+		void closeEvent(QCloseEvent *event);
+		void populateListLevel(int, QString = QString(), const QModelIndex& parent = QModelIndex());
 
-public:
-  NVBBrowser( QWidget *parent = 0, Qt::WindowFlags flags = 0 );
-  ~NVBBrowser();
+	public:
+		NVBBrowser(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+		~NVBBrowser();
 
-  virtual void populateList();
-  unsigned short getIconSize() { return iconSize;}
-  
-  virtual QSize sizeHint () const { return confile->value("Browser/Size", QSize(400, 300)).toSize(); }
+		virtual void populateList();
+		unsigned short getIconSize() { return iconSize;}
 
-public slots:
+		virtual QSize sizeHint() const { return confile->value("Browser/Size", QSize(400, 300)).toSize(); }
 
-	void showItems();
-  void loadPage(const QModelIndex & item);
+	public slots:
 
-  void addFolder(const QModelIndex & index);
-  void switchIconSize(QAction*);
+		void showItems();
+		void loadPage(const QModelIndex & item);
 
-private slots:
+		void addFolder(const QModelIndex & index);
+		void switchIconSize(QAction*);
 
-  void setViewType(bool);
+	private slots:
 
-  void addRootFolder();
-  void addSubfolder();
-	void editFolder();
-	void removeFolder();
-	void exportData();
+		void setViewType(bool);
 
-	void showFoldersMenu();
-	void enableFolderActions(const QModelIndex & index);
+		void addRootFolder();
+		void addSubfolder();
+		void editFolder();
+		void removeFolder();
+		void exportData();
 
-	void updateFolders();
-	void updateColumnsVisibility();
-	void updateColumns();
+		void showFoldersMenu();
+		void enableFolderActions(const QModelIndex & index);
 
-	void moveColumn(int,int,int);
-	void columnAction();
-	void populateColumnsMenu();
-	void showColumnsMenu() {columnsMenu->exec(QCursor::pos());}
+		void updateFolders();
+		void updateColumnsVisibility();
+		void updateColumns();
 
-	virtual void showEvent ( QShowEvent * event ) { event->accept(); emit shown(); }
+		void moveColumn(int, int, int);
+		void columnAction();
+		void populateColumnsMenu();
+		void showColumnsMenu() {columnsMenu->exec(QCursor::pos());}
 
-signals:
-	void shown();
-	void closeRequest();
-	void pageRequest(const NVBAssociatedFilesInfo &, int pagenum);
-};
+		virtual void showEvent(QShowEvent * event) { event->accept(); emit shown(); }
+
+	signals:
+		void shown();
+		void closeRequest();
+		void pageRequest(const NVBAssociatedFilesInfo &, int pagenum);
+	};
 
 #endif

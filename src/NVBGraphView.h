@@ -1,13 +1,20 @@
 //
-// C++ Interface: NVBGraphView
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre data analysis program.
 //
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
-//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #ifndef NVBGRAPHVIEW_H
 #define NVBGRAPHVIEW_H
@@ -41,18 +48,18 @@ public :
 */
 
 class NVBPhysScaleDraw : public QObject, public QwtScaleDraw {
-Q_OBJECT
-protected:
-  NVBDimension scaledim;
-  int scaleorder;
-  QwtScaleWidget * scalewidget;
-protected slots:
-  virtual void updateMultiplier();
-public:
-  NVBPhysScaleDraw(NVBDimension dim, QwtScaleWidget * widget);
-  virtual ~NVBPhysScaleDraw() {;}
-  virtual QwtText label( double value ) const;
-};
+		Q_OBJECT
+	protected:
+		NVBDimension scaledim;
+		int scaleorder;
+		QwtScaleWidget * scalewidget;
+	protected slots:
+		virtual void updateMultiplier();
+	public:
+		NVBPhysScaleDraw(NVBDimension dim, QwtScaleWidget * widget);
+		virtual ~NVBPhysScaleDraw() {;}
+		virtual QwtText label(double value) const;
+	};
 
 /**
   class NVBGraphView is a subclassed QwtPlot,
@@ -74,53 +81,53 @@ public:
 	@author Timofey <timoty@pi-balashov>
 */
 class NVBGraphView : public QFrame, public NVBDataView {
-Q_OBJECT
-private:
-  QVBoxLayout* plotlayout;
-  NVBVizModel * vizmodel;
-  void addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource * source);
+		Q_OBJECT
+	private:
+		QVBoxLayout* plotlayout;
+		NVBVizModel * vizmodel;
+		void addItemToPlot(QwtPlot * plot, NVBVizUnion tmp, NVBDataSource * source);
 
-  bool d_show_grids;
-	bool d_active_zoom;
+		bool d_show_grids;
+		bool d_active_zoom;
 
-  QList<NVBVizUnion> supraVizs;
-  QList<QwtPlotGrid*> grids;
-	QList<NVBPlotZoomer*> zoomers;
+		QList<NVBVizUnion> supraVizs;
+		QList<QwtPlotGrid*> grids;
+		QList<NVBPlotZoomer*> zoomers;
 
-  QwtPlot * plotAt(int row);
+		QwtPlot * plotAt(int row);
 
-public:
-  NVBGraphView(NVBVizModel * model, QWidget* parent = 0);
-  virtual ~NVBGraphView();
+	public:
+		NVBGraphView(NVBVizModel * model, QWidget* parent = 0);
+		virtual ~NVBGraphView();
 
-  QToolBar * generateToolbar(QWidget * parent) const;
-  QAbstractListModel * getVizModel() { return vizmodel; }
+		QToolBar * generateToolbar(QWidget * parent) const;
+		QAbstractListModel * getVizModel() { return vizmodel; }
 
-  virtual bool hasWidthForHeight() const { return false; }
-	virtual int  widthForHeight(int) const { return -1; }
+		virtual bool hasWidthForHeight() const { return false; }
+		virtual int  widthForHeight(int) const { return -1; }
 
-	virtual bool acceptsPage(NVBDataSource *) const { return true; } // FIXME
+		virtual bool acceptsPage(NVBDataSource *) const { return true; } // FIXME
 
-  virtual const QWidget * w() const { return this; }
-  virtual QWidget * w() { return this; }
+		virtual const QWidget * w() const { return this; }
+		virtual QWidget * w() { return this; }
 
-public slots:
-  void setActiveVisualizer( NVBVizUnion viz, const QModelIndex & index);
-  void showGrid(bool);
-	void activateZoom(bool);
-	void swapItems(int row1, int row2);
-	
-protected slots:
-  void activateVisualizer(int row);
-  void deactivateVisualizer(int row);
-  virtual void rowsAboutToBeRemoved ( const QModelIndex & parent, int start, int end );
-  virtual void rowsInserted ( const QModelIndex & parent, int start, int end );
-  void updateVizs(const QModelIndex& start, const QModelIndex& end);
+	public slots:
+		void setActiveVisualizer(NVBVizUnion viz, const QModelIndex & index);
+		void showGrid(bool);
+		void activateZoom(bool);
+		void swapItems(int row1, int row2);
 
-signals : 
-  void activeVisualizerDeactivated();
+	protected slots:
+		void activateVisualizer(int row);
+		void deactivateVisualizer(int row);
+		virtual void rowsAboutToBeRemoved(const QModelIndex & parent, int start, int end);
+		virtual void rowsInserted(const QModelIndex & parent, int start, int end);
+		void updateVizs(const QModelIndex& start, const QModelIndex& end);
+
+	signals :
+		void activeVisualizerDeactivated();
 //   void syncronizeYWidths( int width );
 
-};
+	};
 
 #endif

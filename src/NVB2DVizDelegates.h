@@ -1,15 +1,21 @@
 //
-// C++ Interface: NVB2DVizDelegate
+// Copyright 2006 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre data analysis program.
 //
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//
-
 #ifndef NVB2DVIZ_H
 #define NVB2DVIZ_H
 
@@ -33,12 +39,12 @@
 
 #if QT_VERSION > 0x040299 && QT_VERSION < 0x040400
 class NVB2DMapVizDelegate : public QObject, public QGraphicsItem {
-Q_OBJECT
-private:
-  QImage * p_image;
-public:
-  virtual QRectF boundingRect () const;
-  virtual void paint ( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0 );
+		Q_OBJECT
+	private:
+		QImage * p_image;
+	public:
+		virtual QRectF boundingRect() const;
+		virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 //   int type () const {return 7;}
 
 #else
@@ -46,20 +52,20 @@ public:
 #include <QGraphicsPixmapItem>
 
 class NVB2DMapVizDelegate : public QObject, public QGraphicsPixmapItem {
-Q_OBJECT
+		Q_OBJECT
 #endif
-protected:
-  NVB3DDataSource* page;
-public :
-  NVB2DMapVizDelegate(NVBDataSource* source);
-  virtual ~NVB2DMapVizDelegate();
+	protected:
+		NVB3DDataSource* page;
+	public :
+		NVB2DMapVizDelegate(NVBDataSource* source);
+		virtual ~NVB2DMapVizDelegate();
 
-  virtual NVBVizUnion getVizItem();
+		virtual NVBVizUnion getVizItem();
 
-public slots:
-  void redraw();
-  virtual void setSource( NVBDataSource * );
-};
+	public slots:
+		void redraw();
+		virtual void setSource(NVBDataSource *);
+	};
 
 /**
  * Visualisation as a QGraphicsItem for a specpage.
@@ -68,32 +74,32 @@ public slots:
 class QPicture;
 
 class NVB2DPtsVizDelegate : public QObject, public NVBFilteringGraphicsItem {
-Q_OBJECT
-private:
-  NVBSpecDataSource* page;
-  qreal radius;
+		Q_OBJECT
+	private:
+		NVBSpecDataSource* page;
+		qreal radius;
 
-	NVBQuadTree positions;
-	QPicture * cache;
+		NVBQuadTree positions;
+		QPicture * cache;
 
-private slots:
-  void initEllipses();
+	private slots:
+		void initEllipses();
 
-public :
-  NVB2DPtsVizDelegate(NVBDataSource* source);
-  virtual ~NVB2DPtsVizDelegate();
+	public :
+		NVB2DPtsVizDelegate(NVBDataSource* source);
+		virtual ~NVB2DPtsVizDelegate();
 
-  virtual NVBVizUnion getVizItem();
+		virtual NVBVizUnion getVizItem();
 
-  virtual QRectF boundingRect () const;
-	virtual void paint ( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0 );
+		virtual QRectF boundingRect() const;
+		virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 
-protected:
-  virtual void wheelEvent ( QGraphicsSceneWheelEvent * event );
+	protected:
+		virtual void wheelEvent(QGraphicsSceneWheelEvent * event);
 
-public slots:
-  virtual void setSource( NVBDataSource * );
-	void redraw();
-};
+	public slots:
+		virtual void setSource(NVBDataSource *);
+		void redraw();
+	};
 
 #endif

@@ -1,23 +1,21 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov   *
- *   Timofey.Balashov@pi.uka.de   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
-
+//
+// Copyright 2006 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 #ifndef NANONIS_H
 #define NANONIS_H
 
@@ -41,48 +39,48 @@
 //   NVBVariant v;
 // };
 
-typedef QHash<QString,QStringList> NanonisHeader;
+typedef QHash<QString, QStringList> NanonisHeader;
 
 class NanonisFileGenerator: public QObject, public NVBFileGenerator {
-Q_OBJECT
-Q_INTERFACES(NVBFileGenerator);
+		Q_OBJECT
+		Q_INTERFACES(NVBFileGenerator);
 
-private:
-	static NanonisHeader getNanonisHeader(QFile & file);
+	private:
+		static NanonisHeader getNanonisHeader(QFile & file);
 
-  friend class NanonisTopoPage;
+		friend class NanonisTopoPage;
 
-  NVBFile * loadSpecAggregation(const NVBAssociatedFilesInfo & info) const;
-  NVBFileInfo * loadSpecAggregationInfo(const NVBAssociatedFilesInfo & info) const;
+		NVBFile * loadSpecAggregation(const NVBAssociatedFilesInfo & info) const;
+		NVBFileInfo * loadSpecAggregationInfo(const NVBAssociatedFilesInfo & info) const;
 
-  NVBFile * load3DS(const NVBAssociatedFilesInfo & info) const;
-  NVBFileInfo * load3DSInfo(const NVBAssociatedFilesInfo & info) const;
+		NVBFile * load3DS(const NVBAssociatedFilesInfo & info) const;
+		NVBFileInfo * load3DSInfo(const NVBAssociatedFilesInfo & info) const;
 
-public:
-  NanonisFileGenerator():NVBFileGenerator() {;}
-  virtual ~NanonisFileGenerator() {;}
+	public:
+		NanonisFileGenerator(): NVBFileGenerator() {;}
+		virtual ~NanonisFileGenerator() {;}
 
-	virtual inline QString moduleName() const { return QString("Nanonis SXM files");}
-	virtual inline QString moduleDesc() const { return QString("Nanonis STM file format"); }
+		virtual inline QString moduleName() const { return QString("Nanonis SXM files");}
+		virtual inline QString moduleDesc() const { return QString("Nanonis STM file format"); }
 
-	virtual QStringList extFilters() const {
+		virtual QStringList extFilters() const {
 			static QStringList exts \
-					= QStringList() \
-					<< "*.sxm" \
-					<< "*.3ds" \
-					<< "*.dat" \
-					;
+			  = QStringList() \
+			    << "*.sxm" \
+			    << "*.3ds" \
+			    << "*.dat" \
+			    ;
 			return exts;
 			}
 
-	QStringList availableInfoFields() const;
+		QStringList availableInfoFields() const;
 
-	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
-	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
+		virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+		virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
-	virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
+		virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 
-};
+	};
 
 /*
 class NanonisFile : public NVBFile {
@@ -93,14 +91,14 @@ public:
 */
 
 class NanonisPage : public NVB3DPage {
-Q_OBJECT
-private:
+		Q_OBJECT
+	private:
 //   NanonisHeader header;
-public:
-	NanonisPage(QFile & file, const NanonisHeader & header, const QStringList & di_headers, const QStringList & di_data, bool otherDirection = false);
-  virtual ~NanonisPage() {;}
-public slots:
-  virtual void commit() {;}
-};
+	public:
+		NanonisPage(QFile & file, const NanonisHeader & header, const QStringList & di_headers, const QStringList & di_data, bool otherDirection = false);
+		virtual ~NanonisPage() {;}
+	public slots:
+		virtual void commit() {;}
+	};
 
 #endif
