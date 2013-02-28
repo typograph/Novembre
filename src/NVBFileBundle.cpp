@@ -26,6 +26,12 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QTextStream>
 
+/*
+ * Bundle files will bundle together similar pages from all files.
+ * The list of files will be processed only until the format of
+ * the pages mathes.
+ */
+
 QStringList NVBFileBundle::getFilenamesFromFile(QString filename) {
 	QFile file(filename);
 
@@ -83,23 +89,37 @@ NVBFile * NVBFileBundle::loadFile(const NVBAssociatedFilesInfo & info) const thr
 		return 0;
 		}
 
-	NVBJointFile * f = new NVBJointFile(info);
+
+	QList<NVBAssociatedFilesInfo> infos = fileFactory->associatedFilesFromList(getFilenamesFromFile(info.first()));
+	// Get first file
+	NVBFile * frst = fileFactory->openFile(infos.first());
+
+	if (!frst) {
+		NVBOutputError(QString("First file in the list, %1, did not load").arg(infos.first().name()));
+		return 0;
+		}
+
+	NVBJointFile * f = new NVBJointFile(info, frst);
 
 	if (!f) {
 		NVBOutputError("Memory allocation failed");
 		return 0;
 		}
-
-	foreach(NVBAssociatedFilesInfo info, fileFactory->associatedFilesFromList(getFilenamesFromFile(info.first()))) {
+	
+	infos.removeFirst();
+	
+	foreach(NVBAssociatedFilesInfo info, infos) {
 		NVBFile * fx = fileFactory->openFile(info);
 
-		if (!fx)
+		if (!fx) {
 			NVBOutputError(QString("File %1 did not load").arg(info.name()));
-		else
-			f->addFile(fx);
+			break;
+			}
+		else if (!(f->addFile(fx))) {
+			NVBOutputError(QString("File %1 does not fit the structure").arg(info.name()));
+			break;
+			}
 		}
-//	  else
-//		 NVBOutputError(QString("File %1 does not exist, but was mentioned").arg(fname));
 
 	return f;
 	}
@@ -119,14 +139,14 @@ NVBFileInfo * NVBFileBundle::loadFileInfo(const NVBAssociatedFilesInfo & info) c
 
 	if (!fi) return 0;
 
-	foreach(NVBAssociatedFilesInfo info, fileFactory->associatedFilesFromList(getFilenamesFromFile(info.first()))) {
-		NVBFileInfo * fix = fileFactory->getFileInfo(info);
+	QString fileName = getFilenamesFromFile(info.first()).first();
+	NVBFileInfo * fix = fileFactory->getFileInfo(fileName);
 
-		if (!fix)
-			NVBOutputError(QString("File %1 did not load").arg(info.name()));
-		else
-			fi->pages.append(fix->pages);
+	if (!fix) {
+		NVBOutputError(QString("The first file in list, %1, did not load").arg(fileName));
+		return 0;
 		}
-
-	return fi;
+	else
+		fi->pages.append(fix->pages);
+		return fi;
 	}

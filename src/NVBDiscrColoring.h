@@ -35,6 +35,7 @@ class NVBRandomDiscrColorModel : public NVBDiscrColorModel {
 		NVBRandomDiscrColorModel(int ncolors = 0);
 		virtual ~NVBRandomDiscrColorModel() {;}
 		virtual QColor colorize(int) const;
+		void resize(int ncolors);
 	};
 
 /*
