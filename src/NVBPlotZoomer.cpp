@@ -1,3 +1,21 @@
+//
+// Copyright 2006 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 #include "NVBPlotZoomer.h"
 
 #include <QWheelEvent>
@@ -26,11 +44,10 @@
 	\sa QwtPlot::autoReplot(), QwtPlot::replot(), setZoomBase()
 */
 NVBPlotZoomer::NVBPlotZoomer(QwtPlotCanvas *canvas, bool doReplot):
-		QwtPlotPicker(canvas)
-{
-		if ( canvas )
-				init(RectSelection | ClickSelection, ActiveOnly, doReplot);
-}
+	QwtPlotPicker(canvas) {
+	if (canvas)
+		init(RectSelection | ClickSelection, ActiveOnly, doReplot);
+	}
 
 /*!
 	\brief Create a zoomer for a plot canvas.
@@ -50,30 +67,27 @@ NVBPlotZoomer::NVBPlotZoomer(QwtPlotCanvas *canvas, bool doReplot):
 */
 
 NVBPlotZoomer::NVBPlotZoomer(int xAxis, int yAxis,
-				QwtPlotCanvas *canvas, bool doReplot):
-		QwtPlotPicker(xAxis, yAxis, canvas)
-{
-		if ( canvas )
-				init(RectSelection | ClickSelection, ActiveOnly, doReplot);
-}
+                             QwtPlotCanvas *canvas, bool doReplot):
+	QwtPlotPicker(xAxis, yAxis, canvas) {
+	if (canvas)
+		init(RectSelection | ClickSelection, ActiveOnly, doReplot);
+	}
 
 //! Init the zoomer, used by the constructors
 void NVBPlotZoomer::init(int selectionFlags,
-		DisplayMode trackerMode, bool doReplot)
-{
+                         DisplayMode trackerMode, bool doReplot) {
 
-		setSelectionFlags(selectionFlags);
-		setTrackerMode(trackerMode);
-		setRubberBand(RectRubberBand);
+	setSelectionFlags(selectionFlags);
+	setTrackerMode(trackerMode);
+	setRubberBand(RectRubberBand);
 
-		if ( doReplot && plot() )
-				plot()->replot();
+	if (doReplot && plot())
+		plot()->replot();
 
-}
+	}
 
-NVBPlotZoomer::~NVBPlotZoomer()
-{
-}
+NVBPlotZoomer::~NVBPlotZoomer() {
+	}
 
 
 /*!
@@ -81,10 +95,9 @@ NVBPlotZoomer::~NVBPlotZoomer()
 
 	\sa zoomRectIndex(), scaleRect().
 */
-QwtDoubleRect NVBPlotZoomer::zoomRect() const
-{
-		return zrect;
-}
+QwtDoubleRect NVBPlotZoomer::zoomRect() const {
+	return zrect;
+	}
 
 /*!
 	\brief Zoom in
@@ -97,12 +110,11 @@ QwtDoubleRect NVBPlotZoomer::zoomRect() const
 	\note The zoomed signal is emitted.
 */
 
-void NVBPlotZoomer::zoom(const QwtDoubleRect &rect)
-{
-		zrect = rect;
-		rescale();
-		emit zoomed(zrect);
-}
+void NVBPlotZoomer::zoom(const QwtDoubleRect &rect) {
+	zrect = rect;
+	rescale();
+	emit zoomed(zrect);
+	}
 
 
 /*!
@@ -111,45 +123,45 @@ void NVBPlotZoomer::zoom(const QwtDoubleRect &rect)
 	\note Initiates QwtPlot::replot
 */
 
-void NVBPlotZoomer::rescale()
-{
-		QwtPlot *plt = plot();
-		if ( !plt )
-				return;
+void NVBPlotZoomer::rescale() {
+	QwtPlot *plt = plot();
 
-		if (!zrect.isValid()) {
-			plt->setAxisAutoScale(xAxis());
-			plt->setAxisAutoScale(yAxis());
-			}
-		else if ( zrect != scaleRect() )
-		{
-				const bool doReplot = plt->autoReplot();
-				plt->setAutoReplot(false);
+	if (!plt)
+		return;
 
-				double x1 = zrect.left();
-				double x2 = zrect.right();
-				if ( plt->axisScaleDiv(xAxis())->lowerBound() >
-						plt->axisScaleDiv(xAxis())->upperBound() )
-				{
-						qSwap(x1, x2);
-				}
-
-				plt->setAxisScale(xAxis(), x1, x2);
-
-				double y1 = zrect.top();
-				double y2 = zrect.bottom();
-				if ( plt->axisScaleDiv(yAxis())->lowerBound() >
-						plt->axisScaleDiv(yAxis())->upperBound() )
-				{
-						qSwap(y1, y2);
-				}
-				plt->setAxisScale(yAxis(), y1, y2);
-
-				plt->setAutoReplot(doReplot);
-
-				plt->replot();
+	if (!zrect.isValid()) {
+		plt->setAxisAutoScale(xAxis());
+		plt->setAxisAutoScale(yAxis());
 		}
-}
+	else if (zrect != scaleRect()) {
+		const bool doReplot = plt->autoReplot();
+		plt->setAutoReplot(false);
+
+		double x1 = zrect.left();
+		double x2 = zrect.right();
+
+		if (plt->axisScaleDiv(xAxis())->lowerBound() >
+		    plt->axisScaleDiv(xAxis())->upperBound()) {
+			qSwap(x1, x2);
+			}
+
+		plt->setAxisScale(xAxis(), x1, x2);
+
+		double y1 = zrect.top();
+		double y2 = zrect.bottom();
+
+		if (plt->axisScaleDiv(yAxis())->lowerBound() >
+		    plt->axisScaleDiv(yAxis())->upperBound()) {
+			qSwap(y1, y2);
+			}
+
+		plt->setAxisScale(yAxis(), y1, y2);
+
+		plt->setAutoReplot(doReplot);
+
+		plt->replot();
+		}
+	}
 
 /*!
 	Reinitialize the axes, and set the zoom base to their scales.
@@ -158,55 +170,52 @@ void NVBPlotZoomer::rescale()
 	\param yAxis Y axis
 */
 
-void NVBPlotZoomer::setAxis(int xAxis, int yAxis)
-{
-		if ( xAxis != QwtPlotPicker::xAxis() || yAxis != QwtPlotPicker::yAxis() )
-		{
-				QwtPlotPicker::setAxis(xAxis, yAxis);
-				zrect = QwtDoubleRect();
-				rescale();
+void NVBPlotZoomer::setAxis(int xAxis, int yAxis) {
+	if (xAxis != QwtPlotPicker::xAxis() || yAxis != QwtPlotPicker::yAxis()) {
+		QwtPlotPicker::setAxis(xAxis, yAxis);
+		zrect = QwtDoubleRect();
+		rescale();
 		}
-}
+	}
 
 /*!
 	 Qt::RightButton autoscales plot.
 */
-void NVBPlotZoomer::widgetMouseReleaseEvent(QMouseEvent *me)
-{
-		if ( mouseMatch(MouseSelect2, me) ) {
-				zrect = QwtDoubleRect();
-				rescale();
-				}
-		else
-				QwtPlotPicker::widgetMouseReleaseEvent(me);
-}
+void NVBPlotZoomer::widgetMouseReleaseEvent(QMouseEvent *me) {
+	if (mouseMatch(MouseSelect2, me)) {
+		zrect = QwtDoubleRect();
+		rescale();
+		}
+	else
+		QwtPlotPicker::widgetMouseReleaseEvent(me);
+	}
 
 /*!
 	 Ctrl-Wheel scales,
 	 Shift-Wheel scrolls horizontally,
 	 Wheel scrolls vertically.
 */
-void NVBPlotZoomer::widgetWheelEvent(QWheelEvent *event)
-{
+void NVBPlotZoomer::widgetWheelEvent(QWheelEvent *event) {
 	QwtDoubleRect newrect = scaleRect();
+
 	if (event->modifiers() & Qt::ControlModifier) { // zoom
 		QPointF stable = invTransform(event->pos());
 
-		qreal factor = pow(0.9,event->delta()/120.0);
-		qreal newW = newrect.width()*factor;
-		qreal newH = newrect.height()*factor;
+		qreal factor = pow(0.9, event->delta() / 120.0);
+		qreal newW = newrect.width() * factor;
+		qreal newH = newrect.height() * factor;
 
-		qreal newX = (newrect.x() - stable.x())*factor + stable.x();
-		qreal newY = (newrect.y() - stable.y())*factor + stable.y();
+		qreal newX = (newrect.x() - stable.x()) * factor + stable.x();
+		qreal newY = (newrect.y() - stable.y()) * factor + stable.y();
 
-		newrect = QRectF(newX,newY,newW,newH);
+		newrect = QRectF(newX, newY, newW, newH);
 		}
 	else if (event->modifiers() & Qt::ShiftModifier) { // shift h
-		qreal shift = -newrect.width()*0.1*event->delta()/120.0;
+		qreal shift = -newrect.width() * 0.1 * event->delta() / 120.0;
 		newrect.moveLeft(newrect.x() + shift);
 		}
 	else { // shift v
-		qreal shift = -newrect.height()*0.1*event->delta()/120.0;
+		qreal shift = -newrect.height() * 0.1 * event->delta() / 120.0;
 		newrect.moveTop(newrect.y() + shift);
 		}
 
@@ -228,7 +237,7 @@ void NVBPlotZoomer::widgetWheelEvent(QWheelEvent *event)
 
 	rescale();
 //		QwtPlotPicker::widgetWheelEvent(me);
-}
+	}
 
 /*!
 	\brief Check and correct a selected rectangle
@@ -241,38 +250,37 @@ void NVBPlotZoomer::widgetWheelEvent(QWheelEvent *event)
 					to a accepted rectangle.
 */
 
-bool NVBPlotZoomer::accept(QwtPolygon &pa) const
-{
-		if ( pa.count() < 2 )
-				return false;
+bool NVBPlotZoomer::accept(QwtPolygon &pa) const {
+	if (pa.count() < 2)
+		return false;
 
-		QRect rect = QRect(pa[0], pa[int(pa.count()) - 1]).normalized();
+	QRect rect = QRect(pa[0], pa[int(pa.count()) - 1]).normalized();
 
-		const int minSize = 2;
-		if (rect.width() < minSize && rect.height() < minSize )
-				return false;
+	const int minSize = 2;
 
-		const int minZoomSize = 11;
+	if (rect.width() < minSize && rect.height() < minSize)
+		return false;
 
-		const QPoint center = rect.center();
-		rect.setSize(rect.size().expandedTo(QSize(minZoomSize, minZoomSize)));
-		rect.moveCenter(center);
+	const int minZoomSize = 11;
 
-		pa.resize(2);
-		pa[0] = rect.topLeft();
-		pa[1] = rect.bottomRight();
+	const QPoint center = rect.center();
+	rect.setSize(rect.size().expandedTo(QSize(minZoomSize, minZoomSize)));
+	rect.moveCenter(center);
 
-		return true;
-}
+	pa.resize(2);
+	pa[0] = rect.topLeft();
+	pa[1] = rect.bottomRight();
+
+	return true;
+	}
 
 /*!
 	Rejects selections, when the stack depth is too deep, or
 	the zoomed rectangle is minZoomSize().
 */
-void NVBPlotZoomer::begin()
-{
-		QwtPlotPicker::begin();
-}
+void NVBPlotZoomer::begin() {
+	QwtPlotPicker::begin();
+	}
 
 /*!
 	Expand the selected rectangle to minZoomSize() and zoom in
@@ -280,29 +288,31 @@ void NVBPlotZoomer::begin()
 
 	\sa accept(), minZoomSize()
 */
-bool NVBPlotZoomer::end(bool ok)
-{
-		ok = QwtPlotPicker::end(ok);
-		if (!ok)
-				return false;
+bool NVBPlotZoomer::end(bool ok) {
+	ok = QwtPlotPicker::end(ok);
 
-		QwtPlot *plot = NVBPlotZoomer::plot();
-		if ( !plot )
-				return false;
+	if (!ok)
+		return false;
 
-		const QwtPolygon &pa = selection();
-		if ( pa.count() < 2 )
-				return false;
+	QwtPlot *plot = NVBPlotZoomer::plot();
 
-		QRect rect = QRect(pa[0], pa[int(pa.count() - 1)]).normalized();
+	if (!plot)
+		return false;
 
-		zrect = invTransform(rect).normalized();
+	const QwtPolygon &pa = selection();
+
+	if (pa.count() < 2)
+		return false;
+
+	QRect rect = QRect(pa[0], pa[int(pa.count() - 1)]).normalized();
+
+	zrect = invTransform(rect).normalized();
 
 //		const QwtDoublePoint center = zrect.center();
 //		zrect.setSize(zrect.size().expandedTo(minZoomSize()));
 //		zrect.moveCenter(center);
 
-		rescale();
+	rescale();
 
-		return true;
-}
+	return true;
+	}
