@@ -23,12 +23,14 @@
 
 NVBColoring::NVBRandomDiscrColorModel::NVBRandomDiscrColorModel(int ncolors): NVBDiscrColorModel(), nc(ncolors) {
 	if (nc < 0) nc = 0;
-
 	qsrand(nc);
-
-	for (int i = 0; i < nc; i++)
-		colors.append(newcolor());
+	resize(nc);
 	}
+
+void NVBColoring::NVBRandomDiscrColorModel::resize(int ncolors) {
+	for (int i = colors.length(); i < ncolors; i++)
+		colors.append(newcolor());
+}
 
 QColor NVBColoring::NVBRandomDiscrColorModel::colorize(int index) const {
 	if (index < 0) {
