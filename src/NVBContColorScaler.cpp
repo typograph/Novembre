@@ -154,7 +154,8 @@ void NVBContColorScaler::paintHistogram(QPainter * painter, int w, int h) {
 	scaler<double, int> ww(page->getZMin(), page->getZMax(), 0, abs(w) - 1);
 
 	for (int i = provider->resolution().width() * provider->resolution().height() - 1; i >= 0; i--) {
-		hdata[abs(ww.scaleInt(pdata[i]))] += 1;
+		if (FINITE(pdata[i]))
+			hdata[abs(ww.scaleInt(pdata[i]))] += 1;
 		}
 
 	painter->setPen(QPen(Qt::blue));

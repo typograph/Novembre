@@ -171,8 +171,11 @@ void NVBCircAverager::averageAround(QPoint p) {
 	QHash<uint, ravey> vs;
 
 	for (int i = provider->resolution().width() - 1; i >= 0; i--)
-		for (int j = provider->resolution().height() - 1; j >= 0; j--)
-			vs[(int)(pow(i - p.x(), 2) + pow(j - p.y(), 2)) ] += provider->getData(i, j);
+		for (int j = provider->resolution().height() - 1; j >= 0; j--) {
+			double data = provider->getData(i, j);
+			if (FINITE(data))
+				vs[(int)(pow(i - p.x(), 2) + pow(j - p.y(), 2)) ] += data;
+			}
 
 
 	QwtArray<double> xs, ys;
