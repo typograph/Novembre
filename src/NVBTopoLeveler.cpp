@@ -283,19 +283,30 @@ void NVBTopoLeveler::levelByLineSlope() {
 //  memcpy(fdata, tdata, s.width());
 
 	int aoff, i;
+	int cnt = 0;
 
+	// Iterate over lines
 	for (i = s.height(), aoff = --i * s.width() ;
 	     i >= 0; aoff = --i * s.width()) {
-
+		if (!FINITE(tdata[aoff]) || !FINITE(tdata[aoff + s.width() - 1])) {
+			for (int j = s.width() - 1; j >= 0; j--)
+				fdata[j + aoff] = tdata[j + aoff];
+			continue;
+			}
+			
+		cnt = 0;
+		
 		double slope = (tdata[aoff] - tdata[aoff + s.width() - 1]) / (s.width() - 1);
 
 		double offset = 0;
 
-		for (int j = s.width() - 1; j >= 0; j--) {
-			offset += tdata[j + aoff];
-			}
+		for (int j = s.width() - 1; j >= 0; j--)
+			if (FINITE(tdata[j + aoff])) {
+				offset += tdata[j + aoff];
+				cnt += 1;
+				}
 
-		offset /= s.width();
+		offset /= cnt;
 
 		offset += slope * (s.width() - 1) / 2;
 
@@ -599,12 +610,19 @@ QRect NVBTopoLeveler::discretizeRect(QRectF _rect) {
 double NVBTopoLeveler::getAverageOnDRect(QRect rect) {
 
 	double level = 0;
+	int cnt = 0;
 
 	for (int i = rect.left(); i <= rect.right(); i++)
-		for (int j = rect.top(); j <= rect.bottom(); j++)
-			level += tprovider->getData(i, j);
+		for (int j = rect.top(); j <= rect.bottom(); j++) {
+			double data = tprovider->getData(i, j);
+			if (FINITE(data)) {
+				level += data;
+				cnt += 1;
+				}
+			}
 
-	level /= rect.width() * rect.height();
+	if (cnt)
+		level /= cnt;
 
 	return level;
 	}
