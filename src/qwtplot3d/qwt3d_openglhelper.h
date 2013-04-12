@@ -3,6 +3,7 @@
 
 #include "qglobal.h"
 #include <QtOpenGL/qgl.h>
+#include <GL/glu.h>
 
 namespace Qwt3D
 {
