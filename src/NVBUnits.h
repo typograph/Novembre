@@ -185,11 +185,9 @@ public:
 	bool operator==( const NVBPhysValue & v ) const {
 		return value == v.getValue() && getDimension() == v.getDimension();
 		}
-	bool operator!=( const NVBPhysValue & v ) const { return operator==(v);}
-	bool operator<( const NVBPhysValue & v ) const {
-		return getDimension() == v.getDimension() && getValue() < v.getValue();
-		}
-	bool operator<=( const NVBPhysValue & v ) const { return operator==(v) || operator <(v); }
+	bool operator!=( const NVBPhysValue & v ) const { return !operator==(v);}
+	bool operator<( const NVBPhysValue & v ) const;
+	bool operator<=( const NVBPhysValue & v ) const;
 	bool operator>( const NVBPhysValue & v ) const { return !operator <=(v); }
 	bool operator>=( const NVBPhysValue & v ) const { return !operator <(v);}
 	

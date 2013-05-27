@@ -755,6 +755,12 @@ void NanonisFileGenerator::loadChannelsFromSXM(QString filename, NVBFile* source
 	ds->addAxis("Y",resolution.height());
 	ds->addAxisMap(new NVBAxisPhysMap(-offset.y()-range.height()/2, range.height()/resolution.height(), NVBUnits("m")));
 	
+	// FIXME Add angle
+//   if (header.contains("SCAN_ANGLE") && !header.value("SCAN_ANGLE").isEmpty())
+// 		_angle = header.value("SCAN_ANGLE").first().toDouble(); // FIXME check direction and origin
+// 	else
+// 		_angle = 0;
+	
   QStringList l = h.value("DATA_INFO").split('\n');
   QStringList headers = l.takeFirst().split('\t'); // Headers
 	int dirIndex = headers.indexOf("Direction");

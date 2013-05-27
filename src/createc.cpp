@@ -745,6 +745,9 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 			invIndexes << i;
 
 // There are always only 2 axes : X & Y
+		
+// FIXME Add rotation
+// angle = -header.value("Rotation",0).toDouble();
 
 	NVBConstructableDataSource* result = new NVBConstructableDataSource(sources);
 

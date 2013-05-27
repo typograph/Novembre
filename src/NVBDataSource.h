@@ -26,9 +26,9 @@ class NVBDataSet : public QObject {
 	public:
 		/// Initial type of the data
 		enum Type {
-			Undefined = 0 ,
-			Topography ,
-			Spectroscopy
+			Undefined = 0, // The dataset is displayed in default (2D) view by default
+			Topography,    // The dataset is displayed in 2D view by default
+			Spectroscopy   // The dataset is displayed in Graph view by default
 			};
 
 	protected:
@@ -46,9 +46,9 @@ class NVBDataSet : public QObject {
 		NVBColorMap * clr;
 		/// Hint for displaying the dataset 
 		/*!
-			* This paremeter influences the way this dataset is displayed by default.
-			* All datasets are functionally equivalent, independently of their type. 
-			*/
+		 * This paremeter influences the way this dataset is displayed by default.
+		 * All datasets are functionally equivalent, independently of their type. 
+		 */
 		Type t;
 
 		NVBDataComments comments;

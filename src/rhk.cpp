@@ -214,6 +214,11 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 		NVBOutputFileError(&file);
 		return 0;
 		}
+	
+	if (file.atEnd()) {
+		NVBOutputError("Empty file");
+		return 0;
+		}
 
 	NVBFile * f = new NVBFile(info);
 
@@ -238,6 +243,11 @@ NVBFile * RHKFileGenerator::loadFile(const NVBAssociatedFilesInfo & info) const 
 }
 
 bool RHKFileGenerator::RHKHeaderIsSane(const TRHKHeader & header, QString filename) {
+	if (! header.parameter_size) {
+		// getRHKHeader returns an error in this case
+		return false;
+		}
+
 	// Number of strings is positive and at least 10 (at most 18, as of last specification)
 	if (header.string_count < 10 || header.string_count > 30) {
 		NVBOutputError(QString("Page header has unexpected number of strings. File %1 is probably corrupted.").arg(filename));
@@ -246,7 +256,7 @@ bool RHKFileGenerator::RHKHeaderIsSane(const TRHKHeader & header, QString filena
 
 	// Reasonable size
 	if (header.x_size < 0 || header.y_size < 0 || header.page_data_size < header.x_size || header.page_data_size < header.y_size || header.page_data_size != abs(4*header.x_size*header.y_size)) {
-		NVBOutputError(QString("Page has unexpected dimentions. File %1 is probably corrupted.").arg(filename));
+		NVBOutputError(QString("Page has unexpected dimensions. File %1 is probably corrupted.").arg(filename));
 		return false;
 		}
 
@@ -365,7 +375,7 @@ NVBFileInfo * RHKFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & info
 				int np=1,nx=1,ny=1;
 				float * posdata;
 				// Skip curve position data
-				if (header.page_type != 7 && header.page_type != 31) {
+				if (header.page_type != 7 && header.page_type != 31 && header.line_type != 21 && header.line_type != 4) {
 					posdata = (float*)malloc(2*sizeof(float)*header.y_size);
 					file.read((char*)posdata,2*sizeof(float)*header.y_size);
 					detectGrid(header,posdata,posdata + header.y_size,np,nx,ny);
@@ -458,7 +468,7 @@ bool RHKFileGenerator::loadNextPage(QFile& file, NVBFile * sources, bool subtrac
 			}
 		case 2 :
 		default : {
-			NVBOutputError(QString("Non-existing page found (type %1). Your file might be corrupted. If not, please send the file %2 to the developer").arg(h.type).arg(file.fileName()));
+			NVBOutputError(QString("Non-existing page found (type %1). File %2 is probably corrupted.").arg(h.type).arg(file.fileName()));
 			return false;
 			}
 		}
@@ -557,12 +567,68 @@ bool RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 	ds->filterAddComments(comments);
 	NVBDataSet * dset = ds->addDataSet(strings.at(0).trimmed(),data,NVBUnits(strings.at(9)),comments,ia,NVBDataSet::Topography);
 
+	/*
+48 00
+	00 00 00 40  88 BA 77 3F  C8 D2 A7 3E // Start HSV
+	00 00 30 42  72 C0 02 3F  00 00 80 3F //   End HSV
+
+	01 00 00 00  00 01 00 00 // Direction #Entries
+	00 00 00 00  8C 2E BA 3E // %start %end
+
+	00 00 80 3F  00 00 80 3F // Gamma  Alpha
+	00 00 00 00  00 00 80 3F // X Start/Stop
+	00 00 00 00  00 00 80 3F // Y Start/Stop
+
+	00 00 00 00  01 00 00 00 // Mode   Invert
+
+48 00
+	00 00 00 40  88 BA 77 3F  C8 D2 A7 3E
+	00 00 6C 42  2F C0 66 3F  00 00 80 3F
+
+	01 00 00 00  00 01 00 00
+	8C 2E BA 3E  0D EC 1D 3F
+
+	00 00 80 3F  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+
+	00 00 00 00  00 00 00 00
+
+48 00
+	00 00 4D 43  12 69 4F 3F  C8 D2 A7 3E
+	00 80 91 43  99 2D 99 3E  00 00 80 3F
+
+	01 00 00 00  00 01 00 00
+	0D EC 1D 3F  D8 3B 66 3F
+
+	B4 D4 CB 3E  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+
+	01 00 00 00  00 00 00 00
+
+48 00
+	00 00 00 40  88 BA 77 3F  C8 D2 A7 3E
+	00 00 6C 42  2F C0 66 3F  00 00 80 3F
+
+	01 00 00 00  00 01 00 00
+	D8 3B 66 3F  00 00 80 3F
+
+	00 00 80 3F  CD CC CC 3D
+	00 00 00 00  00 00 80 3F
+	00 00 00 00  00 00 80 3F
+
+	02 00 00 00  00 00 00 00
+
+	 *
+	 */
+
 	if (header.colorinfo_count == 1) {
 		TRHKColorInfo cInfo;
 		if (file.read((char*)&(cInfo.parameter_count),2) != 2) { // read header size
 			NVBOutputError(QString("Colorinfo doesn't conform to spec. File %1 probably corrupted.").arg(file.fileName()));
-			return false;
-			}
+		return false;
+		}
 		if (cInfo.parameter_count+2 <= (int)sizeof(TRHKColorInfo)) {
 			if (file.read((char*)&(cInfo.start_h),cInfo.parameter_count) != cInfo.parameter_count) {
 				NVBOutputError(QString("File ended abruptly. File %1 probably corrupted.").arg(file.fileName()));
@@ -575,13 +641,36 @@ bool RHKFileGenerator::loadTopoPage(QFile& file, NVBFile * sources)
 				NVBOutputError(QString("File ended abruptly. File %1 probably corrupted.").arg(file.fileName()));
 				return false;
 				}
-			file.seek(file.pos() + cInfo.parameter_count+2 - sizeof(TRHKColorInfo));
+			file.seek(file.pos() + cInfo.parameter_count+2 - sizeof(TRHKColorInfo));
 			}
+	
+/*	
+	TRHKColorInfo cInfo;
+	if (file.read((char*)&(cInfo.parameter_count),2) != 2) { // read header size
+		NVBOutputError(QString("Colorinfo doesn't conform to spec. File %1 probably corrupted.").arg(file.fileName()));
+		return false;
+		}*/
+// 	if (cInfo.parameter_count+2 <= (int)sizeof(TRHKColorInfo))
+// 		if (file.read((char*)&(cInfo.start_h),cInfo.parameter_count) != cInfo.parameter_count) {
+// 			NVBOutputError(QString("File ended abruptly. File %1 probably corrupted.").arg(file.fileName()));
+// 			return false;
+// 			}
+// 	else {
+// 		NVBOutputError(QString("Colorinfo doesn't conform to spec. File %1 probably corrupted.").arg(file.fileName()));
+// 		if (file.read((char*)&(cInfo.start_h),(int)sizeof(TRHKColorInfo)) != (int)sizeof(TRHKColorInfo)) {
+// 			NVBOutputError(QString("File ended abruptly. File %1 probably corrupted.").arg(file.fileName()));
+// 			return false;
+// 			}
+// 		file.seek(file.pos() + cInfo.parameter_count+2 - sizeof(TRHKColorInfo));
+// 		}
 
-		if (data) {
-			dset->setColorMap(new NVBHSVWheelColorMap(cInfo.start_h/360, cInfo.end_h/360, cInfo.start_s, cInfo.end_s, cInfo.start_b, cInfo.end_b));
-			}
+	if (data) {
+		dset->setColorMap(new NVBHSVWheelColorMap(cInfo.start_h/360, cInfo.end_h/360, cInfo.start_s, cInfo.end_s, cInfo.start_b, cInfo.end_b));
 		}
+	}
+
+// 	if (header.colorinfo_count > 1) {
+// 		NVBOutputError(QString("Multiple coloring not implemented, the coloring in %1 will be approximate").arg(file.fileName()));
 	else {
 		NVBOutputError(QString("Multiple coloring detected. Please, send a copy of %1 to Timofey").arg(file.fileName()));
 // FIXME  Multiple coloring :  NVBSetContColorModel * m = new NVBSetContColorModel();
@@ -670,7 +759,7 @@ bool RHKFileGenerator::loadSpecPage(QFile & file, NVBFile * sources, bool subtra
 	float * posdata = (float*)calloc(sizeof(float),2*header.y_size);
 	float * xposdata = posdata;
 	float * yposdata = posdata + header.y_size;
-	if ( header.page_type != 7 && header.page_type != 31 && file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
+	if ( header.page_type != 7 && header.line_type != 4 && header.line_type != 21 && header.page_type != 31 && file.read((char*)posdata,2*sizeof(float)*header.y_size) < (qint64)(2*sizeof(float)*header.y_size)) {
 		NVBOutputError(QString("File %1 ended before the page could be fully read").arg(file.fileName()));
 		}
 //      _positions.append(QPointF(xposdata[i],-yposdata[i]));
@@ -964,7 +1053,7 @@ QStringList RHKFileGenerator::loadRHKStrings(QFile & file, qint16 nstrings)
 			}
 		// Check string length. Minimum is 0
 		// I cannot check the maximum, since it's unlimited
-		// And going over the file edge will be caugth.
+		// And going over the file edge will be caught.
 		if (slen < 0) {
 			NVBOutputError(QString("Negative string length. File %1 is probably corrupted.").arg(file.fileName()));
 			return QStringList();
