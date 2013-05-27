@@ -23,6 +23,7 @@
 
 #ifdef NVB_STATIC
 Q_IMPORT_PLUGIN(rhk)
+// Q_IMPORT_PLUGIN(rhk4)
 Q_IMPORT_PLUGIN(createc)
 // Q_IMPORT_PLUGIN(winspm)
 // Q_IMPORT_PLUGIN(textSTM);
@@ -126,7 +127,7 @@ void NVBFileFactory::updateGeneratorSettings(QModelIndex start, QModelIndex end)
 
 NVBFileFactory::~NVBFileFactory()
 {
-	while(not files.isEmpty()) delete files.takeFirst();
+	while(!files.isEmpty()) delete files.takeFirst();
 	if (deadTree) delete deadTree;
 }
 

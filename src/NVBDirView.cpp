@@ -30,12 +30,17 @@
 NVBDirView::NVBDirView(QWidget * parent):QAbstractItemView(parent)
 {
 	keepItemsOnModelChanges = false;
+	ignoreScroll = false;
 	oneItemPerFile = false;
 	top_row = 0;
 	pages_per_row = 0;
 	soft_shift = 0;
 	voffset = 0;
 	setGridSize(iconSize()+QSize(20,20));	
+	setDragEnabled(true);
+	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	verticalScrollBar()->setEnabled(false);
 }
 	
 NVBDirView::~ NVBDirView()
@@ -414,7 +419,7 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 
 #ifdef NVB_DEBUG
 	// DEBUG 
-	QString debugText = QString("TOP : %1 | SOFT : %2 | VOFF : %3/%4 | TOTAL : %5 | STEP : %6 | MAX : %7")
+	QString debugText = QString("TOP : %1 \nSOFT : %2 \nVOFF : %3/%4 \nTOTAL : %5 \nSTEP : %6 \nMAX : %7")
 			.arg(top_row,3)
 			.arg(soft_shift,6)
 			.arg(voffset,8)
@@ -423,13 +428,13 @@ void NVBDirView::paintEvent(QPaintEvent * e)
 			.arg(verticalScrollBar()->pageStep(),6)
 			.arg(verticalScrollBar()->maximum(),6);
 
-	QRectF txtrect = painter.boundingRect(0,viewportHeight(),1,1,Qt::AlignLeft | Qt::TextSingleLine,debugText);
+	QRectF txtrect = painter.boundingRect(0,viewportHeight(),1,1,Qt::AlignLeft,debugText);
 	txtrect.moveRight(viewport()->width()-5);
 	painter.fillRect(txtrect.adjusted(-5,-5,5,5),Qt::white);
 
 	painter.setBrush(QBrush(Qt::black));
 	painter.setPen(Qt::black);
-	painter.drawText(txtrect,debugText);
+	painter.drawText(txtrect,Qt::AlignLeft,debugText);
 	// debug
 #endif
 }
@@ -480,10 +485,6 @@ void NVBDirView::drawItems(int index, int y, QPainter * painter) const
 	option.locale.setNumberOptions(QLocale::OmitGroupSeparator);
 	option.widget = this;
 	
-	option.decorationPosition = QStyleOptionViewItem::Top;
-	option.displayAlignment = Qt::AlignCenter;
-	option.showDecorationSelected = false;
-	
 	for (int i=0; i<nitems; i++) {
 		QModelIndex dindex = model()->index(i,0,fi);
 		option.rect = QRect(QPoint(leftMargin()+(i%pages_per_row)*gridSize.width(),y+(i/pages_per_row)*gridSize.height()),gridSize);
@@ -496,6 +497,17 @@ void NVBDirView::drawItems(int index, int y, QPainter * painter) const
 		itemDelegate()->paint(painter, option, dindex);
 		}
 }
+
+QStyleOptionViewItem NVBDirView::viewOptions() const
+{
+	QStyleOptionViewItem option = QAbstractItemView::viewOptions();
+
+	option.decorationPosition = QStyleOptionViewItem::Top;
+	option.displayAlignment = Qt::AlignCenter;
+	option.showDecorationSelected = false;
+	return option;
+}
+
 
 void NVBDirView::gridPaintEvent(QPaintEvent * e) {
 
@@ -543,10 +555,6 @@ void NVBDirView::drawGridItems(int start, int end, int y, QPainter *painter) con
 	option.locale.setNumberOptions(QLocale::OmitGroupSeparator);
 	option.widget = this;
 
-	option.decorationPosition = QStyleOptionViewItem::Top;
-	option.displayAlignment = Qt::AlignCenter;
-	option.showDecorationSelected = false;
-
 	for (int index = start; index < end; index++) {
 		QModelIndex dindex = model()->index(index,0);
 		option.rect = QRect(QPoint(leftMargin()+(index-start)*gridSize.width(),y),gridSize);
@@ -565,6 +573,8 @@ void NVBDirView::setModel(QAbstractItemModel * m)
 {
 	scrollToTop();
 	QAbstractItemView::setModel(m);
+	
+	verticalScrollBar()->setEnabled(m);
 
 	if (m != 0) {
 		connect(m,SIGNAL(layoutChanged()),this,SLOT(invalidateCache()));
@@ -641,9 +651,8 @@ void NVBDirView::rowsRemoved(const QModelIndex& parent, int start, int end)
 		
 	// Reevaluating vertical offset should be done even if only pages
 	// within a file were changed - maybe it came over pages_per_row
-	calculateVOffset();		
-	updateScrollBars();
-	verticalScrollBar()->setValue(voffset); //workaround scrollContentsBy()
+
+	updateBottom();
 }
 
 // void NVBDirView::rowsAboutToBeInserted(const QModelIndex& /*parent*/, int /*start*/, int /*end*/) {
@@ -691,9 +700,7 @@ void NVBDirView::rowsInserted(const QModelIndex& parent, int start, int end)
 
 	QAbstractItemView::rowsInserted(parent,start,end);
 
-	calculateVOffset();		
-	updateScrollBars();
-	verticalScrollBar()->setValue(voffset); //workaround scrollContentsBy()
+	updateBottom();
 }
 
 void NVBDirView::keyPressEvent(QKeyEvent * event)
@@ -706,13 +713,53 @@ void NVBDirView::keyPressEvent(QKeyEvent * event)
 		QAbstractItemView::keyPressEvent(event);
 }
 
+void NVBDirView::updatePPR(int nppr) {
+	if (!model()) {
+		pages_per_row = nppr;
+		return;
+		}
+		
+	if (pages_per_row != nppr) {
+		int	top_pages = model()->rowCount(model()->index(top_row,0));
+		int top_row_old = pages_per_row ? 1+(top_pages-1)/pages_per_row : 0;
+		int top_row_new = nppr ? 1+(top_pages-1)/nppr : 0;	
+		// If less than half a row is visible, change soft_shift
+		if (top_row_new != top_row_old)
+			if ((top_row_old && fileHeight(top_row) - soft_shift < gridSize.height()/2)
+			 || (!top_row_old && soft_shift > headerHeight()/2))
+				soft_shift += (top_row_new - top_row_old)*gridSize.height();
+		
+		pages_per_row = nppr;
+		updateBottom();
+		}
+
+}
+
+void NVBDirView::updateBottom()
+{
+	calculateVOffset();
+	int maxoffset = qMax(0,totalHeight() - viewportHeight());
+	verticalScrollBar()->setEnabled(maxoffset);
+	if (voffset > maxoffset) {
+		soft_shift -= voffset-maxoffset;
+		voffset = maxoffset;
+		while (soft_shift < 0) {
+			updateTopRow(top_row,top_row-1);
+			soft_shift += fileHeight(top_row) + midMargin();
+			}
+		}
+	ignoreScroll = true;
+	verticalScrollBar()->setRange(0, qMax(-1,maxoffset));
+	verticalScrollBar()->setPageStep(viewportHeight());		
+	verticalScrollBar()->setValue(voffset);
+	ignoreScroll = false;
+	update();
+}
+
 void NVBDirView::resizeEvent(QResizeEvent * event)
 {
 	int nppr = (viewport()->width()-leftMargin()-rightMargin())/gridSize.width();
-	if (pages_per_row != nppr) {
-		pages_per_row = nppr;
-		updateScrollBars();
-		}
+	updatePPR(nppr);
 	QAbstractItemView::resizeEvent(event);
 }
 
@@ -721,22 +768,23 @@ void NVBDirView::setGridSize(QSize s)
 	gridSize = s;
 	
 	verticalScrollBar()->setSingleStep(gridSize.height()/10); // TODO user setting
+	setMinimumSize(
+		1 + leftMargin() + gridSize.width() + rightMargin() + 
+		style()->pixelMetric(QStyle::PM_ScrollBarExtent) + 2*frameWidth(),
+		1 + 2*midMargin() + headerHeight() + headerMargin() + gridSize.height());
 
 	int nppr = qMax(0,viewport()->width()-leftMargin()-rightMargin())/gridSize.width();
-	if (pages_per_row != nppr) {
-		pages_per_row = nppr;
-		setMinimumSize(1 + leftMargin() + gridSize.width() + rightMargin(), 1 + 2*midMargin() + headerHeight() + headerMargin() + gridSize.height());
-		updateScrollBars();
-		}
+	updatePPR(nppr);
 	
 	scheduleDelayedItemsLayout();
 }
 
 void NVBDirView::scrollContentsBy(int dx, int dy) {
 // Remember, dy is opposite to voffset!
-	if (voffset == verticalScrollBar()->value()) return;
+	if (ignoreScroll) return;
+	dy = voffset - verticalScrollBar()->value();
 
-	if (dy != 0 && model()) {
+	if (model()) {
 		soft_shift -= dy;
 		voffset -= dy;
 		while (soft_shift < 0) {
@@ -819,15 +867,12 @@ void NVBDirView::invalidateCache() {
 			}
 		}
 
-	updateScrollBars();
+	int maxoffset = qMax(0,totalHeight() - viewportHeight());
+	verticalScrollBar()->setEnabled(maxoffset);
+	verticalScrollBar()->setRange(0, maxoffset);
+	verticalScrollBar()->setPageStep(viewportHeight());
+	update();
 	
-}
-
-void NVBDirView::updateScrollBars()
-{
-		verticalScrollBar()->setRange(0, qMax(-1,totalHeight() - viewportHeight()));
-		verticalScrollBar()->setPageStep(viewportHeight());
-		update();
 }
 
 int NVBDirView::fileDistance( int index1, int index2 ) const
@@ -855,6 +900,6 @@ void NVBDirView::switchToGridMode() {
 	oneItemPerFile = true;
 	// TOP means the index of top-left viewport corner
 	top_row = pages_per_row*(top_row/pages_per_row);
-	updateScrollBars();
-	setDirtyRegion(viewport()->rect());
+	updateBottom();
+ 	setDirtyRegion(viewport()->rect());
 }

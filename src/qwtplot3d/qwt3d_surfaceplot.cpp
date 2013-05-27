@@ -98,7 +98,7 @@ pair<int,int> SurfacePlot::facets() const
 #include <math.h>
 
 int SurfacePlot::calcLowResolution() {
-  float datasize;
+  float datasize = 0;
   if (actualData_p->datatype == Qwt3D::POLYGON)
     datasize = sqrt(actualDataC_->cells.size());
   else if (actualData_p->datatype == Qwt3D::GRID)

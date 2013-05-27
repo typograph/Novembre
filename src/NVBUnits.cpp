@@ -13,6 +13,11 @@
 #include <stdlib.h>
 #include "NVBUnits.h"
 
+#ifndef round
+inline double round(double val) { return floor(val + 0.5); }
+#endif
+
+
 // Recognized units that are not complex (and have more than one letter). Lowcase
 QStringList NVBUnits::recognizedUnits = QStringList()
 // Base SI units
@@ -296,9 +301,26 @@ int NVBPhysValue::getPosMult(double nvalue, int minSignPos, int maxSignPos)
   return m;
 }
 
-double NVBPhysValue::getValue( const NVBUnits & dim ) const
+bool NVBPhysValue::operator <(const NVBPhysValue &v) const {
+	if (dim.isComparableWith(v.getDimension()))
+		return getValue() < v.getValue(dim);
+	else
+		return dim.toStr() < v.getDimension().toStr();
+}
+
+bool NVBPhysValue::operator <=(const NVBPhysValue &v) const {
+	if (dim.isComparableWith(v.getDimension()))
+		return getValue() <= v.getValue(dim);
+	else
+		return dim.toStr() < v.getDimension().toStr();
+}
+
+double NVBPhysValue::getValue( const NVBUnits & _dim ) const
 {
-  return value / dim.mult;
+	if (dim.isComparableWith(_dim))
+		return value / _dim.mult;
+	else
+		return 0;
 }
 
 // --------------

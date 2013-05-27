@@ -3,7 +3,7 @@
 
 #include <QtCore/QSettings>
 
-Q_DECLARE_METATYPE(QSettings*);
+Q_DECLARE_METATYPE(QSettings*)
 
 namespace NVBSettings {
 

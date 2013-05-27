@@ -26,13 +26,13 @@ class NVBDirView : public QAbstractItemView
 Q_OBJECT
 private:
 /// Index of the file on top of the view
-  int top_row;
+	int top_row;
 /// Vertical coordinate (in pixels) of topleft corner of \a top_row in view
 	int soft_shift;
 /// Maximum number of pages horizontally
-  int pages_per_row;
+	int pages_per_row;
 /// The size of the grid
-  QSize gridSize;
+	QSize gridSize;
 /// cached vertical offset
 	int voffset;
 
@@ -41,11 +41,16 @@ private:
 
 /// The view will try to keep current visible items in the viewport if rows are inserted or removed above
 /**
- * If true, the view will keep the top row in the view on any model change (except deleting this row)
- * If false, the view will keep voffset constant on any model change (except deleting all rows below the top)
- */
+* If true, the view will keep the top row in the view on any model change (except deleting this row)
+* If false, the view will keep voffset constant on any model change (except deleting all rows below the top)
+*/
 	bool keepItemsOnModelChanges;
-	
+
+/** Since the view has a complicated scrollbar control,
+* sometimes valueChanged() signal has to be ignored.
+*/
+	bool ignoreScroll;
+
 /// Number of rows before \a top_row with corresponding number of pages
 	mutable QVector<int> counts_above;
 /// Total number of rows with corresponding number of pages
@@ -53,49 +58,53 @@ private:
 
 /// Total visual height of all items in the view, not including midMargin() at every end. For an empty view is equal to 0
 	int totalHeight();
-  void calculateVOffset();
+/// voffset is equal to the scrollbar value.
+	void calculateVOffset();
 	void updateTopRow(int rold, int rnew);
 
+/// Updates view when the number of pages per row changes
+	void updatePPR(int nppr);
 	
 public:
-  NVBDirView( QWidget * parent = 0 );
-  virtual ~NVBDirView();
+	NVBDirView( QWidget * parent = 0 );
+	virtual ~NVBDirView();
 
-  virtual QModelIndex indexAt ( const QPoint & point ) const;
-  virtual void scrollTo ( const QModelIndex & index, ScrollHint hint = EnsureVisible );
-  virtual QRect visualRect ( const QModelIndex & index ) const;
+	virtual QModelIndex indexAt ( const QPoint & point ) const;
+	virtual void scrollTo ( const QModelIndex & index, ScrollHint hint = EnsureVisible );
+	virtual QRect visualRect ( const QModelIndex & index ) const;
 
-  void setGridSize(QSize s);
+	void setGridSize(QSize s);
 
-  virtual void setModel(QAbstractItemModel * m);
+	virtual void setModel(QAbstractItemModel * m);
 
 protected:
 
-  virtual void paintEvent(QPaintEvent *e);
-  virtual void resizeEvent ( QResizeEvent * event );
+	virtual void paintEvent(QPaintEvent *e);
+	virtual void resizeEvent ( QResizeEvent * event );
 	virtual void keyPressEvent ( QKeyEvent * event );
 
-  virtual int horizontalOffset () const { return 0; } // Always wrapped
-  virtual inline int verticalOffset () const { return voffset; }
-  virtual bool isIndexHidden(const QModelIndex & /*index*/) const { return false; }
-  virtual QModelIndex moveCursor ( CursorAction cursorAction, Qt::KeyboardModifiers modifiers );
-  virtual void setSelection ( const QRect & rect, QItemSelectionModel::SelectionFlags flags );
-  virtual QRegion visualRegionForSelection ( const QItemSelection & selection ) const;
-  virtual void scrollContentsBy(int dx, int dy);
-
+	virtual int horizontalOffset () const { return 0; } // Always wrapped
+	virtual inline int verticalOffset () const { return voffset; }
+	virtual bool isIndexHidden(const QModelIndex & /*index*/) const { return false; }
+	virtual QModelIndex moveCursor ( CursorAction cursorAction, Qt::KeyboardModifiers modifiers );
+	virtual void setSelection ( const QRect & rect, QItemSelectionModel::SelectionFlags flags );
+	virtual QRegion visualRegionForSelection ( const QItemSelection & selection ) const;
+	virtual void scrollContentsBy(int dx, int dy);
+	
+	virtual QStyleOptionViewItem viewOptions() const;
 private:
 
-  QRect visualRect (int index) const;
+	QRect visualRect (int index) const;
 //   int fileVOffset(int index) const;
 /// Returns height (in pixels) of the file at \a index. Height is counted from header to bottom row of items (without midMargin())
-  int fileHeight(int index) const;
+	int fileHeight(int index) const;
 /// Distance in pixels between \a index1 and \a index2
-  int fileDistance(int index1, int index2) const;
+	int fileDistance(int index1, int index2) const;
 
 /// Draws the header - a horizontal line with filename in the middle
-  void drawHeader(int index, int y, QPainter * painter) const;
+	void drawHeader(int index, int y, QPainter * painter) const;
 /// Draws all visible items of file at \a index
-  void drawItems(int index, int y, QPainter* painter) const;
+	void drawItems(int index, int y, QPainter* painter) const;
 
 /// Draws all visible items in grid
 	void gridPaintEvent(QPaintEvent * e);
@@ -119,7 +128,7 @@ private:
 	inline int viewportHeight() const { return viewport()->height() - 2*midMargin(); }
 
 private slots:
-	void updateScrollBars();
+	void updateBottom();
 	void invalidateCache();
 	virtual void	rowsAboutToBeRemoved ( const QModelIndex & parent, int start, int end );
 	virtual void	rowsRemoved ( const QModelIndex & parent, int start, int end );

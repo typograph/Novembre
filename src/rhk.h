@@ -80,8 +80,7 @@ struct  TRHKColorTransform{
   float y_start;
   float y_stop;
   qint32 mapping_mode;
-  // FIXME how big is RHK's bool?
-  bool invert;  
+  quint32 invert; // bool according to spec - 4 bytes long  
 };
 
 /*TCOLORINFO*/

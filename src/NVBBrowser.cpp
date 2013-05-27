@@ -68,6 +68,14 @@
 
 #include <math.h>
 
+#ifndef log2
+double log2( double n )
+{
+    // log(n)/log(2) is log2.
+    return log(n)/log(2);
+}
+#endif
+
 #include "../icons/browser.xpm"
 #include "NVBSettings.h"
 
