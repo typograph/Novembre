@@ -1,23 +1,21 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov                                *
- *   Timofey.Balashov@pi.uka.de                                            *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- *                                                                         *
- ***************************************************************************/
+//
+// Copyright 2006 - 2013 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 
 #ifndef NVB_H
 #define NVB_H
@@ -41,31 +39,31 @@
 #include "NVBCoreApplication.h"
 
 class NVBApplication : public NVBCoreApplication {
-Q_OBJECT
-private:
-  QString confile;
+		Q_OBJECT
+	private:
+		QString confile;
 
-	QStringList filesSupplied;
-  QUdpSocket msgSocket;
-  NVBMain * mainWindow;
+		QStringList filesSupplied;
+		QUdpSocket msgSocket;
+		NVBMain * mainWindow;
 
-  void parseArguments();
-	
-	QSettings * conf;
+		void parseArguments();
 
-	bool socketBusy;
-	bool firstrun;
+		QSettings * conf;
 
-public:
-  NVBApplication ( int & argc, char ** argv );
-  virtual ~NVBApplication();
+		bool socketBusy;
+		bool firstrun;
 
-	bool otherInstanceIsRunning();
-	void passParamsToOtherInstance();
-	void createFactories();
+	public:
+		NVBApplication ( int & argc, char ** argv );
+		virtual ~NVBApplication();
 
-	void setMainWindow(NVBMain * widget);
-  void openFileFrocketData();
-};
+		bool otherInstanceIsRunning();
+		void passParamsToOtherInstance();
+		void createFactories();
+
+		void setMainWindow(NVBMain * widget);
+		void openFileFrocketData();
+	};
 
 #endif

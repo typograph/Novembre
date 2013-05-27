@@ -1,22 +1,21 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov   *
- *   Timofey.Balashov@pi.uka.de   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+//
+// Copyright 2006 - 2013 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 
 #ifndef NANONIS_H
 #define NANONIS_H
@@ -35,36 +34,36 @@
 //   NVBVariant v;
 // };
 
-typedef QHash<QString,QString> NanonisHeader;
+typedef QHash<QString, QString> NanonisHeader;
 
 class NanonisFileGenerator: public QObject, public NVBFileGenerator {
-Q_OBJECT
-Q_INTERFACES(NVBFileGenerator)
+		Q_OBJECT
+		Q_INTERFACES(NVBFileGenerator)
 
-private:
-	void loadChannelsFromSXM(QString filename, NVBFile * sources) const;
-	void loadChannelsFromDAT(QString filename, NVBFile * sources) const;
-	void loadChannelsFrom3DS(QString filename, NVBFile * sources) const;
-		
-public:
-  NanonisFileGenerator():NVBFileGenerator() {;}
-  virtual ~NanonisFileGenerator() {;}
+	private:
+		void loadChannelsFromSXM(QString filename, NVBFile * sources) const;
+		void loadChannelsFromDAT(QString filename, NVBFile * sources) const;
+		void loadChannelsFrom3DS(QString filename, NVBFile * sources) const;
 
-	virtual inline QString moduleName() const { return QString("Nanonis SXM files");}
-	virtual inline QString moduleDesc() const { return QString("Nanonis STM file format"); }
+	public:
+		NanonisFileGenerator(): NVBFileGenerator() {;}
+		virtual ~NanonisFileGenerator() {;}
 
-	virtual QStringList extFilters() const {
+		virtual inline QString moduleName() const { return QString("Nanonis SXM files");}
+		virtual inline QString moduleDesc() const { return QString("Nanonis STM file format"); }
+
+		virtual QStringList extFilters() const {
 			static QStringList exts = QStringList() << "*.sxm" << "*.dat" << "*.3ds";
 			return exts;
 			}
 
-	QStringList availableInfoFields() const;
+		QStringList availableInfoFields() const;
 
-	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
-	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
+		virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+		virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
-	virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
+		virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
 
-};
+	};
 
 #endif

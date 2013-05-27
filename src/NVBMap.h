@@ -1,3 +1,22 @@
+//
+// Copyright 2010 - 2013 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre utility library.
+//
+// Novembre utility library is free software: you can redistribute it
+// and/or modify it  under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 #ifndef NVBMAP_H
 #define NVBMAP_H
 
@@ -17,21 +36,21 @@ class NVBAxisMap {
 		NVBAxisMap() {;}
 		virtual ~NVBAxisMap() {;}
 
-	/// Defines the way indexes are mapped into values.
-	enum MapType {
-		General = 0, /// Arbitrary mapping, any distribution.
-		Linear = 1,  /// Linear mapping, the resulting points are linearly distributed
-		Linear2D = 2 /// Bilinear mapping, the resulting points are on a regular grid (not necessarily rectangular).
-								/// A map of this type can be cast into QTransform.
+		/// Defines the way indexes are mapped into values.
+		enum MapType {
+		  General = 0, /// Arbitrary mapping, any distribution.
+		  Linear = 1,  /// Linear mapping, the resulting points are linearly distributed
+		  Linear2D = 2 /// Bilinear mapping, the resulting points are on a regular grid (not necessarily rectangular).
+		             /// A map of this type can be cast into QTransform.
 		};
 
-	/// Defines the type of output values.
-	enum ValueType {
-		Template = 0, /// Underfined
-		Physical = 1, /// NVBPhysValue
-		Point = 2,    /// NVBPhysPoint
-		Color = 3,    /// QColor
-		Label = 4     /// QString
+		/// Defines the type of output values.
+		enum ValueType {
+		  Template = 0, /// Underfined
+		  Physical = 1, /// NVBPhysValue
+		  Point = 2,    /// NVBPhysPoint
+		  Color = 3,    /// QColor
+		  Label = 4     /// QString
 		};
 
 		virtual int dimension() const = 0;
@@ -41,17 +60,17 @@ class NVBAxisMap {
 		virtual NVBAxisMap::ValueType mappingType() const = 0;
 
 		virtual NVBVariant value(QVector<axissize_t> indexes) = 0;
-		
+
 		virtual NVBAxisMap * copy() = 0;
-};
+	};
 
 class NVBColorMap;
 
 class NVBColorInstance {
 	protected:
 		const NVBColorMap * source;
-		double zmin,zmax;
-		NVBValueScaler<double,double> zscaler;
+		double zmin, zmax;
+		NVBValueScaler<double, double> zscaler;
 	public:
 		NVBColorInstance(const NVBColorMap * map);
 		~NVBColorInstance() {;}
@@ -63,32 +82,32 @@ class NVBColorInstance {
 		void autoscale(const double * zs, axissize_t size);
 		void autoscale(const double * zs, QSize d_wxh);
 
-	/**
-		\fn void setLimits(double zmin, double zmax)
+		/**
+			\fn void setLimits(double zmin, double zmax)
 
-		The mapping limits will be changed to \a zmin & \a zmax
-		\a zmin will now map to 0 and \a zmax to 1.
+			The mapping limits will be changed to \a zmin & \a zmax
+			\a zmin will now map to 0 and \a zmax to 1.
 
-		*/
+			*/
 		void setLimits(double zmin, double zmax);
 
-	/**
-		\fn void overrideLimits(double zmin, double zmax)
+		/**
+			\fn void overrideLimits(double zmin, double zmax)
 
-		Tricks the model to make it think the limits are \a zmin & \a zmax
-		This is trickier than setLimits. Example:
-		We map -1 to 0 and 1 to 1. Do overrideLimits(0,1).
-		The mapping stays the same. Now setLimits(-1,1).
-		What maps to 0 now? Answer: -3!
-		This could have been reached with setLimits(-3,1)
+			Tricks the model to make it think the limits are \a zmin & \a zmax
+			This is trickier than setLimits. Example:
+			We map -1 to 0 and 1 to 1. Do overrideLimits(0,1).
+			The mapping stays the same. Now setLimits(-1,1).
+			What maps to 0 now? Answer: -3!
+			This could have been reached with setLimits(-3,1)
 
-		How to use that? No idea.
-		*/
+			How to use that? No idea.
+			*/
 		void overrideLimits(double zmin, double zmax);
 
 		QPixmap colorize(const double * zs, QSize d_wxh, QSize i_wxh = QSize()) const;
 		QPixmap colorizeFlipped(const double * zs, bool flipX, bool flipY, QSize d_wxh, QSize i_wxh = QSize()) const;
-};
+	};
 
 /**
 	\class NVBColorInstance
@@ -99,7 +118,7 @@ class NVBColorInstance {
 */
 
 class NVBDataColorInstance : public QObject, public NVBColorInstance {
-	Q_OBJECT
+		Q_OBJECT
 	private:
 		const NVBDataSet * data;
 		QVector<axisindex_t> sliceAxes;
@@ -114,11 +133,11 @@ class NVBDataColorInstance : public QObject, public NVBColorInstance {
 		NVBDataColorInstance(const NVBDataColorInstance & other);
 		NVBDataColorInstance & operator=(const NVBDataColorInstance & other);
 		~NVBDataColorInstance();
-	/**
-		\fn void setImageAxes(axisindex_t x, axisindex_t y)
+		/**
+			\fn void setImageAxes(axisindex_t x, axisindex_t y)
 
-		Set two axis for converting data to images. \a x will be the horizontal axis and \a y will be vertical.
-		*/
+			Set two axis for converting data to images. \a x will be the horizontal axis and \a y will be vertical.
+			*/
 
 		void setImageAxes(QVector<axisindex_t> xy);
 		void setImageAxes(axisindex_t x, axisindex_t y);
@@ -129,12 +148,12 @@ class NVBDataColorInstance : public QObject, public NVBColorInstance {
 
 		static QPixmap colorize(NVBDataSet * dset, QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize());
 
-public slots:
+	public slots:
 		void setXAxis(axisindex_t x);
 		void setYAxis(axisindex_t y);
-		
+
 		void setRescaleOnDataChange(bool rescale = true) { rescaleOnDataChange = rescale; }
-};
+	};
 
 /**
 	\class NVBColorMap
@@ -152,10 +171,10 @@ class NVBColorMap {
 		virtual QRgb colorize(double z) const = 0;
 
 		NVBColorInstance * instantiate() const { return new NVBColorInstance(this); }
-		NVBDataColorInstance * instantiate(const NVBDataSet * data) const { return new NVBDataColorInstance(data,this); }
-		
+		NVBDataColorInstance * instantiate(const NVBDataSet * data) const { return new NVBDataColorInstance(data, this); }
+
 		virtual NVBColorMap * copy() const = 0;
-};
+	};
 
 Q_DECLARE_METATYPE(const NVBColorMap*)
 Q_DECLARE_METATYPE(NVBColorMap*)

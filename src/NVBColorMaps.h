@@ -1,14 +1,22 @@
 //
-// C++ Interface: NVBColoring
+// Copyright 2010 - 2013 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre utility library.
 //
+// Novembre utility library is free software: you can redistribute it
+// and/or modify it  under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2007
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//
+
 #ifndef NVBCOLORMAPS_H
 #define NVBCOLORMAPS_H
 
@@ -19,47 +27,47 @@
 /**
 	A color map, where the colors are on a spiral on the HSV wheel
 */
-class NVBHSVWheelColorMap : public NVBColorMap{
+class NVBHSVWheelColorMap : public NVBColorMap {
 	private:
-		NVBValueScaler<double,double> h,s,v;
+		NVBValueScaler<double, double> h, s, v;
 	public:
 		NVBHSVWheelColorMap(double h_min, double h_max, double s_min, double s_max, double v_min, double v_max, short turns = 0)
-			: h(NVBValueScaler<double,double>(0,1,h_min,h_max+turns))
-			, s(NVBValueScaler<double,double>(0,1,s_min,s_max))
-			, v(NVBValueScaler<double,double>(0,1,v_min,v_max))
+			: h(NVBValueScaler<double, double>(0, 1, h_min, h_max + turns))
+			, s(NVBValueScaler<double, double>(0, 1, s_min, s_max))
+			, v(NVBValueScaler<double, double>(0, 1, v_min, v_max))
 			{;}
-			
+
 		virtual ~NVBHSVWheelColorMap() {;}
 
 		virtual QRgb colorize(double z) const;
-		
-		virtual NVBHSVWheelColorMap * copy() const { return new NVBHSVWheelColorMap(h.scale(0),h.scale(1),s.scale(0),s.scale(1),v.scale(0),v.scale(1)); }
-};
+
+		virtual NVBHSVWheelColorMap * copy() const { return new NVBHSVWheelColorMap(h.scale(0), h.scale(1), s.scale(0), s.scale(1), v.scale(0), v.scale(1)); }
+	};
 
 /**
 This class makes a simple gray gradient from 0 to 1
 */
-class NVBGrayRampColorMap : public NVBColorMap{
+class NVBGrayRampColorMap : public NVBColorMap {
 	public:
 		NVBGrayRampColorMap()	{;}
-			
+
 		virtual ~NVBGrayRampColorMap() {;}
-		
+
 		virtual QRgb colorize(double z) const;
 
 		virtual NVBGrayRampColorMap * copy() const { return new NVBGrayRampColorMap(); }
 
-};
+	};
 
 /**
 This class makes a gray gradient with multiple steps
 */
-class NVBGrayStepColorMap : public NVBColorMap{
+class NVBGrayStepColorMap : public NVBColorMap {
 	private:
 		QList<double> steps;
-		QList< NVBValueScaler<double,double> > scales;
+		QList< NVBValueScaler<double, double> > scales;
 
-		NVBGrayStepColorMap(const QList<double> & xs, const QList< NVBValueScaler<double,double> > & scalers)
+		NVBGrayStepColorMap(const QList<double> & xs, const QList< NVBValueScaler<double, double> > & scalers)
 			: steps(xs)
 			, scales(scalers)
 			{;}
@@ -68,14 +76,13 @@ class NVBGrayStepColorMap : public NVBColorMap{
 		NVBGrayStepColorMap(double start, double end)	{
 			steps.append(0);
 			steps.append(1);
-			scales.append(NVBValueScaler<double,double>(0,1,start,end));
+			scales.append(NVBValueScaler<double, double>(0, 1, start, end));
 			}
 
 		NVBGrayStepColorMap(const QList<double> & xs, const QList<double> & values)
-			: steps(xs)
-			{
-			for (int i=1; i<values.count(); i++)
-				scales.append(NVBValueScaler<double,double>(xs.at(i-1),xs.at(i),values.at(i-1),values.at(i)));
+			: steps(xs) {
+			for (int i = 1; i < values.count(); i++)
+				scales.append(NVBValueScaler<double, double>(xs.at(i - 1), xs.at(i), values.at(i - 1), values.at(i)));
 			}
 
 		virtual ~NVBGrayStepColorMap() {;}
@@ -84,16 +91,16 @@ class NVBGrayStepColorMap : public NVBColorMap{
 
 		virtual QRgb colorize(double z) const;
 
-		virtual NVBGrayStepColorMap * copy() const { return new NVBGrayStepColorMap(steps,scales); }
+		virtual NVBGrayStepColorMap * copy() const { return new NVBGrayStepColorMap(steps, scales); }
 
-};
+	};
 
 /**
 This class makes a simple gradient from ARGB_start to ARGB_end
 */
 class NVBRGBRampColorMap : public NVBColorMap {
 	private:
-		NVBValueScaler<double,quint8> r,g,b;
+		NVBValueScaler<double, quint8> r, g, b;
 	public:
 		NVBRGBRampColorMap(double r_min, double r_max, double g_min, double g_max, double b_min, double b_max);
 		NVBRGBRampColorMap(quint32 rgb_min, quint32 rgb_max);
@@ -101,11 +108,11 @@ class NVBRGBRampColorMap : public NVBColorMap {
 
 		virtual QRgb colorize(double z) const;
 
-		virtual NVBRGBRampColorMap * copy() const { return new NVBRGBRampColorMap(colorize(0),colorize(1));}
+		virtual NVBRGBRampColorMap * copy() const { return new NVBRGBRampColorMap(colorize(0), colorize(1));}
 
 		void setStart(quint32 start);
 		void setEnd(quint32 end);
-};
+	};
 
 /**
 	This class mixes three channels into rgb
@@ -117,21 +124,22 @@ class NVBRGBMixColorMap : public NVBColorMap {
 		NVBRGBMixColorMap(NVBColorMap *red, NVBColorMap *green, NVBColorMap *blue)
 			: r(red)
 			, g(green)
-			, b(blue)
-		{
+			, b(blue) {
 			if (!r) {
 				NVBOutputError("No red");
 				r = new NVBGrayRampColorMap();
-			}
+				}
+
 			if (!g) {
 				NVBOutputError("No green");
 				g = new NVBGrayRampColorMap();
-			}
+				}
+
 			if (!b) {
 				NVBOutputError("No blue");
 				b = new NVBGrayRampColorMap();
+				}
 			}
-		}
 		virtual ~NVBRGBMixColorMap() {
 			delete r;
 			delete g;
@@ -140,9 +148,9 @@ class NVBRGBMixColorMap : public NVBColorMap {
 
 		virtual QRgb colorize(double z) const {
 			return (r->colorize(z) & 0xFF0000) + (g->colorize(z) & 0xFF00) + (b->colorize(z) & 0xFF) + 0xFF000000;
-		}
+			}
 
-		virtual NVBRGBMixColorMap * copy() const { return new NVBRGBMixColorMap(r->copy(),g->copy(),b->copy()); }
+		virtual NVBRGBMixColorMap * copy() const { return new NVBRGBMixColorMap(r->copy(), g->copy(), b->copy()); }
 
 		NVBColorMap * red() { return r; }
 		const NVBColorMap * red() const { return r; }
@@ -150,21 +158,21 @@ class NVBRGBMixColorMap : public NVBColorMap {
 		const NVBColorMap * green() const { return g; }
 		NVBColorMap * blue() { return b; }
 		const NVBColorMap * blue() const { return b; }
-};
+	};
 
 /**
 	This class always returns the same colour
 	*/
 class NVBConstColorMap : public NVBColorMap {
-private:
-	QRgb constcolor;
-public:
-	NVBConstColorMap(QRgb color):constcolor(color)	{;}
-	virtual ~NVBConstColorMap() {;}
+	private:
+		QRgb constcolor;
+	public:
+		NVBConstColorMap(QRgb color): constcolor(color)	{;}
+		virtual ~NVBConstColorMap() {;}
 
-	virtual QRgb colorize(double) const { return constcolor; }
-	virtual NVBConstColorMap * copy() const { return new NVBConstColorMap(constcolor); }
-};
+		virtual QRgb colorize(double) const { return constcolor; }
+		virtual NVBConstColorMap * copy() const { return new NVBConstColorMap(constcolor); }
+	};
 
 ///**
 //  This class uses a look-up table
