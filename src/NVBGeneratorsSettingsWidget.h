@@ -1,3 +1,22 @@
+//
+// Copyright 2012 - 2013 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 #ifndef NVBGENERATORSSETTINGSWIDGET_H
 #define NVBGENERATORSSETTINGSWIDGET_H
 
@@ -13,28 +32,27 @@ class NVBFileFactory;
  *
  */
 
-class NVBGeneratorsSettingsWidget : public NVBSettingsWidget
-{
-private:
-	QListView * pluginList;
+class NVBGeneratorsSettingsWidget : public NVBSettingsWidget {
+	private:
+		QListView * pluginList;
 
-	NVBFileFactory * ffactory;
+		NVBFileFactory * ffactory;
 
-	NVBGeneratorsSettingsWidget * pluginWidget;
+		NVBGeneratorsSettingsWidget * pluginWidget;
 
-private slots:
-	void selectGenerator();
+	private slots:
+		void selectGenerator();
 
-public:
-	NVBGeneratorsSettingsWidget();
-	virtual ~NVBGeneratorsSettingsWidget() {;}
+	public:
+		NVBGeneratorsSettingsWidget();
+		virtual ~NVBGeneratorsSettingsWidget() {;}
 
-	/// Copy widget values from an existing QSettings
-	virtual void init(QSettings * settings);
-	/// Write out all changes into QSettings
-	virtual bool write(QSettings * settings);
+		/// Copy widget values from an existing QSettings
+		virtual void init(QSettings * settings);
+		/// Write out all changes into QSettings
+		virtual bool write(QSettings * settings);
 
 
-};
+	};
 
 #endif // NVBGENERATORSSETTINGSWIDGET_H

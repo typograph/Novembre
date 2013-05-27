@@ -1,3 +1,22 @@
+//
+// Copyright 2010 - 2013 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre utility library.
+//
+// Novembre utility library is free software: you can redistribute it
+// and/or modify it  under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 #ifndef NVBDATACORE_H
 #define NVBDATACORE_H
 
@@ -51,9 +70,9 @@ double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, Q
 
 /// Transform data using a transform function
 double * transformNArray(const double * data, axisindex_t n, const axissize_t * sizes,
-																							axisindex_t m, const axisindex_t * sliceaxes, const axisindex_t * targetaxes,
-																							axisindex_t p, const axissize_t * newsizes,
-						void (*transform)(const double *, axisindex_t, const axissize_t *, axisindex_t, const axissize_t *, double * ) );
+                         axisindex_t m, const axisindex_t * sliceaxes, const axisindex_t * targetaxes,
+                         axisindex_t p, const axissize_t * newsizes,
+                         void (*transform)(const double *, axisindex_t, const axissize_t *, axisindex_t, const axissize_t *, double * ) );
 
 //
 //----------------
@@ -64,16 +83,17 @@ double * transformNArray(const double * data, axisindex_t n, const axissize_t * 
 axissize_t prod(axisindex_t n, const axissize_t * numbers);
 axissize_t subprod(const axissize_t * numbers, axisindex_t m, const axisindex_t * ixs);
 
-inline axissize_t prod(QVector<axissize_t> numbers) { return prod(numbers.count(),numbers.constData()); }
+inline axissize_t prod(QVector<axissize_t> numbers) { return prod(numbers.count(), numbers.constData()); }
 
 template< typename Container >
 void uniquify( Container & list ) {
 	qSort(list);
-	for(int i = 1; i<list.count(); i++) {
-		if (list.at(i) == list.at(i-1))
+
+	for(int i = 1; i < list.count(); i++) {
+		if (list.at(i) == list.at(i - 1))
 			list.removeAt(--i);
 		}
-}
+	}
 
 QVector<axisindex_t> targetaxes(axisindex_t n, QVector<axisindex_t> sliceaxes);
 QVector<axissize_t> subvector(QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes);
@@ -108,15 +128,15 @@ struct NVBDataSlice {
 
 	QColor associatedColor() const;
 	QVector<axissize_t> parentIndexes() const;
-};
+	};
 
 class NVBSliceCounter {
-	const NVBDataSet * dset;
-	bool is_running;
-	int step;
-	NVBDataSlice slice;
+		const NVBDataSet * dset;
+		bool is_running;
+		int step;
+		NVBDataSlice slice;
 
-	Q_DISABLE_COPY(NVBSliceCounter);
+		Q_DISABLE_COPY(NVBSliceCounter);
 
 	public:
 		NVBSliceCounter(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept = QVector<axisindex_t>(), int maxCount = -1);
@@ -124,15 +144,15 @@ class NVBSliceCounter {
 		~NVBSliceCounter();
 
 		static bool stepIndexVector(QVector<axissize_t> & ixs, const QVector<axissize_t> & sizes, int step) ;
-		
+
 		void stepIndexVector();
 		inline bool counting() { return is_running; }
 
 		inline const NVBDataSlice & getSlice() const { return slice; }
-};
+	};
 
 class NVBSliceSingle {
-	NVBDataSlice * slice;
+		NVBDataSlice * slice;
 
 	public:
 		NVBSliceSingle(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept = QVector<axisindex_t>()) ;
@@ -142,7 +162,7 @@ class NVBSliceSingle {
 		inline bool hasSlice() { return slice != 0; }
 		inline void killSlice() {if (slice) { delete(slice); slice = 0;} }
 		inline const NVBDataSlice & getSlice() const { return *slice; }
-};
+	};
 
 /**
  *
@@ -175,7 +195,7 @@ class NVBSliceSingle {
  */
 #define forSingleSlice(dataset,sliced,kept) \
 	for(NVBSliceSingle _counter(dataset,sliced,kept); _counter.hasSlice(); _counter.killSlice())
-		
+
 #define SLICE _counter.getSlice()
 
 #endif

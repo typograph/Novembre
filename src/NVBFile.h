@@ -1,14 +1,22 @@
 //
-// C++ Interface: NVBFile
+// Copyright 2006 - 2013 Timofey <typograph@elec.ru>
 //
-// Description: 
+// This file is part of Novembre utility library.
 //
+// Novembre utility library is free software: you can redistribute it
+// and/or modify it  under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// Copyright: See COPYING file that comes with this distribution
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//
+
 #ifndef NVBFILE_H
 #define NVBFILE_H
 
@@ -21,8 +29,8 @@
 	It contains a number of NVBDataSources and global comments.
 	*/
 class NVBFile : public QObject, public QList<NVBDataSource*> {
-	Q_OBJECT
-	friend class NVBFileGenerator;
+		Q_OBJECT
+		friend class NVBFileGenerator;
 
 	private:
 		NVBAssociatedFilesInfo files;
@@ -30,7 +38,7 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 		NVBDataComments comments;
 
 		// Private constructors - nobody should use them
-    NVBFile();
+		NVBFile();
 		explicit NVBFile(const QList<NVBDataSource*> & list);
 		NVBFile(const NVBFile & other);
 		NVBFile & operator=(const NVBFile & other);
@@ -44,7 +52,7 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 		/// Returns info about the original files
 		NVBAssociatedFilesInfo sources() const { return files; }
 
-		//! \Returns all file-global comments 
+		//! \Returns all file-global comments
 		inline NVBDataComments getAllComments() const { return comments; }
 		//! Return a file-global comment for \a key
 		inline NVBVariant getComment(const QString & key) const { return comments.value(key); }
@@ -53,15 +61,15 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 
 		//! Checks for global comment duplicates, \sa NVBConstructableDataSource::filterAddComments
 		void filterAddComments(NVBDataComments & comments);
-		
+
 		inline QString name() const { return files.name(); }
 
 //		/// Adds a datasource to the end of file.
 //		virtual void addSource(NVBDataSource * data);
 //		/// Adds data to the end of file.
 //		virtual void addSources(QList<NVBDataSource *> pages);
-	//  /// Sets an icon for the last page
-	//  virtual void setVisualizer(NVBVizUnion visualizer);
+		//  /// Sets an icon for the last page
+		//  virtual void setVisualizer(NVBVizUnion visualizer);
 
 		bool inUse() { return refCount != 0; }
 
@@ -73,6 +81,6 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 	signals:
 		/// This signal is emitted when the file is not in use any more (refcount == 0).
 		void free(NVBFile *);
-};
+	};
 
 #endif

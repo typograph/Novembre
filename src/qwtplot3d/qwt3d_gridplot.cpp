@@ -10,520 +10,505 @@ using namespace Qwt3D;
 
 
 
-void SurfacePlot::createDataG()
-{
-  createFloorData();
+void SurfacePlot::createDataG() {
+	createFloorData();
 
-  if (plotStyle() == NOPLOT)
-    return;
+	if (plotStyle() == NOPLOT)
+		return;
 
-  int i, j;
-  RGBA col;
-  int step = resolution();
+	int i, j;
+	RGBA col;
+	int step = resolution();
 
 
 #ifdef WITH_GL2PS
-  setDeviceLineWidth(meshLineWidth());
+	setDeviceLineWidth(meshLineWidth());
 #endif
-  GLStateBewarer sb(GL_POLYGON_OFFSET_FILL,true);
+	GLStateBewarer sb(GL_POLYGON_OFFSET_FILL, true);
 #ifdef WITH_GL2PS
-  setDevicePolygonOffset(polygonOffset(),1.0);
+	setDevicePolygonOffset(polygonOffset(), 1.0);
 #endif
-  GLStateBewarer sb2(GL_LINE_SMOOTH, smoothDataMesh());
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GLStateBewarer sb2(GL_LINE_SMOOTH, smoothDataMesh());
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-  int lastcol =  actualDataG_->columns();
-  int lastrow =  actualDataG_->rows();
+	int lastcol =  actualDataG_->columns();
+	int lastrow =  actualDataG_->rows();
 
-  if (plotStyle() != WIREFRAME)
-  {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_QUADS);
+	if (plotStyle() != WIREFRAME) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_QUADS);
 
-    bool hl = (plotStyle() == HIDDENLINE);
-    if (hl)
-    {
-      col = backgroundRGBAColor();
-      glColor4d(col.r, col.g, col.b, col.a);
-    }
+		bool hl = (plotStyle() == HIDDENLINE);
 
-    for (i = 0; i < lastcol - step; i += step)
-    {
-      glBegin(GL_TRIANGLE_STRIP);
-        setColorFromVertexG(i, 0, hl);
-        glNormal3dv(actualDataG_->normals[i][0]);
-        glVertex3dv(actualDataG_->vertices[i][0]);
+		if (hl) {
+			col = backgroundRGBAColor();
+			glColor4d(col.r, col.g, col.b, col.a);
+			}
 
-        setColorFromVertexG(i+step, 0, hl);
-        glNormal3dv(actualDataG_->normals[i+step][0]);
-        glVertex3dv(actualDataG_->vertices[i+step][0]);
+		for (i = 0; i < lastcol - step; i += step) {
+			glBegin(GL_TRIANGLE_STRIP);
+			setColorFromVertexG(i, 0, hl);
+			glNormal3dv(actualDataG_->normals[i][0]);
+			glVertex3dv(actualDataG_->vertices[i][0]);
 
-        for (j = 0; j < lastrow - step; j += step)
-        {
-          setColorFromVertexG(i,j+step, hl);
-          glNormal3dv(actualDataG_->normals[i][j+step]);
-          glVertex3dv(actualDataG_->vertices[i][j+step]);
+			setColorFromVertexG(i + step, 0, hl);
+			glNormal3dv(actualDataG_->normals[i + step][0]);
+			glVertex3dv(actualDataG_->vertices[i + step][0]);
 
-          setColorFromVertexG(i+step, j+step, hl);
-          glNormal3dv(actualDataG_->normals[i+step][j+step]);
-          glVertex3dv(actualDataG_->vertices[i+step][j+step]);
-        }
-      glEnd();
-    }
-  }
+			for (j = 0; j < lastrow - step; j += step) {
+				setColorFromVertexG(i, j + step, hl);
+				glNormal3dv(actualDataG_->normals[i][j + step]);
+				glVertex3dv(actualDataG_->vertices[i][j + step]);
 
-  if (plotStyle() == FILLEDMESH || plotStyle() == WIREFRAME || plotStyle() == HIDDENLINE)
-  {
-    glColor4d(meshColor().r, meshColor().g, meshColor().b, meshColor().a);
+				setColorFromVertexG(i + step, j + step, hl);
+				glNormal3dv(actualDataG_->normals[i + step][j + step]);
+				glVertex3dv(actualDataG_->vertices[i + step][j + step]);
+				}
 
-    if (step < actualDataG_->columns() && step < actualDataG_->rows())
-    {
-      glBegin(GL_LINE_LOOP);
-        for (i = 0; i < actualDataG_->columns() - step; i += step)
-          glVertex3dv(actualDataG_->vertices[i][0]);
-        for (j = 0; j < actualDataG_->rows() - step; j += step)
-          glVertex3dv(actualDataG_->vertices[i][j]);
-        for (; i >= 0; i -= step)
-          glVertex3dv(actualDataG_->vertices[i][j]);
-        for (; j >= 0; j -= step)
-          glVertex3dv(actualDataG_->vertices[0][j]);
-      glEnd();
-    }
+			glEnd();
+			}
+		}
 
-    // weaving
-    for (i = step; i < actualDataG_->columns() - step; i += step)
-    {
-      glBegin(GL_LINE_STRIP);
-        for (j = 0; j < actualDataG_->rows(); j += step)
-          glVertex3dv(actualDataG_->vertices[i][j]);
-      glEnd();
-    }
-    for (j = step; j < actualDataG_->rows() - step; j += step)
-    {
-      glBegin(GL_LINE_STRIP);
-        for (i = 0; i < actualDataG_->columns(); i += step)
-          glVertex3dv(actualDataG_->vertices[i][j]);
-      glEnd();
-    }
-  }
-}
+	if (plotStyle() == FILLEDMESH || plotStyle() == WIREFRAME || plotStyle() == HIDDENLINE) {
+		glColor4d(meshColor().r, meshColor().g, meshColor().b, meshColor().a);
 
-void SurfacePlot::setColorFromVertexG(int ix, int iy, bool skip)
-{
-  if (skip)
-    return;
+		if (step < actualDataG_->columns() && step < actualDataG_->rows()) {
+			glBegin(GL_LINE_LOOP);
 
-  RGBA col = (*datacolor_p)(
-    actualDataG_->vertices[ix][iy][0],
-    actualDataG_->vertices[ix][iy][1],
-    actualDataG_->vertices[ix][iy][2]);
+			for (i = 0; i < actualDataG_->columns() - step; i += step)
+				glVertex3dv(actualDataG_->vertices[i][0]);
 
-  glColor4d(col.r, col.g, col.b, col.a);
-}
+			for (j = 0; j < actualDataG_->rows() - step; j += step)
+				glVertex3dv(actualDataG_->vertices[i][j]);
 
-void SurfacePlot::readIn(GridData& gdata, Triple** data, unsigned int columns, unsigned int rows)
-{
-  gdata.setSize(columns,rows);
+			for (; i >= 0; i -= step)
+				glVertex3dv(actualDataG_->vertices[i][j]);
 
-  ParallelEpiped range(Triple(DBL_MAX,DBL_MAX,DBL_MAX),Triple(-DBL_MAX,-DBL_MAX,-DBL_MAX));
+			for (; j >= 0; j -= step)
+				glVertex3dv(actualDataG_->vertices[0][j]);
 
-  /* fill out the vertex array for the mesh. */
-  for (unsigned i = 0; i != columns; ++i)
-  {
-    for (unsigned j = 0; j != rows; ++j)
-    {
-      gdata.vertices[i][j][0] = data[i][j].x;
-      gdata.vertices[i][j][1] = data[i][j].y;
-      gdata.vertices[i][j][2] = data[i][j].z;
+			glEnd();
+			}
 
-      if (data[i][j].x > range.maxVertex.x)
-        range.maxVertex.x = data[i][j].x;
-      if (data[i][j].y > range.maxVertex.y)
-        range.maxVertex.y = data[i][j].y;
-      if (data[i][j].z > range.maxVertex.z)
-        range.maxVertex.z = data[i][j].z;
-      if (data[i][j].x < range.minVertex.x)
-        range.minVertex.x = data[i][j].x;
-      if (data[i][j].y < range.minVertex.y)
-        range.minVertex.y = data[i][j].y;
-      if (data[i][j].z < range.minVertex.z)
-        range.minVertex.z = data[i][j].z;
-     }
-  }
-  gdata.setHull(range);
-}
+		// weaving
+		for (i = step; i < actualDataG_->columns() - step; i += step) {
+			glBegin(GL_LINE_STRIP);
+
+			for (j = 0; j < actualDataG_->rows(); j += step)
+				glVertex3dv(actualDataG_->vertices[i][j]);
+
+			glEnd();
+			}
+
+		for (j = step; j < actualDataG_->rows() - step; j += step) {
+			glBegin(GL_LINE_STRIP);
+
+			for (i = 0; i < actualDataG_->columns(); i += step)
+				glVertex3dv(actualDataG_->vertices[i][j]);
+
+			glEnd();
+			}
+		}
+	}
+
+void SurfacePlot::setColorFromVertexG(int ix, int iy, bool skip) {
+	if (skip)
+		return;
+
+	RGBA col = (*datacolor_p)(
+	             actualDataG_->vertices[ix][iy][0],
+	             actualDataG_->vertices[ix][iy][1],
+	             actualDataG_->vertices[ix][iy][2]);
+
+	glColor4d(col.r, col.g, col.b, col.a);
+	}
+
+void SurfacePlot::readIn(GridData& gdata, Triple** data, unsigned int columns, unsigned int rows) {
+	gdata.setSize(columns, rows);
+
+	ParallelEpiped range(Triple(DBL_MAX, DBL_MAX, DBL_MAX), Triple(-DBL_MAX, -DBL_MAX, -DBL_MAX));
+
+	/* fill out the vertex array for the mesh. */
+	for (unsigned i = 0; i != columns; ++i) {
+		for (unsigned j = 0; j != rows; ++j) {
+			gdata.vertices[i][j][0] = data[i][j].x;
+			gdata.vertices[i][j][1] = data[i][j].y;
+			gdata.vertices[i][j][2] = data[i][j].z;
+
+			if (data[i][j].x > range.maxVertex.x)
+				range.maxVertex.x = data[i][j].x;
+
+			if (data[i][j].y > range.maxVertex.y)
+				range.maxVertex.y = data[i][j].y;
+
+			if (data[i][j].z > range.maxVertex.z)
+				range.maxVertex.z = data[i][j].z;
+
+			if (data[i][j].x < range.minVertex.x)
+				range.minVertex.x = data[i][j].x;
+
+			if (data[i][j].y < range.minVertex.y)
+				range.minVertex.y = data[i][j].y;
+
+			if (data[i][j].z < range.minVertex.z)
+				range.minVertex.z = data[i][j].z;
+			}
+		}
+
+	gdata.setHull(range);
+	}
 
 
 void SurfacePlot::readIn(GridData& gdata, const double* data, unsigned int columns, unsigned int rows
-            , double minx, double maxx, double miny, double maxy)
-{
-  gdata.setPeriodic(false,false);
-  gdata.setSize(columns,rows);
+                         , double minx, double maxx, double miny, double maxy) {
+	gdata.setPeriodic(false, false);
+	gdata.setSize(columns, rows);
 
-  double dx = (maxx - minx) / (gdata.columns() - 1);
-  double dy = (maxy - miny) / (gdata.rows() - 1);
+	double dx = (maxx - minx) / (gdata.columns() - 1);
+	double dy = (maxy - miny) / (gdata.rows() - 1);
 
-  double tmin = DBL_MAX;
-  double tmax = -DBL_MAX;
+	double tmin = DBL_MAX;
+	double tmax = -DBL_MAX;
 
-  /* fill out the vertex array for the mesh. */
-  for (unsigned i = 0; i != columns; ++i)
-  {
-    for (unsigned j = 0; j != rows; ++j)
-    {
-      double data_pt = data[i*rows + j];
+	/* fill out the vertex array for the mesh. */
+	for (unsigned i = 0; i != columns; ++i) {
+		for (unsigned j = 0; j != rows; ++j) {
+			double data_pt = data[i * rows + j];
 
-      gdata.vertices[i][j][0] = minx + i*dx;
-      gdata.vertices[i][j][1] = miny + j*dy;
-      gdata.vertices[i][j][2] = data_pt;
+			gdata.vertices[i][j][0] = minx + i * dx;
+			gdata.vertices[i][j][1] = miny + j * dy;
+			gdata.vertices[i][j][2] = data_pt;
 
-      if (data_pt > tmax)
-        tmax = data_pt;
-      if (data_pt < tmin)
-        tmin = data_pt;
-     }
-  }
-  ParallelEpiped hull =
-  ParallelEpiped(
-	                  Triple(
-					                  gdata.vertices[0][0][0],
-					                  gdata.vertices[0][0][1],
-					                  tmin
-				                  ),
-	                  Triple(
-					                  gdata.vertices[gdata.columns()-1][gdata.rows()-1][0],
-					                  gdata.vertices[gdata.columns()-1][gdata.rows()-1][1],
-					                  tmax
-				                  )
-                  );
+			if (data_pt > tmax)
+				tmax = data_pt;
 
-  gdata.setHull(hull);
-}
+			if (data_pt < tmin)
+				tmin = data_pt;
+			}
+		}
 
+	ParallelEpiped hull =
+	  ParallelEpiped(
+	    Triple(
+	      gdata.vertices[0][0][0],
+	      gdata.vertices[0][0][1],
+	      tmin
+	    ),
+	    Triple(
+	      gdata.vertices[gdata.columns() - 1][gdata.rows() - 1][0],
+	      gdata.vertices[gdata.columns() - 1][gdata.rows() - 1][1],
+	      tmax
+	    )
+	  );
 
-void SurfacePlot::calcNormals(GridData& gdata)
-{
-
-  unsigned int rows = gdata.rows();
-  unsigned int columns = gdata.columns();
-
-  // normals
-
-  Triple u, v, n;  // for cross product
-
-  for (unsigned i = 0; i != columns; ++i)
-  {
-    for (unsigned j = 0; j != rows; ++j)
-    {
-      n = Triple(0,0,0);
+	gdata.setHull(hull);
+	}
 
 
-      if (i<columns-1 && j<rows-1)
-      {
-        /*	get two vectors to cross */
-        u = Triple(
-                    gdata.vertices[i+1][j][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i+1][j][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i+1][j][2] - gdata.vertices[i][j][2]
-                  );
+void SurfacePlot::calcNormals(GridData& gdata) {
 
-        v = Triple(
-                    gdata.vertices[i][j+1][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i][j+1][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i][j+1][2] - gdata.vertices[i][j][2]
-                  );
-        /* get the normalized cross product */
-        n += normalizedcross(u,v); // right hand system here !
-      }
+	unsigned int rows = gdata.rows();
+	unsigned int columns = gdata.columns();
 
-      if (i>0 && j<rows-1)
-      {
-        u = Triple(
-                    gdata.vertices[i][j+1][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i][j+1][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i][j+1][2] - gdata.vertices[i][j][2]
-                  );
-        v = Triple(
-                    gdata.vertices[i-1][j][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i-1][j][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i-1][j][2] - gdata.vertices[i][j][2]
-                  );
-        n += normalizedcross(u,v);
-      }
+	// normals
 
-      if (i>0 && j>0)
-      {
-        u = Triple(
-                    gdata.vertices[i-1][j][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i-1][j][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i-1][j][2] - gdata.vertices[i][j][2]
-                  );
+	Triple u, v, n;  // for cross product
 
-        v = Triple(
-                    gdata.vertices[i][j-1][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i][j-1][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i][j-1][2] - gdata.vertices[i][j][2]
-                  );
-        n += normalizedcross(u,v);
-      }
-
-      if (i<columns-1 && j>0)
-      {
-        u = Triple(
-                    gdata.vertices[i][j-1][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i][j-1][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i][j-1][2] - gdata.vertices[i][j][2]
-                  );
-
-        v = Triple(
-                    gdata.vertices[i+1][j][0] - gdata.vertices[i][j][0],
-                    gdata.vertices[i+1][j][1] - gdata.vertices[i][j][1],
-                    gdata.vertices[i+1][j][2] - gdata.vertices[i][j][2]
-                  );
-        n += normalizedcross(u,v);
-      }
-      n.normalize();
-
-      gdata.normals[i][j][0] = n.x;
-      gdata.normals[i][j][1] = n.y;
-      gdata.normals[i][j][2] = n.z;
-    }
-  }
-}
+	for (unsigned i = 0; i != columns; ++i) {
+		for (unsigned j = 0; j != rows; ++j) {
+			n = Triple(0, 0, 0);
 
 
-void SurfacePlot::sewPeriodic(GridData& gdata)
-{
-  // sewing
+			if (i < columns - 1 && j < rows - 1) {
+				/*	get two vectors to cross */
+				u = Triple(
+				      gdata.vertices[i + 1][j][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i + 1][j][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i + 1][j][2] - gdata.vertices[i][j][2]
+				    );
 
-  Triple n;
+				v = Triple(
+				      gdata.vertices[i][j + 1][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i][j + 1][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i][j + 1][2] - gdata.vertices[i][j][2]
+				    );
+				/* get the normalized cross product */
+				n += normalizedcross(u, v); // right hand system here !
+				}
 
-  unsigned int columns = gdata.columns();
-  unsigned int rows = gdata.rows();
+			if (i > 0 && j < rows - 1) {
+				u = Triple(
+				      gdata.vertices[i][j + 1][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i][j + 1][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i][j + 1][2] - gdata.vertices[i][j][2]
+				    );
+				v = Triple(
+				      gdata.vertices[i - 1][j][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i - 1][j][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i - 1][j][2] - gdata.vertices[i][j][2]
+				    );
+				n += normalizedcross(u, v);
+				}
 
-  if (gdata.uperiodic())
-  {
-    for (unsigned i = 0; i != columns; ++i)
-    {
-      n = Triple(
-                  gdata.normals[i][0][0] + gdata.normals[i][rows-1][0],
-                  gdata.normals[i][0][1] + gdata.normals[i][rows-1][1],
-                  gdata.normals[i][0][2] + gdata.normals[i][rows-1][2]
-                );
+			if (i > 0 && j > 0) {
+				u = Triple(
+				      gdata.vertices[i - 1][j][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i - 1][j][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i - 1][j][2] - gdata.vertices[i][j][2]
+				    );
 
-      n.normalize();
-      gdata.normals[i][0][0] = gdata.normals[i][rows-1][0] = n.x;
-      gdata.normals[i][0][1] = gdata.normals[i][rows-1][1] = n.y;
-      gdata.normals[i][0][2] = gdata.normals[i][rows-1][2] = n.z;
-    }
-  }
-  if (gdata.vperiodic())
-  {
-    for (unsigned j = 0; j != rows; ++j)
-    {
-      n = Triple(
-                  gdata.normals[0][j][0] + gdata.normals[columns-1][j][0],
-                  gdata.normals[0][j][1] + gdata.normals[columns-1][j][1],
-                  gdata.normals[0][j][2] + gdata.normals[columns-1][j][2]
-                );
+				v = Triple(
+				      gdata.vertices[i][j - 1][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i][j - 1][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i][j - 1][2] - gdata.vertices[i][j][2]
+				    );
+				n += normalizedcross(u, v);
+				}
 
-      n.normalize();
-      gdata.normals[0][j][0] = gdata.normals[columns-1][j][0] = n.x;
-      gdata.normals[0][j][1] = gdata.normals[columns-1][j][1] = n.y;
-      gdata.normals[0][j][2] = gdata.normals[columns-1][j][2] = n.z;
-    }
-  }
-}
+			if (i < columns - 1 && j > 0) {
+				u = Triple(
+				      gdata.vertices[i][j - 1][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i][j - 1][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i][j - 1][2] - gdata.vertices[i][j][2]
+				    );
+
+				v = Triple(
+				      gdata.vertices[i + 1][j][0] - gdata.vertices[i][j][0],
+				      gdata.vertices[i + 1][j][1] - gdata.vertices[i][j][1],
+				      gdata.vertices[i + 1][j][2] - gdata.vertices[i][j][2]
+				    );
+				n += normalizedcross(u, v);
+				}
+
+			n.normalize();
+
+			gdata.normals[i][j][0] = n.x;
+			gdata.normals[i][j][1] = n.y;
+			gdata.normals[i][j][2] = n.z;
+			}
+		}
+	}
+
+
+void SurfacePlot::sewPeriodic(GridData& gdata) {
+	// sewing
+
+	Triple n;
+
+	unsigned int columns = gdata.columns();
+	unsigned int rows = gdata.rows();
+
+	if (gdata.uperiodic()) {
+		for (unsigned i = 0; i != columns; ++i) {
+			n = Triple(
+			      gdata.normals[i][0][0] + gdata.normals[i][rows - 1][0],
+			      gdata.normals[i][0][1] + gdata.normals[i][rows - 1][1],
+			      gdata.normals[i][0][2] + gdata.normals[i][rows - 1][2]
+			    );
+
+			n.normalize();
+			gdata.normals[i][0][0] = gdata.normals[i][rows - 1][0] = n.x;
+			gdata.normals[i][0][1] = gdata.normals[i][rows - 1][1] = n.y;
+			gdata.normals[i][0][2] = gdata.normals[i][rows - 1][2] = n.z;
+			}
+		}
+
+	if (gdata.vperiodic()) {
+		for (unsigned j = 0; j != rows; ++j) {
+			n = Triple(
+			      gdata.normals[0][j][0] + gdata.normals[columns - 1][j][0],
+			      gdata.normals[0][j][1] + gdata.normals[columns - 1][j][1],
+			      gdata.normals[0][j][2] + gdata.normals[columns - 1][j][2]
+			    );
+
+			n.normalize();
+			gdata.normals[0][j][0] = gdata.normals[columns - 1][j][0] = n.x;
+			gdata.normals[0][j][1] = gdata.normals[columns - 1][j][1] = n.y;
+			gdata.normals[0][j][2] = gdata.normals[columns - 1][j][2] = n.z;
+			}
+		}
+	}
 
 /*!
   Convert user grid data to internal vertex structure.
   See also NativeReader::read() and Function::create()
 */
-bool SurfacePlot::loadFromData(Triple** data, unsigned int columns, unsigned int rows, bool uperiodic, bool vperiodic)
-{
-  actualDataC_->clear();
-  actualData_p = actualDataG_;
+bool SurfacePlot::loadFromData(Triple** data, unsigned int columns, unsigned int rows, bool uperiodic, bool vperiodic) {
+	actualDataC_->clear();
+	actualData_p = actualDataG_;
 
-  readIn(*actualDataG_, data, columns, rows);
-  calcNormals(*actualDataG_);
-  actualDataG_->setPeriodic(uperiodic,vperiodic);
-  sewPeriodic(*actualDataG_);
+	readIn(*actualDataG_, data, columns, rows);
+	calcNormals(*actualDataG_);
+	actualDataG_->setPeriodic(uperiodic, vperiodic);
+	sewPeriodic(*actualDataG_);
 
-  updateData();
-  createCoordinateSystem();
+	updateData();
+	createCoordinateSystem();
 
-  return true;
-}
+	return true;
+	}
 
 /*!
   Convert user grid data to internal vertex structure.
   See also NativeReader::read() and Function::create()
 */
 bool SurfacePlot::loadFromData(const double* data, unsigned int columns, unsigned int rows
-											                  , double minx, double maxx, double miny, double maxy)
-{
-  actualDataC_->clear();
-  actualData_p = actualDataG_;
+                               , double minx, double maxx, double miny, double maxy) {
+	actualDataC_->clear();
+	actualData_p = actualDataG_;
 
-  actualDataG_->setPeriodic(false,false);
-  actualDataG_->setSize(columns,rows);
-  readIn(*actualDataG_,data,columns,rows,minx,maxx,miny,maxy);
-  calcNormals(*actualDataG_);
+	actualDataG_->setPeriodic(false, false);
+	actualDataG_->setSize(columns, rows);
+	readIn(*actualDataG_, data, columns, rows, minx, maxx, miny, maxy);
+	calcNormals(*actualDataG_);
 
-  updateData();
-  createCoordinateSystem();
+	updateData();
+	createCoordinateSystem();
 
-  return true;
-}
+	return true;
+	}
 
 
-void SurfacePlot::createFloorDataG()
-{
-  switch (floorStyle())
-  {
-  case FLOORDATA:
-    Data2FloorG();
-    break;
-  case FLOORISO:
-    Isolines2FloorG();
-    break;
-  default:
-    break;
-  }
-}
+void SurfacePlot::createFloorDataG() {
+	switch (floorStyle()) {
+		case FLOORDATA:
+			Data2FloorG();
+			break;
 
-void SurfacePlot::Data2FloorG()
-{
-  if (actualData_p->empty())
-    return;
+		case FLOORISO:
+			Isolines2FloorG();
+			break;
 
-  int step = resolution();
+		default:
+			break;
+		}
+	}
 
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_QUADS);
+void SurfacePlot::Data2FloorG() {
+	if (actualData_p->empty())
+		return;
 
-  double zshift = actualData_p->hull().minVertex.z;
-  for (int i = 0; i < actualDataG_->columns() - step; i += step)
-  {
-    glBegin(GL_TRIANGLE_STRIP);
-      setColorFromVertexG(i, 0);
-      glVertex3d(actualDataG_->vertices[i][0][0], actualDataG_->vertices[i][0][1], zshift);
+	int step = resolution();
 
-      setColorFromVertexG(i+step, 0);
-      glVertex3d(actualDataG_->vertices[i+step][0][0],actualDataG_->vertices[i+step][0][1], zshift);
-      for (int j = 0; j < actualDataG_->rows() - step; j += step)
-      {
-        setColorFromVertexG(i, j+step);
-        glVertex3d(actualDataG_->vertices[i][j+step][0],actualDataG_->vertices[i][j+step][1], zshift);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_QUADS);
 
-        setColorFromVertexG(i+step, j+step);
-        glVertex3d(actualDataG_->vertices[i+step][j+step][0],actualDataG_->vertices[i+step][j+step][1], zshift);
-      }
-    glEnd();
-  }
-}
+	double zshift = actualData_p->hull().minVertex.z;
 
-void SurfacePlot::Isolines2FloorG()
-{
-  if (isolines() <= 0 || actualData_p->empty())
-    return;
+	for (int i = 0; i < actualDataG_->columns() - step; i += step) {
+		glBegin(GL_TRIANGLE_STRIP);
+		setColorFromVertexG(i, 0);
+		glVertex3d(actualDataG_->vertices[i][0][0], actualDataG_->vertices[i][0][1], zshift);
 
-  double count = (actualData_p->hull().maxVertex.z - actualData_p->hull().minVertex.z) / isolines();
+		setColorFromVertexG(i + step, 0);
+		glVertex3d(actualDataG_->vertices[i + step][0][0], actualDataG_->vertices[i + step][0][1], zshift);
 
-  RGBA col;
+		for (int j = 0; j < actualDataG_->rows() - step; j += step) {
+			setColorFromVertexG(i, j + step);
+			glVertex3d(actualDataG_->vertices[i][j + step][0], actualDataG_->vertices[i][j + step][1], zshift);
 
-  int step = resolution();
+			setColorFromVertexG(i + step, j + step);
+			glVertex3d(actualDataG_->vertices[i + step][j + step][0], actualDataG_->vertices[i + step][j + step][1], zshift);
+			}
 
-  double zshift = actualData_p->hull().minVertex.z;
+		glEnd();
+		}
+	}
 
-  int cols = actualDataG_->columns();
-  int rows = actualDataG_->rows();
+void SurfacePlot::Isolines2FloorG() {
+	if (isolines() <= 0 || actualData_p->empty())
+		return;
 
-  Triple t[4];
-  vector<Triple> intersection;
+	double count = (actualData_p->hull().maxVertex.z - actualData_p->hull().minVertex.z) / isolines();
 
-  double lambda = 0;
+	RGBA col;
 
-  GLStateBewarer sb2(GL_LINE_SMOOTH, false);
+	int step = resolution();
 
-  for (int k = 0; k != isolines(); ++k)
-  {
-    double val = zshift + k * count;
+	double zshift = actualData_p->hull().minVertex.z;
 
-    for (int i = 0; i < cols-step; i += step)
-    {
-      for (int j = 0; j < rows-step; j += step)
-      {
-        t[0] =  Triple(	actualDataG_->vertices[i][j][0],
-			                  actualDataG_->vertices[i][j][1],
-			                  actualDataG_->vertices[i][j][2]);
+	int cols = actualDataG_->columns();
+	int rows = actualDataG_->rows();
 
-        col = (*datacolor_p)(t[0].x,t[0].y,t[0].z);
-        glColor4d(col.r, col.g, col.b, col.a);
+	Triple t[4];
+	vector<Triple> intersection;
+
+	double lambda = 0;
+
+	GLStateBewarer sb2(GL_LINE_SMOOTH, false);
+
+	for (int k = 0; k != isolines(); ++k) {
+		double val = zshift + k * count;
+
+		for (int i = 0; i < cols - step; i += step) {
+			for (int j = 0; j < rows - step; j += step) {
+				t[0] =  Triple(	actualDataG_->vertices[i][j][0],
+				                actualDataG_->vertices[i][j][1],
+				                actualDataG_->vertices[i][j][2]);
+
+				col = (*datacolor_p)(t[0].x, t[0].y, t[0].z);
+				glColor4d(col.r, col.g, col.b, col.a);
 //  			glColor4d(0,0,0,1);
 
-        t[1] =  Triple(	actualDataG_->vertices[i+step][j][0],
-			                  actualDataG_->vertices[i+step][j][1],
-			                  actualDataG_->vertices[i+step][j][2]);
-        t[2] =  Triple(	actualDataG_->vertices[i+step][j+step][0],
-			                  actualDataG_->vertices[i+step][j+step][1],
-			                  actualDataG_->vertices[i+step][j+step][2]);
-        t[3] =  Triple(	actualDataG_->vertices[i][j+step][0],
-			                  actualDataG_->vertices[i][j+step][1],
-			                  actualDataG_->vertices[i][j+step][2]);
+				t[1] =  Triple(	actualDataG_->vertices[i + step][j][0],
+				                actualDataG_->vertices[i + step][j][1],
+				                actualDataG_->vertices[i + step][j][2]);
+				t[2] =  Triple(	actualDataG_->vertices[i + step][j + step][0],
+				                actualDataG_->vertices[i + step][j + step][1],
+				                actualDataG_->vertices[i + step][j + step][2]);
+				t[3] =  Triple(	actualDataG_->vertices[i][j + step][0],
+				                actualDataG_->vertices[i][j + step][1],
+				                actualDataG_->vertices[i][j + step][2]);
 
-        double diff = 0;
-        for (int m = 0; m!=4; ++m)
-        {
-          int mm = (m+1)%4;
-          if ((val>=t[m].z && val<=t[mm].z) || (val>=t[mm].z && val<=t[m].z))
-          {
-            diff = t[mm].z - t[m].z;
+				double diff = 0;
 
-            if (isPracticallyZero(diff)) // degenerated
-            {
-              intersection.push_back(t[m]);
-              intersection.push_back(t[mm]);
-              continue;
-            }
+				for (int m = 0; m != 4; ++m) {
+					int mm = (m + 1) % 4;
 
-            lambda =  (val - t[m].z) / diff;
-            intersection.push_back(Triple(t[m].x + lambda * (t[mm].x-t[m].x), t[m].y + lambda * (t[mm].y-t[m].y), val));
-          }
-        }
+					if ((val >= t[m].z && val <= t[mm].z) || (val >= t[mm].z && val <= t[m].z)) {
+						diff = t[mm].z - t[m].z;
 
-        if (!intersection.empty())
-        {
-          if (intersection.size()>2)
-          {
-            glBegin(GL_LINE_STRIP);
-            for (unsigned dd = 0; dd!=intersection.size(); ++dd)
-            {
-              glVertex3d(intersection[dd].x, intersection[dd].y, zshift);
-            }
-            glEnd();
-            glBegin(GL_POINTS);
-              glVertex3d(intersection[0].x,intersection[0].y,zshift);
-            glEnd();
-          }
-          else if (intersection.size() == 2)
-          {
-            glBegin(GL_LINES);
-              glVertex3d(intersection[0].x,intersection[0].y,zshift);
-              glVertex3d(intersection[1].x,intersection[1].y,zshift);
+						if (isPracticallyZero(diff)) { // degenerated
+							intersection.push_back(t[m]);
+							intersection.push_back(t[mm]);
+							continue;
+							}
 
-              // small pixel gap problem (see OpenGL spec.)
-              glVertex3d(intersection[1].x,intersection[1].y,zshift);
-              glVertex3d(intersection[0].x,intersection[0].y,zshift);
-            glEnd();
-          }
+						lambda =  (val - t[m].z) / diff;
+						intersection.push_back(Triple(t[m].x + lambda * (t[mm].x - t[m].x), t[m].y + lambda * (t[mm].y - t[m].y), val));
+						}
+					}
 
-          intersection.clear();
-        }
-      }
-    }
-  }
-}
+				if (!intersection.empty()) {
+					if (intersection.size() > 2) {
+						glBegin(GL_LINE_STRIP);
+
+						for (unsigned dd = 0; dd != intersection.size(); ++dd) {
+							glVertex3d(intersection[dd].x, intersection[dd].y, zshift);
+							}
+
+						glEnd();
+						glBegin(GL_POINTS);
+						glVertex3d(intersection[0].x, intersection[0].y, zshift);
+						glEnd();
+						}
+					else if (intersection.size() == 2) {
+						glBegin(GL_LINES);
+						glVertex3d(intersection[0].x, intersection[0].y, zshift);
+						glVertex3d(intersection[1].x, intersection[1].y, zshift);
+
+						// small pixel gap problem (see OpenGL spec.)
+						glVertex3d(intersection[1].x, intersection[1].y, zshift);
+						glVertex3d(intersection[0].x, intersection[0].y, zshift);
+						glEnd();
+						}
+
+					intersection.clear();
+					}
+				}
+			}
+		}
+	}
 
 
 

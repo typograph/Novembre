@@ -1,22 +1,22 @@
-/***************************************************************************
-*   Copyright (C) 2006 by Timofey Balashov                                *
-*                         Timofey.Balashov@pi.uka.de                      *
-*                                                                         *
-*   This program is free software; you can redistribute it and/or modify  *
-*   it under the terms of the GNU General Public License as published by  *
-*   the Free Software Foundation; either version 2 of the License, or     *
-*   (at your option) any later version.                                   *
-*                                                                         *
-*   This program is distributed in the hope that it will be useful,       *
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-*   GNU General Public License for more details.                          *
-*                                                                         *
-*   You should have received a copy of the GNU General Public License     *
-*   along with this program; if not, write to the                         *
-*   Free Software Foundation, Inc.,                                       *
-*   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
-***************************************************************************/
+//
+// Copyright 2011 - 2013 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 #include "NVBMainWindow.h"
 #include <QtGui/QMenu>
 #include <QtGui/QMenuBar>
@@ -41,8 +41,7 @@
 #include "NVBStandardIcons.h"
 
 
-NVBMainWindow::NVBMainWindow() : QMainWindow()
-{
+NVBMainWindow::NVBMainWindow() : QMainWindow() {
 
 	setAcceptDrops(true);
 
@@ -51,15 +50,17 @@ NVBMainWindow::NVBMainWindow() : QMainWindow()
 	// Initialisation
 
 	conf = NVBSettings::getGlobalSettings();
+
 	if (!conf)
 		NVBCriticalError("Configuration missing");
 
 #ifdef NVB_ENABLE_LOG
-	log = new NVBLogWidgetDock(new NVBLogWidget("Novembre log",this),this);
-	addDockWidget(Qt::TopDockWidgetArea,log);
+	log = new NVBLogWidgetDock(new NVBLogWidget("Novembre log", this), this);
+	addDockWidget(Qt::TopDockWidgetArea, log);
 #endif
 
 	files = qApp->property("filesFactory").value<NVBFileFactory*>();
+
 	if (!files)
 		NVBCriticalError("File factory not properly initialised");
 
@@ -69,33 +70,29 @@ NVBMainWindow::NVBMainWindow() : QMainWindow()
 	fileOpenDir.setFilter(QDir::Readable & QDir::AllDirs & QDir::Files & QDir::Dirs & QDir::Drives);
 	createMenus();
 	show();
-}
+	}
 
-NVBMainWindow::~NVBMainWindow( )
-{
+NVBMainWindow::~NVBMainWindow( ) {
 	conf->setValue("Size", size());
-}
+	}
 
-void NVBMainWindow::callFileOpenDialog( )
-{
-	QFileDialog dialog(this,"Open STM File");
+void NVBMainWindow::callFileOpenDialog( ) {
+	QFileDialog dialog(this, "Open STM File");
 	dialog.setFileMode(QFileDialog::ExistingFile);
 	dialog.setNameFilter(files->getDialogFilter());
 	dialog.setDirectory(fileOpenDir);
 
 	if (dialog.exec() == QDialog::Accepted) {
 		openFile(dialog.selectedFiles().value(0));
+		}
 	}
-}
 
-void NVBMainWindow::callSettingsDialog()
-{
+void NVBMainWindow::callSettingsDialog() {
 	NVBSettingsDialog::showGeneralSettings();
-}
+	}
 
 
-void NVBMainWindow::createMenus( )
-{
+void NVBMainWindow::createMenus( ) {
 	// Menus and toolbars
 
 	menuBar()->clear();
@@ -116,10 +113,10 @@ void NVBMainWindow::createMenus( )
 	fileMenu->addSeparator();
 	fileMenu->addAction( fileExitAction );
 
-/*	
-	fileTools = addToolBar( QString("File Operations") );
-	fileTools->addAction( fileOpenAction );
-*/
+	/*
+		fileTools = addToolBar( QString("File Operations") );
+		fileTools->addAction( fileOpenAction );
+	*/
 	// help
 
 #ifdef NVB_ENABLE_LOG
@@ -137,15 +134,13 @@ void NVBMainWindow::createMenus( )
 #endif
 	helpMenu->addAction( helpAboutAction );
 
-}
+	}
 
-void NVBMainWindow::showInfo()
-{
-	QMessageBox::about(this,"About Novembre","Novembre v."+qApp->property("applicationVersion").toString()+"\n(c) Timofey");
-}
+void NVBMainWindow::showInfo() {
+	QMessageBox::about(this, "About Novembre", "Novembre v." + qApp->property("applicationVersion").toString() + "\n(c) Timofey");
+	}
 
-void NVBMainWindow::dragEnterEvent(QDragEnterEvent * event)
-{
+void NVBMainWindow::dragEnterEvent(QDragEnterEvent * event) {
 	if (event->mimeData()->hasFormat(NVBDataSourceMimeData::dataSourceMimeType()))
 		event->acceptProposedAction();
 	else if (event->mimeData()->hasUrls())
@@ -153,10 +148,9 @@ void NVBMainWindow::dragEnterEvent(QDragEnterEvent * event)
 	else {
 		QMainWindow::dragEnterEvent(event);
 		}
-}
+	}
 
-void NVBMainWindow::dropEvent(QDropEvent * event)
-{
+void NVBMainWindow::dropEvent(QDropEvent * event) {
 	if (event->mimeData()->hasFormat(NVBDataSourceMimeData::dataSourceMimeType())) {
 		event->acceptProposedAction();
 		openDataSet(((NVBDataSourceMimeData*)event->mimeData())->getDataSet());
@@ -167,35 +161,34 @@ void NVBMainWindow::dropEvent(QDropEvent * event)
 			openFile(url.toLocalFile());
 			}
 		}
-}
+	}
 
-void NVBMainWindow::openDataSet(NVBDataSet * /*dataset*/)
-{
+void NVBMainWindow::openDataSet(NVBDataSet * /*dataset*/) {
 //  new NVBFileWindow(this, NVBToolsFactory::hardlinkDataSource(source));
-}
+	}
 
-void NVBMainWindow::openFile(QString filename)
-{
+void NVBMainWindow::openFile(QString filename) {
 	if (filename.isEmpty()) {
 		NVBOutputError("No filename supplied");
 		return;
 		}
-	
+
 	NVBFile * nFile = files->getFile(filename);
+
 	if (!nFile) return;
 
 	// TODO let out a signal or something... The browser should open it
-	
-	nFile->release();
-	
-}
 
-void NVBMainWindow::openFile(const NVBAssociatedFilesInfo & info)
-{
+	nFile->release();
+
+	}
+
+void NVBMainWindow::openFile(const NVBAssociatedFilesInfo & info) {
 	NVBFile * nFile = files->getFile(info);
+
 	if (!nFile) return;
 
 	// TODO let out a signal or something... The browser should open it
-	
+
 	nFile->release();
-}
+	}

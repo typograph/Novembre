@@ -1,22 +1,21 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Timofey Balashov   *
- *   Timofey.Balashov@pi.uka.de   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+//
+// Copyright 2006 - 2013 Timofey <typograph@elec.ru>
+//
+// This file is part of Novembre data analysis program.
+//
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
+//
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 
 #ifndef CREATEC_H
 #define CREATEC_H
@@ -29,41 +28,41 @@
 #include "NVBVariant.h"
 #include "NVBFileGenerator.h"
 
-typedef QHash<QString,NVBVariant> CreatecHeader;
+typedef QHash<QString, NVBVariant> CreatecHeader;
 
 class CreatecFileGenerator: public QObject, public NVBFileGenerator {
-Q_OBJECT
-Q_INTERFACES(NVBFileGenerator);
+		Q_OBJECT
+		Q_INTERFACES(NVBFileGenerator);
 
-private:
+	private:
 
-	static CreatecHeader getCreatecHeader(QFile & file);
+		static CreatecHeader getCreatecHeader(QFile & file);
 
-	NVBDataComments commentsFromHeader(const CreatecHeader & header) const;
+		NVBDataComments commentsFromHeader(const CreatecHeader & header) const;
 
-	void loadAllChannelsFromDAT(QString filename, NVBFile * sources) const;
-	void loadAllChannelsFromVERT(QStringList filenames, NVBFile * sources) const;
-	void loadAllChannelsFromLAT(QString filename, NVBFile * sources) const;
-	void loadAllChannelsFromTSPEC(QString filename, NVBFile * sources) const;
+		void loadAllChannelsFromDAT(QString filename, NVBFile * sources) const;
+		void loadAllChannelsFromVERT(QStringList filenames, NVBFile * sources) const;
+		void loadAllChannelsFromLAT(QString filename, NVBFile * sources) const;
+		void loadAllChannelsFromTSPEC(QString filename, NVBFile * sources) const;
 
-public:
-	CreatecFileGenerator():NVBFileGenerator() {;}
-  virtual ~CreatecFileGenerator() {;}
+	public:
+		CreatecFileGenerator(): NVBFileGenerator() {;}
+		virtual ~CreatecFileGenerator() {;}
 
-  virtual inline QString moduleName() const { return QString("Createc SPS files");}
-	virtual inline QString moduleDesc() const { return QString("Createc STM file format used by STMAFM 2.x"); }
+		virtual inline QString moduleName() const { return QString("Createc SPS files");}
+		virtual inline QString moduleDesc() const { return QString("Createc STM file format used by STMAFM 2.x"); }
 
-  virtual QStringList extFilters() const {
+		virtual QStringList extFilters() const {
 			static QStringList exts = QStringList() << "A??????.??????.dat" << "A??????.*.vert"; // FIXME << "A*.lat" << "A*.tspec";
-      return exts;
-  }
+			return exts;
+			}
 
 //  virtual bool canLoadFile(QString filename);
-	virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
-	virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
+		virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw();
+		virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw();
 
-  virtual QStringList availableInfoFields() const;
-  virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
-};
+		virtual QStringList availableInfoFields() const;
+		virtual NVBAssociatedFilesInfo associatedFiles(QString filename) const;
+	};
 
 #endif

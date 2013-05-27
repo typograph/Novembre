@@ -1,13 +1,22 @@
 //
-// C++ Interface: NVBSettingsDialog
+// Copyright 2011 - 2013 Timofey <typograph@elec.ru>
 //
-// This file is part of Novembre GUI
+// This file is part of Novembre data analysis program.
 //
-// Author: Timofey <timoty@pi-balashov>, (C) 2008
+// Novembre is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License,
+// or (at your option) any later version.
 //
-// Copyright: See COPYING file that comes with this distribution
+// Novembre is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+
 #ifndef NVBSETTINGSDIALOG_H
 #define NVBSETTINGSDIALOG_H
 
@@ -19,44 +28,44 @@ class QListWidget;
 class QSettings;
 
 class NVBSettingsDialog : public QDialog {
-Q_OBJECT
+		Q_OBJECT
 
-private:
+	private:
 
-	QSettings * conf;
-	QListWidget * sections;
-	QStackedWidget * view;
-	QPushButton * applyButton;
-	QPushButton * resetButton;
+		QSettings * conf;
+		QListWidget * sections;
+		QStackedWidget * view;
+		QPushButton * applyButton;
+		QPushButton * resetButton;
 
-	static NVBSettingsDialog * getGlobalDialog();
-	
-public:
+		static NVBSettingsDialog * getGlobalDialog();
 
-	NVBSettingsDialog();
-	~NVBSettingsDialog() {;}
+	public:
 
-public slots:
-	void switchToPage(int page);
-	
-	void tryAccept();
+		NVBSettingsDialog();
+		~NVBSettingsDialog() {;}
 
-	void writeSettings();
-	void reinitSettings();
+	public slots:
+		void switchToPage(int page);
 
-private slots:
-	void pageSwitch();
-	void dataOutOfSync();
-	void dataInSync();
-	
-public:
-	
-	static int showGeneralSettings();
-	static int showBrowserSettings();
+		void tryAccept();
+
+		void writeSettings();
+		void reinitSettings();
+
+	private slots:
+		void pageSwitch();
+		void dataOutOfSync();
+		void dataInSync();
+
+	public:
+
+		static int showGeneralSettings();
+		static int showBrowserSettings();
 // 	static int showFileSettings();
 // 	static int showPluginSettings();
-	void addPage(QWidget * widget);
+		void addPage(QWidget * widget);
 
-};
+	};
 
 #endif

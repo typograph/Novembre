@@ -5,73 +5,69 @@
 #include <QtOpenGL/qgl.h>
 #include <GL/glu.h>
 
-namespace Qwt3D
-{
+namespace Qwt3D {
 
 #ifndef QWT3D_NOT_FOR_DOXYGEN
 
-class GLStateBewarer
-{
-public:
+class GLStateBewarer {
+	public:
 
-  GLStateBewarer(GLenum what, bool on, bool persist=false)
-  {
-    state_ = what;
-    stateval_ = glIsEnabled(what);
-    if (on)
-      turnOn(persist);
-    else
-      turnOff(persist);
-  }
+		GLStateBewarer(GLenum what, bool on, bool persist = false) {
+			state_ = what;
+			stateval_ = glIsEnabled(what);
 
-  ~GLStateBewarer()
-  {
-    if (stateval_)
-      glEnable(state_);
-    else
-      glDisable(state_);
-  }
+			if (on)
+				turnOn(persist);
+			else
+				turnOff(persist);
+			}
 
-  void turnOn(bool persist = false)
-  {
-    glEnable(state_);
-    if (persist)
-      stateval_ = true;
-  }
+		~GLStateBewarer() {
+			if (stateval_)
+				glEnable(state_);
+			else
+				glDisable(state_);
+			}
 
-  void turnOff(bool persist = false)
-  {
-    glDisable(state_);
-    if (persist)
-      stateval_ = false;
-  }
+		void turnOn(bool persist = false) {
+			glEnable(state_);
+
+			if (persist)
+				stateval_ = true;
+			}
+
+		void turnOff(bool persist = false) {
+			glDisable(state_);
+
+			if (persist)
+				stateval_ = false;
+			}
 
 
-private:
+	private:
 
-  GLenum state_;
-  bool stateval_;
+		GLenum state_;
+		bool stateval_;
 
-};
+	};
 
-inline const GLubyte* gl_error()
-{
-  GLenum errcode;
-  const GLubyte* err = 0;
+inline const GLubyte* gl_error() {
+	GLenum errcode;
+	const GLubyte* err = 0;
 
-  if ((errcode = glGetError()) != GL_NO_ERROR)
-  {
-    err = gluErrorString(errcode);
-  }
-  return err;
-}
+	if ((errcode = glGetError()) != GL_NO_ERROR) {
+		err = gluErrorString(errcode);
+		}
 
-inline	void SaveGlDeleteLists(GLuint& lstidx, GLsizei range)
-{
-  if (glIsList(lstidx))
-    glDeleteLists(lstidx, range);
-  lstidx = 0;
-}
+	return err;
+	}
+
+inline	void SaveGlDeleteLists(GLuint& lstidx, GLsizei range) {
+	if (glIsList(lstidx))
+		glDeleteLists(lstidx, range);
+
+	lstidx = 0;
+	}
 
 //! get OpenGL transformation matrices
 /**
@@ -80,44 +76,41 @@ inline	void SaveGlDeleteLists(GLuint& lstidx, GLsizei range)
   \param projMatrix should be a GLdouble[16]
   \param viewport should be a GLint[4]
 */
-inline void getMatrices(GLdouble* modelMatrix, GLdouble* projMatrix, GLint* viewport)
-{
-  glGetIntegerv(GL_VIEWPORT, viewport);
-  glGetDoublev(GL_MODELVIEW_MATRIX,	modelMatrix);
-  glGetDoublev(GL_PROJECTION_MATRIX,	projMatrix);
-}
+inline void getMatrices(GLdouble* modelMatrix, GLdouble* projMatrix, GLint* viewport) {
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	glGetDoublev(GL_MODELVIEW_MATRIX,	modelMatrix);
+	glGetDoublev(GL_PROJECTION_MATRIX,	projMatrix);
+	}
 
 //! simplified glut routine (glUnProject): windows coordinates_p --> object coordinates_p
 /**
   Don't rely on (use) this in display lists !
 */
-inline bool ViewPort2World(double& objx, double& objy, double& objz, double winx, double winy, double winz)
-{
-  GLdouble modelMatrix[16];
-  GLdouble projMatrix[16];
-  GLint viewport[4];
+inline bool ViewPort2World(double& objx, double& objy, double& objz, double winx, double winy, double winz) {
+	GLdouble modelMatrix[16];
+	GLdouble projMatrix[16];
+	GLint viewport[4];
 
-  getMatrices(modelMatrix, projMatrix, viewport);
-  int res = gluUnProject(winx, winy, winz, modelMatrix, projMatrix, viewport, &objx, &objy, &objz);
+	getMatrices(modelMatrix, projMatrix, viewport);
+	int res = gluUnProject(winx, winy, winz, modelMatrix, projMatrix, viewport, &objx, &objy, &objz);
 
-  return (res == GL_FALSE) ? false : true;
-}
+	return (res == GL_FALSE) ? false : true;
+	}
 
 //! simplified glut routine (glProject): object coordinates_p --> windows coordinates_p
 /**
   Don't rely on (use) this in display lists !
 */
-inline bool World2ViewPort(double& winx, double& winy, double& winz, double objx, double objy, double objz )
-{
-  GLdouble modelMatrix[16];
-  GLdouble projMatrix[16];
-  GLint viewport[4];
+inline bool World2ViewPort(double& winx, double& winy, double& winz, double objx, double objy, double objz ) {
+	GLdouble modelMatrix[16];
+	GLdouble projMatrix[16];
+	GLint viewport[4];
 
-  getMatrices(modelMatrix, projMatrix, viewport);
-  int res = gluProject(objx, objy, objz, modelMatrix, projMatrix, viewport, &winx, &winy, &winz);
+	getMatrices(modelMatrix, projMatrix, viewport);
+	int res = gluProject(objx, objy, objz, modelMatrix, projMatrix, viewport, &winx, &winy, &winz);
 
-  return (res == GL_FALSE) ? false : true;
-}
+	return (res == GL_FALSE) ? false : true;
+	}
 
 
 #endif // QWT3D_NOT_FOR_DOXYGEN
