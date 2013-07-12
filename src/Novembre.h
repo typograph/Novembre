@@ -25,8 +25,8 @@
 #define NVB_VERSION "0.0.5g"
 #endif
 
-#include "NVBMain.h"
-#include "NVBLogger.h"
+#include "gui/NVBMain.h"
+#include "core/NVBLogger.h"
 
 #include <QApplication>
 #include <QUdpSocket>

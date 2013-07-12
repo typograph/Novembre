@@ -2,21 +2,21 @@ include(nvbdelegate.pri)
 
 contains(CONFIG,NVB2DView) {
 HEADERS += \
-          src/NVBGraphicsItems.h \
-          src/NVBCircAverager.h
+#           src/core/NVBGraphicsItems.h \
+          src/filters/NVBCircAverager.h
 
 SOURCES += \
-          src/NVBCircAverager.cpp
+          src/filters/NVBCircAverager.cpp
 }
 
 HEADERS += \
-          src/NVBContColoring.h \
-          src/NVBTopoToolsProvider.h \
-          src/NVBTopoLeveler.h
+#           src/core/NVBContColoring.h \
+          src/filters/NVBTopoToolsProvider.h \
+          src/filters/NVBTopoLeveler.h
 
 SOURCES += \
-          src/NVBTopoToolsProvider.cpp \
-          src/NVBTopoLeveler.cpp
+          src/filters/NVBTopoToolsProvider.cpp \
+          src/filters/NVBTopoLeveler.cpp
 
 TARGET = lib/tools/nvbtopo
 

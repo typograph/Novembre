@@ -1,9 +1,9 @@
 include(nvbfile.pri)
 # Library headers
 HEADERS += \
-	  src/winspm.h
+	  src/files/winspm.h
 SOURCES += \
-	  src/winspm.cpp
+	  src/files/winspm.cpp
 
 TARGET = lib/files/winspm
 

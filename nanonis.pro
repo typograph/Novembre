@@ -8,9 +8,9 @@ DEFINES += WITH_SPEC_AGGR
 
 # Library headers
 HEADERS += \
-	  src/nanonis.h
+	  src/files/nanonis.h
 SOURCES += \
-	  src/nanonis.cpp
+	  src/files/nanonis.cpp
 
 TARGET = lib/files/nanonis
 

@@ -1,14 +1,14 @@
 include(nvbdelegate.pri)
 
 HEADERS += \
-    src/NVBExportToolsProvider.h \
-    src/NVBQtiExportView.h \
-	src/NVBQtiTableDialog.h
+	src/filters/NVBExportToolsProvider.h \
+	src/filters/NVBQtiExportView.h \
+	src/filters/NVBQtiTableDialog.h
 
 SOURCES += \
-    src/NVBExportToolsProvider.cpp \
-    src/NVBQtiExportView.cpp \
-	src/NVBQtiTableDialog.cpp
+	src/filters/NVBExportToolsProvider.cpp \
+	src/filters/NVBQtiExportView.cpp \
+	src/filters/NVBQtiTableDialog.cpp
 
 
 TARGET = lib/tools/nvbexport

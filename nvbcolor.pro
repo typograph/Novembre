@@ -3,29 +3,29 @@ include(nvbdelegate.pri)
 contains(CONFIG,NVB2DView) {
 
 HEADERS += \
-          src/NVBGraphicsItems.h \
-		  src/NVBDiscrColorPainter.h \
-		  src/NVBCurveClassifier.h
+# 			src/core/NVBGraphicsItems.h \
+			src/filters/NVBDiscrColorPainter.h \
+			src/filters/NVBCurveClassifier.h
 
 SOURCES += \
-		  src/NVBDiscrColorPainter.cpp \
-		  src/NVBCurveClassifier.cpp
+			src/filters/NVBDiscrColorPainter.cpp \
+			src/filters/NVBCurveClassifier.cpp
 
 }
 
 HEADERS += \
-          src/NVBContColoring.h \
-          src/NVBDiscrColoring.h \
-          src/NVBColorAdjustProvider.h \
-          src/NVBContColorScaler.h \
-          src/NVBColorButton.h
+# 			src/core/NVBContColoring.h \
+# 			src/core/NVBDiscrColoring.h \
+			src/filters/NVBColorAdjustProvider.h \
+			src/filters/NVBContColorScaler.h \
+			src/filters/NVBColorButton.h
 
 SOURCES += \
-          src/NVBColorAdjustProvider.cpp \
-		  src/NVBContColorScaler.cpp
+			src/filters/NVBColorAdjustProvider.cpp \
+			src/filters/NVBContColorScaler.cpp
 
-#          src/NVBSlicePainter.h
-#          src/NVBSlicePainter.cpp
+#          src/filters/NVBSlicePainter.h
+#          src/filters/NVBSlicePainter.cpp
 
 TARGET = lib/tools/nvbcolor
 

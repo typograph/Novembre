@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 #include "Novembre.h"
-#include "NVBSettings.h"
+#include "gui/NVBSettings.h"
 #include <QDir>
 #include <QDebug>
 
@@ -171,17 +171,17 @@ void NVBApplication::createFactories() {
 #ifndef NVB_STATIC
 		setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
 #endif
-		NVBFileFactory * ff = new NVBFileFactory();
-
-		if (!ff) NVBCriticalError("Filefactory failed to initialize.");
-
-		qApp->setProperty("filesFactory", QVariant::fromValue(ff));
-
-		NVBToolsFactory * tf = new NVBToolsFactory;
+		NVBToolsFactory * tf = new NVBToolsFactory();
 
 		if (!tf) NVBCriticalError("Tools factory failed to initialize");
 
 		qApp->setProperty("toolsFactory", QVariant::fromValue(tf));
+
+		NVBFileFactory * ff = new NVBFileFactory();
+
+		if (!ff) NVBCriticalError("Filefactory failed to initialize.");
+ 
+		qApp->setProperty("filesFactory", QVariant::fromValue(ff));
 
 		break;
 //	QMessageBox::critical(0,"Plugin error","Errors occured when loading plugins. Re-check plugin path");
