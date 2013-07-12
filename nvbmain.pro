@@ -1,34 +1,33 @@
 include(nvb.pri)
 
-# Log
-HEADERS += src/NVBLogger.h
+# Log HEADERS += src/core/NVBLogger.h
 
 NVBLog {
 	HEADERS += \
-		src/NVBLogUtils.h
+		src/gui/NVBLogUtils.h
 	SOURCES += \
-		src/NVBLogger.cpp \
-		src/NVBLogUtils.cpp
+		# src/core/NVBLogger.cpp \ # Why is this here?
+		src/gui/NVBLogUtils.cpp
 }
 
 # STMFile tools
 HEADERS += \
-	src/NVBDimension.h \
-#	src/NVBFile.h \
-	src/NVBJointFile.h \
-	src/NVBFileBundle.h \
-	src/NVBFileFactory.h
+#	src/core/NVBDimension.h \
+##	src/core/NVBFile.h \
+	src/gui/NVBJointFile.h \
+	src/gui/NVBFileBundle.h \
+	src/gui/NVBFileFactory.h
 SOURCES += \
-	src/NVBDimension.cpp \
-	src/NVBJointFile.cpp \
-	src/NVBFileBundle.cpp \
-	src/NVBFileFactory.cpp
+#	src/core/NVBDimension.cpp \ # Why is this here? It should be in the library
+	src/gui/NVBJointFile.cpp \
+	src/gui/NVBFileBundle.cpp \
+	src/gui/NVBFileFactory.cpp
 
 # Delegates
 HEADERS += \
-	src/NVBToolsFactory.h
+	src/gui/NVBToolsFactory.h
 SOURCES += \
-	src/NVBToolsFactory.cpp
+	src/gui/NVBToolsFactory.cpp
 
 debug {
 	win32 : LIBS += -Ldebug/lib/tools -lnvbdviz
@@ -74,79 +73,79 @@ NVBStatic {
 # FileWindow
 
 HEADERS += \
-	src/NVBVizModel.h \
-	src/NVBUserPageViewModel.h \
-	src/NVBPageViewModel.h \
-	src/QCollapsibleBox.h \
-	src/NVBDelegateStackView.h \
-	src/NVBWidgetStackModel.h \
-	src/NVBDataView.h \
-	src/NVBFileWindowLayout.h \
-	src/NVBFileWindow.h
+	src/gui/NVBVizModel.h \
+	src/gui/NVBUserPageViewModel.h \
+	src/gui/NVBPageViewModel.h \
+	src/gui/QCollapsibleBox.h \
+	src/gui/NVBDelegateStackView.h \
+	src/gui/NVBWidgetStackModel.h \
+	src/gui/NVBDataView.h \
+	src/gui/NVBFileWindowLayout.h \
+	src/gui/NVBFileWindow.h
 SOURCES += \
-	src/NVBVizModel.cpp \
-	src/NVBUserPageViewModel.cpp \
-	src/QCollapsibleBox.cpp \
-	src/NVBDelegateStackView.cpp \
-	src/NVBWidgetStackModel.cpp \
-	src/NVBFileWindowLayout.cpp \
-	src/NVBFileWindow.cpp
+	src/gui/NVBVizModel.cpp \
+	src/gui/NVBUserPageViewModel.cpp \
+	src/gui/QCollapsibleBox.cpp \
+	src/gui/NVBDelegateStackView.cpp \
+	src/gui/NVBWidgetStackModel.cpp \
+	src/gui/NVBFileWindowLayout.cpp \
+	src/gui/NVBFileWindow.cpp
 
 NVB2DView {
 	HEADERS += \
-		src/NVB2DPageView.h
+		src/gui/NVB2DPageView.h
 	SOURCES += \
-		src/NVB2DPageView.cpp
+		src/gui/NVB2DPageView.cpp
 }
 
 NVBGraphView {
 	HEADERS += \
-		src/NVBPlotZoomer.h \
-		src/NVBGraphView.h
+		src/gui/NVBPlotZoomer.h \
+		src/gui/NVBGraphView.h
 	SOURCES += \
-		src/NVBPlotZoomer.cpp \
-		src/NVBGraphView.cpp
+		src/gui/NVBPlotZoomer.cpp \
+		src/gui/NVBGraphView.cpp
 }
 
 NVB3DView {
 	HEADERS += \
-		src/NVB3DPageView.h
+		src/gui/NVB3DPageView.h
 	SOURCES += \
-		src/NVB3DPageView.cpp
+		src/gui/NVB3DPageView.cpp
 	QT += opengl
 }
 
 # FileBrowser
 HEADERS += \
-	src/NVBPageRefactorModel.h \
-	src/NVBListItemDelegate.h \
-	src/NVBPageInfoWidget.h \
-	src/NVBPageInfoView.h \
-	src/NVBColumnsModel.h \
-	src/NVBColumnDialog.h \
-	src/NVBFileFilterDialog.h \
-	src/NVBDirModelHelpers.h \
-	src/NVBDirModel.h \
-	src/NVBFileListView.h \
-	src/NVBDirView.h \
-	src/NVBDirViewModel.h \
-	src/NVBBrowserHelpers.h \
-	src/NVBBrowser.h
+	src/gui/NVBPageRefactorModel.h \
+	src/gui/NVBListItemDelegate.h \
+	src/gui/NVBPageInfoWidget.h \
+	src/gui/NVBPageInfoView.h \
+	src/gui/NVBColumnsModel.h \
+	src/gui/NVBColumnDialog.h \
+	src/gui/NVBFileFilterDialog.h \
+	src/gui/NVBDirModelHelpers.h \
+	src/gui/NVBDirModel.h \
+	src/gui/NVBFileListView.h \
+	src/gui/NVBDirView.h \
+	src/gui/NVBDirViewModel.h \
+	src/gui/NVBBrowserHelpers.h \
+	src/gui/NVBBrowser.h
 
 SOURCES += \
-	src/NVBPageRefactorModel.cpp \
-	src/NVBListItemDelegate.cpp \
-	src/NVBPageInfoWidget.cpp \
-	src/NVBColumnsModel.cpp \
-	src/NVBColumnDialog.cpp \
-	src/NVBFileFilterDialog.cpp \
-	src/NVBDirModelHelpers.cpp \
-	src/NVBDirModel.cpp \
-	src/NVBFileListView.cpp \
-	src/NVBDirView.cpp \
-	src/NVBDirViewModel.cpp \
-	src/NVBBrowserHelpers.cpp \
-	src/NVBBrowser.cpp
+	src/gui/NVBPageRefactorModel.cpp \
+	src/gui/NVBListItemDelegate.cpp \
+	src/gui/NVBPageInfoWidget.cpp \
+	src/gui/NVBColumnsModel.cpp \
+	src/gui/NVBColumnDialog.cpp \
+	src/gui/NVBFileFilterDialog.cpp \
+	src/gui/NVBDirModelHelpers.cpp \
+	src/gui/NVBDirModel.cpp \
+	src/gui/NVBFileListView.cpp \
+	src/gui/NVBDirView.cpp \
+	src/gui/NVBDirViewModel.cpp \
+	src/gui/NVBBrowserHelpers.cpp \
+	src/gui/NVBBrowser.cpp
 
 NVBGlobalDocks {
 	DEFINES += NVB_NO_FWDOCS
@@ -154,14 +153,14 @@ NVBGlobalDocks {
 
 # Application headers
 HEADERS += \
-	src/NVBSettings.h \
-	src/NVBMainDocks.h \
-	src/NVBMain.h \
+	src/gui/NVBSettings.h \
+	src/gui/NVBMainDocks.h \
+	src/gui/NVBMain.h \
 	src/Novembre.h
 
 SOURCES += \
-	src/NVBSettings.cpp \
-	src/NVBMain.cpp \
+	src/gui/NVBSettings.cpp \
+	src/gui/NVBMain.cpp \
 	src/Novembre.cpp
 
 

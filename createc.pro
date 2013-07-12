@@ -5,9 +5,9 @@ LIBS         += $${ZLIB_LIB}
 
 # Library headers
 HEADERS += \
-	  src/createc.h
+	  src/files/createc.h
 SOURCES += \
-	  src/createc.cpp
+	  src/files/createc.cpp
 
 TARGET = lib/files/createc
 

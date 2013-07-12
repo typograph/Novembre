@@ -2,9 +2,9 @@ include(nvbfile.pri)
 
 # Library headers
 HEADERS += \
-		src/rhk4.h
+		src/files/rhk4.h
 SOURCES += \
-		src/rhk4.cpp
+		src/files/rhk4.cpp
 
 TARGET = lib/files/rhk4
 

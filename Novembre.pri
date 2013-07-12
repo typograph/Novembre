@@ -35,8 +35,6 @@ win32 {
     LIBS += -L../3rdparty/qwt5/lib
 }
 
-LIBS += -lqwt
-
 # Installation paths for Novembre binaries
 unix { 
     NVB_INSTALL_PATH = /opt/Novembre

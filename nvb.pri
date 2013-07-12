@@ -11,7 +11,7 @@ include($${NVB_CONFILE})
 #
 
 # qwtplot3d has been changed from upstream -> do not use official version
-INCLUDEPATH += src/qwtplot3d
+# INCLUDEPATH += src/qwtplot3d
 
 NVBStatic {
  CONFIG -= NVBShared
