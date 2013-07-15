@@ -139,9 +139,13 @@ void NVBPlotZoomer::rescale() {
 
 		double x1 = zrect.left();
 		double x2 = zrect.right();
-
+#if QWT_VERSION < 0x050200
+		if (plt->axisScaleDiv(xAxis())->lBound() >
+		    plt->axisScaleDiv(xAxis())->uBound()) {
+#else
 		if (plt->axisScaleDiv(xAxis())->lowerBound() >
 		    plt->axisScaleDiv(xAxis())->upperBound()) {
+#endif			
 			qSwap(x1, x2);
 			}
 
@@ -150,8 +154,13 @@ void NVBPlotZoomer::rescale() {
 		double y1 = zrect.top();
 		double y2 = zrect.bottom();
 
+#if QWT_VERSION < 0x050200
+		if (plt->axisScaleDiv(yAxis())->lBound() >
+		    plt->axisScaleDiv(yAxis())->uBound()) {
+#else
 		if (plt->axisScaleDiv(yAxis())->lowerBound() >
 		    plt->axisScaleDiv(yAxis())->upperBound()) {
+#endif			
 			qSwap(y1, y2);
 			}
 
