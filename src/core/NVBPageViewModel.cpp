@@ -24,7 +24,7 @@
 NVBPageViewModel::NVBPageViewModel(): QAbstractListModel(), lastAddedRow(-1) {
 #ifndef FILEGENERATOR_NO_GUI
 	// FIXME breaks locality of nvblib
-	iconProvider = qApp->property("toolsFactory").value<NVBIconProvider*>();
+	iconProvider = qApp->property("iconProvider").value<NVBIconProvider*>();
 #endif
 	setSupportedDragActions(Qt::CopyAction);
 	}
