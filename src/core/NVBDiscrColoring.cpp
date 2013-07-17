@@ -21,14 +21,14 @@
 #include "NVBDiscrColoring.h"
 #include "NVBLogger.h"
 
-NVBColoring::NVBRandomDiscrColorModel::NVBRandomDiscrColorModel(int ncolors): NVBDiscrColorModel(), nc(ncolors) {
-	if (nc < 0) nc = 0;
-	qsrand(nc);
-	resize(nc);
+NVBColoring::NVBRandomDiscrColorModel::NVBRandomDiscrColorModel(int ncolors): NVBDiscrColorModel() {
+	if (ncolors < 0) ncolors = 0;
+	qsrand(ncolors);
+	resize(ncolors);
 	}
 
 void NVBColoring::NVBRandomDiscrColorModel::resize(int ncolors) const {
-	for (int i = nc; i < ncolors; i++)
+	for (int i = colors.size(); i < ncolors; i++)
 		colors.append(newcolor());
 }
 
@@ -37,9 +37,9 @@ QColor NVBColoring::NVBRandomDiscrColorModel::colorize(int index) const {
 		NVBOutputPMsg("Negative color queried for.");
 		return Qt::black;
 		}
-	else if (index >= nc) {
+	else if (index >= colors.size()) {
 		NVBOutputPMsg("Expanding color base");
-		resize(index);
+		resize(index+1);
 		}
 
 	return colors.at(index);

@@ -28,7 +28,6 @@ namespace NVBColoring {
 
 class NVBRandomDiscrColorModel : public NVBDiscrColorModel {
 	private:
-		int nc;
 		mutable  QList<QColor> colors;
 		QColor newcolor() const;
 	public:
