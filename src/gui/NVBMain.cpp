@@ -159,7 +159,7 @@ void NVBMain::actualize(QWidget * window)
 	{
 	static QWidget * lastwindow = 0;
 
-	NVBOutputVPMsg(QString("Activated window \"%2\" (%1)").arg((int)window).arg(window ? window->windowTitle() : "No window"));
+	NVBOutputVPMsg(QString("Activated window \"%2\" (%1)").arg((size_t)window).arg(window ? window->windowTitle() : "No window"));
 
 	if (lastwindow == window) return;
 
