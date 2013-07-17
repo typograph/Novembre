@@ -176,6 +176,7 @@ void NVBApplication::createFactories() {
 		if (!tf) NVBCriticalError("Tools factory failed to initialize");
 
 		qApp->setProperty("toolsFactory", QVariant::fromValue(tf));
+		qApp->setProperty("iconProvider", QVariant::fromValue((NVBIconProvider*)tf));
 
 		NVBFileFactory * ff = new NVBFileFactory();
 
