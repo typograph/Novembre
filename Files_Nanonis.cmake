@@ -1,5 +1,5 @@
-set(nanonis_SRCS src/nanonis.cpp)
-set(nanonis_HDRS src/nanonis.h)
+set(nanonis_SRCS src/files/nanonis.cpp)
+set(nanonis_HDRS src/files/nanonis.h)
 
 qt4_wrap_cpp(nanonis_MOC_SRCS ${nanonis_HDRS})
 

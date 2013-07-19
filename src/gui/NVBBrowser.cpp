@@ -74,7 +74,7 @@ double log2( double n ) {
 	}
 #endif
 
-#include "../icons/browser.xpm"
+#include "../../icons/browser.xpm"
 #include "NVBSettings.h"
 
 class NVBDataSet34Substractor : public NVBFile2ImageConverter {

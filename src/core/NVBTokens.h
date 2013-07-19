@@ -34,39 +34,36 @@
  * column format strings of NVBBrowser.
  *
  * The string in question has the following format:
- *
+ * 
+ * \code
  * format ::= expression
  * expression ::= conditional | fileParam | dataParam | axis_param | user_text
- * conditional ::= ? cond_char expression [: expression] '|'
- * cond_char ::= S | T | = number | < number | > number | !
+ * conditional ::= '?' cond_char expression [':' expression] '|'
+ * cond_char ::= 'S' | 'T' | '=' number | '<' number | '>' number | '!'
  * user_text ::= '"' any_text '"'
  * axis_param ::= ['(' axis_name ')' | '(' axis_index ')'] axisParam
+ * \endcode
  *
- * 1) File parameters
- *
- * fileATime : File access time
- * fileMTime : File modification time
- * fileCTime : File creation time
- * fileName  : File name
- * fileNames : Files on disk
- * fileSize  : File size
- * nPages    : Number of datasets
- *
- * 2) Dataset parameters
- *
- * dataName  : Dataset name
- * dataSize  : Data dimensions
- * dataUnits : Data units
- * dataNAxes : Number of axes
- * dataIsTopo : Toporaphy data bool
- * dataIsSpec : Spectroscopy data bool
- *
- * 3) Axis parameters
- *
- * axisName   : axis name
- * axisLength : axis length
- * axisSpan   : axis length in units
- * axisUnits  : axis units
+ * -# File parameters
+ *   - fileATime : File access time
+ *   - fileMTime : File modification time
+ *   - fileCTime : File creation time
+ *   - fileName  : File name
+ *   - fileNames : Files on disk
+ *   - fileSize  : File size
+ *   - nPages    : Number of datasets
+ * -# Dataset parameters
+ *   - dataName  : Dataset name
+ *   - dataSize  : Data dimensions
+ *   - dataUnits : Data units
+ *   - dataNAxes : Number of axes
+ *   - dataIsTopo : Toporaphy data bool
+ *   - dataIsSpec : Spectroscopy data bool
+ * -# Axis parameters
+ *   - axisName   : axis name
+ *   - axisLength : axis length
+ *   - axisSpan   : axis length in units
+ *   - axisUnits  : axis units
  */
 
 

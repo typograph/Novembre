@@ -26,7 +26,7 @@
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QToolBar>
-#include "../icons/icons_log.xpm"
+#include "../../icons/icons_log.xpm"
 #include "NVBLogger.h"
 
 NVBLogModel::NVBLogModel(QObject * parent): QAbstractItemModel(parent) {

@@ -1,5 +1,7 @@
 set(fileplugins createc nanonis rhk) #rhk4 winspm)
 
+include_directories("src/core")
+
 include(Files_Createc.cmake)
 include(Files_Nanonis.cmake)
 include(Files_RHK.cmake)

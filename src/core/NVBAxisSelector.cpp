@@ -27,13 +27,16 @@
  *
  *  \class NVBAxisSelector
  *
- * This class is a part of the mechanism that allows one
- * to check if the available data conforms to a set of rules.
- * E.g. one can check if the data has enough axes for a 2D FFT
- * transform or select two axes with the same units -
- * the possibilities are quite vast.
+ * AxisSelector is a helper class that allows one to find a set of axes and maps in a given
+ * DataSet, DataSource or a list of DataSource's that satisfy a set of requirements.
+ * E.g. one can check if the data has enough axes for a 2D FFT transform or
+ * select two axes with the same units.
  *
- * The examples below show some use cases.
+ * The AxisSelector should be initialized by constructing a set of rules, using the add* functions.
+ * Then the set is matched against the axes with an instantiate* function. The resulting instance
+ * can then be used to get to the necessary axes.
+ * 
+ * The examples below show the initialization for some use cases.
  *
  * \li Make sure the dataset has at least 3 axes:
  * \code

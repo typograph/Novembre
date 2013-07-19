@@ -34,7 +34,7 @@
 #include "NVBSingle2DView.h"
 #include "NVBSingleGraphView.h"
 
-#include "../icons/singleview.xpm"
+#include "../../icons/singleview.xpm"
 
 template <class T, class S>
 QVector<T> mappedVector(const QVector<T> & values, const QVector<S> & indexes) {

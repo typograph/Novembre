@@ -1,104 +1,107 @@
 # Log
-set(browser_HDRS src/NVBLogger.h)
+# set(browser_HDRS src/gui/NVBLogger.h)
+set(browser_HDRS)
 set(browser_SRCS)
 
 if (NOVEMBRE_LOG)
 	set(browser_HDRS
 		${browser_HDRS}
-		src/NVBLogUtils.h
+		src/gui/NVBLogUtils.h
 		)
 	set(browser_SRCS
 		${browser_SRCS}
-		src/NVBLogger.cpp
-		src/NVBLogUtils.cpp
+# 		src/gui/NVBLogger.cpp
+		src/gui/NVBLogUtils.cpp
 		)
 endif(NOVEMBRE_LOG)
+
+include_directories("src/core")
 
 # STMFile tools
 set(browser_HDRS
 	${browser_HDRS}
-	src/NVBFileBundle.h
-# 	src/NVBGeneratorsSettingsWidget.h
-	src/NVBFilePluginModel.h
-	src/NVBFileFactory.h
+	src/gui/NVBFileBundle.h
+# 	src/gui/NVBGeneratorsSettingsWidget.h
+	src/gui/NVBFilePluginModel.h
+	src/gui/NVBFileFactory.h
 	)
 set(browser_SRCS
 	${browser_SRCS}
-	src/NVBFileBundle.cpp
-	src/NVBGeneratorsSettingsWidget.cpp
-	src/NVBFilePluginModel.cpp
-	src/NVBFileFactory.cpp
+	src/gui/NVBFileBundle.cpp
+	src/gui/NVBGeneratorsSettingsWidget.cpp
+	src/gui/NVBFilePluginModel.cpp
+	src/gui/NVBFileFactory.cpp
 	)
 
 # FileBrowser
 set(browser_HDRS
 	${browser_HDRS}
-	src/NVBGradientMenu.h
-	src/NVBMutableGradients.h
-	src/NVBPageInfoWidget.h
-	src/NVBPageInfoView.h
-	src/NVBFileListView.h
-# 	src/NVBColumnsModel.h
-	src/NVBColumnDialog.h
-	src/NVBFileFilterDialog.h
-	src/NVBDirModelHelpers.h
-	src/NVBDirModel.h
-	src/NVBDirView.h
-	src/NVBDirViewModel.h
-	src/NVBPosLabel.h
-	src/NVBSingle2DView.h
-	src/NVBPlotCurves.h
-	src/NVBPhysScaleDraw.h
-	src/NVBSingleGraphView.h
-	src/NVBSingleView.h
-	src/NVBBrowserHelpers.h
-	src/NVBBrowser.h
+	src/gui/NVBGradientMenu.h
+	src/gui/NVBMutableGradients.h
+	src/gui/NVBPageInfoWidget.h
+	src/gui/NVBPageInfoView.h
+	src/gui/NVBFileListView.h
+# 	src/gui/NVBColumnsModel.h
+	src/gui/NVBColumnDialog.h
+	src/gui/NVBFileFilterDialog.h
+	src/gui/NVBDirModelHelpers.h
+	src/gui/NVBDirModel.h
+	src/gui/NVBDirView.h
+	src/gui/NVBDirViewModel.h
+	src/gui/NVBPosLabel.h
+	src/gui/NVBSingle2DView.h
+	src/gui/NVBPlotCurves.h
+	src/gui/NVBPhysScaleDraw.h
+	src/gui/NVBSingleGraphView.h
+	src/gui/NVBSingleView.h
+	src/gui/NVBBrowserHelpers.h
+	src/gui/NVBBrowser.h
 	)
 
 set(browser_SRCS
 	${browser_SRCS}
-	src/NVBGradientMenu.cpp
-	src/NVBMutableGradients.cpp
-	src/NVBPageInfoWidget.cpp
-	src/NVBFileListView.cpp
-	src/NVBColumnsModel.cpp
-	src/NVBColumnDialog.cpp
-	src/NVBFileFilterDialog.cpp
-	src/NVBDirModelHelpers.cpp
-	src/NVBDirModel.cpp
-	src/NVBDirView.cpp
-	src/NVBDirViewModel.cpp
-	src/NVBPosLabel.cpp
-	src/NVBSingle2DView.cpp
-	src/NVBPlotCurves.cpp
-	src/NVBPhysScaleDraw.cpp
-	src/NVBSingleGraphView.cpp
-	src/NVBSingleView.cpp
-	src/NVBBrowserHelpers.cpp
-	src/NVBBrowser.cpp
+	src/gui/NVBGradientMenu.cpp
+	src/gui/NVBMutableGradients.cpp
+	src/gui/NVBPageInfoWidget.cpp
+	src/gui/NVBFileListView.cpp
+	src/gui/NVBColumnsModel.cpp
+	src/gui/NVBColumnDialog.cpp
+	src/gui/NVBFileFilterDialog.cpp
+	src/gui/NVBDirModelHelpers.cpp
+	src/gui/NVBDirModel.cpp
+	src/gui/NVBDirView.cpp
+	src/gui/NVBDirViewModel.cpp
+	src/gui/NVBPosLabel.cpp
+	src/gui/NVBSingle2DView.cpp
+	src/gui/NVBPlotCurves.cpp
+	src/gui/NVBPhysScaleDraw.cpp
+	src/gui/NVBSingleGraphView.cpp
+	src/gui/NVBSingleView.cpp
+	src/gui/NVBBrowserHelpers.cpp
+	src/gui/NVBBrowser.cpp
 	)
 
 # Application headers
 set(browser_HDRS
 	${browser_HDRS}
-# 	src/NVBStandardIcons.h
-# 	src/NVBSettings.h
-	src/NVBSettingsDialog.h
-	src/NVBMainWindow.h
-	src/NVBMainDocks.h
-	src/NVBCoreApplication.h
-	src/NvBrowserApp.h
+# 	src/gui/NVBStandardIcons.h
+# 	src/gui/NVBSettings.h
+	src/gui/NVBSettingsDialog.h
+	src/gui/NVBMainWindow.h
+	src/gui/NVBMainDocks.h
+	src/gui/NVBCoreApplication.h
+	src/gui/NvBrowserApp.h
 	)
 
 set(browser_SRCS
 	${browser_SRCS}
-	src/NVBStandardIcons.cpp
-	src/NVBSettings.cpp
-	src/NVBSettingsDialog.cpp
-	src/NVBMainWindow.cpp
-	src/NVBMainDocks.cpp
-	src/NVBCoreApplication.cpp
-	src/NvBrowserApp.cpp
+	src/gui/NVBStandardIcons.cpp
+# 	src/gui/NVBSettings.cpp
+	src/gui/NVBSettingsDialog.cpp
+	src/gui/NVBMainWindow.cpp
+	src/gui/NVBMainDocks.cpp
+	src/gui/NVBCoreApplication.cpp
+	src/gui/NvBrowserApp.cpp
 	)
 
 # icons

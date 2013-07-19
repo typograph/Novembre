@@ -1,5 +1,5 @@
-set(winspm_SRCS src/winspm.cpp)
-set(winspm_HDRS src/winspm.h)
+set(winspm_SRCS src/files/winspm.cpp)
+set(winspm_HDRS src/files/winspm.h)
 
 qt4_wrap_cpp(winspm_MOC_SRCS ${winspm_HDRS})
 

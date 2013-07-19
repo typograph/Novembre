@@ -36,7 +36,7 @@
 #include <QtCore/QStringList>
 #endif
 
-#include "NVBCoreApplication.h"
+#include "gui/NVBCoreApplication.h"
 
 class NVBApplication : public NVBCoreApplication {
 		Q_OBJECT

@@ -30,6 +30,14 @@
 class QPixmap;
 class NVBDataSet;
 
+/**
+ * \class NVBAxisMap
+ *
+ * NVBAxisMap defines a way to associate values of an arbitrary type with
+ * points in an N-dimentional space. In a sense, this is an NVBDataSet where the
+ * values are not of type double, but of some other type, like QColor, QString or NVBPhysValue.
+ */
+/// A mapping of arbitrary type from a set of axes.
 class NVBAxisMap {
 	private:
 	public:
@@ -38,29 +46,34 @@ class NVBAxisMap {
 
 		/// Defines the way indexes are mapped into values.
 		enum MapType {
-		  General = 0, /// Arbitrary mapping, any distribution.
-		  Linear = 1,  /// Linear mapping, the resulting points are linearly distributed
-		  Linear2D = 2 /// Bilinear mapping, the resulting points are on a regular grid (not necessarily rectangular).
-		             /// A map of this type can be cast into QTransform.
+		  General = 0, ///< Arbitrary mapping, any distribution.
+		  Linear = 1,  ///< Linear mapping, the resulting points are linearly distributed
+		  Linear2D = 2 ///< Bilinear mapping, the resulting points are on a regular grid (not necessarily rectangular).
+		               ///< A map of this type can be cast into QTransform.
 		};
 
 		/// Defines the type of output values.
 		enum ValueType {
-		  Template = 0, /// Underfined
-		  Physical = 1, /// NVBPhysValue
-		  Point = 2,    /// NVBPhysPoint
-		  Color = 3,    /// QColor
-		  Label = 4     /// QString
+		  Template = 0, ///< Undefined
+		  Physical = 1, ///< NVBPhysValue
+		  Point = 2,    ///< NVBPhysPoint
+		  Color = 3,    ///< QColor
+		  Label = 4     ///< QString
 		};
 
+		/// Returns the number of axes this map covers
 		virtual int dimension() const = 0;
 
+		/// Returns the type of map values (\sa QMetatype)
 		virtual int valType() const = 0;
+		/// Returns the type of the map
 		virtual NVBAxisMap::MapType mapType() const { return General; }
+		/// Returns the type of map values for common maps
 		virtual NVBAxisMap::ValueType mappingType() const = 0;
-
+		/// Returns the value of the map at a specified point
 		virtual NVBVariant value(QVector<axissize_t> indexes) = 0;
 
+		/// Creates a deep copy of the map
 		virtual NVBAxisMap * copy() = 0;
 	};
 

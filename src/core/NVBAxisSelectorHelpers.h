@@ -94,14 +94,14 @@ struct NVBSelectorRules {
 
 	enum NVBSelectorRulesType {
 	  None
-	  ,	Axis
+	  , Axis
 	  , Map
 	  , Dataset
 	};
 
 	enum NVBSelectorRuleType {
 	  Invalid = 0
-	            , Index     // Axis, ? Dataset
+	  , Index     // Axis, ? Dataset
 	  , Name      // Axis, Dataset
 	  , MinSize   // Axis, Map, Dataset
 	  , MaxSize   // Axis, ? Map, Dataset
@@ -112,10 +112,10 @@ struct NVBSelectorRules {
 	};
 
 	enum NVBAxisBuddy {
-	  Copy = 0
-	         , SameUnits = 1
-	                       , SameLength = 2
-	                                      , SameMap = 4
+	  Copy = 0,
+	  SameUnits = 1,
+	  SameLength = 2,
+	  SameMap = 4
 	};
 
 	NVBSelectorRules(NVBSelectorRulesType type);

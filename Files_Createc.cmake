@@ -3,8 +3,8 @@ if(WIN32)
   include_directories(${ZLIB_INCLUDE_DIR})
 endif(WIN32)
 
-set(createc_SRCS src/createc.cpp)
-set(createc_HDRS src/createc.h)
+set(createc_SRCS src/files/createc.cpp)
+set(createc_HDRS src/files/createc.h)
 
 qt4_wrap_cpp(createc_MOC_SRCS ${createc_HDRS})
 

@@ -25,8 +25,8 @@
 #include <stdlib.h>
 
 #include "Novembre.h"
-#include "NVBMain.h"
-#include "NVBSettings.h"
+#include "gui/NVBMain.h"
+#include "core/NVBSettings.h"
 #include <QtCore/QDir>
 
 int main(int argc, char *argv[]) {

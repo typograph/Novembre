@@ -41,12 +41,11 @@ class NVBSelectorCase {
 		friend class NVBSelectorSourceInstance;
 		friend class NVBSelectorFileInstance;
 	public:
-		enum Type { Undefined, AND, OR };
 		int id;
-
 	private:
+		enum Type { Undefined, AND, OR };
 		Type t;
-// 	NVBDataSet::Type target;
+
 		QList<NVBSelectorCase> cases;
 		NVBSelectorDataset dataset;
 
@@ -101,19 +100,19 @@ class NVBSelectorCase {
 // 	NVBSelectorAxisInstanceList match(const NVBDataSource * dataSource) const
 // 		{ return dataset.match(dataSource); }
 
-		/// Returns an instance, that reports all datasources that have matching datasets
+		/// Returns an instance that reports all datasources that have matching datasets
 		NVBSelectorFileInstance instantiate(const QList<NVBDataSource *> * dataSources);
-		/// Returns an instance, that reports one datasource from the list that has matching datasets
+		/// Returns an instance that reports one datasource from the list that has matching datasets
 		NVBSelectorSourceInstance instantiateOneSource(const QList<NVBDataSource *> * dataSources);
-		/// Returns an instance, that reports the first matching dataset from the list
+		/// Returns an instance that reports the first matching dataset from the list
 		NVBSelectorDataInstance instantiateOneDataset(const QList<NVBDataSource *> * dataSources);
 
-		/// Returns an instance, that reports all matching datasets (may be none)
+		/// Returns an instance that reports all matching datasets (may be none)
 		NVBSelectorSourceInstance instantiate(const NVBDataSource * dataSource);
-		/// Returns an instance, that reports the first matching dataset from the list
+		/// Returns an instance that reports the first matching dataset from the list
 		NVBSelectorDataInstance instantiateOneDataset(const NVBDataSource * dataSource);
 
-		/// Returns an instance, that has info on all matching axes from the selector (may be invalid if no match)
+		/// Returns an instance that has info on all matching axes from the selector (may be invalid if no match)
 		NVBSelectorDataInstance instantiate(const NVBDataSet * dataSet);
 
 // 	void optimize();

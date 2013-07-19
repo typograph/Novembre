@@ -6,21 +6,21 @@ endif(NOVEMBRE_3DVIEW)
 
 # Log
 
-set(nvblib_HDRS src/NVBLogger.h)
+set(nvblib_HDRS src/core/NVBLogger.h)
 set(nvblib_SRCS)
 
 if (NOVEMBRE_LOG)
-  set(nvblib_SRCS src/NVBLogger.cpp)
+  set(nvblib_SRCS src/core/NVBLogger.cpp)
 endif (NOVEMBRE_LOG)
 
 # if (NOVEMBRE_2DVIEW)
 # 	set(nvblib_HDRS
 # 		${nvblib_HDRS}
-# 		src/NVBGraphicsItems.h
+# 		src/core/NVBGraphicsItems.h
 # 		)
 # 	set(nvblib_SRCS
 # 		${nvblib_SRCS}
-# 		src/NVBGraphicsItems.cpp
+# 		src/core/NVBGraphicsItems.cpp
 # 		)
 # endif (NOVEMBRE_2DVIEW)
 
@@ -28,50 +28,50 @@ endif (NOVEMBRE_LOG)
 
 set(nvblib_HDRS
 	${nvblib_HDRS}
-	src/NVBMap.h
-	src/NVBDatasetIcons.h
-	src/NVBDataSource.h
-	src/NVBDataSourceModel.h
-	src/NVBFile.h
+	src/core/NVBMap.h
+	src/core/NVBDatasetIcons.h
+	src/core/NVBDataSource.h
+	src/core/NVBDataSourceModel.h
+	src/core/NVBFile.h
 	)
 
 set(nvblib_SRCS
 	${nvblib_SRCS}
-	src/NVBScaler.cpp
-	src/NVBUnits.cpp
-	src/NVBVariant.cpp
-	src/NVBMap.cpp
-	src/NVBDataCore.cpp
-	src/NVBDataTransforms.cpp
-	src/NVBDatasetIcons.cpp
-	src/NVBDataSource.cpp
-	src/NVBDataSourceModel.cpp
-	src/NVBAxisSelectorHelpers.cpp
-	src/NVBAxisSelector.cpp
-	src/NVBTokens.cpp
-	src/NVBFileInfo.cpp
-	src/NVBMimeData.cpp
-	src/NVBFile.cpp
+	src/core/NVBScaler.cpp
+	src/core/NVBUnits.cpp
+	src/core/NVBVariant.cpp
+	src/core/NVBMap.cpp
+	src/core/NVBDataCore.cpp
+	src/core/NVBDataTransforms.cpp
+	src/core/NVBDatasetIcons.cpp
+	src/core/NVBDataSource.cpp
+	src/core/NVBDataSourceModel.cpp
+	src/core/NVBAxisSelectorHelpers.cpp
+	src/core/NVBAxisSelector.cpp
+	src/core/NVBTokens.cpp
+	src/core/NVBFileInfo.cpp
+	src/core/NVBMimeData.cpp
+	src/core/NVBFile.cpp
 	)
 
 # Helpful objects for plugins
 
 set(nvblib_HDRS
 	${nvblib_HDRS}
-	src/NVBPhysSpinBox.h
-	src/NVBPhysStepSpinBox.h
-	src/NVBColorWidgets.h
-	src/NVBSettingsWidget.h
+	src/core/NVBPhysSpinBox.h
+	src/core/NVBPhysStepSpinBox.h
+	src/core/NVBColorWidgets.h
+	src/core/NVBSettingsWidget.h
 	)
 
 set(nvblib_SRCS
 	${nvblib_SRCS}
-	src/NVBColorMaps.cpp
-	src/NVBPhysSpinBox.cpp
-	src/NVBPhysStepSpinBox.cpp
-	src/NVBColorWidgets.cpp
-	src/NVBSettings.cpp
-	src/NVBSettingsWidget.cpp
+	src/core/NVBColorMaps.cpp
+	src/core/NVBPhysSpinBox.cpp
+	src/core/NVBPhysStepSpinBox.cpp
+	src/core/NVBColorWidgets.cpp
+	src/core/NVBSettings.cpp
+	src/core/NVBSettingsWidget.cpp
 	)
 
 qt4_wrap_cpp(nvblib_MOC_SRCS ${nvblib_HDRS})

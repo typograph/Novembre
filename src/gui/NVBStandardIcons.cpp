@@ -20,8 +20,8 @@
 #include "NVBStandardIcons.h"
 #include <QtGui/QIcon>
 
-#include "../icons/novembre_v1.xpm"
-#include "../icons/mainwindow.xpm"
+#include "../../icons/novembre_v1.xpm"
+#include "../../icons/mainwindow.xpm"
 
 
 class NVBStandardIconFactory {
