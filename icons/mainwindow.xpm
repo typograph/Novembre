@@ -1,0 +1,331 @@
+/* XPM */
+const char * _main_browse_8[] = {
+/* columns rows colors chars-per-pixel */
+"8 8 5 1",
+"  c None",
+". c gray50",
+": c gray75",
+"X c black",
+"1 c red",
+/* pixels */
+"XXX  XXX",
+"X1X  X:X",
+"XXX  XXX",
+"...  ...",
+"XXX  XXX",
+"X.X  X X",
+"XXX  XXX",
+"...  ..."
+};
+
+/* XPM */
+const char * _main_browse_16[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 5 1",
+"  c None",
+". c gray50",
+": c gray75",
+"X c black",
+"1 c red",
+/* pixels */
+"XXXXXXX  XXXXXXX",
+"X.    X  X.....X",
+"X . 11X  X:....X",
+"X  1  X  X::...X",
+"X11 . X  X:::..X",
+"X    .X  X:::..X",
+"XXXXXXX  XXXXXXX",
+"                ",
+"XXXXXXX  XXXXXXX",
+"X     X  X     X",
+"X ... X  X     X",
+"X  .  X  X     X",
+"X  .  X  X     X",
+"X     X  X     X",
+"XXXXXXX  XXXXXXX",
+"                "
+};
+
+/* XPM */
+const char * _main_browse_24[] = {
+/* columns rows colors chars-per-pixel */
+"24 24 5 1",
+"  c None",
+". c gray50",
+", c gray75",
+"X c black",
+"1 c red",
+/* pixels */
+"                        ",
+" XXXXXXXXX    XXXXXXXXX ",
+" X.      X    X.......X ",
+" X .   11X    X:......X ",
+" X  . 1  X    X::.....X ",
+" X  .1   X    X::.....X ",
+" X  1.   X    X:::....X ",
+" X11  ...X    X::::...X ",
+" X       X    X:::::..X ",
+" XXXXXXXXX    XXXXXXXXX ",
+"                        ",
+" XXXXXXXXX    XXXXXXXXX ",
+"                        ",
+" XXXXXXXXX    XXXXXXXXX ",
+" X       X    X       X ",
+" X ..... X    X       X ",
+" X . . . X    X       X ",
+" X   .   X    X       X ",
+" X   .   X    X       X ",
+" X  ...  X    X       X ",
+" X       X    X       X ",
+" XXXXXXXXX    XXXXXXXXX ",
+"                        ",
+" XXXXXXXXX    XXXXXXXXX "
+};
+
+/* XPM */
+const char * _main_browse_32[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 5 1",
+"  c None",
+". c gray50",
+", c gray75",
+"X c black",
+"1 c red",
+/* pixels */
+"                                ",
+" XXXXXXXXXXXX      XXXXXXXXXXXX ",
+" X          X      X,.........X ",
+" X.         X      X,,........X ",
+" X .       1X      X,,........X ",
+" X . ..  11 X      X,,,.......X ",
+" X  . 1.1   X      X,,,,......X ",
+" X   1 ..   X      X,,,,......X ",
+" X  1    . .X      X,,,,,.....X ",
+" X11     .. X      X,,,,,,....X ",
+" X          X      X,,,,,,....X ",
+" X          X      X,,,,,,,...X ",
+" XXXXXXXXXXXX      XXXXXXXXXXXX ",
+"                                ",
+" XXXXXXXXXXXX      XXXXXXXXXXXX ",
+"                                ",
+"                                ",
+" XXXXXXXXXXXX      XXXXXXXXXXXX ",
+" X          X      X          X ",
+" X ,,,,,,,, X      X          X ",
+" X ,, ,, ,, X      X          X ",
+" X ,  ,,  , X      X          X ",
+" X    ,,    X      X          X ",
+" X    ,,    X      X          X ",
+" X    ,,    X      X          X ",
+" X    ,,    X      X          X ",
+" X   ,,,,   X      X          X ",
+" X          X      X          X ",
+" XXXXXXXXXXXX      XXXXXXXXXXXX ",
+"                                ",
+" XXXXXXXXXXXX      XXXXXXXXXXXX ",
+"                                "
+};
+
+/* XPM */
+const char * _main_open_8[] = {
+/* columns rows colors chars-per-pixel */
+"8 8 3 1",
+"  c None",
+". c black",
+"X c yellow",
+/* pixels */
+" ..   X ",
+".  . XXX",
+".   X.X ",
+". ..X...",
+"..    . ",
+"..    . ",
+".    .  ",
+"......  "
+};
+
+
+/* XPM */
+const char * _main_open_16[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 4 1",
+"  c None",
+". c black",
+", c gray50",
+"X c yellow",
+/* pixels */
+"            ..  ",
+" ....     ,,.X. ",
+".    .  ,.XXXXX.",
+".    .  .XX,,X. ",
+".    ....XX,,.  ",
+".       .XX,    ",
+".       .X.     ",
+".  ............ ",
+".  .         .. ",
+". .          .  ",
+". .          .  ",
+"..          .   ",
+"..          .   ",
+".          .    ",
+"..        ..    ",
+"...........     "
+};
+
+
+/* XPM */
+const char * _main_open_24[] = {
+/* columns rows colors chars-per-pixel */
+"24 24 3 1",
+"  c None",
+". c black",
+"X c yellow",
+/* pixels */
+"                   ..   ",
+"  .....          ...X.  ",
+" .     .       ..XXXXX. ",
+" .     .      .XXXXXXXX.",
+" .     .     ..XXXXXXX. ",
+" .     .......XXXX..X.  ",
+" .           .XXX.  .   ",
+" .           .XXX.      ",
+" .           .XXX.      ",
+" .   .................. ",
+" .   .                . ",
+" .   .                . ",
+" .  .                .  ",
+" .  .                .  ",
+" .  .                .  ",
+" . .                .   ",
+" . .                .   ",
+" . .                .   ",
+" ..                .    ",
+" ..                .    ",
+" ..                .    ",
+" ..               .     ",
+"  .................     ",
+"                        "
+};
+
+
+/* XPM */
+const char * _main_open_32[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 3 1",
+"  c None",
+". c black",
+"X c yellow",
+/* pixels */
+"                                ",
+"                        ..      ",
+"                        .X.     ",
+"  ......             ....XX.    ",
+" .      .          ..XXXXXXX.   ",
+" .      .         .XXXXXXXXXX.  ",
+" .      .        .XXXXXXXXXX.   ",
+" .  .............XXXXX...XX.    ",
+" ...            .XXXX.  .X.     ",
+" .              .XXXX.  ..      ",
+" .              .XXXX.          ",
+" .              .XXXX.  .       ",
+" .               .XX.    .      ",
+" .    ......................    ",
+" .   ..                    ..   ",
+" .   .                      .   ",
+" .   .                      .   ",
+" .   .                      .   ",
+" .  .                      .    ",
+" .  .                      .    ",
+" .  .                      .    ",
+" .  .                      .    ",
+" . .                      .     ",
+" . .                      .     ",
+" . .                      .     ",
+" . .                      .     ",
+" ..                      .      ",
+" ..                      .      ",
+" ..                      .      ",
+" ..                      .      ",
+"  .......................       ",
+"                                "
+};
+
+/* XPM */
+const char * _main_PageList[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 2 1",
+"  c None",
+"X c black",
+"                                ",
+"   XXXXXX                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X   XXXXXXXXXXXXXXXXXX  ",
+"   XXXXXX                       ",
+"                                ",
+"                                ",
+"   XXXXXX                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X   XXXXXXXXXXXXXXXXXX  ",
+"   XXXXXX                       ",
+"                                ",
+"                                ",
+"   XXXXXX                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X   XXXXXXXXXXXXXXXXXX  ",
+"   XXXXXX                       ",
+"                                ",
+"                                ",
+"   XXXXXX                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X                       ",
+"   X    X   XXXXXXXXXXXXXXXXXX  ",
+"   XXXXXX                       ",
+"                                "
+};
+
+/* XPM */
+const char * _main_WidgetList[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 2 1",
+"  c None",
+"X c black",
+"                                ",
+"                                ",
+"                                ",
+"   XX                           ",
+"   XXXX                         ",
+"   XXXXXX   XXXXXXXXXXXXXXXXXX  ",
+"   XXXX                         ",
+"   XX                           ",
+"                                ",
+"                                ",
+"                                ",
+"   XX                           ",
+"   XXXX                         ",
+"   XXXXXX   XXXXXXXXXXXXXXXXXX  ",
+"   XXXX                         ",
+"   XX                           ",
+"                                ",
+"                                ",
+"                                ",
+"   XXXXX                        ",
+"   XXXXX                        ",
+"    XXX     XXXXXXXXXXXXXXXXXX  ",
+"    XXX                         ",
+"     X                          ",
+"     X      XXXXXXXXXXXXXXXXXX  ",
+"                                ",
+"     X                          ",
+"     X      XXXXXXXXXXXXXXXXXX  ",
+"     X                          ",
+"     X                          ",
+"     XXXXXXXXXXXXXXXXXXXXXXXXX  ",
+"                                "
+};
