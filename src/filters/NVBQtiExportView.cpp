@@ -36,7 +36,8 @@ NVBQtiExportView::NVBQtiExportView(NVBWorkingArea * area, QString filename)
 	, qti_file(new QFile(filename, this)) {
 
 	setWindowTitle(QString("QtiPlot project %1").arg(filename));
-
+	setAttribute(Qt::WA_DeleteOnClose);
+	
 	list = new QListWidget(this);
 //   c_line = new QLineEdit(this);
 //   c_line->setReadOnly(true);
