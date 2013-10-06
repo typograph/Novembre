@@ -23,9 +23,6 @@
 #include <QtCore/QAbstractListModel>
 #include "NVBDataSource.h"
 
-/**
-	@author Timofey <timoty@pi-balashov>
-*/
 class NVBDataSourceModel : public QAbstractListModel {
 		Q_OBJECT
 	public:

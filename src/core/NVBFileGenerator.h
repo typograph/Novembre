@@ -60,7 +60,7 @@ class NVBFileGenerator {
 		/// The list of supported filenames, using wildcards \sa QDir::setNameFilers. Filters are case-insensitive
 		virtual QStringList extFilters() const = 0; // wildcards
 
-		/// Load full file data from \param file
+		/// Load full file data from \param info
 		virtual NVBFile * loadFile(const NVBAssociatedFilesInfo & info) const throw() = 0;
 		/// Load file information from \param info
 		virtual NVBFileInfo * loadFileInfo(const NVBAssociatedFilesInfo & info) const throw() = 0;

@@ -97,7 +97,7 @@ NVBVariantList NVBVariant::toList() const {
 	if (userType() == QVariant::List) {
 		NVBVariantList l;
 		foreach(QVariant v, QVariant::toList())
-		l << v;
+			l << v;
 		return l;
 		}
 

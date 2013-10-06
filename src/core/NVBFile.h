@@ -52,7 +52,7 @@ class NVBFile : public QObject, public QList<NVBDataSource*> {
 		/// Returns info about the original files
 		NVBAssociatedFilesInfo sources() const { return files; }
 
-		//! \Returns all file-global comments
+		//! \return all file-global comments
 		inline NVBDataComments getAllComments() const { return comments; }
 		//! Return a file-global comment for \a key
 		inline NVBVariant getComment(const QString & key) const { return comments.value(key); }

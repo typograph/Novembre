@@ -30,21 +30,45 @@ Q_DECLARE_METATYPE(NVBVariant);
 class NVBVariantList;
 Q_DECLARE_METATYPE(NVBVariantList);
 
+/**
+ * \class NVBVariantList
+ * 
+ * NVBVariantList is a list of NVBVariant values with an added ability to
+ * convert the list to a QString. The individual values are converted to QString
+ * and the resulting strings are concatenated, separated by separator().
+ */
+/// A list of NVBVariant
 class NVBVariantList : public QList<NVBVariant> {
 
 	private:
 		QString _separator;
 	public:
+		/// Returns the separator for string conversion
 		QString separator() const { return _separator; }
+		/// Sets the separator for string conversion
 		void setSeparator(const QString & separator) { _separator = separator; }
 
+		/// Converts the list to string with elements separated with separator()
 		QString toString(QString separator = QString()) const;
+		/// Converts every list element to a string and returns a list of there strings
 		QStringList toStringList() const;
 	};
 
+/**
+ * \class NVBVariant
+ * 
+ * NVBVariant is an extension of QVariant that natively supports
+ * Novembre types such as NVBUnits, NVBPhysValue and NVBVariantList.
+ * The support includes correct ordering and string conversion.
+ * 
+ * NVBVariant is the type of comment values returned by file plugins
+ * (see NVBFileInfo::getComment()).
+ */
+/// Novembre version of QVariant, supporting core classes
 class NVBVariant: public QVariant {
 	private:
 	public:
+		/// Constructs an invalid NVBVariant
 		NVBVariant (): QVariant() {;}
 		/*  NVBVariant ( Type type );
 		  NVBVariant ( int typeOrUserType, const void * copy ) ;
@@ -80,25 +104,37 @@ class NVBVariant: public QVariant {
 		  NVBVariant ( const QLocale & l ) ;
 		  NVBVariant ( const QRegExp & regExp ) ;
 		  NVBVariant ( Qt::GlobalColor color ) ;*/
+		/// Constructs an NVBVariant from QVariant
 		NVBVariant ( const QVariant & val): QVariant(val) { ; }
+		/// Constructs an NVBVariant containing a value of arbitrary type
 		template <typename T>
 		NVBVariant ( const T & val): QVariant() { setValue(val); }
 		/*template <>
 		  NVBVariant ( const NVBUnits & val);
 		template <>
 		  NVBVariant ( const NVBPhysValue & val);*/
+		/// Deconstructs NVBVariant
 		virtual ~NVBVariant () {;}
 
 //   QVariant toVariant () const ;
+		/// Converts NVBVariant to a string representation
 		QString toString () const ;
+		/// Returns an NVBUnits contained in this NVBVariant
 		NVBUnits toDimension () const;
+		/// Returns an NVBPhysValue contained in this NVBVariant
 		NVBPhysValue toPhysValue () const;
+		/// Returns a list contained in this NVBVariant
 		NVBVariantList toList() const;
 
+		/// Returns true if this NVBVariant contains an NVBVariantList or a QVariantList
 		bool isAList() const;
 
-		bool operator!= ( const NVBVariant & v ) const ;
+		/// Copies the value from another NVBVariant to this one
 		NVBVariant & operator= ( const NVBVariant & variant ) ;
+
+		/// Compares two NVBVariants for inequality
+		bool operator!= ( const NVBVariant & v ) const ;
+		/// Compares two NVBVariants for equality
 		bool operator== ( const NVBVariant & v ) const;
 		bool operator>= ( const NVBVariant & v ) const;
 		bool operator>  ( const NVBVariant & v ) const;
@@ -110,13 +146,19 @@ class NVBVariant: public QVariant {
 		bool operator<= ( const NVBPhysValue & v ) const;
 		bool operator<  ( const NVBPhysValue & v ) const;
 
+		/// Converts NVBVariant to QVariant
 		operator QVariant() const { return QVariant::fromValue(*this); }
+		/// Returns a list contained in this NVBVariant
 		operator NVBVariantList() const { return toList(); }
+		/// Returns an NVBPhysValue contained in this NVBVariant
 		operator NVBPhysValue() const { return toPhysValue(); }
+		/// Returns an NVBUnits contained in this NVBVariant
 		operator NVBUnits() const { return toDimension(); }
+		/// Converts NVBVariant to a string representation
 		operator QString() const { return toString(); }
 	};
 
+/// Compares two QVariants
 bool operator<(const QVariant & l, const QVariant & r);
 // bool variantLessThan(const NVBVariant & l, const NVBVariant & r) { return l < r; }
 

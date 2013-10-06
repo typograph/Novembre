@@ -256,6 +256,11 @@ QString NVBUnits::unitFromOrder(int order) const {
 	return order ? QString("%1%2").arg(charFromOrder(order)).arg(base) : base;
 	}
 
+/** Converts the unit into string, following the SI standard.
+	* In the case that the multiplier does not correspond to a SI letter,
+	* the rest of the multiplier that couldn't be converted is displayed in front
+	* E.g. 10^5 m will convert to "100 km".
+	*/
 QString NVBUnits::toStr() const {
 	if (!dimstr.isNull()) return dimstr;
 

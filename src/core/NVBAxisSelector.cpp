@@ -247,7 +247,7 @@ void NVBSelectorCase::optimize() {
 
 /**
  *
- * \fn NVBSelectorCase::instantiate(QList<NVBDataSource *> dataSources)
+ * \fn NVBSelectorCase::instantiate(const QList<NVBDataSource *> * dataSources)
  *
  * Armed with a list of datasources, this function tries to find the best match between
  * them. The best match is defined as the datasource that has the biggest number of matching axes.
@@ -343,23 +343,23 @@ NVBSelectorDataInstance NVBSelectorCase::instantiate(const NVBDataSet* data) {
 
 /**
 	* When NVBSelectorInstance is constructed on a dataset, it is looking for a set of axes,
-	* matching the supplied rules. The axes defined by the rules are aggregated into \fn matchedAxes(),
-	* and the other axes into \fn otherAxes(). If the rules couldn't be matched, the constructed instance
+	* matching the supplied rules. The axes defined by the rules are aggregated into matchedAxes(),
+	* and the other axes into otherAxes(). If the rules couldn't be matched, the constructed instance
 	* is invalid.
 	*
 	* @param selector Rules to match with
-	* @param ds Dataset to match to
+	* @param dataset Dataset to match to
 	**/
 
 /**
 * When NVBSelectorInstance is constructed on a datasource, it is matching each axis of the rules
-* against an axis of this dataSource. The axes defined by the rules are aggregated into \fn matchedAxes(),
-* with the non-matched rule places filled with '-1'. The other axes are put into \fn otherAxes().
+* against an axis of this dataSource. The axes defined by the rules are aggregated into matchedAxes(),
+* with the non-matched rule places filled with '-1'. The other axes are put into otherAxes().
 * If no rule matched, the constructed instance is invalid.
-* TODO To convert this instance into a dataset-based one, use \fn matchDataset()
+* TODO To convert this instance into a dataset-based one, use matchDataset()
 *
 * @param selector The NVBSelectorCase to be matched
-* @param ds DataSource to match \a selector against
+* @param dataset DataSource to match \a selector against
 **/
 
 // -------------------------------- NVBSelectorDataInstance

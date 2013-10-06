@@ -37,7 +37,7 @@ class QVBoxLayout;
  * the add*** functions are called.
  *
  * In case this simple scheme doesn't work for you, subclass NVBSettingsWidget,
- * and replace the layout and the \fn init() and \fn write() functions.
+ * and replace the layout and the init() and write() functions.
  * Do not forget to use the group in your init() function.
  */
 
