@@ -931,7 +931,7 @@ void CreatecFileGenerator::loadAllChannelsFromDAT(QString filename, NVBFile* sou
 		if ((errorcode = uncompress((Bytef *)buf, &unzsize, (Bytef *)zbuf, zsize)) != Z_OK)
 			NVBOutputError(QString("Uncompressing failed with error %1. Buffer size %2").arg(errorcode).arg(unzsize));
 		else
-			NVBOutputPMsg(QString("Uncompressed buffer to %1 bytes").arg(unzsize));
+			NVBOutputVPMsg(QString("Uncompressed buffer to %1 bytes").arg(unzsize));
 
 		free(zbuf);
 
