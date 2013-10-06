@@ -698,7 +698,7 @@ void NanonisFileGenerator::loadChannelsFromDAT(QString filename, NVBFile * sourc
 	QRegExp chName("^(.*) \\(([^\\)]*)\\)$");
 
 	foreach(QString channel, QString(file.readLine(500)).trimmed().split('\t', QString::SkipEmptyParts))
-	channels << channelFromStr(channel);
+		channels << channelFromStr(channel);
 
 	QList< QVector<double> * > data;
 
@@ -720,7 +720,8 @@ void NanonisFileGenerator::loadChannelsFromDAT(QString filename, NVBFile * sourc
 	NVBConstructableDataSource * ds = new NVBConstructableDataSource(sources);
 	sources->filterAddComments(c);
 	ds->filterAddComments(c);
-
+    
+/*
 	// We will use the first column as a map
 	if (channels.first().first.right(4) == "calc") { // Let's assume this is always a marker for equally-spaced data
 		ds->addAxis(channels.first().first.left(channels.first().first.length() - 5), data.first()->count());
@@ -733,6 +734,9 @@ void NanonisFileGenerator::loadChannelsFromDAT(QString filename, NVBFile * sourc
 
 	channels.removeFirst();
 	delete data.takeFirst();
+*/
+    // We do not assume anything
+	ds->addAxis("Point", data.first()->count());
 
 	while (!channels.isEmpty()) {
 		QPair<QString, NVBUnits> channel = channels.takeFirst();
