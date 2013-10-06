@@ -360,7 +360,7 @@ NVBVariant NVBDataSource::getComment(const QString& key, bool recursive) const {
  * between datasets. It is more useful to put the common comments into NVBDataSource,
  * and the individual ones into datasets.
  * \a newComments parameter will be filtered.
- * \li If a comment from \a newComments is already in the datasource and is the same, it will be removed from \anewComments.
+ * \li If a comment from \a newComments is already in the datasource and is the same, it will be removed from \a newComments.
  * \li If a comment from \a newComments is already in the datasource and is different, the comment in the datasource will be propagated to all already included datasets, and will be left in \a newComments
  * \li If a comment is new, it will just stay in \a newComments
  * \li If datasource has no comments, \a newComments will become the new comment list and the original object will be cleared

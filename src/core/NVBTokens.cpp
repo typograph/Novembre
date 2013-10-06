@@ -44,7 +44,7 @@ QMap<NVBFileParamToken::NVBFileParam, NVBDescrPair > NVBTokenList::initFileParam
 	}
 
 QString NVBTokenList::nameFileParam( NVBFileParamToken::NVBFileParam p ) {
-	return fileParamNames.value(p).verbName();
+	return fileParamNames.value(p,NVBDescrPair("-- BUG --", "-- BUG --")).verbName();
 	}
 
 NVBFileParamToken::NVBFileParam NVBTokenList::findFileParam( QString key ) {
@@ -69,7 +69,7 @@ QMap<NVBDataParamToken::NVBDataParam, NVBDescrPair > NVBTokenList::initDataParam
 	}
 
 QString NVBTokenList::nameDataParam( NVBDataParamToken::NVBDataParam p ) {
-	return dataParamNames.value(p).verbName();
+	return dataParamNames.value(p,NVBDescrPair("-- BUG --", "-- BUG --")).verbName();
 	}
 
 NVBDataParamToken::NVBDataParam NVBTokenList::findDataParam( QString key ) {
@@ -97,7 +97,7 @@ NVBAxisParamToken::NVBAxisParam NVBTokenList::findAxisParam( QString key ) {
 	}
 
 QString NVBTokenList::nameAxisParam(NVBAxisParamToken::NVBAxisParam p) {
-	return axisParamNames.value(p).verbName();
+	return axisParamNames.value(p,NVBDescrPair("-- BUG --", "-- BUG --")).verbName();
 	}
 
 QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > & tokens ) {
@@ -124,7 +124,8 @@ QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > 
 			case NVBToken::DataParam : {
 				if (needsemicolon) s += ';';
 
-				s += dataParamNames.value(static_cast<NVBDataParamToken*>(tokens.at(i++))->pparam).keyName();
+				s += dataParamNames.value(static_cast<NVBDataParamToken*>(tokens.at(i++))->pparam,
+				                          NVBDescrPair("-- BUG --", "-- BUG --")).keyName();
 				needsemicolon = true;
 				break;
 				}
@@ -135,9 +136,11 @@ QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > 
 				NVBAxisParamToken * at = static_cast<NVBAxisParamToken*>(tokens.at(i++));
 
 				if (at->nparam.isEmpty())
-					s += QString("(%1)%2").arg(at->ixparam).arg(axisParamNames.value(at->aparam).keyName());
+					s += QString("(%1)%2").arg(at->ixparam).arg(axisParamNames.value(at->aparam,
+				                                                NVBDescrPair("-- BUG --", "-- BUG --")).keyName());
 				else
-					s += QString("(%1)%2").arg(at->nparam).arg(axisParamNames.value(at->aparam).keyName());
+					s += QString("(%1)%2").arg(at->nparam).arg(axisParamNames.value(at->aparam,
+				                                               NVBDescrPair("-- BUG --", "-- BUG --")).keyName());
 
 				needsemicolon = true;
 				break;
@@ -146,7 +149,8 @@ QString NVBTokenList::readFromTo( int start, int end, const QList< NVBToken * > 
 			case NVBToken::FileParam : {
 				if (needsemicolon) s += ';';
 
-				s += fileParamNames.value(static_cast<NVBFileParamToken*>(tokens.at(i++))->fparam).keyName();
+				s += fileParamNames.value(static_cast<NVBFileParamToken*>(tokens.at(i++))->fparam,
+				                          NVBDescrPair("-- BUG --", "-- BUG --")).keyName();
 				needsemicolon = true;
 				break;
 				}

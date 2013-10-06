@@ -31,6 +31,13 @@
 #define exp10(x) pow(10,x)
 #endif
 
+/**
+ * \class NVBUnits
+ *
+ * NVBUnits represents a physical unit of measure. It 
+ * 
+ */
+/// Physical unit including a SI prefactor
 class NVBUnits {
 		friend class NVBPhysValue;
 	private:
@@ -45,16 +52,16 @@ class NVBUnits {
 			Construct NVBUnits by deciphering the string into power and unit.
 			If scalable is false, the string will not be deciphered, and the unit will be declared absolute.
 
-			\example NVBUnits("kHz") // kilo Herz
-			\example NVBUnits("DAC",false) // DAC units
+			     NVBUnits("kHz") // kilo Herz
+			     NVBUnits("DAC",false) // DAC units
 			*/
 		NVBUnits( const QString& s, bool scalable = true );
 		NVBUnits( const char * s, bool scalable = true );
 		/**
 			Construct NVBUnits by using the provided string as unit, and the multiplier directly.
 
-			\example NVBUnits("Hz",1000) // kilo Herz
-			\example NVBUnits("m",1) // meters
+			     NVBUnits("Hz",1000) // kilo Herz
+			     NVBUnits("m",1) // meters
 			*/
 		NVBUnits( const QString& s, double multiplier): base(s), mult(multiplier) {;}
 		~NVBUnits() {;}
@@ -81,24 +88,24 @@ class NVBUnits {
 		/// Converts SI multiplier letter into powers of 10. E.g. "k" gives 1000 and "m" gives 0.001.
 		static double multFromChar(const QChar & c);
 
-		/** \brief Returns a string representation of the unit
-		*  Converts the unit into string, following the SI standard.
-		*  In the case that the multiplier does not correspond to a SI letter,
-		*  the rest of the multiplier that couldn't be converted is displayed in front
-		*  E.g. 10^5 m will convert to "100 km".
-		*/
+		/// Returns a string representation of the unit
 		QString toStr() const;
 		/// Returns the unit without multipliers, e.g. "Hz", "m" or "DAC"
 		inline QString baseUnit() { return base; }
 
-		/** Unit is scalable when it can have a multiplier. If the constructor
-		*  was called with \p scalable = false, this function will return false.
-		*/
+		/**
+		 * \brief Checks if this unit can hava a scaling prefix
+		 * A unit is scalable when it can have a multiplier.
+		 * If the constructor was called with \p scalable = false,
+		 * this function will return false.
+		 */
 		bool isScalable() const { return mult != 0; }
 		/**
-		* An NVBUnit is invalid if it was constructed without a string.
-		* Warning - a unit with empty base is valid.
-		*/
+		 * \brief Checks if this unit is valid (has a base)
+		 * An NVBUnit is invalid if it was constructed without a string.
+		 * 
+		 * Warning: - a unit with empty base is valid.
+		 */
 		bool isValid() const { return not base.isNull(); }
 
 		/// A unit is comparable with another unit if both have the same base

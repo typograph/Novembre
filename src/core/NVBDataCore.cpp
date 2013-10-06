@@ -197,7 +197,7 @@ sliceNArray_cycle:
  * @param data The original array
  * @param n The number of axes in @a data
  * @param sizes The sizes of the @a n axes in @a data
- * @param f The function of type f(int, const int*)
+ * @param f The function of type f(axisindex_t, const axissize_t*)
  *
  */
 void fillNArray(double * data, axisindex_t n, const axissize_t * sizes, FillFunc f) {
@@ -282,7 +282,7 @@ axissize_t subprod(const axissize_t * numbers, axisindex_t m, const axisindex_t 
  */
 
 /**
- * \fn transform
+ * -- transform --
  *
  * The transformation function should move and transform the data between two arrays.
  * Definition: \code
@@ -652,14 +652,17 @@ bool NVBSliceCounter::stepIndexVector(QVector< axissize_t >& ixs, const QVector<
 	}
 
 void  NVBSliceCounter::stepIndexVector() {
-	if ( (is_running = stepIndexVector(slice.indexes, slice.sizes, step)) )
+	is_running = stepIndexVector(slice.indexes, slice.sizes, step);
+	if ( is_running )
 		slice.calculate();
 	}
 
 /**
 	* \fn NVBDataSlice::NVBDataSlice
 	*
-	* \param sizes
+	* \param dataset
+	* \param sliced
+	* \param kept
 	*/
 NVBDataSlice::NVBDataSlice(const NVBDataSet * ds, const QVector< axisindex_t >& sliced, const QVector< axisindex_t >& kept)
 	: dataset(ds)

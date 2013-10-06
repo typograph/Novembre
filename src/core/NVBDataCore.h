@@ -48,9 +48,10 @@ class NVBDataSet;
  * Therefore I leave it incomplete.
  */
 
+/// A functional dataset - returns a double for a multi-dimensional index
 typedef double (* FillFunc)(axisindex_t, const axissize_t * );
 
-/// Fill the array with values from a multi-dim. function
+/// Fill an array with values from a multi-dimensional function
 void fillNArray(double * data, axisindex_t n, const axissize_t * sizes, FillFunc);
 
 /// Get a slice at defined indexes (using pre-allocated buffer)
@@ -68,11 +69,13 @@ double * sliceNArray(const double * const data, QVector<axissize_t> sizes, QVect
 /// Get a slice of NVBDataSet. The ownership of the slice is passed to the calling function.
 double * sliceDataSet(const NVBDataSet * data, QVector<axisindex_t> sliceaxes, QVector<axissize_t> sliceixs, QVector<axisindex_t> targetaxes = QVector<axisindex_t>());
 
+typedef void (*transformFunc)(const double *, axisindex_t, const axissize_t *, axisindex_t, const axissize_t *, double * );
+
 /// Transform data using a transform function
 double * transformNArray(const double * data, axisindex_t n, const axissize_t * sizes,
                          axisindex_t m, const axisindex_t * sliceaxes, const axisindex_t * targetaxes,
                          axisindex_t p, const axissize_t * newsizes,
-                         void (*transform)(const double *, axisindex_t, const axissize_t *, axisindex_t, const axissize_t *, double * ) );
+                         transformFunc transform  );
 
 //
 //----------------
@@ -80,11 +83,15 @@ double * transformNArray(const double * data, axisindex_t n, const axissize_t * 
 //---------------
 // Now some helper functions
 
+/// Calculates the product of all values in the array
 axissize_t prod(axisindex_t n, const axissize_t * numbers);
+/// Calculates the product of a subset of values in the array
 axissize_t subprod(const axissize_t * numbers, axisindex_t m, const axisindex_t * ixs);
 
+/// Calculates the product of all values in a QVector
 inline axissize_t prod(QVector<axissize_t> numbers) { return prod(numbers.count(), numbers.constData()); }
 
+/// Removes duplicate values from QList or QVector
 template< typename Container >
 void uniquify( Container & list ) {
 	qSort(list);
@@ -95,17 +102,26 @@ void uniquify( Container & list ) {
 		}
 	}
 
+/// Returns complimentary axes for given \a sliceaxes
 QVector<axisindex_t> targetaxes(axisindex_t n, QVector<axisindex_t> sliceaxes);
+/// Returns a subset of \a sizes, selected at \a sliceaxes
 QVector<axissize_t> subvector(QVector<axissize_t> sizes, QVector<axisindex_t> sliceaxes);
 
-/// Reorder array axes
+/// Reorders array axes
 double* reorderNArray(const double * data, axisindex_t n, const axissize_t * sizes, const axisindex_t * neworder);
 
-/// average data arrray
+/// Averages all data in array \a data (function of type transformFunc)
 void average(const double * data, axisindex_t n, const axissize_t * sizes, axisindex_t nc, const axissize_t * coords, double * target);
 
+/// Averages a dataset along \a axes and returns an array of double
 double * averageDataSet(const NVBDataSet * data, QVector<axisindex_t> axes);
 
+/**
+ * \class NVBDataSlice
+ * 
+ * \brief The type of slice-loop variable
+ * 
+ */
 struct NVBDataSlice {
 	/// The dataset that is sliced
 	const NVBDataSet * dataset;
@@ -120,13 +136,16 @@ struct NVBDataSlice {
 	/// Sizes of \a slicedAxes
 	QVector<axissize_t> sizes;
 
+	/// Creates a slice of \a dataset. The \a sliced axes are no longer in the result
 	NVBDataSlice(const NVBDataSet * dataset, const QVector<axisindex_t> & sliced, const QVector<axisindex_t> & kept);
 	~NVBDataSlice();
 
 	/// Slices the dataset at \a indexes
 	void calculate() ;
 
+	/// The color, associated with the slice (one or more of the sliced axes has to have color maps)
 	QColor associatedColor() const;
+	///
 	QVector<axissize_t> parentIndexes() const;
 	};
 
