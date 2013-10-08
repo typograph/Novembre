@@ -62,6 +62,8 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 
 	// TODO system dependent config file
 
+	NVBSettingsDialog::initGlobalDialog(config);
+		
 	bool firstrun = config.contains("Browser");
 
 //	setProperty("DefaultGradient",QVariant::fromValue((NVBColorMap*)(new NVBRGBRampColorMap(0xFFFF30AD,0xFF15FF33))));
@@ -114,8 +116,6 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 		}
 
 #endif
-
-	NVBSettingsDialog::initGlobalDialog(config);
 
 //	while (true) {
 #ifndef NVB_STATIC

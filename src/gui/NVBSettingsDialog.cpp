@@ -261,7 +261,7 @@ NVBSettingsDialog::NVBSettingsDialog(NVBSettings settings)
 
 	l->addWidget(buttonBox, 1, 1, Qt::AlignRight);
 
-	addPage(new NVBGeneralSettingsWidget(conf.group("General")));
+	addPage(new NVBGeneralSettingsWidget(conf));
 	addPage(new NVBBrowserSettingsWidget(conf.group("Browser")));
 // 	addPage(new NVBFileSettingsWidget(conf.group("Files")));
 // 	addPage(new NVBToolsSettingsWidget(conf.group("Tools")));
@@ -314,8 +314,7 @@ void NVBSettingsDialog::writeSettings() {
 void NVBSettingsDialog::switchToPage(int page) {
 	if (applyButton->isEnabled())
 		reinitSettings();
-
-	view->setCurrentIndex(page);
+	sections->setCurrentRow(page);
 	}
 
 void NVBSettingsDialog::pageSwitch() {

@@ -58,6 +58,7 @@ NVBSettings::NVBSettings(const NVBSettings* other, QString group)
 }
 
 NVBSettings::~NVBSettings() {
+	c->settings.sync();
 // 	delete c;
 }
 
@@ -89,20 +90,28 @@ void NVBSettings::endGroup() {
 }
 
 bool NVBSettings::contains(const QString& key) const {
-	return c->settings.contains(c_group + key);
+	if (key.isEmpty())
+		return false;
+	else
+		return c->settings.contains(c_group + key);
 }
 
 QString NVBSettings::fileName() const {
 	return c->settings.fileName();
 }
 void NVBSettings::remove(const QString& key) {
-	c->settings.remove(c_group + key);
+	if (!key.isEmpty())
+		c->settings.remove(c_group + key);
 }
 
 void NVBSettings::setValue(const QString& key, const QVariant& value) {
-	c->settings.setValue(c_group + key,value);
+	if (!key.isEmpty())
+		c->settings.setValue(c_group + key,value);
 }
 
 QVariant NVBSettings::value(const QString& key, const QVariant& defaultValue) const {
-	return c->settings.value(c_group + key,defaultValue);
+	if (key.isEmpty())
+		return defaultValue;
+	else
+		return c->settings.value(c_group + key,defaultValue);
 }

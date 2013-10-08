@@ -54,9 +54,9 @@ NVBFileFactory::NVBFileFactory(NVBSettings settings)
 // QPluginLoader::instance is, the actions are
 // created on load
 
-	gmodel.addGenerator(new NVBFileBundle(settings,this));
+	gmodel.addGenerator(new NVBFileBundle(confile,this));
 
-	foreach (NVBFileGenerator * plugin, NVBFilePluginLoader::staticInstances(settings)) {
+	foreach (NVBFileGenerator * plugin, NVBFilePluginLoader::staticInstances(confile)) {
 		if (gmodel.addGenerator(plugin))
 			NVBOutputPMsg("Static plugin loaded");
 		}
@@ -75,7 +75,7 @@ NVBFileFactory::NVBFileFactory(NVBSettings settings)
 	else foreach (QString fileName, dir.entryList(QDir::Files)) {
 		NVBFilePluginLoader loader(dir.absoluteFilePath(fileName));
 		NVBOutputPMsg(QString("Loading plugin %1").arg(fileName));
-		if (gmodel.addGenerator(loader.instance(settings), fileName))
+		if (gmodel.addGenerator(loader.instance(confile), fileName))
 			NVBOutputPMsg("Dynamic plugin loaded");
 		else NVBOutputError(loader.errorString());
 		}
