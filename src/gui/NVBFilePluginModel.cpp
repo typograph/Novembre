@@ -54,7 +54,7 @@ int NVBFilePluginModel::columnCount(const QModelIndex &parent) const {
 QVariant NVBFilePluginModel::data(const QModelIndex &index, int role) const {
 	if (!index.isValid()) return QVariant();
 
-	if (role != Qt::DisplayRole || index.column() != 0) return QVariant();
+	if (role != Qt::DisplayRole) return QVariant();
 
 	switch(index.column()) {
 		case 0: {
