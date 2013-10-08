@@ -24,7 +24,7 @@
 
 NVBFilePluginModel::NVBFilePluginModel()
 	: QAbstractTableModel() {
-
+	connect(&actMapper,SIGNAL(mapped(int)),this,SLOT(notifyGeneratorToggle(int)));
 	}
 
 NVBFilePluginModel::~NVBFilePluginModel() {
@@ -110,8 +110,13 @@ void NVBFilePluginModel::toggleGenerator(int gindex) {
 	if (gindex < 0 || gindex >= generators.count()) return;
 
 	gactions.at(gindex)->setChecked(!gactions.at(gindex)->isChecked());
-	emit dataChanged(index(gindex, 0), index(gindex, 0));
+	notifyGeneratorToggle(gindex);
 	}
+	
+void NVBFilePluginModel::notifyGeneratorToggle(int gindex) {
+	emit dataChanged(index(gindex, 0), index(gindex, 0));
+}
+
 
 bool NVBFilePluginModel::isGeneratorActive(NVBFileGenerator *generator) {
 	return isGeneratorActive(generators.indexOf(generator));
@@ -125,11 +130,11 @@ void NVBFilePluginModel::toggleGenerator(NVBFileGenerator * generator) {
 	toggleGenerator(generators.indexOf(generator));
 	}
 
-void NVBFilePluginModel::toggleGenerator(QObject *go) {
-	NVBFileGenerator * generator = qobject_cast<NVBFileGenerator*>(go);
-	Q_ASSERT(generator);
-	toggleGenerator(generator);
-	}
+// void NVBFilePluginModel::toggleGenerator(int ) {
+// 	NVBFileGenerator * generator = qobject_cast<NVBFileGenerator*>(go);
+// 	Q_ASSERT(generator);
+// 	toggleGenerator(generator);
+// 	}
 
 QList<NVBFileGenerator*> NVBFilePluginModel::activeGenerators() const {
 	QList<NVBFileGenerator*> gs;
@@ -150,7 +155,7 @@ bool NVBFilePluginModel::addGenerator(NVBFileGenerator *generator, QString filen
 	tAct->setToolTip(generator->moduleDesc());
 	tAct->setCheckable(true);
 	tAct->setChecked(true);
-	actMapper.setMapping(tAct, (QObject*)generator);
+	actMapper.setMapping(tAct, generators.length()-1);
 	connect(tAct, SIGNAL(toggled(bool)), &actMapper, SLOT(map()));
 	gactions << tAct;
 	gsource << filename;

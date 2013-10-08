@@ -58,10 +58,12 @@ class NVBFilePluginModel : public QAbstractTableModel {
 		void setGeneratorActive(int index, bool active = true);
 
 	public slots:
-		void toggleGenerator(QObject* generator);
+// 		void toggleGenerator(QObject* generator);
 		void toggleGenerator(NVBFileGenerator* generator);
 		void toggleGenerator(int index);
-
+	private slots:
+		void notifyGeneratorToggle(int index);
+		
 	};
 
 #endif // NVBFILEPLUGINMODEL_H
