@@ -108,13 +108,13 @@ class NVBBrowser: public QFrame {
 	protected:
 		Q_PROPERTY(unsigned short iconSize READ getIconSize())
 		unsigned short iconSize;
-		QSettings * confile;
+		NVBSettings confile;
 
 //  void closeEvent(QCloseEvent * event);
 		void populateListLevel(int, QString = QString(), const QModelIndex& parent = QModelIndex());
 
 	public:
-		NVBBrowser( QWidget *parent = 0, Qt::WindowFlags flags = 0 );
+		NVBBrowser(NVBSettings settings, QWidget *parent = 0, Qt::WindowFlags flags = 0 );
 		~NVBBrowser();
 
 		virtual void populateList();

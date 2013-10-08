@@ -36,9 +36,9 @@
 
 typedef QHash<QString, QString> NanonisHeader;
 
-class NanonisFileGenerator: public QObject, public NVBFileGenerator {
-		Q_OBJECT
-		Q_INTERFACES(NVBFileGenerator)
+class NanonisFileGenerator: public NVBFileGenerator {
+// 		Q_OBJECT
+// 		Q_INTERFACES(NVBFileGenerator)
 
 	private:
 		void loadChannelsFromSXM(QString filename, NVBFile * sources) const;
@@ -46,7 +46,7 @@ class NanonisFileGenerator: public QObject, public NVBFileGenerator {
 		void loadChannelsFrom3DS(QString filename, NVBFile * sources) const;
 
 	public:
-		NanonisFileGenerator(): NVBFileGenerator() {;}
+		NanonisFileGenerator(NVBSettings settings): NVBFileGenerator(settings) {;}
 		virtual ~NanonisFileGenerator() {;}
 
 		virtual inline QString moduleName() const { return QString("Nanonis SXM files");}

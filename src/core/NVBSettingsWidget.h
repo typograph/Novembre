@@ -20,10 +20,10 @@
 #ifndef NVBSETTINGSWIDGET_H
 #define NVBSETTINGSWIDGET_H
 
+#include "NVBSettings.h"
 #include <QtGui/QFrame>
 #include <QtCore/QStringList>
 
-class QSettings;
 class QCheckBox;
 class QLineEdit;
 class QComboBox;
@@ -65,25 +65,14 @@ class NVBSettingsWidget : public QFrame {
 	protected:
 		bool uncommitted;
 
-		QString groupname;
+		NVBSettings settings;
 		NVBSettingsWidget * parentSettings;
 
 		QVBoxLayout * vlayout;
 		QList<NVBSettingsWidgetEntry> entries;
 
 	public:
-		explicit NVBSettingsWidget(QWidget* parent = 0);
-
-		/// Set a group for all the children widgets to use in QSettings
-		void setGroup(QString groupName) { groupname = groupName; }
-		/// Return the group in use
-		QString group() {
-			return groupname;
-			}
-
-		QString fullGroup() {
-			return (parentSettings ? QString("%1/%2").arg(parentSettings->fullGroup(), groupname) : groupname );
-			}
+		explicit NVBSettingsWidget(NVBSettings settings, QWidget* parent = 0);
 
 		/// Add an NVBSettingsWidget to the layout (last position)
 		void addSetting(NVBSettingsWidget *);
@@ -100,10 +89,10 @@ class NVBSettingsWidget : public QFrame {
 		/// Add an existing \a lineedit to the layout, with caption \a label and the corresponding QSettings key \a entry
 		void addLineEdit(QString entry, QString label, QLineEdit * lineedit);
 
-		/// Copy widget values from an existing QSettings
-		virtual void init(QSettings * settings);
-		/// Write out all changes into QSettings
-		virtual bool write(QSettings * settings);
+		/// Copy widget values from an existing NVBSettings
+		virtual void init();
+		/// Write out all changes into NVBSettings
+		virtual bool write();
 
 		/// This function will be called when data is written.
 		virtual void onWrite() {;}

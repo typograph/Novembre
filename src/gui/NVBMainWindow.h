@@ -24,10 +24,10 @@
 #include <QtCore/QUrl>
 #include <QtCore/QDir>
 #include "NVBFileInfo.h"
+#include "NVBSettings.h"
 
 class QAction;
 class QMenu;
-class QSettings;
 class QToolBar;
 class NVBFileFactory;
 class NVBLogWidgetDock;
@@ -39,6 +39,8 @@ class NVBMainWindow: public QMainWindow {
 		Q_OBJECT
 	private:
 	protected:
+		NVBSettings conf;
+
 		QAction * fileOpenAction;
 		QAction * fileExitAction;
 
@@ -64,9 +66,7 @@ class NVBMainWindow: public QMainWindow {
 
 	public:
 
-		QSettings * conf;
-
-		NVBMainWindow();
+		NVBMainWindow(NVBSettings settings);
 		virtual ~NVBMainWindow();
 
 	public slots:

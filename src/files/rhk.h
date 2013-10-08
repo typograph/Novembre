@@ -104,7 +104,7 @@ class NVBDataSource;
 
 class RHKFileGenerator: public QObject, public NVBFileGenerator {
 		Q_OBJECT
-		Q_INTERFACES(NVBFileGenerator)
+// 		Q_INTERFACES(NVBFileGenerator)
 
 	private:
 
@@ -131,11 +131,11 @@ class RHKFileGenerator: public QObject, public NVBFileGenerator {
 
 		static QList<QPointF> pointsFromXY(int length, float * x, float * y);
 
-	private slots:
+	protected slots:
 		void loadSettings();
 
 	public:
-		RHKFileGenerator();
+		RHKFileGenerator( NVBSettings settings );
 		virtual ~RHKFileGenerator() {;}
 
 		virtual inline QString moduleName() const { return QString("RHK XPMPro files");}

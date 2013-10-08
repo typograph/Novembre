@@ -19,12 +19,90 @@
 
 #include "NVBSettings.h"
 #include <QtGui/QApplication>
+#include <QtCore/QSharedData>
+// #include <qvarlengtharray.h>
 
-QSettings* NVBSettings::getGlobalSettings() {
-	return qApp->property("NVBSettings").value<QSettings*>();
-	}
+class NVBSettingsContainer: public QSharedData {
+public:
+	NVBSettingsContainer(QString filename): settings(filename, QSettings::IniFormat) {;}
+	~NVBSettingsContainer() { settings.sync(); }
+	
+	QSettings settings;
+};
 
-QString NVBSettings::pluginGroup() {
-	static QString group("Plugins");
-	return group;
-	}
+
+NVBSettings::NVBSettings(NVBSettingsContainer * container) : c (container) {
+
+}
+
+NVBSettings::NVBSettings(QString filename) {
+	c = new NVBSettingsContainer(filename);
+}
+
+NVBSettings::NVBSettings(const NVBSettings& other, QString group)
+	: c (other.c)
+	, level(other.level)
+{
+	if (!group.isEmpty())
+		level += group + '/';
+	updateGroup();
+}
+
+NVBSettings::NVBSettings(const NVBSettings* other, QString group) 
+	: c (other->c)
+	, level(other->level)
+{
+	if (!group.isEmpty())
+		level += group + '/';
+	updateGroup();
+}
+
+NVBSettings::~NVBSettings() {
+// 	delete c;
+}
+
+
+// QSettings* NVBSettings::getGlobalSettings() {
+// 	return qApp->property("NVBSettings").value<QSettings*>();
+// 	}
+// 
+// QString NVBSettings::pluginGroup() {
+// 	static QString group("Plugins");
+// 	return group;
+// 	}
+
+void NVBSettings::updateGroup() {
+	if (groups.isEmpty())
+		c_group = level;
+	else
+		c_group = QString("%1%2/").arg(level, groups.join(QChar('/')));
+}
+	
+void NVBSettings::beginGroup(const QString& prefix) {
+	groups.append(prefix);
+	updateGroup();
+}
+
+void NVBSettings::endGroup() {
+	groups.removeLast();
+	updateGroup();
+}
+
+bool NVBSettings::contains(const QString& key) const {
+	return c->settings.contains(c_group + key);
+}
+
+QString NVBSettings::fileName() const {
+	return c->settings.fileName();
+}
+void NVBSettings::remove(const QString& key) {
+	c->settings.remove(c_group + key);
+}
+
+void NVBSettings::setValue(const QString& key, const QVariant& value) {
+	c->settings.setValue(c_group + key,value);
+}
+
+QVariant NVBSettings::value(const QString& key, const QVariant& defaultValue) const {
+	return c->settings.value(c_group + key,defaultValue);
+}

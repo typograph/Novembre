@@ -51,17 +51,18 @@ public:
 	explicit NVBSettingsCheckLineWidget(QString entry, QString text, QString tooltip, QWidget* parent = 0) {
 		}
 
-	virtual void init(QSettings * settings) {
+	virtual void init(NVBSettings settings) {
 		}
 };
 */
 
+NVBSettingsDialog * NVBSettingsDialog::globalInstance = 0;
+
 class NVBGeneralSettingsWidget : public NVBSettingsWidget {
 	public:
-		NVBGeneralSettingsWidget(QWidget* parent = 0) : NVBSettingsWidget(parent) {
+		NVBGeneralSettingsWidget(NVBSettings conf, QWidget* parent = 0) : NVBSettingsWidget(conf, parent) {
 			setWindowIcon(getStandardIcon(NVBStandardIcon::Novembre));
 			setWindowIconText("General");
-//		setGroup("General");
 // 		addCheckBox("ShowBrowserOnStart","Open browser on start");
 #ifndef NVB_STATIC
 			addLineEdit("PluginPath", "Plugin path", "The plugin path defines where Novembre is looking for plugins. Novembre will not work without plugins, so this is a very important field.");
@@ -69,7 +70,7 @@ class NVBGeneralSettingsWidget : public NVBSettingsWidget {
 			addLineEdit("LogFile", "Logfile", "If you want to keep record of application messages, select a location for the log file.");
 			}
 
-		virtual bool write(QSettings * settings) {
+		virtual bool write() {
 
 #ifndef NVB_STATIC
 			QLineEdit * plgPath = entries.first().lineEdit;
@@ -108,16 +109,16 @@ class NVBGeneralSettingsWidget : public NVBSettingsWidget {
 					}
 				}
 
-			return NVBSettingsWidget::write(settings);
+			return NVBSettingsWidget::write();
 			}
 	};
 
 class NVBBrowserSettingsWidget : public NVBSettingsWidget {
 	public:
-		NVBBrowserSettingsWidget(QWidget* parent = 0) : NVBSettingsWidget(parent) {
+		NVBBrowserSettingsWidget(NVBSettings conf, QWidget* parent = 0) : NVBSettingsWidget(conf, parent) {
 			setWindowIcon(getStandardIcon(NVBStandardIcon::Browser));
 			setWindowIconText("Browser");
-			setGroup("Browser");
+// 			setGroup("Browser");
 			addCheckBox("ShowOnStart", "Show browser on start");
 			addCheckBox("ShowMaximized", "Show maximized");
 			addComboBox("IconSize", "Default icon size", QStringList() << "64" << "128" << "256" << "512");
@@ -137,16 +138,16 @@ class NVBBrowserSettingsWidget : public NVBSettingsWidget {
 
 class NVBFilesSettingsWidget : public NVBSettingsWidget {
 	public:
-		NVBFilesSettingsWidget(QWidget* parent = 0) : NVBSettingsWidget(parent) {
+		NVBFilesSettingsWidget(NVBSettings conf, QWidget* parent = 0) : NVBSettingsWidget(conf, parent) {
 			setWindowIcon(getStandardIcon(NVBStandardIcon::Browser));
 			setWindowIconText("Files");
 // 		setGroup("");
 			}
 
-		virtual void init(QSettings * settings) {
+		virtual void init() {
 			}
 
-		virtual bool write(QSettings * settings) {
+		virtual bool write() {
 			}
 	};
 
@@ -228,12 +229,9 @@ void NVBSettingsSectionDelegate::drawFocus( QPainter *painter, const QStyleOptio
 	}
 
 
-NVBSettingsDialog::NVBSettingsDialog()
-	: QDialog() {
-	conf = NVBSettings::getGlobalSettings();
-
-	if (!conf)
-		NVBCriticalError("Configuration missing");
+NVBSettingsDialog::NVBSettingsDialog(NVBSettings settings)
+	: QDialog()
+	, conf(settings) {
 
 	QGridLayout * l = new QGridLayout(this);
 
@@ -263,10 +261,10 @@ NVBSettingsDialog::NVBSettingsDialog()
 
 	l->addWidget(buttonBox, 1, 1, Qt::AlignRight);
 
-	addPage(new NVBGeneralSettingsWidget());
-	addPage(new NVBBrowserSettingsWidget());
-// 	addPage(new NVBFileSettingsWidget());
-// 	addPage(new NVBToolsSettingsWidget());
+	addPage(new NVBGeneralSettingsWidget(conf.group("General")));
+	addPage(new NVBBrowserSettingsWidget(conf.group("Browser")));
+// 	addPage(new NVBFileSettingsWidget(conf.group("Files")));
+// 	addPage(new NVBToolsSettingsWidget(conf.group("Tools")));
 
 	view->setCurrentIndex(0);
 	}
@@ -279,7 +277,7 @@ void NVBSettingsDialog::addPage(QWidget* widget) {
 	if (w) {
 		connect(w, SIGNAL(dataChanged()), this, SLOT(dataOutOfSync()));
 		connect(w, SIGNAL(dataSynced()), this, SLOT(dataInSync()));
-		w->init(conf);
+		w->init();
 		}
 	}
 
@@ -304,13 +302,13 @@ void NVBSettingsDialog::dataOutOfSync() {
 void NVBSettingsDialog::reinitSettings() {
 	NVBSettingsWidget * w = qobject_cast<NVBSettingsWidget*>(view->currentWidget());
 
-	if (w) w->init(conf);
+	if (w) w->init();
 	}
 
 void NVBSettingsDialog::writeSettings() {
 	NVBSettingsWidget * w = qobject_cast<NVBSettingsWidget*>(view->currentWidget());
 
-	if (w) w->write(conf);
+	if (w) w->write();
 	}
 
 void NVBSettingsDialog::switchToPage(int page) {
@@ -326,35 +324,43 @@ void NVBSettingsDialog::pageSwitch() {
 
 
 int NVBSettingsDialog::showGeneralSettings() {
-	NVBSettingsDialog * d = getGlobalDialog();
-	d->switchToPage(0);
-	return d->exec();
+	if (globalInstance) {
+		globalInstance->switchToPage(0);
+		return globalInstance->exec();
+		}
 	}
 
 int NVBSettingsDialog::showBrowserSettings() {
-	NVBSettingsDialog * d = getGlobalDialog();
-	d->switchToPage(1);
-	return d->exec();
+	if (globalInstance) {
+		globalInstance->switchToPage(1);
+		return globalInstance->exec();
+		}
 	}
 
 /*
 int NVBSettingsDialog::showFileSettings()
 {
-	NVBSettingsDialog * d = getGlobalDialog();
-	d->switchToPage(2);
-	return d->exec();
+	if (globalInstance) {
+		globalInstance->switchToPage(2);
+		return globalInstance->exec();
+		}
 }
 
 int NVBSettingsDialog::showPluginSettings()
 {
-	NVBSettingsDialog * d = getGlobalDialog();
-	d->switchToPage(3);
-	return d->exec();
+	if (globalInstance) {
+		globalInstance->switchToPage(3);
+		return globalInstance->exec();
+	}
 }
 */
 
-NVBSettingsDialog* NVBSettingsDialog::getGlobalDialog() {
-	static NVBSettingsDialog * d = new NVBSettingsDialog();
-	return d;
+void NVBSettingsDialog::initGlobalDialog(NVBSettings settings) {
+	if (globalInstance) {
+		delete globalInstance;
+		globalInstance = 0;
 	}
+	globalInstance = new NVBSettingsDialog(settings);
+}
+
 

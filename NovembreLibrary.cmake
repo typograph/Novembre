@@ -58,6 +58,7 @@ set(nvblib_SRCS
 
 set(nvblib_HDRS
 	${nvblib_HDRS}
+	src/core/NVBFileGenerator.h
 	src/core/NVBPhysSpinBox.h
 	src/core/NVBPhysStepSpinBox.h
 	src/core/NVBColorWidgets.h
@@ -66,6 +67,7 @@ set(nvblib_HDRS
 
 set(nvblib_SRCS
 	${nvblib_SRCS}
+	src/core/NVBPlugin.cpp
 	src/core/NVBColorMaps.cpp
 	src/core/NVBPhysSpinBox.cpp
 	src/core/NVBPhysStepSpinBox.cpp
