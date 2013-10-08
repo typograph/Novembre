@@ -23,13 +23,13 @@
 #include <QtGui/QComboBox>
 #include <QtGui/QLabel>
 #include <QtGui/QLineEdit>
-#include <QtCore/QSettings>
 
 #include "NVBLogger.h"
 
-NVBSettingsWidget::NVBSettingsWidget(QWidget* parent)
+NVBSettingsWidget::NVBSettingsWidget(NVBSettings conf, QWidget* parent)
 	: QFrame(parent)
 	, uncommitted(false)
+	, settings(conf)
 	, parentSettings(0) {
 	vlayout = new QVBoxLayout(this);
 	vlayout->setMargin(10);
@@ -115,20 +115,16 @@ void NVBSettingsWidget::addLineEdit(QString entry, QString label, QLineEdit* lin
 	connect(lineedit, SIGNAL(textChanged(QString)), this, SIGNAL(dataChanged()));
 	}
 
-void NVBSettingsWidget::init(QSettings* settings) {
-	if (!settings) return;
-
-	if (!groupname.isNull())
-		settings->beginGroup(groupname);
+void NVBSettingsWidget::init() {
 
 	foreach(NVBSettingsWidgetEntry e, entries) {
 		switch(e.type) {
 			case NVBSettingsWidgetEntry::External :
-				e.settingsWidget->init(settings);
+				e.settingsWidget->init();
 				break;
 
 			case NVBSettingsWidgetEntry::ComboBox : {
-				QString value = settings->value(e.key).toString();
+				QString value = settings.value(e.key).toString();
 				int i = e.comboBox->findText(value);
 
 				if (i >= 0)
@@ -136,17 +132,17 @@ void NVBSettingsWidget::init(QSettings* settings) {
 				else if (e.comboBox->isEditable())
 					e.comboBox->setEditText(value);
 				else
-					NVBOutputError(QString("Unrecognized value %3 in settings at %1/%2").arg(group()).arg(e.key).arg(value));
+					NVBOutputError(QString("Unrecognized value %3 in settings at %1%2").arg(settings.node(),e.key,value));
 
 				break;
 				}
 
 			case NVBSettingsWidgetEntry::CheckBox :
-				e.checkBox->setChecked(settings->value(e.key).toBool());
+				e.checkBox->setChecked(settings.value(e.key).toBool());
 				break;
 
 			case NVBSettingsWidgetEntry::LineEdit :
-				e.lineEdit->setText( settings->value(e.key).toString() );
+				e.lineEdit->setText( settings.value(e.key).toString() );
 				break;
 
 			default:
@@ -154,29 +150,23 @@ void NVBSettingsWidget::init(QSettings* settings) {
 			}
 		}
 
-	if (!groupname.isNull())
-		settings->endGroup();
-
 	emit dataSynced();
 	}
 
-bool NVBSettingsWidget::write(QSettings* settings) {
-	if (!settings) return false;
+bool NVBSettingsWidget::write() {
+// 	if (!settings) return false;
 
 	if (!uncommitted) return true;
-
-	if (!groupname.isNull())
-		settings->beginGroup(groupname);
 
 	// To make sure all the commited parameters lead to sigmal emission,
 	// we first try to write whole widgets. If one fails, the process stops,
 	// but the ones before that are commited and can lead to slot calls
 
-	foreach(NVBSettingsWidgetEntry e, entries)
-
-	if (e.type == NVBSettingsWidgetEntry::External)
-		if (!e.settingsWidget->write(settings))
-			return false;
+	foreach(NVBSettingsWidgetEntry e, entries) {
+		if (e.type == NVBSettingsWidgetEntry::External)
+			if (!e.settingsWidget->write())
+				return false;
+		}
 
 	foreach(NVBSettingsWidgetEntry e, entries) {
 		switch(e.type) {
@@ -184,18 +174,18 @@ bool NVBSettingsWidget::write(QSettings* settings) {
 				break;
 
 			case NVBSettingsWidgetEntry::ComboBox :
-				settings->setValue(e.key, e.comboBox->currentText());
+				settings.setValue(e.key, e.comboBox->currentText());
 				break;
 
 			case NVBSettingsWidgetEntry::CheckBox :
-				settings->setValue(e.key, e.checkBox->isChecked());
+				settings.setValue(e.key, e.checkBox->isChecked());
 				break;
 
 			case NVBSettingsWidgetEntry::LineEdit :
 				if (e.lineEdit->text().isEmpty())
-					settings->remove(e.key);
+					settings.remove(e.key);
 				else
-					settings->setValue(e.key, e.lineEdit->text());
+					settings.setValue(e.key, e.lineEdit->text());
 
 				break;
 
@@ -204,9 +194,6 @@ bool NVBSettingsWidget::write(QSettings* settings) {
 				break;
 			}
 		}
-
-	if (!groupname.isNull())
-		settings->endGroup();
 
 	onWrite();
 	emit dataSynced();

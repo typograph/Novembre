@@ -20,10 +20,11 @@
 #ifndef NVBFILEGENERATOR_H
 #define NVBFILEGENERATOR_H
 
-#include <QtCore/QtPlugin>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
+#include "NVBPlugin.h"
 #include "NVBFileInfo.h"
+#include "NVBSettings.h"
 
 class NVBFile;
 class NVBSettingsWidget;
@@ -31,7 +32,6 @@ class NVBSettingsWidget;
 /**
   * NVBFileGenerator is a base class for loading physical files into internal data format
   * This class is exclusively used by NVBFileFactory and does not figure anywhere else.
-  * While subclassing, don't forget to make your class a descendant of QObject
   *
   * When implementing \a availableInfoFields(), no optimization and/or
   * caching is necessary, since this function is unlikely
@@ -40,7 +40,10 @@ class NVBSettingsWidget;
 
 class NVBFileGenerator {
 
+	protected:
+		NVBSettings config;
 	public:
+		NVBFileGenerator(NVBSettings settings) : config(settings) {;}
 		virtual ~NVBFileGenerator() {;}
 
 		/// A human-readable name of the module, e.g. "Omicron STM files"
@@ -74,8 +77,8 @@ class NVBFileGenerator {
 
 	};
 
-// NVBFileGenerator interface should have the same major version as Novembre itself
+// NVBFilePlugin interface should have the same major version as Novembre itself
 // Minor version should be the same or smaller
 Q_DECLARE_INTERFACE(NVBFileGenerator, "com.novembre.fileGenerator/0.1.0");
-
+	
 #endif

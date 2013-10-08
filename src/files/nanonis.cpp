@@ -23,6 +23,7 @@
 #include "NVBLogger.h"
 #include "NVBAxisMaps.h"
 #include "NVBColorMaps.h"
+#include "NVBPlugin.h"
 #include <QtCore/QDir>
 #include <QtCore/QRectF>
 #include <QtCore/QString>
@@ -1069,4 +1070,4 @@ void NanonisFileGenerator::loadChannelsFrom3DS(QString filename, NVBFile* source
 	return;
 	}
 
-Q_EXPORT_PLUGIN2(nanonis, NanonisFileGenerator)
+NVB_EXPORT_FILEPLUGIN(nanonis,NanonisFileGenerator)

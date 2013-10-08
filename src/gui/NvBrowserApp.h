@@ -20,18 +20,22 @@
 #ifndef NVBrowserAPP_H
 #define NVBrowserAPP_H
 
+#include "NVBSettings.h"
 #include "NVBCoreApplication.h"
 
+class NVBSettings;
 class NVBBrowser;
 
 class NVBBrowserApplication : public NVBCoreApplication {
 		Q_OBJECT
 	private:
-		QString confile;
+		NVBSettings config;
 		NVBBrowser * mainWindow;
 	public:
 		NVBBrowserApplication ( int & argc, char ** argv );
 		virtual ~NVBBrowserApplication();
+    NVBSettings browserSettings();
+    NVBSettings mainSettings();
 //	void setMainWindow(NVBBrowser * widget);
 	};
 

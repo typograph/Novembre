@@ -30,9 +30,9 @@
 
 typedef QHash<QString, NVBVariant> CreatecHeader;
 
-class CreatecFileGenerator: public QObject, public NVBFileGenerator {
-		Q_OBJECT
-		Q_INTERFACES(NVBFileGenerator);
+class CreatecFileGenerator: public NVBFileGenerator {
+// 		Q_OBJECT
+// 		Q_INTERFACES(NVBFileGenerator);
 
 	private:
 
@@ -46,7 +46,7 @@ class CreatecFileGenerator: public QObject, public NVBFileGenerator {
 		void loadAllChannelsFromTSPEC(QString filename, NVBFile * sources) const;
 
 	public:
-		CreatecFileGenerator(): NVBFileGenerator() {;}
+		CreatecFileGenerator(NVBSettings settings): NVBFileGenerator(settings) {;}
 		virtual ~CreatecFileGenerator() {;}
 
 		virtual inline QString moduleName() const { return QString("Createc SPS files");}

@@ -20,6 +20,7 @@
 #include "NVBFileFactory.h"
 #include "NVBFileBundle.h"
 #include "NVBSettings.h"
+#include "NVBPlugin.h"
 
 #include <QtCore/QSettings>
 #include <QtCore/QStringList>
@@ -30,12 +31,12 @@
 #include <QtGui/QAction>
 
 #ifdef NVB_STATIC
-Q_IMPORT_PLUGIN(rhk)
-// Q_IMPORT_PLUGIN(rhk4)
-Q_IMPORT_PLUGIN(createc)
-// Q_IMPORT_PLUGIN(winspm)
-// Q_IMPORT_PLUGIN(textSTM);
-Q_IMPORT_PLUGIN(nanonis)
+NVB_IMPORT_FILEPLUGIN(rhk)
+// NVB_IMPORT_FILEPLUGIN(rhk4)
+NVB_IMPORT_FILEPLUGIN(createc)
+// NVB_IMPORT_FILEPLUGIN(winspm)
+// NVB_IMPORT_FILEPLUGIN(textSTM);
+NVB_IMPORT_FILEPLUGIN(nanonis)
 #endif
 
 /*
@@ -43,7 +44,9 @@ void NVBFileLoader::run() {
 	if (info.generator()) file = info.generator()->loadFile(info);
 }
 */
-NVBFileFactory::NVBFileFactory() {
+NVBFileFactory::NVBFileFactory(NVBSettings settings)
+	: confile(settings)
+{
 	deadTree = new NVBFileQueue(5); // TODO Make the size of deadTree user-controllable
 
 // Since QSignalMapper needs QObject to map to,
@@ -51,12 +54,12 @@ NVBFileFactory::NVBFileFactory() {
 // QPluginLoader::instance is, the actions are
 // created on load
 
-	gmodel.addGenerator(new NVBFileBundle(this));
+	gmodel.addGenerator(new NVBFileBundle(settings,this));
 
-	foreach (QObject * plugin, QPluginLoader::staticInstances())
-
-	if (gmodel.addGenerator(qobject_cast<NVBFileGenerator*>(plugin)))
-		NVBOutputPMsg("Static plugin loaded");
+	foreach (NVBFileGenerator * plugin, NVBFilePluginLoader::staticInstances(settings)) {
+		if (gmodel.addGenerator(plugin))
+			NVBOutputPMsg("Static plugin loaded");
+		}
 
 #ifndef NVB_STATIC
 #ifdef Q_WS_MAC
@@ -70,10 +73,9 @@ NVBFileFactory::NVBFileFactory() {
 	if (!dir.cd ("files"))
 		NVBOutputError(QString("File plugin directory %1/files does not exist").arg(dir.absolutePath()));
 	else foreach (QString fileName, dir.entryList(QDir::Files)) {
-		QPluginLoader loader(dir.absoluteFilePath(fileName));
+		NVBFilePluginLoader loader(dir.absoluteFilePath(fileName));
 		NVBOutputPMsg(QString("Loading plugin %1").arg(fileName));
-
-		if (gmodel.addGenerator(qobject_cast<NVBFileGenerator*>(loader.instance()), fileName))
+		if (gmodel.addGenerator(loader.instance(settings), fileName))
 			NVBOutputPMsg("Dynamic plugin loaded");
 		else NVBOutputError(loader.errorString());
 		}
@@ -83,19 +85,9 @@ NVBFileFactory::NVBFileFactory() {
 	if (gmodel.rowCount() < 2) // FileBundle is always there
 		NVBCriticalError(QString("No valid plugins found"));
 
-	confile = NVBSettings::getGlobalSettings();
-
-	if (!confile)
-		NVBOutputError("FileFactory cannot access the configuration file");
-	else {
-		confile->beginGroup("Plugins");
-
-		for(int i = 0; i < gmodel.rowCount(); i++)
-			if (!confile->value(gmodel.availableGenerators().at(i)->moduleName(), true).toBool())
-				gmodel.setGeneratorActive(i, false);
-
-		confile->endGroup();
-		}
+	for(int i = 0; i < gmodel.rowCount(); i++)
+		if (!confile.value(gmodel.availableGenerators().at(i)->moduleName(), true).toBool())
+			gmodel.setGeneratorActive(i, false);
 
 	foreach (const NVBFileGenerator * generator, gmodel.availableGenerators()) {
 		commentNames << generator->availableInfoFields();
@@ -131,13 +123,9 @@ void NVBFileFactory::updateWildcards() {
 
 void NVBFileFactory::updateGeneratorSettings(QModelIndex start, QModelIndex end) {
 
-	if (start.column() == 0 && confile) {
-		confile->beginGroup("Plugins");
-
+	if (start.column() == 0) {
 		for (int gi = start.row(); gi <= end.row(); gi++)
-			confile->setValue(gmodel.data(gmodel.index(gi, 1)).toString(), gmodel.isGeneratorActive(gi));
-
-		confile->endGroup();
+			confile.setValue(gmodel.data(gmodel.index(gi, 1)).toString(), gmodel.isGeneratorActive(gi));
 		}
 
 	}

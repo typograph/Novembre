@@ -29,6 +29,7 @@
 #include "NVBFileInfo.h"
 #include "NVBFile.h"
 #include "NVBAxisMaps.h"
+#include "NVBPlugin.h"
 
 #define SCANTYPE_SPECTROSCOPY    0 // Spectroscopy
 #define SCANTYPE_SINGLEVOLTAGE   1 // Single-Voltage
@@ -1522,4 +1523,4 @@ void CreatecFileGenerator::loadAllChannelsFromTSPEC(QString filename, NVBFile* s
 	*sources << result;
 	}
 
-Q_EXPORT_PLUGIN2(createc, CreatecFileGenerator)
+NVB_EXPORT_FILEPLUGIN(createc,CreatecFileGenerator)

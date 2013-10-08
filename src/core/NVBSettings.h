@@ -20,21 +20,68 @@
 #ifndef NVBSETTINGS_H
 #define NVBSETTINGS_H
 
+#include <QtCore/QStringList>
 #include <QtCore/QSettings>
+#include <QtCore/QExplicitlySharedDataPointer>
 
-Q_DECLARE_METATYPE(QSettings*)
+// Q_DECLARE_METATYPE(QSettings*)
 
-namespace NVBSettings {
+class NVBSettingsContainer;
 
+/**
+ * \brief Manage settings of the application
+ * 
+ * NVBSettings is similar to (and built around) QSettings, and allows keeping
+ * QVariant parameters in a tree-like structure in a file. Any subtree can also
+ * be represented as NVBSettings, allowing passing settings to classes
+ * that needn't be aware of the whole tree.
+ * 
+ * In contrast to QSettings, NVBSettings does not allow writing arrays.
+ *  
+ */
+
+class NVBSettings {
+private:
+	NVBSettings(NVBSettingsContainer * c);
+public:
+	NVBSettings(QString filename);
+// 	NVBSettings(QSettings);
+	NVBSettings(const NVBSettings & other, QString group = QString());
+	NVBSettings( const NVBSettings* other, QString group = QString() );
+	~NVBSettings();
+	
+	// Service functions
+	
 /**
 	* @brief Returns application-wide QSettings
 	*
 	* @return QSettings*
 	**/
-QSettings * getGlobalSettings();
+ 	static NVBSettings * getGlobalSettings();
 
-QString pluginGroup();
-
-}
+	QString pluginGroup();
+	
+	NVBSettings group(QString path) { return NVBSettings(this,path); }
+	
+	// "Inherited" functions
+	
+	QString fileName () const;
+	bool contains ( const QString & key ) const;
+	QVariant value ( const QString & key, const QVariant & defaultValue = QVariant() ) const;
+	void remove ( const QString & key );
+	void setValue ( const QString & key, const QVariant & value );
+	
+	void beginGroup ( const QString & prefix );
+	void endGroup ();
+	
+	QString node() { return level; }
+	
+private:
+	QExplicitlySharedDataPointer<NVBSettingsContainer> c;
+	QString level;
+	QStringList groups;
+	QString c_group;
+	void updateGroup();
+};
 
 #endif

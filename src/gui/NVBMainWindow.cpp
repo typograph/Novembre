@@ -41,18 +41,16 @@
 #include "NVBStandardIcons.h"
 
 
-NVBMainWindow::NVBMainWindow() : QMainWindow() {
+NVBMainWindow::NVBMainWindow(NVBSettings settings)
+	: QMainWindow()
+	, conf(settings)
+{
 
 	setAcceptDrops(true);
 
 	setWindowIcon(getStandardIcon(NVBStandardIcon::Novembre));
 
 	// Initialisation
-
-	conf = NVBSettings::getGlobalSettings();
-
-	if (!conf)
-		NVBCriticalError("Configuration missing");
 
 #ifdef NVB_ENABLE_LOG
 	log = new NVBLogWidgetDock(new NVBLogWidget("Novembre log", this), this);
@@ -64,7 +62,7 @@ NVBMainWindow::NVBMainWindow() : QMainWindow() {
 	if (!files)
 		NVBCriticalError("File factory not properly initialised");
 
-	resize(conf->value("Size", QSize(800, 600)).toSize());
+	resize(conf.value("Size", QSize(800, 600)).toSize());
 
 	fileOpenDir.setPath(QDir::homePath());
 	fileOpenDir.setFilter(QDir::Readable & QDir::AllDirs & QDir::Files & QDir::Dirs & QDir::Drives);
@@ -73,7 +71,7 @@ NVBMainWindow::NVBMainWindow() : QMainWindow() {
 	}
 
 NVBMainWindow::~NVBMainWindow( ) {
-	conf->setValue("Size", size());
+	conf.setValue("Size", size());
 	}
 
 void NVBMainWindow::callFileOpenDialog( ) {

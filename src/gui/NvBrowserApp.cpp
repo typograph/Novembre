@@ -38,8 +38,8 @@
 int main(int argc, char *argv[]) {
 	NVBBrowserApplication * app = new NVBBrowserApplication(argc, argv);
 
-	NVBMainWindow * main = new NVBMainWindow();
-	main->setCentralWidget(new NVBBrowser());
+	NVBMainWindow * main = new NVBMainWindow(app->mainSettings());
+	main->setCentralWidget(new NVBBrowser(app->browserSettings()));
 	main->setWindowTitle( QString("Novembre Browser") );
 	main->show();
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
 NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 	: NVBCoreApplication(argc, argv)
-	, confile(QString("%1/.NVB.0.1").arg(QDir::homePath())) {
+	,	config(QString("%1/.NVB.0.1").arg(QDir::homePath())){
 
 	// Loading objects
 
@@ -62,10 +62,8 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 
 	// TODO system dependent config file
 
-	bool firstrun = !QFile::exists(confile);
+	bool firstrun = config.contains("Browser");
 
-	QSettings * conf = new QSettings(confile, QSettings::IniFormat, this);
-	setProperty("NVBSettings", QVariant::fromValue(conf));
 //	setProperty("DefaultGradient",QVariant::fromValue((NVBColorMap*)(new NVBRGBRampColorMap(0xFFFF30AD,0xFF15FF33))));
 	setProperty("DefaultGradient", QVariant::fromValue((NVBColorMap*)
 	            new NVBRGBMixColorMap(
@@ -87,13 +85,13 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 
 #ifdef NVB_ENABLE_LOG
 
-	if (conf->contains("LogFile") && !new NVBLogFile(conf->value("LogFile").toString(), this)) {
+	if (config.contains("LogFile") && !new NVBLogFile(config.value("LogFile").toString(), this)) {
 		QMessageBox::critical(0, "Log error", "Cannot access the logfile. Please check the settings");
 		NVBSettingsDialog::showGeneralSettings();
 
-		if (conf->contains("LogFile") && !new NVBLogFile(conf->value("LogFile").toString(), this)) {
-			NVBOutputError("Cannot access the logfile. Disable file logging.");
-			conf->remove("LogFile"); // This part should not be reachable
+		if (config.contains("LogFile") && !new NVBLogFile(config.value("LogFile").toString(), this)) {
+			NVBOutputError("Cannot access the logfile. Disabling file logging.");
+			config.remove("LogFile"); // This part should not be reachable
 			}
 		}
 
@@ -106,29 +104,36 @@ NVBBrowserApplication::NVBBrowserApplication( int & argc, char ** argv )
 
 #else
 
-	if (firstrun || !conf->contains("PluginPath"))
-		conf->setValue("PluginPath", NVB_PLUGINS);
+	if (firstrun || !config.contains("PluginPath"))
+		config.setValue("PluginPath", NVB_PLUGINS);
 
-	if (!QFile::exists(conf->value("PluginPath").toString())) {
+	if (!QFile::exists(config.value("PluginPath").toString())) {
 		NVBSettingsDialog::showGeneralSettings();
 
-		if (!QFile::exists(conf->value("PluginPath").toString()))	throw;
+		if (!QFile::exists(config.value("PluginPath").toString()))	throw;
 		}
 
 #endif
 
+	NVBSettingsDialog::initGlobalDialog(config);
+
 //	while (true) {
 #ifndef NVB_STATIC
-	setLibraryPaths(QStringList(conf->value("PluginPath").toString()));
+	setLibraryPaths(QStringList(config.value("PluginPath").toString()));
 #endif
-	qApp->setProperty("filesFactory", QVariant::fromValue(new NVBFileFactory()));
+	qApp->setProperty("filesFactory", QVariant::fromValue(new NVBFileFactory(config.group("Plugins"))));
 
 	}
 
 NVBBrowserApplication::~ NVBBrowserApplication() {
-	QSettings * conf = property("NVBSettings").value<QSettings*>();
-	conf->sync();
-	delete conf;
 	delete property("filesFactory").value<NVBFileFactory*>();
 	delete property("DefaultGradient").value<NVBColorMap*>();
 	}
+
+NVBSettings NVBBrowserApplication::mainSettings() {
+	return NVBSettings(config, "SDI");
+}
+
+NVBSettings NVBBrowserApplication::browserSettings() {
+	return NVBSettings(config,"Browser");
+}

@@ -31,7 +31,6 @@
 #endif
 
 #include <QtCore/QDateTime>
-#include "NVBSettings.h"
 #include <QtGui/QCheckBox>
 
 #define RHK_TOPOPAGE 0
@@ -42,8 +41,7 @@
 #ifndef FILEGENERATOR_NO_GUI
 class RHKSettingsWidget : public NVBSettingsWidget {
 	public:
-		explicit RHKSettingsWidget(QWidget * parent = 0) : NVBSettingsWidget(parent) {
-			setGroup("RHK");
+		explicit RHKSettingsWidget(NVBSettings settings, QWidget * parent = 0) : NVBSettingsWidget(settings,parent) {
 			addCheckBox("subtractBias", "Subtract bias voltage", "In case 'Bias mode' was not selected in XPMPro, I(U) spectroscopy voltage is shifted by the applied bias. This setting will apply to any spectroscopic data with X axis in volts.");
 			}
 	};
@@ -52,7 +50,7 @@ NVBSettingsWidget* RHKFileGenerator::configurationPage() const {
 	static NVBSettingsWidget * w = 0;
 
 	if (!w) {
-		w = new RHKSettingsWidget();
+		w = new RHKSettingsWidget(config);
 
 		if (w) connect(w, SIGNAL(dataSynced()), this, SLOT(loadSettings()));
 		}
@@ -61,21 +59,13 @@ NVBSettingsWidget* RHKFileGenerator::configurationPage() const {
 	}
 #endif
 
-RHKFileGenerator::RHKFileGenerator() : NVBFileGenerator() {
+RHKFileGenerator::RHKFileGenerator(NVBSettings settings) : NVBFileGenerator(settings) {
 	loadSettings();
 	}
 
 void RHKFileGenerator::loadSettings() {
 	// Load subtractBias from settings;
-	QSettings * conf = NVBSettings::getGlobalSettings();
-
-	if (!conf)
-		subtractBias = false;
-	else {
-		conf->beginGroup(NVBSettings::pluginGroup());
-		subtractBias = conf->value("RHK/subtractBias", false).toBool();
-		conf->endGroup();
-		}
+	subtractBias = config.value("subtractBias", false).toBool();
 	}
 
 /*
@@ -1284,5 +1274,5 @@ QList< QPointF > RHKFileGenerator::pointsFromXY(int length, float* x, float* y) 
 
 	return points;
 	}
-
-Q_EXPORT_PLUGIN2(rhk, RHKFileGenerator);
+	
+NVB_EXPORT_FILEPLUGIN(rhk, RHKFileGenerator)

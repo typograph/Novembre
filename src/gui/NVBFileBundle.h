@@ -28,15 +28,15 @@
 class NVBFileFactory;
 class NVBFile;
 
-class NVBFileBundle: public QObject, public NVBFileGenerator {
-		Q_OBJECT
-		Q_INTERFACES(NVBFileGenerator)
+class NVBFileBundle: public NVBFileGenerator {
+// 		Q_OBJECT
+// 		Q_INTERFACES(NVBFileGenerator)
 
 	private:
 		NVBFileFactory * const fileFactory;
 
 	public:
-		NVBFileBundle( NVBFileFactory * ff ) : NVBFileGenerator(), fileFactory(ff) {;}
+		NVBFileBundle(NVBSettings settings, NVBFileFactory * ff ) : NVBFileGenerator(settings), fileFactory(ff) {;}
 		virtual ~NVBFileBundle() {;}
 
 		virtual inline QString moduleName() const { return QString("Novembre bundle files"); }

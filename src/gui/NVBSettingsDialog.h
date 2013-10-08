@@ -21,28 +21,28 @@
 #define NVBSETTINGSDIALOG_H
 
 #include <QtGui/QDialog>
+#include "NVBSettings.h"
 
 class QStackedWidget;
 class QPushButton;
 class QListWidget;
-class QSettings;
 
 class NVBSettingsDialog : public QDialog {
 		Q_OBJECT
 
 	private:
 
-		QSettings * conf;
+		NVBSettings conf;
 		QListWidget * sections;
 		QStackedWidget * view;
 		QPushButton * applyButton;
 		QPushButton * resetButton;
 
-		static NVBSettingsDialog * getGlobalDialog();
+		static NVBSettingsDialog * globalInstance;
 
 	public:
 
-		NVBSettingsDialog();
+		NVBSettingsDialog(NVBSettings settings);
 		~NVBSettingsDialog() {;}
 
 	public slots:
@@ -65,6 +65,7 @@ class NVBSettingsDialog : public QDialog {
 // 	static int showFileSettings();
 // 	static int showPluginSettings();
 		void addPage(QWidget * widget);
+		static void initGlobalDialog(NVBSettings settings);
 
 	};
 

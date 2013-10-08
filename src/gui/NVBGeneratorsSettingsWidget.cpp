@@ -24,8 +24,8 @@
 #include <QtCore/QCoreApplication>
 #include "NVBFilePluginModel.h"
 
-NVBGeneratorsSettingsWidget::NVBGeneratorsSettingsWidget()
-	: NVBSettingsWidget()
+NVBGeneratorsSettingsWidget::NVBGeneratorsSettingsWidget(NVBSettings conf)
+	: NVBSettingsWidget(conf)
 	, pluginList(0)
 	, ffactory(0) {
 	pluginList = new QListView(this);
@@ -40,10 +40,10 @@ NVBGeneratorsSettingsWidget::NVBGeneratorsSettingsWidget()
 
 	}
 
-void NVBGeneratorsSettingsWidget::init(QSettings *settings) {
+void NVBGeneratorsSettingsWidget::init() {
 
 	}
 
-bool NVBGeneratorsSettingsWidget::write(QSettings *settings) {
+bool NVBGeneratorsSettingsWidget::write() {
 
 	}

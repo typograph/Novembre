@@ -44,13 +44,13 @@ class NVBGeneratorsSettingsWidget : public NVBSettingsWidget {
 		void selectGenerator();
 
 	public:
-		NVBGeneratorsSettingsWidget();
+		NVBGeneratorsSettingsWidget(NVBSettings settings);
 		virtual ~NVBGeneratorsSettingsWidget() {;}
 
-		/// Copy widget values from an existing QSettings
-		virtual void init(QSettings * settings);
-		/// Write out all changes into QSettings
-		virtual bool write(QSettings * settings);
+		/// Copy widget values from config file
+		virtual void init();
+		/// Write out all changes to config
+		virtual bool write();
 
 
 	};

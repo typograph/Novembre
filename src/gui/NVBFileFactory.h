@@ -26,6 +26,7 @@
 #include <QtCore/QMutex>
 
 #include "NVBLogger.h"
+#include "NVBSettings.h"
 #include "NVBFile.h"
 #include "NVBFileInfo.h"
 #include "NVBFileGenerator.h"
@@ -83,7 +84,7 @@ class NVBFileFactory : public QObject {
 		/// Model with generators
 		NVBFilePluginModel gmodel;
 
-		QSettings * confile;
+		NVBSettings confile;
 
 		/// Load file from \a filename. Returns NULL if file wasn't opened.
 		/// The returned file is already considered in use.
@@ -105,7 +106,7 @@ class NVBFileFactory : public QObject {
 		QList<const NVBFileGenerator*> getGeneratorsFromFilename(QString filename) const;
 
 	public:
-		NVBFileFactory();
+		NVBFileFactory(NVBSettings settings);
 		virtual ~NVBFileFactory();
 
 		/**
