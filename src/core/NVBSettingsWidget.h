@@ -70,12 +70,15 @@ class NVBSettingsWidget : public QFrame {
 
 		QVBoxLayout * vlayout;
 		QList<NVBSettingsWidgetEntry> entries;
+		
+		void appendWidgetToLayout(QWidget * widget);
+		void appendLayoutToLayout(QLayout * layout);
 
 	public:
 		explicit NVBSettingsWidget(NVBSettings settings, QWidget* parent = 0);
 
 		/// Add an NVBSettingsWidget to the layout (last position)
-		void addSetting(NVBSettingsWidget *);
+		void addSetting( NVBSettingsWidget* widget, bool autoLayout );
 		/// Add a checkbox to the layout, with caption \a text and the corresponding QSettings key \a entry
 		void addCheckBox(QString entry, QString text, QString tooltip = QString());
 		/// Add an existing \a checkbox to the layout, with the corresponding QSettings key \a entry.

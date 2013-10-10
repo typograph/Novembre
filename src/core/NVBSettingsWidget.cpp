@@ -31,6 +31,9 @@ NVBSettingsWidget::NVBSettingsWidget(NVBSettings conf, QWidget* parent)
 	, uncommitted(false)
 	, settings(conf)
 	, parentSettings(0) {
+		
+	if (layout())
+		delete layout();
 	vlayout = new QVBoxLayout(this);
 	vlayout->setMargin(10);
 	vlayout->addStretch(1000);
@@ -42,9 +45,19 @@ NVBSettingsWidget::NVBSettingsWidget(NVBSettings conf, QWidget* parent)
 	connect(this, SIGNAL(dataSynced()), SLOT(synced()));
 	}
 
-void NVBSettingsWidget::addSetting(NVBSettingsWidget* widget) {
+void NVBSettingsWidget::appendWidgetToLayout(QWidget* widget) {
+	vlayout->insertWidget(vlayout->count() - 1, widget);
+}
+
+void NVBSettingsWidget::appendLayoutToLayout(QLayout * _layout) {
+	vlayout->insertLayout(vlayout->count() - 1, _layout);
+}
+
+	
+void NVBSettingsWidget::addSetting(NVBSettingsWidget* widget, bool autoLayout = true) {
 	entries << NVBSettingsWidgetEntry(widget);
-	vlayout->insertWidget(entries.count() - 1, widget);
+	if (autoLayout)
+		appendWidgetToLayout(widget);
 	widget->parentSettings = this;
 
 	connect(widget, SIGNAL(dataChanged()), this, SIGNAL(dataChanged()));
@@ -64,7 +77,8 @@ void NVBSettingsWidget::addCheckBox(QString entry, QCheckBox* checkBox) {
 	if (!checkBox) return;
 
 	entries << NVBSettingsWidgetEntry(entry, checkBox);
-	vlayout->insertWidget(entries.count() - 1, checkBox);
+	appendWidgetToLayout(checkBox);
+// 	vlayout->insertWidget(entries.count() - 1, checkBox);
 	connect(checkBox, SIGNAL(clicked(bool)), this, SIGNAL(dataChanged()));
 	}
 
@@ -90,7 +104,8 @@ void NVBSettingsWidget::addComboBox(QString entry, QString label, QComboBox* com
 
 	hl->addWidget(lbl);
 	hl->addWidget(combobox);
-	vlayout->insertLayout(entries.count() - 1, hl);
+	appendLayoutToLayout(hl);
+// 	vlayout->insertLayout(entries.count() - 1, hl);
 	connect(combobox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(dataChanged()));
 	}
 
@@ -111,7 +126,8 @@ void NVBSettingsWidget::addLineEdit(QString entry, QString label, QLineEdit* lin
 
 	hl->addWidget(lbl);
 	hl->addWidget(lineedit);
-	vlayout->insertLayout(entries.count() - 1, hl);
+	appendLayoutToLayout(hl);
+// 	vlayout->insertLayout(entries.count() - 1, hl);
 	connect(lineedit, SIGNAL(textChanged(QString)), this, SIGNAL(dataChanged()));
 	}
 

@@ -86,6 +86,7 @@ set(browser_HDRS
 	${browser_HDRS}
 # 	src/gui/NVBStandardIcons.h
 # 	src/gui/NVBSettings.h
+	src/gui/NVBGeneratorsSettingsWidget.h
 	src/gui/NVBSettingsDialog.h
 	src/gui/NVBMainWindow.h
 	src/gui/NVBMainDocks.h
@@ -98,6 +99,7 @@ set(browser_SRCS
 	src/gui/NVBStandardIcons.cpp
 # 	src/gui/NVBSettings.cpp
 	src/gui/NVBSettingsDialog.cpp
+	src/gui/NVBGeneratorsSettingsWidget.cpp
 	src/gui/NVBMainWindow.cpp
 	src/gui/NVBMainDocks.cpp
 	src/gui/NVBCoreApplication.cpp
