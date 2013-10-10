@@ -20,38 +20,55 @@
 #ifndef NVBGENERATORSSETTINGSWIDGET_H
 #define NVBGENERATORSSETTINGSWIDGET_H
 
-class QListView;
+class QTableView;
 class QPushButton;
 class NVBFileFactory;
+class NVBFilePluginModel;
+class QStackedWidget;
 
 #include "NVBSettingsWidget.h"
+#include <QtCore/QModelIndex>
 
 /**
- * A widget for controlling the usage of file generators and their properties
+ * \class NVBGeneratorsSettingsWidget
  *
+ * An NVBSettingsWidget for NVBFilesFactory.
+ *
+ * Here, the user can set properties for individual plugins,
+ * such as disable loading of files with these plugins,
+ * or change plugin-specific settings.
  *
  */
 
 class NVBGeneratorsSettingsWidget : public NVBSettingsWidget {
+	Q_OBJECT
 	private:
-		QListView * pluginList;
-
-		NVBFileFactory * ffactory;
-
-		NVBGeneratorsSettingsWidget * pluginWidget;
+		/// A table showing the list of plugins
+		QTableView * pluginList;
+		/// The model supplying data for the table
+		NVBFilePluginModel * pluginModel;
+		/// The widget showing the configuration widgets of plugins
+    QStackedWidget* pluginSettingsView;
 
 	private slots:
-		void selectGenerator();
+		/// Show the appropriate configuration widget
+		void selectGenerator( QModelIndex index );
+		/// Activate/deactivate plugings
+		void updateGeneratorSettings(QModelIndex, QModelIndex);
 
 	public:
+		/// Create the widget
 		NVBGeneratorsSettingsWidget(NVBSettings settings);
 		virtual ~NVBGeneratorsSettingsWidget() {;}
-
+		
+		/// Set a model with generators
+		void setModel(NVBFilePluginModel * model);
+		
 		/// Copy widget values from config file
 		virtual void init();
+
 		/// Write out all changes to config
 		virtual bool write();
-
 
 	};
 

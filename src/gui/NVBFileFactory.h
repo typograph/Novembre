@@ -151,8 +151,6 @@ class NVBFileFactory : public QObject {
 		void bury(NVBFile *);
 		/// Removes the file associated with \a filename from all caches
 		void release(QString filename);
-		/// Follows changes in the model
-		void updateGeneratorSettings(QModelIndex, QModelIndex);
 		/// Updates wildcard list
 		void updateWildcards();
 	};

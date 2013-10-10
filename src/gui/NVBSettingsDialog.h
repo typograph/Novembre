@@ -23,6 +23,8 @@
 #include <QtGui/QDialog>
 #include "NVBSettings.h"
 
+class NVBFilePluginModel;
+class NVBGeneratorsSettingsWidget;
 class QStackedWidget;
 class QPushButton;
 class QListWidget;
@@ -37,6 +39,7 @@ class NVBSettingsDialog : public QDialog {
 		QStackedWidget * view;
 		QPushButton * applyButton;
 		QPushButton * resetButton;
+		NVBGeneratorsSettingsWidget * gWidget;
 
 		static NVBSettingsDialog * globalInstance;
 
@@ -60,13 +63,14 @@ class NVBSettingsDialog : public QDialog {
 
 	public:
 
+		static void initGlobalDialog(NVBSettings settings);
 		static int showGeneralSettings();
 		static int showBrowserSettings();
-// 	static int showFileSettings();
+		static int showFileSettings();
 // 	static int showPluginSettings();
 		void addPage(QWidget * widget);
-		static void initGlobalDialog(NVBSettings settings);
 
+		static void setFileModel( NVBFilePluginModel* model );
 	};
 
 #endif

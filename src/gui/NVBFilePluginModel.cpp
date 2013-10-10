@@ -54,24 +54,17 @@ int NVBFilePluginModel::columnCount(const QModelIndex &parent) const {
 QVariant NVBFilePluginModel::data(const QModelIndex &index, int role) const {
 	if (!index.isValid()) return QVariant();
 
-	if (role != Qt::DisplayRole) return QVariant();
-
-	switch(index.column()) {
-		case 0: {
-			if (role == Qt::CheckStateRole)
-				return gactions.at(index.row())->isChecked() ? Qt::Checked : Qt::Unchecked;
-			else
-				return QVariant();
+	if (role == Qt::CheckStateRole && index.column() == 0)
+		return gactions.at(index.row())->isChecked() ? Qt::Checked : Qt::Unchecked;
+	else if (role == Qt::DisplayRole) 
+		switch(index.column()) {
+			case 1: return generators.at(index.row())->moduleName();
+			case 2: return generators.at(index.row())->moduleDesc();
+			case 3: return gsource.at(index.row());
+			default: return QVariant();
 			}
-
-		case 1: return generators.at(index.row())->moduleName();
-
-		case 2: return generators.at(index.row())->moduleDesc();
-
-		case 3: return gsource.at(index.row());
-
-		default: return QVariant();
-		}
+	else
+		return QVariant();
 	}
 
 QVariant NVBFilePluginModel::headerData ( int section, Qt::Orientation orientation, int role) const {
@@ -79,13 +72,9 @@ QVariant NVBFilePluginModel::headerData ( int section, Qt::Orientation orientati
 
 	switch(section) {
 		case 0: return "Use";
-
 		case 1: return "Name";
-
 		case 2: return "Description";
-
 		case 3: return "Source";
-
 		default: return QVariant();
 		}
 

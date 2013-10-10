@@ -21,6 +21,7 @@
 #include "NVBSettings.h"
 #include "NVBSettingsDialog.h"
 #include "NVBSettingsWidget.h"
+#include "NVBGeneratorsSettingsWidget.h"
 #include "NVBStandardIcons.h"
 
 #include <QtCore/QString>
@@ -125,32 +126,6 @@ class NVBBrowserSettingsWidget : public NVBSettingsWidget {
 			}
 	};
 
-/**
- * \class NVBFilesSettingsWidget
- *
- * An NVBSettingsWidget for NVBFilesFactory.
- *
- * Here, the user can set properties for individual plugins,
- * such as disable loading of files with these plugins,
- * or change plugin-specific settings.
- *
- */
-
-class NVBFilesSettingsWidget : public NVBSettingsWidget {
-	public:
-		NVBFilesSettingsWidget(NVBSettings conf, QWidget* parent = 0) : NVBSettingsWidget(conf, parent) {
-			setWindowIcon(getStandardIcon(NVBStandardIcon::Browser));
-			setWindowIconText("Files");
-// 		setGroup("");
-			}
-
-		virtual void init() {
-			}
-
-		virtual bool write() {
-			}
-	};
-
 
 /**
  * NVBSettingsSectionDelegate for showing a list of big icons
@@ -245,8 +220,8 @@ NVBSettingsDialog::NVBSettingsDialog(NVBSettings settings)
 	sections->setViewMode(QListView::ListMode);
 	sections->setItemDelegate( new NVBSettingsSectionDelegate( this ) );
 // 	sections->setResizeMode(QListView::Fixed);
-	sections->setMaximumWidth(LIST_ICON_SIZE + 2 * LIST_ICON_MARGIN + 10);
-	sections->setMinimumWidth(LIST_ICON_SIZE + 2 * LIST_ICON_MARGIN + 5 + style()->pixelMetric(QStyle::PM_ScrollBarExtent));
+	sections->setMaximumWidth(LIST_ICON_SIZE + 2 * LIST_ICON_MARGIN + 20 + style()->pixelMetric(QStyle::PM_ScrollBarExtent));
+	sections->setMinimumWidth(LIST_ICON_SIZE + 2 * LIST_ICON_MARGIN + 15 + style()->pixelMetric(QStyle::PM_ScrollBarExtent));
 	sections->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
 
 	QPushButton * closeButton = new QPushButton("Close", this);
@@ -263,7 +238,8 @@ NVBSettingsDialog::NVBSettingsDialog(NVBSettings settings)
 
 	addPage(new NVBGeneralSettingsWidget(conf));
 	addPage(new NVBBrowserSettingsWidget(conf.group("Browser")));
-// 	addPage(new NVBFileSettingsWidget(conf.group("Files")));
+	gWidget = new NVBGeneratorsSettingsWidget(conf.group("Plugins"));
+	addPage(gWidget);
 // 	addPage(new NVBToolsSettingsWidget(conf.group("Tools")));
 
 	view->setCurrentIndex(0);
@@ -321,7 +297,6 @@ void NVBSettingsDialog::pageSwitch() {
 // 	NVBSettingsWidget * w = qobject_cast<NVBSettingsWidget*>(view->currentWidget());
 	}
 
-
 int NVBSettingsDialog::showGeneralSettings() {
 	if (globalInstance) {
 		globalInstance->switchToPage(0);
@@ -336,7 +311,6 @@ int NVBSettingsDialog::showBrowserSettings() {
 		}
 	}
 
-/*
 int NVBSettingsDialog::showFileSettings()
 {
 	if (globalInstance) {
@@ -345,6 +319,7 @@ int NVBSettingsDialog::showFileSettings()
 		}
 }
 
+/*
 int NVBSettingsDialog::showPluginSettings()
 {
 	if (globalInstance) {
@@ -360,6 +335,11 @@ void NVBSettingsDialog::initGlobalDialog(NVBSettings settings) {
 		globalInstance = 0;
 	}
 	globalInstance = new NVBSettingsDialog(settings);
+}
+
+void NVBSettingsDialog::setFileModel(NVBFilePluginModel* model) {
+	if (globalInstance && globalInstance->gWidget)
+		globalInstance->gWidget->setModel(model);
 }
 
 

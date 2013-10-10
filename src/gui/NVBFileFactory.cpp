@@ -21,6 +21,7 @@
 #include "NVBFileBundle.h"
 #include "NVBSettings.h"
 #include "NVBPlugin.h"
+#include "NVBSettingsDialog.h"
 
 #include <QtCore/QSettings>
 #include <QtCore/QStringList>
@@ -48,11 +49,6 @@ NVBFileFactory::NVBFileFactory(NVBSettings settings)
 	: confile(settings)
 {
 	deadTree = new NVBFileQueue(5); // TODO Make the size of deadTree user-controllable
-
-// Since QSignalMapper needs QObject to map to,
-// and NVBFileGenerator is not an object, but
-// QPluginLoader::instance is, the actions are
-// created on load
 
 	gmodel.addGenerator(new NVBFileBundle(confile,this));
 
@@ -85,17 +81,14 @@ NVBFileFactory::NVBFileFactory(NVBSettings settings)
 	if (gmodel.rowCount() < 2) // FileBundle is always there
 		NVBCriticalError(QString("No valid plugins found"));
 
-	for(int i = 0; i < gmodel.rowCount(); i++)
-		if (!confile.value(gmodel.availableGenerators().at(i)->moduleName(), true).toBool())
-			gmodel.setGeneratorActive(i, false);
-
 	foreach (const NVBFileGenerator * generator, gmodel.availableGenerators()) {
 		commentNames << generator->availableInfoFields();
 		}
 
+	NVBSettingsDialog::setFileModel(&gmodel);
+		
 	updateWildcards();
 	connect(&gmodel, SIGNAL(dataChanged(QModelIndex, QModelIndex)), this, SLOT(updateWildcards()));
-	connect(&gmodel, SIGNAL(dataChanged(QModelIndex, QModelIndex)), this, SLOT(updateGeneratorSettings(QModelIndex, QModelIndex)));
 
 	if (!commentNames.isEmpty()) {
 		commentNames.sort();
@@ -119,15 +112,6 @@ void NVBFileFactory::updateWildcards() {
 	foreach (const NVBFileGenerator * g, gmodel.activeGenerators())
 	foreach (QString e, g->extFilters())
 	wildcards.insertMulti(e, g);
-	}
-
-void NVBFileFactory::updateGeneratorSettings(QModelIndex start, QModelIndex end) {
-
-	if (start.column() == 0) {
-		for (int gi = start.row(); gi <= end.row(); gi++)
-			confile.setValue(gmodel.data(gmodel.index(gi, 1)).toString(), gmodel.isGeneratorActive(gi));
-		}
-
 	}
 
 NVBFileFactory::~NVBFileFactory() {
