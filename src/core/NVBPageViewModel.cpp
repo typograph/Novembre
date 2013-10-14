@@ -20,8 +20,9 @@
 #include <QCoreApplication>
 #include "NVBPageViewModel.h"
 #include "NVBFilterDelegate.h"
+#include "NVBFile.h"
 
-NVBPageViewModel::NVBPageViewModel(): QAbstractListModel(), lastAddedRow(-1) {
+NVBPageViewModel::NVBPageViewModel(): QAbstractListModel(), lastAddedRow(-1), common(0) {
 #ifndef FILEGENERATOR_NO_GUI
 	// FIXME breaks locality of nvblib
 	iconProvider = qApp->property("iconProvider").value<NVBIconProvider*>();
@@ -79,11 +80,12 @@ QVariant NVBPageViewModel::data(const QModelIndex & index, int role) const {
  */
 QVariant NVBPageViewModel::pageData(NVBDataSource* page, int role) const {
 	switch (role) {
-		case Qt::DisplayRole :
-		case Qt::EditRole    : {
-			return page->name();
+		case Qt::DisplayRole : {
+			if (!common)
+				return QString("%1 (%2)").arg(page->name(),page->owner->name());
 			}
-
+		case Qt::EditRole    : 
+			return page->name();
 		case Qt::StatusTipRole :
 		case Qt::ToolTipRole   : {
 			if (page->type() == NVB::TopoPage)
@@ -203,6 +205,11 @@ int NVBPageViewModel::addSource(NVBDataSource * page) {
 void NVBPageViewModel::addSource(NVBDataSource* page, int row) {
 	if (!page) return;
 
+	if (pages.count() == 0)
+		common = page->owner;
+	else if (common && common != page->owner)
+		common = 0;
+	
 	if (row < 0) row = 0;
 
 	if (row > pages.count()) row = pages.count();

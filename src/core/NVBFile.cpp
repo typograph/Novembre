@@ -112,3 +112,14 @@ NVBFile::NVBFile(NVBAssociatedFilesInfo sources, QList< NVBDataSource * > pages)
 		addSource(s);
 		}
 	}
+
+QVariant NVBFile::data(const QModelIndex& index, int role) const
+{
+	if (!index.isValid()) return QVariant();
+	if (index.row() >= rowCount()) return QVariant();
+
+	if (role == Qt::DisplayRole)
+		return pages.at(index.row())->name();
+	else
+		return NVBPageViewModel::data(index, role);
+}

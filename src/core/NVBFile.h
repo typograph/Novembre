@@ -50,6 +50,9 @@ class NVBFile : public NVBPageViewModel {
 		/// Returns info about the original files
 		NVBAssociatedFilesInfo sources() const { return sourceInfo; }
 
+		/// Return information about page at @p index
+		virtual QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
+
 		/// \returns the total area occupied by all pages in the x-y plane
 		QRectF fullarea();
 		/// \returns the name of the file
