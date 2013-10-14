@@ -54,7 +54,7 @@
 
 // --------------
 
-NVBDoubleListView::NVBDoubleListView(NVBFileWindow * parent, QAbstractListModel * topmodel, QAbstractListModel * bottommodel) : QSplitter(parent) {
+NVBDoubleListView::NVBDoubleListView(NVBFileWindow * parent, QAbstractListModel * topmodel, QAbstractListModel * bottommodel) : QSplitter(parent), bottomList(0) {
 	setMouseTracking(true);
 
 	setOrientation(Qt::Vertical);
@@ -89,7 +89,7 @@ NVBDoubleListView::NVBDoubleListView(NVBFileWindow * parent, QAbstractListModel 
 	setTopModel(topmodel);
 
 	if (bottommodel)
-		addBottomModel(bottommodel);
+		setBottomModel(bottommodel);
 
 	setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding);
 	resize(minimumSizeHint());
@@ -125,45 +125,59 @@ void NVBDoubleListView::setTopModel(QAbstractListModel * model) {
 		topList->hide();
 	}
 
-/*
+
 void NVBDoubleListView::setBottomModel(QAbstractListModel * model)
 {
 	if (model) {
+		if (!bottomList) {
+			bottomList = new QListView(this);
+			bottomList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+			bottomList->setSpacing(4);
+			bottomList->setIconSize(QSize(32, 32));
+			bottomList->setDragDropMode(QAbstractItemView::DragOnly);
+
+			connect(bottomList, SIGNAL(activated(const QModelIndex&)),
+					SIGNAL(bottomActivated(const QModelIndex&)));
+			connect(bottomList, SIGNAL(clicked(const QModelIndex&)),
+					SIGNAL(bottomClicked(const QModelIndex&)));
+			connect(bottomList, SIGNAL(doubleClicked(const QModelIndex&)),
+					SIGNAL(bottomDoubleClicked(const QModelIndex&)));
+			}
 		bottomList->setModel(model);
 		bottomList->show();
 		}
 	else
 		bottomList->hide();
 }
-*/
 
-void NVBDoubleListView::addBottomModel(QAbstractListModel * model) {
-	if (model) {
-		QListView * bottomList = new QListView(this);
-		bottomList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-		bottomList->setSpacing(4);
-		bottomList->setIconSize(QSize(32, 32));
-		bottomList->setDragDropMode(QAbstractItemView::DragOnly);
-		/*
-		frame->addWidget(bottomList);
-		bottomList->setMouseTracking(true);
-		bottomList->viewport()->setMouseTracking(true);
-		bottomList->setAttribute(Qt::WA_Hover);
-		connect(bottomList,SIGNAL(entered( const QModelIndex & )),bottomList,SLOT(edit( const QModelIndex & )));
-		bottomList->setItemDelegate(new NVBListItemDelegate(bottomList));
-		*/
 
-		connect(bottomList, SIGNAL(activated(const QModelIndex&)),
-		        SIGNAL(bottomActivated(const QModelIndex&)));
-		connect(bottomList, SIGNAL(clicked(const QModelIndex&)),
-		        SIGNAL(bottomClicked(const QModelIndex&)));
-		connect(bottomList, SIGNAL(doubleClicked(const QModelIndex&)),
-		        SIGNAL(bottomDoubleClicked(const QModelIndex&)));
-
-		bottomList->setModel(model);
-		bottomList->show();
-		}
-	}
+// void NVBDoubleListView::addBottomModel(QAbstractListModel * model) {
+// 	if (model) {
+// 		QListView * bottomList = new QListView(this);
+// 		bottomList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+// 		bottomList->setSpacing(4);
+// 		bottomList->setIconSize(QSize(32, 32));
+// 		bottomList->setDragDropMode(QAbstractItemView::DragOnly);
+// 		/*
+// 		frame->addWidget(bottomList);
+// 		bottomList->setMouseTracking(true);
+// 		bottomList->viewport()->setMouseTracking(true);
+// 		bottomList->setAttribute(Qt::WA_Hover);
+// 		connect(bottomList,SIGNAL(entered( const QModelIndex & )),bottomList,SLOT(edit( const QModelIndex & )));
+// 		bottomList->setItemDelegate(new NVBListItemDelegate(bottomList));
+// 		*/
+// 
+// 		connect(bottomList, SIGNAL(activated(const QModelIndex&)),
+// 		        SIGNAL(bottomActivated(const QModelIndex&)));
+// 		connect(bottomList, SIGNAL(clicked(const QModelIndex&)),
+// 		        SIGNAL(bottomClicked(const QModelIndex&)));
+// 		connect(bottomList, SIGNAL(doubleClicked(const QModelIndex&)),
+// 		        SIGNAL(bottomDoubleClicked(const QModelIndex&)));
+// 
+// 		bottomList->setModel(model);
+// 		bottomList->show();
+// 		}
+// 	}
 
 
 QModelIndex NVBDoubleListView::selectedTopPage() {
@@ -583,6 +597,8 @@ void NVBFileWindow::selectionChanged(const QItemSelection & selected, const QIte
 		}
 	else {
 		emit pageSelected(selected.indexes().at(0).data(PageTypeRole).value<NVB::PageType>());
+		
+		pageListView->setBottomModel(selected.indexes().at(0).data(PageRole).value<NVBDataSource*>()->owner);
 
 		if (deselected.indexes().size() != 1)
 			emit selectionChanged(selected.indexes().at(0), QModelIndex());

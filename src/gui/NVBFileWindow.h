@@ -57,6 +57,7 @@ class NVBDoubleListView : public QSplitter {
 		Q_OBJECT
 	private:
 		QListView * topList;
+		QListView * bottomList;
 //   QList<QListView *> bottomLists;
 
 	private slots:
@@ -83,8 +84,8 @@ class NVBDoubleListView : public QSplitter {
 		virtual void closeEvent(QCloseEvent * event) { event->ignore(); hide(); }
 
 		void setTopModel(QAbstractListModel * model);
-		void addBottomModel(QAbstractListModel * model);
-//   void setBottomModel(QAbstractListModel * model);
+// 		void addBottomModel(QAbstractListModel * model);
+		void setBottomModel(QAbstractListModel * model);
 
 		void setCurrentTopIndex(const QModelIndex & index);
 //   void setCurrentBottomIndex(const QModelIndex & index);
