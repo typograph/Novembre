@@ -545,7 +545,7 @@ NVBSelectorFileInstance::NVBSelectorFileInstance(const NVBSelectorCase & selecto
 void NVBSelectorFileInstance::fillInstances(const NVBSelectorCase & selector, const QList< NVBDataSource* > & sources) {
 	if (selector.t == NVBSelectorCase::OR) {
 		foreach(NVBSelectorCase subs, selector.cases)
-		fillInstances(subs, sources);
+			fillInstances(subs, sources);
 		return;
 		}
 
