@@ -252,7 +252,7 @@ QPixmap NVBDataColorInstance::colorize(QVector<axissize_t> slice, QSize i_wxh) c
 	return timg;
 	}
 
-QPixmap NVBDataColorInstance::colorize(NVBDataSet * dset, QVector<axissize_t> slice, QSize i_wxh) {
+QPixmap NVBDataColorInstance::colorize(const NVBDataSet * dset, QVector<axissize_t> slice, QSize i_wxh) {
 	if (!dset) return QPixmap();
 
 	NVBDataColorInstance * i = dset->colorInstance();

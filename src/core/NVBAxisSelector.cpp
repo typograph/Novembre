@@ -258,7 +258,7 @@ void NVBSelectorCase::optimize() {
  * to unmatched axes.
  */
 
-NVBSelectorFileInstance NVBSelectorCase::instantiate(const QList< NVBDataSource* > * dataSources) {
+NVBSelectorFileInstance NVBSelectorCase::instantiate(const QList< NVBDataSource* >* dataSources) const{
 //	if (t != NVBSelectorCase::AND) {
 //		NVBOutputError("Only one case per selector is supported when instantiating on list");
 //		return NVBSelectorFileInstance(*this);
@@ -269,7 +269,7 @@ NVBSelectorFileInstance NVBSelectorCase::instantiate(const QList< NVBDataSource*
 	return NVBSelectorFileInstance(*this, *dataSources);
 	}
 
-NVBSelectorSourceInstance NVBSelectorCase::instantiateOneSource(const QList< NVBDataSource* > * dataSources) {
+NVBSelectorSourceInstance NVBSelectorCase::instantiateOneSource(const QList< NVBDataSource* >* dataSources) const{
 // 	optimize();
 	NVBSelectorFileInstance i = NVBSelectorFileInstance(*this, *dataSources);
 
@@ -280,7 +280,7 @@ NVBSelectorSourceInstance NVBSelectorCase::instantiateOneSource(const QList< NVB
 	}
 
 
-NVBSelectorDataInstance NVBSelectorCase::instantiateOneDataset(const QList< NVBDataSource* > * dataSources) {
+NVBSelectorDataInstance NVBSelectorCase::instantiateOneDataset(const QList< NVBDataSource* >* dataSources) const{
 // 	optimize();
 	NVBSelectorSourceInstance i = instantiateOneSource(dataSources);
 
@@ -290,13 +290,13 @@ NVBSelectorDataInstance NVBSelectorCase::instantiateOneDataset(const QList< NVBD
 	return i.matchedInstances().first();
 	}
 
-NVBSelectorSourceInstance NVBSelectorCase::instantiate(const NVBDataSource* dataSource) {
+NVBSelectorSourceInstance NVBSelectorCase::instantiate(const NVBDataSource* dataSource) const{
 // 	optimize();
 
 	return NVBSelectorSourceInstance(*this, dataSource);
 	}
 
-NVBSelectorDataInstance NVBSelectorCase::instantiateOneDataset(const NVBDataSource* dataSource) {
+NVBSelectorDataInstance NVBSelectorCase::instantiateOneDataset(const NVBDataSource* dataSource) const{
 // 	optimize();
 
 	NVBSelectorSourceInstance i = instantiate(dataSource);
@@ -307,20 +307,20 @@ NVBSelectorDataInstance NVBSelectorCase::instantiateOneDataset(const NVBDataSour
 	return NVBSelectorDataInstance(*this);
 	}
 
-NVBSelectorDataInstance NVBSelectorCase::instantiate(const NVBDataSet* data) {
+NVBSelectorDataInstance NVBSelectorCase::instantiate(const NVBDataSet* dataSet) const{
 #ifdef NVB_DEBUG_AXISSELECTOR
 	NVBOutputDMsg(QString("Trying to match case %1").arg(id));
 #endif
 
 	switch (t) {
 		case NVBSelectorCase::AND : {
-			return NVBSelectorDataInstance(*this, data);
+			return NVBSelectorDataInstance(*this, dataSet);
 			break;
 			}
 
 		case NVBSelectorCase::OR : {
 			foreach(NVBSelectorCase c, cases) {
-				NVBSelectorDataInstance i = c.instantiate(data);
+				NVBSelectorDataInstance i = c.instantiate(dataSet);
 
 				if (i.isValid()) return i;
 				}

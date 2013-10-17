@@ -101,19 +101,19 @@ class NVBSelectorCase {
 // 		{ return dataset.match(dataSource); }
 
 		/// Returns an instance that reports all datasources that have matching datasets
-		NVBSelectorFileInstance instantiate(const QList<NVBDataSource *> * dataSources);
+		NVBSelectorFileInstance instantiate(const QList<NVBDataSource *> * dataSources) const;
 		/// Returns an instance that reports one datasource from the list that has matching datasets
-		NVBSelectorSourceInstance instantiateOneSource(const QList<NVBDataSource *> * dataSources);
+		NVBSelectorSourceInstance instantiateOneSource(const QList<NVBDataSource *> * dataSources) const;
 		/// Returns an instance that reports the first matching dataset from the list
-		NVBSelectorDataInstance instantiateOneDataset(const QList<NVBDataSource *> * dataSources);
+		NVBSelectorDataInstance instantiateOneDataset(const QList<NVBDataSource *> * dataSources) const;
 
 		/// Returns an instance that reports all matching datasets (may be none)
-		NVBSelectorSourceInstance instantiate(const NVBDataSource * dataSource);
+		NVBSelectorSourceInstance instantiate(const NVBDataSource * dataSource) const;
 		/// Returns an instance that reports the first matching dataset from the list
-		NVBSelectorDataInstance instantiateOneDataset(const NVBDataSource * dataSource);
+		NVBSelectorDataInstance instantiateOneDataset(const NVBDataSource * dataSource) const;
 
 		/// Returns an instance that has info on all matching axes from the selector (may be invalid if no match)
-		NVBSelectorDataInstance instantiate(const NVBDataSet * dataSet);
+		NVBSelectorDataInstance instantiate(const NVBDataSet * dataSet) const;
 
 // 	void optimize();
 //	NVBSelectorAxis & addDependentAxis();
