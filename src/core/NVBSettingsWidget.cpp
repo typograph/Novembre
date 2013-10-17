@@ -32,8 +32,6 @@ NVBSettingsWidget::NVBSettingsWidget(NVBSettings conf, QWidget* parent)
 	, settings(conf)
 	, parentSettings(0) {
 		
-	if (layout())
-		delete layout();
 	vlayout = new QVBoxLayout(this);
 	vlayout->setMargin(10);
 	vlayout->addStretch(1000);
@@ -97,7 +95,7 @@ void NVBSettingsWidget::addComboBox(QString entry, QString label, QComboBox* com
 	if (!combobox) return;
 
 	entries << NVBSettingsWidgetEntry(entry, combobox);
-	QHBoxLayout * hl = new QHBoxLayout(this);
+	QHBoxLayout * hl = new QHBoxLayout();
 	QLabel * lbl = new QLabel(label);
 
 	if (lbl) lbl->setToolTip(combobox->toolTip());
@@ -119,7 +117,7 @@ void NVBSettingsWidget::addLineEdit(QString entry, QString label, QLineEdit* lin
 	if (!lineedit) return;
 
 	entries << NVBSettingsWidgetEntry(entry, lineedit);
-	QHBoxLayout * hl = new QHBoxLayout(this);
+	QHBoxLayout * hl = new QHBoxLayout();
 	QLabel * lbl = new QLabel(label);
 
 	if (lbl) lbl->setToolTip(lineedit->toolTip());
