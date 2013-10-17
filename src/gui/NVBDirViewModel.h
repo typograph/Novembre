@@ -32,6 +32,7 @@
 
 #include <QtGui/QIcon>
 
+class NVBShowFirstPageConverter;
 class NVBFile;
 class NVBFileModel;
 class NVBFileFactory;
@@ -124,12 +125,14 @@ class NVBDirViewModel : public QAbstractItemModel {
 
 		NVBSpecOverlayIconProvider * overlay;
 		NVBFile2ImageConverter * imgConverter;
+		NVBShowFirstPageConverter * firstConverter;
 
 		bool operationRunning;
 		void cacheRowCounts() const;
 		void cacheRowCounts ( int first, int last ) const;
 
 		Mode mode;
+		bool overlayActive;
 
 		mutable QPixmap unavailable, loading;
 
@@ -148,11 +151,14 @@ class NVBDirViewModel : public QAbstractItemModel {
 //	void fileLoaded();
 //	void fileLoaded(int index);
 		void fileLoaded(NVBFile* file, QString name);
+		void setMode(Mode m);
 
 	public slots:
 		void defineWindow(int start, int end);
-		void setMode(Mode m);
 		void setSingleImageProvider(NVBFile2ImageConverter * provider);
+		void setOverlayActive(bool active);
+		void setSingleImageModeActive(bool active);
+		
 	};
 
 

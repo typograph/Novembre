@@ -36,6 +36,7 @@ set(browser_SRCS
 # FileBrowser
 set(browser_HDRS
 	${browser_HDRS}
+	src/gui/NVBConverterMenu.h
 	src/gui/NVBGradientMenu.h
 	src/gui/NVBMutableGradients.h
 	src/gui/NVBPageInfoWidget.h
@@ -60,6 +61,7 @@ set(browser_HDRS
 
 set(browser_SRCS
 	${browser_SRCS}
+	src/gui/NVBConverterMenu.cpp
 	src/gui/NVBGradientMenu.cpp
 	src/gui/NVBMutableGradients.cpp
 	src/gui/NVBPageInfoWidget.cpp
