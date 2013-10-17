@@ -428,22 +428,22 @@ bool NVBSelectorRules::matchDataset(const NVBDataSet* dataset) const {
 				break;
 
 			case ObjType:
-				if (!dataset->type() != (NVBDataSet::Type)(r.i)) return false;
+				if (dataset->type() != (NVBDataSet::Type)(r.i)) return false;
 
 				break;
 
 			case Size:
-				if (!dataset->nAxes() != (axisindex_t)(r.i)) return false;
+				if (dataset->nAxes() != (axisindex_t)(r.i)) return false;
 
 				break;
 
 			case MinSize:
-				if (!dataset->nAxes() < (axisindex_t)(r.i)) return false;
+				if (dataset->nAxes() < (axisindex_t)(r.i)) return false;
 
 				break;
 
 			case MaxSize:
-				if (!dataset->nAxes() > (axisindex_t)(r.i)) return false;
+				if (dataset->nAxes() > (axisindex_t)(r.i)) return false;
 
 				break;
 
