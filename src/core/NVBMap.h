@@ -192,7 +192,7 @@ class NVBDataColorInstance : public QObject, public NVBColorInstance {
 
 		QPixmap colorize(QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize()) const;
 
-		static QPixmap colorize(NVBDataSet * dset, QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize());
+		static QPixmap colorize(const NVBDataSet * dset, QVector<axissize_t> slice = QVector<axissize_t>(), QSize i_wxh = QSize());
 
 	public slots:
 		void setXAxis(axisindex_t x);
