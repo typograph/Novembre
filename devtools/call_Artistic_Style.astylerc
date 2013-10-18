@@ -1,0 +1,9 @@
+--indent-switches
+--break-blocks
+--pad-oper
+--keep-one-line-blocks
+--keep-one-line-statements
+--indent=tab=2
+-A6
+--brackets=attach
+--lineend=linux
