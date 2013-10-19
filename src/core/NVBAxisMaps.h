@@ -201,4 +201,49 @@ class NVBAxisColorMap : public NVBAxisTMap<QColor> {
 		virtual NVBAxisColorMap * copy() { return new NVBAxisColorMap(vs); }
 	};
 
+template <class T>
+class NVBAxisFuncMap : public NVBAxisMap {
+	typedef T (*VFunc)(axissize_t);
+	protected:
+		VFunc getvalue;
+	public:
+		NVBAxisFuncMap(VFunc function):NVBAxisMap(),getvalue(function) {;}
+		~NVBAxisFuncMap() {;}
+
+		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Template; }
+		virtual inline int dimension() const { return 1; }
+		virtual inline int valType() const { return qMetaTypeId<T>(); }
+
+		T value(axissize_t i) const {
+			return getvalue(i);
+			}
+
+		virtual NVBAxisFuncMap<T> * copy() { return new NVBAxisFuncMap<T>(getvalue); }
+
+		NVBVariant value(QVector<axissize_t> indexes) {
+			return NVBVariant::fromValue<T>(value(indexes.first()));
+			}
+};
+
+template <class T>
+class NVBAxesNDFuncMap : public NVBAxisMap {
+	typedef T (*VFunc)(QVector<axissize_t>);
+	protected:
+		VFunc getvalue;
+		axisindex_t n;
+	public:
+		NVBAxesNDFuncMap(VFunc function, axisindex_t naxes):NVBAxisMap(),getvalue(function),n(naxes) {;}
+		~NVBAxesNDFuncMap() {;}
+
+		inline NVBAxisMap::ValueType mappingType() const { return NVBAxisMap::Template; }
+		virtual inline int dimension() const { return n; }
+		virtual inline int valType() const { return qMetaTypeId<T>(); }
+
+		virtual NVBAxesNDFuncMap<T> * copy() { return new NVBAxesNDFuncMap<T>(getvalue,n); }
+
+		NVBVariant value(QVector<axissize_t> indexes) {
+			return NVBVariant::fromValue<T>(getvalue(indexes));
+			}
+};
+
 #endif
