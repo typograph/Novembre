@@ -417,34 +417,31 @@ bool NVBSelectorRules::matchDataset(const NVBDataSet* dataset) const {
 
 	foreach(NVBSelectorRule r, p->rules) {
 		switch(r.type) {
+			case Invalid:
+				break;
+				
 			case Name:
 				if (dataset->name() != r.n) return false;
-
 				break;
 
 			case Units :
 				if (!dataset->dimension().isComparableWith(r.u)) return false;
-
 				break;
 
 			case ObjType:
 				if (dataset->type() != (NVBDataSet::Type)(r.i)) return false;
-
 				break;
 
 			case Size:
 				if (dataset->nAxes() != (axisindex_t)(r.i)) return false;
-
 				break;
 
 			case MinSize:
 				if (dataset->nAxes() < (axisindex_t)(r.i)) return false;
-
 				break;
 
 			case MaxSize:
 				if (dataset->nAxes() > (axisindex_t)(r.i)) return false;
-
 				break;
 
 			default:
