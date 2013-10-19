@@ -556,42 +556,34 @@ NVBSelectorAxisInstanceList NVBSelectorRules::matchAxis(const NVBDataSet* datase
 		if (axisNotMatched) continue;
 
 		if (instance.parent_axis > -1) { // Some buddies needed
-			switch (p->buddyType) {
-				case Copy:
+			if (p->buddyType == Copy) { // The new rules are a copy of this one, i.e. no extra nothing needed
 #ifdef NVB_DEBUG_AXISSELECTOR
 					NVBOutputDMsg(QString("Buddy is a copy - already matched"));
 #endif
-					break; // The new rules are a copy of this one, i.e. no extra nothing needed
-
-				case SameLength:
+				}
+			if (p->buddyType & SameLength) {
 #ifdef NVB_DEBUG_AXISSELECTOR
 					NVBOutputDMsg(QString("Trying to match by parent length %1").arg(dataset->sizeAt(instance.parent_axis)));
 #endif
 					axisNotMatched = (dataset->sizeAt(testIndex) != dataset->sizeAt(instance.parent_axis));
-					break;
-
-				case SameUnits: {
+				}
+			if (!axisNotMatched && (p->buddyType & SameUnits)) {
 					NVBAxisPhysMap * mp = dataset->axisAt(instance.parent_axis).physMap();
 					NVBAxisPhysMap * mc = dataset->axisAt(testIndex).physMap();
 #ifdef NVB_DEBUG_AXISSELECTOR
 					NVBOutputDMsg(QString("Trying to match by parent units [%1]").arg(mp ? mp->units().baseUnit() : QString("no units")));
 #endif
-					axisNotMatched = ( mp && !mc ) || (!mp && mc);
-
-					if (mp && mc)
+// 				axisNotMatched = ( mp && !mc ) || (!mp && mc);
+				if (mp && mc) // Both maps exist and have units
 						axisNotMatched = !mp->units().isComparableWith(mc->units());
-					else if (mp || mc)
+				else if (mp || mc) // Only one map exists.
 						axisNotMatched = true;
-
-					break;
 					}
-
-				case SameMap:
+			if (!axisNotMatched && (p->buddyType & SameMap)) {
 #ifdef NVB_DEBUG_AXISSELECTOR
 					NVBOutputDMsg(QString("Buddy is a map - it's already selected"));
 #endif
 					// Everything should have been done by the parent
-					break;
 				}
 			}
 
@@ -600,7 +592,7 @@ NVBSelectorAxisInstanceList NVBSelectorRules::matchAxis(const NVBDataSet* datase
 		// Buddy on SameMap needs a different unmatched list
 		NVBSelectorAxisInstance intermediate(instance, testIndex);
 
-		if (p->buddyType == SameMap && instance.parent_axis == -1) {
+		if ((p->buddyType & SameMap) && instance.parent_axis == -1) {
 			foreach(NVBAxisMapping mp, dataset->axisAt(testIndex).maps()) {
 				if (mp.axes.count() >= p->more + 1) {
 					NVBSelectorAxisInstance final = intermediate;
