@@ -1,0 +1,73 @@
+Last Thing Not Done
+
+- Incorporate plane subtraction/leveling into the browser.
+- Reimplement specpoint showing  (Done in 0.0.5d)
+
+Release NVBBrowser
+
+- Compile documentation
+- Document every undocumented feature
+
+- Remove all FIXME comments, implementing the missing functionality
+
+- NVBPageInfoWidget
+	- Needs reasonable interface for showing important and unimportant params
+	- Has to show extra info, not available as comments
+
+- NVBAxisSelector
+	+ Optimize name / index queries
+	- Optimize instantiateOneXXX functions and NVBSelectorDataInstance::instantiate
+	+ Write unit tests for all of the features.
+	- allow negating rules
+	- general DataSource matching (dataset-free, like all maps over 2 axes?)
+	- Extend buddy mechanism (current syntax should work)
+		- case one more axis with SL, one with SUL (independent features)
+		- case -UL-LM-MU- (ring dependence - multiple parents) [Rules are ordered, i.e. one could just use the rule index]
+		- case shorter/longer
+		- FLAGS for buddy
+	? QRegExp for name matching
+	
+Polishing NVBBrowser
+
+- Beautify NVBSingleView
+	- rounded corners // Seems impossible
+	+ white background
+	- animation on show and hide
+	+ reasonable hide behaviour
+
+- Subclass for 2D plane showing
+	+ show arbitrary data
+	? use QwtPlot and QwtSpectrogram
+	- show color bar
+	- make the colorbar interactive - wheel to scale, drag to shift
+	- support uneven x/y axes
+	- support angles
+	- color autoscale selectable
+
+- NVBFileBundle
+	- In-browser creation
+	- check loading
+
+- WinSPM support
+- Omicron support
+
+- Extend filters
+	- "Less than"/"More than"
+	- "In set"
+
+Finishing NVBMain
+
+- Subclass NVBCoreApplication for NVBMainApplication
+
+- Structurize data filter tree signals & slots
+
+- improve NVBUnits
+	- support for compound units (e.g. m/s)
+		- support for multiplying/dividing NVBPhysValue
+	- support for non-decimal units (hours and degrees)
+	+ support for common multiletter units, e.g. Hertz, Gauss, Lumen etc.
+
+Bells and wistles
+
+- in-situ Python modules
+- 
