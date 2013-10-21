@@ -98,10 +98,14 @@ void NVB2DMapVizDelegate::setSource(NVBDataSource * source) {
 		page = (NVB3DDataSource*)source;
 
 		setPos(page->position().topLeft());
+// 		setTransformOriginPoint(page->resolution().width() / 2, page->resolution().height() / 2);
 
 #if QT_VERSION >= 0x040300
 		setTransform(
-		  QTransform().scale(
+		  QTransform().translate(page->position().width() / 2, page->position().height() / 2
+			).rotate(page->rotation()
+			).translate(-page->position().width() / 2, -page->position().height() / 2
+			).scale(
 		    page->position().width() / page->resolution().width(),
 		    page->position().height() / page->resolution().height()
 		  )
@@ -121,8 +125,7 @@ void NVB2DMapVizDelegate::setSource(NVBDataSource * source) {
 						);
 		*/
 
-		setTransformOriginPoint(page->resolution().width() / 2, page->resolution().height() / 2);
-		setRotation(page->rotation());
+// 		setRotation(page->rotation());
 
 		connect(page, SIGNAL(dataChanged()), SLOT(redraw()));
 		connect(page, SIGNAL(dataAdjusted()), SLOT(redraw()));
