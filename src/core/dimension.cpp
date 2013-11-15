@@ -27,7 +27,7 @@ template <>
 void getMemMinMax<double>(const double* const mem, unsigned long size, double & min, double & max) {
 	unsigned long i = 0;
 
-	while (!FINITE(mem[i]) && i < size) { i++; }
+	while (i < size && !FINITE(mem[i])) { i++; }
 
 	if (i == size) { min = 0; max = 0; return;}
 
