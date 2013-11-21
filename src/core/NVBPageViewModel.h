@@ -22,15 +22,17 @@
 #define NVBPAGEVIEWMODEL_H
 
 #include <QAbstractListModel>
+#include <QMap>
 #include "NVBGeneralDelegate.h"
 #include "NVBViewController.h"
 #ifndef FILEGENERATOR_NO_GUI
-#include "NVBIconProvider.h"
+	#include "NVBIconProvider.h"
 #else
-class NVBIconProvider;
+	class NVBIconProvider;
 #endif
 #include "NVBMimeData.h"
 
+	
 class NVBFile;
 
 /*!
@@ -47,7 +49,7 @@ class NVBPageViewModel : public QAbstractListModel {
 		/// Position at which last addSource succeeded
 		int lastAddedRow;
 		/// common file
-		const NVBFile * common;
+		QMap<NVBFile*,int> usedFiles;
 	protected:
 		/// Icon provider to use for icons
 		NVBIconProvider * iconProvider;
