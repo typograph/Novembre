@@ -66,6 +66,7 @@ QStringList NanonisFileGenerator::availableInfoFields() const {
 	return QStringList() \
 	       << "Bias" \
 	       << "User comment" \
+	       << "Line time" \
 	       ;
 	}
 
@@ -251,8 +252,11 @@ NVBFileInfo * NanonisFileGenerator::loadFileInfo(const NVBAssociatedFilesInfo & 
 			comments.insert("Bias", NVBPhysValue(h.value("BIAS").first().toDouble(), NVBDimension("V")));
 
 		if (h.contains("COMMENT") && !h.value("COMMENT").isEmpty())
-			comments.insert("User comment", h.value("COMMENT").first());
+			comments.insert("User comment", h.value("COMMENT").join(" "));
 
+		if (h.contains("SCAN_TIME") && !h.value("SCAN_TIME").isEmpty())
+			comments.insert("Line time", NVBPhysValue(h.value("SCAN_TIME").first().split(' ', QString::SkipEmptyParts).first().toDouble(),NVBDimension("s")));
+		
 		NVBPhysValue xspan, yspan;
 
 		if (h.contains("SCAN_RANGE") && !h.value("SCAN_RANGE").isEmpty()) {
@@ -317,8 +321,11 @@ NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStri
 		setComment("Bias", NVBPhysValue(header.value("BIAS").first().toDouble(), NVBDimension("V")));
 
 	if (header.contains("COMMENT") && !header.value("COMMENT").isEmpty())
-		setComment("User comment", header.value("COMMENT").first());
+		setComment("User comment", header.value("COMMENT").join(" "));
 
+	if (header.contains("SCAN_TIME") && !header.value("SCAN_TIME").isEmpty())
+		setComment("Line time", NVBPhysValue(header.value("SCAN_TIME").first().split(' ', QString::SkipEmptyParts).first().toDouble(),NVBDimension("s")));
+	
 	int data_points = _resolution.width() * _resolution.height();
 
 	QDataStream ds(&file);
