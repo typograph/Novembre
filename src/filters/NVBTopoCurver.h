@@ -33,7 +33,7 @@ class NVBTopoCurver : public NVBSpecFilterDelegate {
 		NVB3DDataSource * tprovider;
 		QList<QPointF> spositions;
 		QList<QwtData*> sdata;
-		NVBRGBRampDiscrColorModel * scolors;
+		NVBConstDiscrColorModel * scolors;
 
 		Mode mode;
 
@@ -71,7 +71,6 @@ class NVBTopoCurver : public NVBSpecFilterDelegate {
 
 	protected slots:
 		void generateCurves();
-		void invalidateColors();
 	};
 
 class NVBTopoCurverWidget : public QWidget {
