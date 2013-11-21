@@ -104,7 +104,7 @@ RHKFileGenerator::RHKFileGenerator()
 	
 void RHKFileGenerator::useSettings(const QSettings * confile) {
 	if (confile)
-		subtractBias = confile->value("Plugins/RHK-SUBTRACT-BIAS", false).toBool();
+		subtractBias = confile->value("RHK-SUBTRACT-BIAS", false).toBool();
 }
 
 
