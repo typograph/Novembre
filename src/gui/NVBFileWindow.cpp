@@ -905,7 +905,7 @@ void NVBFileWindow::print() {
 		rndoffset.setX((page.width() - pict.width()) / 2);
 		rndoffset.setY((page.height() - pict.height()) / 2);
 
-		view->w()->render(&printer, rndoffset);
+		view->w()->render(&p, rndoffset);
 		}
 
 	QPoint txtoffset;
