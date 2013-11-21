@@ -22,7 +22,7 @@
 #include "NVBFilterDelegate.h"
 #include "NVBFile.h"
 
-NVBPageViewModel::NVBPageViewModel(): QAbstractListModel(), lastAddedRow(-1), common(0) {
+NVBPageViewModel::NVBPageViewModel(): QAbstractListModel(), lastAddedRow(-1) {
 #ifndef FILEGENERATOR_NO_GUI
 	// FIXME breaks locality of nvblib
 	iconProvider = qApp->property("iconProvider").value<NVBIconProvider*>();
@@ -81,8 +81,8 @@ QVariant NVBPageViewModel::data(const QModelIndex & index, int role) const {
 QVariant NVBPageViewModel::pageData(NVBDataSource* page, int role) const {
 	switch (role) {
 		case Qt::DisplayRole : {
-			if (!common)
-				return QString("%1 (%2)").arg(page->name(),page->owner->name());
+			if (usedFiles.count() > 1)
+				return QString("%1 (%2)").arg(page->name(), page->owner ? page->owner->name() : QString("---"));
 			}
 		case Qt::EditRole    : 
 			return page->name();
@@ -148,6 +148,14 @@ bool NVBPageViewModel::setData(const QModelIndex & index, const QVariant & value
 	if (!index.isValid()) return false;
 
 	if (role == PageRole) {
+		NVBFile * owner = pages.at(index.row())->owner;
+		if (owner && usedFiles.contains(owner)) {
+			usedFiles[owner] -= 1;
+			if(!usedFiles[owner]) {
+				usedFiles.remove(owner);
+				owner->release();
+				}
+			}
 		releaseDataSource(pages.at(index.row()));
 		pages.replace(index.row(), value.value<NVBDataSource*>());
 		emit dataChanged(index, index);
@@ -172,7 +180,15 @@ void NVBPageViewModel::clear() {
 	if (rowCount()) {
 		beginRemoveRows(QModelIndex(), 0, rowCount() - 1);
 
-		while (!pages.isEmpty()) releaseDataSource(pages.takeFirst());
+		while (!pages.isEmpty())
+			releaseDataSource(pages.takeFirst());
+		
+		QMutableMapIterator<NVBFile *, int> i(usedFiles);
+		while (i.hasNext()) {
+			i.next();
+			i.key()->release();
+			i.remove();
+			}
 
 		icons.clear();
 		endRemoveRows();
@@ -205,10 +221,13 @@ int NVBPageViewModel::addSource(NVBDataSource * page) {
 void NVBPageViewModel::addSource(NVBDataSource* page, int row) {
 	if (!page) return;
 
-	if (pages.count() == 0)
-		common = page->owner;
-	else if (common && common != page->owner)
-		common = 0;
+	if (page->owner) {
+		if (!usedFiles.contains(page->owner)) {
+			usedFiles.insert(page->owner,0);
+			page->owner->use();
+			}
+		usedFiles[page->owner] += 1;
+		}
 	
 	if (row < 0) row = 0;
 
@@ -266,6 +285,13 @@ void NVBPageViewModel::updateSource(NVBDataSource * newobj, NVBDataSource * oldo
 			endRemoveRows();
 			}
 
+		if (oldobj->owner && usedFiles.contains(oldobj->owner)) {
+			usedFiles[oldobj->owner] -= 1;
+			if (!usedFiles[oldobj->owner]) {
+				usedFiles.remove(oldobj->owner);
+				oldobj->owner->release();
+				}
+			}
 		releaseDataSource(oldobj);
 		}
 	else
