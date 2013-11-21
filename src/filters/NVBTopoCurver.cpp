@@ -48,9 +48,9 @@ class NVBCrossLinkedGraphData : public NVBLinkedGraphData {
 		virtual double y(size_t i) const { return ydata[i * yleap];}
 	};
 
-NVBTopoCurver::NVBTopoCurver(NVB3DDataSource * source): NVBSpecFilterDelegate(source), tprovider(source), scolors(0), mode(XT) {
+NVBTopoCurver::NVBTopoCurver(NVB3DDataSource * source): NVBSpecFilterDelegate(source), tprovider(source), mode(XT) {
+	scolors = new NVBConstDiscrColorModel(Qt::black);
 	connectSignals();
-	invalidateColors();
 	}
 
 void NVBTopoCurver::setSource(NVBDataSource * source) {
@@ -73,7 +73,6 @@ void NVBTopoCurver::connectSignals() {
 	connect(tprovider, SIGNAL(dataAboutToBeChanged()), SIGNAL(dataAboutToBeChanged()));
 	connect(tprovider, SIGNAL(dataAdjusted()), SIGNAL(dataAdjusted()));
 	connect(tprovider, SIGNAL(dataChanged()), SLOT(generateCurves()));
-	connect(tprovider, SIGNAL(colorsChanged()), SLOT(invalidateColors())); // Color adjustment is not important ### I doubt that
 
 	generateCurves();
 	}
@@ -100,8 +99,6 @@ void NVBTopoCurver::generateCurves() {
 				spositions << QPointF(tprovider->position().center().x(), tprovider->position().y() + i * tprovider->position().height() / tprovider->resolution().height());
 				}
 
-			if (scolors) scolors->setNCurves(tprovider->resolution().height());
-
 			break;
 			}
 
@@ -116,8 +113,6 @@ void NVBTopoCurver::generateCurves() {
 				      );
 				spositions << QPointF(tprovider->position().x() + i * tprovider->position().width() / tprovider->resolution().width(), tprovider->position().center().y());
 				}
-
-			if (scolors) scolors->setNCurves(tprovider->resolution().width());
 
 			break;
 			}
@@ -190,17 +185,4 @@ NVBTopoCurver::~ NVBTopoCurver() {
 void NVBTopoCurverWidget::remapMode(int mode) {
 	emit curvingModeActivated((NVBTopoCurver::Mode)mode);
 	}
-
-void NVBTopoCurver::invalidateColors() {
-	if (tprovider) {
-		emit colorsAboutToBeChanged();
-
-		if (scolors) delete scolors;
-
-		const NVBContColorModel * tc = tprovider->getColorModel();
-		scolors = new NVBRGBRampDiscrColorModel(1, tc->colorize(tc->zMin()), tc->colorize(tc->zMax()));
-		connect(scolors, SIGNAL(adjusted()), SIGNAL(colorsAdjusted()));
-		emit colorsChanged();
-		}
-	}
-
+	
