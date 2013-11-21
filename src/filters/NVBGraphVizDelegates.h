@@ -38,12 +38,14 @@ class NVBCurveBunch : public QwtPlotItem {
 
 		virtual void addCurve(QwtPlotCurve * curve);
 		virtual void addCurveFromData(const QwtData * data, const QColor & color = Qt::black);
+		virtual void repaintCurve(int i, const QColor & color);
 
 		virtual void draw(QPainter *painter, const QwtScaleMap &xMap, const QwtScaleMap &yMap, const QRect &canvasRect) const;
 		virtual QwtDoubleRect boundingRect() const {return rect;}
 
 		void recalculateRect();
-
+	protected:
+		static void colorCurve(QwtPlotCurve * curve, QColor color);
 	};
 
 /**

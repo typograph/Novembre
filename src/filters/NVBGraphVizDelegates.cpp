@@ -34,16 +34,31 @@ void NVBCurveBunch::addCurve(QwtPlotCurve * curve) {
 void NVBCurveBunch::addCurveFromData(const QwtData * data, const QColor &color) {
 	QwtPlotCurve* curve = new QwtPlotCurve();
 	curve->setData(*data);
-	curve->setPen(QPen(color));
+	colorCurve(curve,color);
 	addCurve(curve);
 	}
 
+void NVBCurveBunch::colorCurve(QwtPlotCurve * curve, QColor color) {
+	if (color.alpha() < 0xFF && color.alpha() >= 0xF0) {
+		QColor c(color);
+		c.setAlpha(0xFF);
+		QPen p(QBrush(c),0xFF - color.alpha());
+		curve->setPen(p);
+		}
+	else
+		curve->setPen(QPen(color));
+	}
+	
 void NVBCurveBunch::clear() {
 	rect = QRectF();
 
 	while (!curves.isEmpty()) delete curves.takeFirst();
 	}
 
+void NVBCurveBunch::repaintCurve(int i, const QColor & color) {
+	colorCurve(curves[i],color);
+	}
+	
 void NVBCurveBunch::recalculateRect() {
 	rect = QRectF();
 
@@ -152,10 +167,8 @@ void NVBCurveVizDelegate::paintCurves() {
 	if (colors.size() < curves.size())
 		NVBOutputError("Not enough colors for repaint");
 	else {
-		for (int i = 0; i < curves.size(); i++) {
-			curves[i]->setPen(QPen(colors.at(i)));
-			}
-
+		for (int i = 0; i < curves.size(); i++)
+			repaintCurve(i, colors.at(i));
 		itemChanged();
 //    if (plot()) plot()->replot();
 		}
