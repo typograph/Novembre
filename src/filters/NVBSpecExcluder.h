@@ -36,12 +36,14 @@ class NVBSpecExcluderWidget : public QWidget {
 		QCheckBox *excl_box;
 		QRadioButton *r_excl, *r_incl;
 		QComboBox *ecurve_list, *icurve_list;
+		QCheckBox *incl_extra;
 	public:
 		NVBSpecExcluderWidget(NVBSpecDataSource * source);
 	signals :
 		void activated(bool);
 		void curveSelected(int);
 		void curveAntiSelected(int);
+		void neighboursActivated(bool);
 	public slots:
 		void reset();
 	private slots:
@@ -52,7 +54,7 @@ class NVBSpecExcluderWidget : public QWidget {
 class NVBSpecExcluder : public NVBSpecFilterDelegate {
 		Q_OBJECT
 	public:
-		enum Mode { NoExclusion = 0, Exclude, Include};
+		enum Mode { NoExclusion = 0, Exclude, Include, IncludeNeighbours};
 
 	private :
 		NVBSpecDataSource * sprovider;
@@ -81,7 +83,13 @@ class NVBSpecExcluder : public NVBSpecFilterDelegate {
 					return p;
 					}
 				else {
-					return QList<QPointF>() << sprovider->positions().at(index);
+					QList<QPointF> list;
+					if (mode == IncludeNeighbours && index > 0)
+						list << sprovider->positions().at(index-1);
+					list << sprovider->positions().at(index);
+					if (mode == IncludeNeighbours && index+1 < sprovider->positions().count())
+						list << sprovider->positions().at(index+1);
+					return list;
 					}
 				}
 			else
@@ -97,7 +105,13 @@ class NVBSpecExcluder : public NVBSpecFilterDelegate {
 					return p;
 					}
 				else {
-					return QList<QwtData*>() << sprovider->getData().at(index);
+					QList<QwtData*> list;
+					if (mode == IncludeNeighbours && index > 0)
+						list << sprovider->getData().at(index-1);
+					list << sprovider->getData().at(index);
+					if (mode == IncludeNeighbours && index+1 < sprovider->getData().count())
+						list << sprovider->getData().at(index+1);
+					return list;
 					}
 				}
 			else
@@ -111,7 +125,14 @@ class NVBSpecExcluder : public NVBSpecFilterDelegate {
 					return QSize(sprovider->datasize().width(), sprovider->datasize().height() - 1);
 					}
 				else {
-					return QSize(sprovider->datasize().width(), 1);
+					if (mode == IncludeNeighbours) {
+						if (index == 0 || index == sprovider->datasize().height()-1)
+							return QSize(sprovider->datasize().width(), 2);
+						else
+							return QSize(sprovider->datasize().width(), 3);
+						}
+					else
+						return QSize(sprovider->datasize().width(), 1);
 					}
 				}
 			else
@@ -125,6 +146,7 @@ class NVBSpecExcluder : public NVBSpecFilterDelegate {
 		void setActive(bool);
 		void setExcludeIndex(int);
 		void setIncludeIndex(int);
+		void setNeighboursActive(bool);
 		virtual void setSource(NVBDataSource * source);
 
 	private slots:
