@@ -34,6 +34,12 @@ class NVBExclInclDiscrColorModel : public NVBDiscrColorModel {
 		int eindex;
 		NVBSpecExcluder::Mode mode;
 		const NVBDiscrColorModel * model;
+		
+		static QColor makeBold(const QColor & color) {
+			QColor c(color);
+			c.setAlpha(0xFC); // Dirty bold trick
+			return c;
+		}
 	public :
 		NVBExclInclDiscrColorModel(const NVBDiscrColorModel * source = 0): NVBDiscrColorModel(), eindex(-1), mode(NVBSpecExcluder::NoExclusion), model(source) {
 			if (model)
@@ -62,8 +68,20 @@ class NVBExclInclDiscrColorModel : public NVBDiscrColorModel {
 				else
 					return model->colorize(index + 1);
 				}
-			else //  mode == NVBSpecExcluder::Include
-				return model->colorize(eindex);
+			else {//  mode == NVBSpecExcluder::Include
+				if (mode == NVBSpecExcluder::Include)
+					return model->colorize(eindex);
+				if (eindex == 0) { // First page
+					if (index == 0)
+						return makeBold(model->colorize(index));
+					else
+						return model->colorize(index);
+					
+					}
+				if (index == 1)
+					return makeBold(model->colorize(eindex + index - 1));
+				return model->colorize(eindex + index - 1);
+				}
 			}
 		void setExcludedIndex(int _eindex = -1) {
 			if (eindex != _eindex) {
@@ -86,6 +104,11 @@ class NVBExclInclDiscrColorModel : public NVBDiscrColorModel {
 				mode = NVBSpecExcluder::Include;
 				emit adjusted();
 				}
+			}
+		void includeNeighbours(bool include) {
+			if (mode == NVBSpecExcluder::NoExclusion || mode == NVBSpecExcluder::Exclude || (include && mode == NVBSpecExcluder::IncludeNeighbours) || (!include && mode == NVBSpecExcluder::Include)) return;
+			mode = include ? NVBSpecExcluder::IncludeNeighbours : NVBSpecExcluder::Include;
+			emit adjusted();
 			}
 	};
 
@@ -138,11 +161,21 @@ NVBSpecExcluderWidget::NVBSpecExcluderWidget(NVBSpecDataSource * source): QWidge
 	connect(icurve_list, SIGNAL(currentIndexChanged(int)), SLOT(inclSelected(int)));
 	l->addWidget(icurve_list);
 
+	l = new QHBoxLayout();
+	layout()->addItem(l);
+	l->addStretch();
+	incl_extra = new QCheckBox("Show neighbouring curves",this);
+	incl_extra->setChecked(false);
+	incl_extra->setEnabled(false);
+	connect(r_incl,SIGNAL(toggled(bool)),incl_extra,SLOT(setEnabled(bool)));
+	connect(incl_extra,SIGNAL(toggled(bool)),SIGNAL(neighboursActivated(bool)));
+	l->addWidget(incl_extra);
 	}
 
 void NVBSpecExcluderWidget::inclSelected(int i) {
 	r_incl->setChecked(true);
 	emit curveSelected(i);
+	emit neighboursActivated(incl_extra->isChecked());
 	}
 
 void NVBSpecExcluderWidget::exclSelected(int i) {
@@ -152,6 +185,7 @@ void NVBSpecExcluderWidget::exclSelected(int i) {
 
 void NVBSpecExcluderWidget::reset() {
 	excl_box->setChecked(false);
+	incl_extra->setEnabled(false);
 	}
 
 
@@ -165,6 +199,7 @@ QWidget * NVBSpecExcluder::widget() {
 	connect(w, SIGNAL(curveSelected(int)), SLOT(setIncludeIndex(int)));
 	connect(w, SIGNAL(curveAntiSelected(int)), SLOT(setExcludeIndex(int)));
 	connect(w, SIGNAL(activated(bool)), SLOT(setActive(bool)));
+	connect(w, SIGNAL(neighboursActivated(bool)), SLOT(setNeighboursActive(bool)));
 	connect(this, SIGNAL(delegateReset()), w, SLOT(reset()));
 	return w;
 	}
@@ -201,6 +236,15 @@ void NVBSpecExcluder::setIncludeIndex(int i) {
 	emit dataChanged();
 	}
 
+void NVBSpecExcluder::setNeighboursActive(bool active) {
+	if (mode == NoExclusion || mode == Exclude || (active && mode == IncludeNeighbours) || (!active && mode == Include)) return;
+	 
+	emit dataAboutToBeChanged();
+	mode = active ? IncludeNeighbours : Include;
+	((NVBExclInclDiscrColorModel*)scolors)->includeNeighbours(active);
+	emit dataChanged();
+}
+	
 void NVBSpecExcluder::setSource(NVBDataSource * source) {
 	if (source) source->disconnect(this);
 
