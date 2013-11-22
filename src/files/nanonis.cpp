@@ -624,7 +624,7 @@ NVBFile * NanonisFileGenerator::load3DS(const NVBAssociatedFilesInfo & info) con
 	checkHeaderParam("Grid settings");
 	checkHeaderParam("Sweep Signal");
 	checkHeaderParam("Fixed parameters");
-	checkHeaderParam("Experiment parameters");
+// 	checkHeaderParam("Experiment parameters");
 //	checkHeaderParam("");
 
 	QString gd = h.value("Grid dim").first();
