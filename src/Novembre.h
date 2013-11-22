@@ -20,9 +20,9 @@
 #define NVB_H
 
 #ifdef NVB_DEBUG
-#define NVB_VERSION "0.0.5g [DEBUG]"
+#define NVB_VERSION "0.0.5h [DEBUG]"
 #else
-#define NVB_VERSION "0.0.5g"
+#define NVB_VERSION "0.0.5h"
 #endif
 
 #include "gui/NVBMain.h"
