@@ -304,7 +304,8 @@ NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStri
 	QStringList s_offset = header.value("SCAN_OFFSET").first().split(' ', QString::SkipEmptyParts);
 
 	_position = QRectF(
-	              s_offset.at(0).toDouble() - s_range.at(0).toDouble() / 2, - s_offset.at(1).toDouble() - s_range.at(1).toDouble() / 2,
+	              s_offset.at(0).toDouble() - s_range.at(0).toDouble() / 2,
+	            - s_offset.at(1).toDouble() - s_range.at(1).toDouble() / 2,
 	              s_range.at(0).toDouble(), s_range.at(1).toDouble()
 	            );
 
@@ -561,7 +562,7 @@ NanonisHeader TDSHeader(QFile& file) {
 
 class NanonisPage_topoC : public NVB3DPage {
 	public:
-		NanonisPage_topoC(QString name, double * _data, QSize size, QRectF pos,
+		NanonisPage_topoC(QString name, double * _data, QSize size, QRectF pos, double angle,
 		                  NVBDimension x, NVBDimension y, NVBDimension z,
 		                  QMap<QString, NVBVariant> cs)
 			: NVB3DPage() {
@@ -569,7 +570,7 @@ class NanonisPage_topoC : public NVB3DPage {
 			data = _data;
 			_resolution = size;
 			_position = pos;
-			_angle = 0;
+			_angle = angle;
 			xd = x;
 			yd = y;
 			zd = z;
@@ -577,7 +578,7 @@ class NanonisPage_topoC : public NVB3DPage {
 			getMinMax();
 			setColorModel(new NVBGrayRampContColorModel(0, 1, zMin, zMax));
 			foreach(QString key, cs)
-			setComment(key, cs[key]);
+				setComment(key, cs[key]);
 			}
 	};
 
@@ -607,7 +608,6 @@ class NanonisPage_specC : public NVBSpecPage {
 			}
 		~NanonisPage_specC() { free(xdata); free(zdata); }
 	};
-
 
 NVBFile * NanonisFileGenerator::load3DS(const NVBAssociatedFilesInfo & info) const {
 	QFile file(info.first());
@@ -650,39 +650,35 @@ NVBFile * NanonisFileGenerator::load3DS(const NVBAssociatedFilesInfo & info) con
 		}
 
 	QStringList gparams = h.value("Grid settings").first().split(';');
-// 	double gcx = gparams.at(0).toDouble(&ok);
-// 	if (!ok) {
-// 		NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(0)));
-// 		return 0;
-// 		}
-// 	double gcy = gparams.at(1).toDouble(&ok);
-// 	if (!ok) {
-// 		NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(1)));
-// 		return 0;
-// 		}
-	double gw = gparams.at(2).toDouble(&ok);
 
+	double gcx = gparams.at(0).toDouble(&ok);
+	if (!ok) {
+		NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(0)));
+		return 0;
+		}
+
+	double gcy = gparams.at(1).toDouble(&ok);
+	if (!ok) {
+		NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(1)));
+		return 0;
+		}
+		
+	double gw = gparams.at(2).toDouble(&ok);
 	if (!ok) {
 		NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(2)));
 		return 0;
 		}
 
 	double gh = gparams.at(3).toDouble(&ok);
-
 	if (!ok) {
 		NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(3)));
 		return 0;
 		}
 
 	double ga = gparams.at(4).toDouble(&ok);
-
 	if (!ok) {
 		NVBOutputError(QString("Grid settings format mismatch %1").arg(gparams.at(4)));
 		return 0;
-		}
-
-	if (ga != 0) { // FIXME
-		NVBOutputPMsg("Angles not implemented");
 		}
 
 	QPair<QString, NVBDimension> sweep;
@@ -692,15 +688,15 @@ NVBFile * NanonisFileGenerator::load3DS(const NVBAssociatedFilesInfo & info) con
 	sweep = channelFromStr(h.value("Sweep Signal").first());
 
 	foreach(QString channel, h.value("Fixed parameters").first().split(';', QString::SkipEmptyParts))
-	fixed_params << channelFromStr(channel);
+		fixed_params << channelFromStr(channel);
 
 	foreach(QString channel, h.value("Experiment parameters").first().split(';', QString::SkipEmptyParts))
-	exp_params << channelFromStr(channel);
+		exp_params << channelFromStr(channel);
 
 	QList< QPair<QString, NVBDimension> > channels;
 
 	foreach(QString channel, h.value("Channels").first().split(';', QString::SkipEmptyParts))
-	channels << channelFromStr(channel);
+		channels << channelFromStr(channel);
 
 	int nParam = h.value("# Parameters (4 byte)").first().toInt();
 
@@ -799,8 +795,7 @@ NVBFile * NanonisFileGenerator::load3DS(const NVBAssociatedFilesInfo & info) con
 
 	for (int j = 0; j < exp_params.count(); j++)
 		if (exp_params.at(j).first != "X" && exp_params.at(j).first != "Y") // Skip useless X and Y
-			f->addSource(new NanonisPage_topoC(exp_params.at(j).first, paramData[j], tSize, QRectF(0, 0, gw, gh),
-			                                   NVBDimension("m"), NVBDimension("m"), exp_params.at(j).second, comments));
+			f->addSource(new NanonisPage_topoC(exp_params.at(j).first, paramData[j], tSize, QRectF(gcx-gw/2, -gcy-gh/2, gw, gh), ga, NVBDimension("m"), NVBDimension("m"), exp_params.at(j).second, comments));
 
 
 	QSize sSize(nPoints, nx * ny);
@@ -808,13 +803,19 @@ NVBFile * NanonisFileGenerator::load3DS(const NVBAssociatedFilesInfo & info) con
 	int chX = exp_params.indexOf(QPair<QString, NVBDimension>("X", NVBDimension("m")));
 	int chY = exp_params.indexOf(QPair<QString, NVBDimension>("Y", NVBDimension("m")));
 
-	for (int i = 0; i < nx * ny; i++) {
-		specPos << QPointF(paramData[chX][i], -paramData[chY][i]);
+	if (chX >= 0 && chY >=0) // Use data from the table
+		for (int i = 0; i < nx * ny; i++)
+			specPos << QPointF(paramData[chX][i], -paramData[chY][i]);
+	else {
+		ga *= 3.1415/180;
+		for (int i = 0; i < ny; i++)
+			for (int j = 0; j < nx; j++) // FIXME is nx really the fast axis?
+				specPos << QPointF(gcx - ((nx-1)/2 - j)*gw/nx*cos(ga) - ((ny-1)/2 - i)*gh/ny*sin(ga),
+				                  -gcy - ((nx-1)/2 - j)*gw/nx*sin(ga) + ((ny-1)/2 - i)*gh/ny*cos(ga));
 		}
 
 	for (int j = 0; j < channels.count(); j++)
-		f->addSource(new NanonisPage_specC(channels.at(j).first, sweep_data, channelData[j], sSize, specPos,
-		                                   sweep.second, channels.at(j).second, comments));
+		f->addSource(new NanonisPage_specC(channels.at(j).first, sweep_data, channelData[j], sSize, specPos, sweep.second, channels.at(j).second, comments));
 
 	free(fxParams);
 	return f;
