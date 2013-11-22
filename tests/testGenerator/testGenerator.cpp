@@ -8,8 +8,8 @@
 #include <QtCore/QTimer>
 #include <QtGui/QMessageBox>
 
-#include "NVBFileGenerator.h"
-#include "NVBFile.h"
+#include "core/NVBFileGenerator.h"
+#include "core/NVBFile.h"
 
 int main(int argc, char** argv) {
 

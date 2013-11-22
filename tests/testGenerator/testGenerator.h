@@ -3,8 +3,8 @@
 
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
-#include <QtCore/QString>
-#include "NVBLogger.h"
+#include <QtCore/QStringList>
+#include "core/NVBLogger.h"
 #include <QCoreApplication>
 #include <QtCore/QSettings>
 
