@@ -15,8 +15,8 @@ int main(int argc, char** argv) {
 
 	NVBTestGenApplication app(argc,argv);
 	
-	if (argc > 1)
-		app.filename = argv[1];
+	for (int i = 1; i<argc; i++)
+		app.filenames << QString(argv[i]);
 
 	QTimer::singleShot(1,&app,SLOT(openFile()));
 
@@ -44,33 +44,37 @@ NVBTestGenApplication::~ NVBTestGenApplication()
 
 void NVBTestGenApplication::openFile() {
 //	if (!quiet)
+	int r;
+	TESTGENERATOR * generator = new TESTGENERATOR();
+	foreach(QString filename, filenames) {
 		printf("%s ",filename.toLatin1().constData());
-	int r = openFile(filename);
-	switch(r) {
-		case status_SUCCESS:
-			printf("Success (%d/%d pages)\n",pages_loaded_file,pages_loaded_fileinfo);
-			break;
-		case status_UNLOADABLE_FILEINFO:
-			printf("FileInfo loading failed\n");
-			break;
-		case status_UNLOADABLE_FILE:
-			printf("File loading failed (%d pages)\n", pages_loaded_fileinfo);
-			break;
-		case status_INVALID:
-			printf("Invalid parameters\n");
-			break;
-		case status_TECHFAILURE:
-			printf("Technical problems\n");
-			break;
-		default:
-			printf("Unknown error\n");
-			break;
-		}
+		r = openFile(filename, generator);
+		switch(r) {
+			case status_SUCCESS:
+				printf("Success (%d/%d pages)\n",pages_loaded_file,pages_loaded_fileinfo);
+				break;
+			case status_UNLOADABLE_FILEINFO:
+				printf("FileInfo loading failed\n");
+				break;
+			case status_UNLOADABLE_FILE:
+				printf("File loading failed (%d pages)\n", pages_loaded_fileinfo);
+				break;
+			case status_INVALID:
+				printf("Invalid parameters\n");
+				break;
+			case status_TECHFAILURE:
+				printf("Technical problems\n");
+				break;
+			default:
+				printf("Unknown error\n");
+				break;
+			}
+	}
 
 	exit(r);
 }
 
-int NVBTestGenApplication::openFile(QString name) {
+int NVBTestGenApplication::openFile(QString name, TESTGENERATOR * _gen = 0) {
 
 	if (name.isEmpty())
 		return status_INVALID;
@@ -80,25 +84,33 @@ int NVBTestGenApplication::openFile(QString name) {
 //		return;
 //		}
 
-	TESTGENERATOR * generator = new TESTGENERATOR();
-	
-	if (!generator) return status_TECHFAILURE;
+	TESTGENERATOR * generator;
+	if (_gen)
+		generator = _gen;
+	else {
+		generator = new TESTGENERATOR();
+		if (!generator) return status_TECHFAILURE;
+		}
 
 	NVBAssociatedFilesInfo inf = generator->associatedFiles(name);
 	
 	NVBFileInfo * fi = inf.loadFileInfo();
-	if (!fi)
+	if (!fi) {
+		if (!_gen) delete generator;
 		return status_UNLOADABLE_FILEINFO;
+		}
 	pages_loaded_fileinfo = fi->pages.count();
 	delete fi;
 	
 	NVBFile * fl = generator->loadFile(inf);
-	if (!fl)
+	if (!fl) {
+		if (!_gen) delete generator;		
 		return status_UNLOADABLE_FILE;
+		}
 	pages_loaded_file = fl->rowCount();
 	delete fl;
 
-	delete generator;
+	if (!_gen) delete generator;
 
 	return status_SUCCESS;
 }
