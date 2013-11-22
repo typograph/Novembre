@@ -24,7 +24,7 @@ class NVBTestGenApplication : public QCoreApplication {
 Q_OBJECT
 public:
 
-	QString filename;
+	QStringList filenames;
 	int pages_loaded_file;
 	int pages_loaded_fileinfo;
 
@@ -33,7 +33,7 @@ public:
 
 public slots:
 	void openFile();
-	int openFile(QString);
+	int openFile(QString, TESTGENERATOR *);
 
 #ifdef NVB_ENABLE_LOG
 private slots:
