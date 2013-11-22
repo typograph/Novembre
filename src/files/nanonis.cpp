@@ -342,6 +342,7 @@ NanonisPage::NanonisPage(QFile & file, const NanonisHeader & header, const QStri
 
 	flipMem<double>(data, tdata, _resolution.width(), _resolution.height(), otherDirection, header.value("SCAN_DIR").first() != "down");
 
+	free(tdata);
 	getMinMax();
 
 	// colors
