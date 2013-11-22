@@ -487,8 +487,11 @@ NVBFileInfo * NanonisFileGenerator::loadSpecAggregationInfo(const NVBAssociatedF
 	if (h.contains(x) && !h.value(x).isEmpty())
 
 QPair<QString, NVBDimension> channelFromStr(QString value) {
-	static QRegExp chName("^([^\\(]*)(?: \\((.*)\\))?$");
-
+	static QRegExp chNameCompiled("([^\\(]*)(?:\\s\\((.*)\\))?");
+	
+	// QRegExp is not thread-safe, but I don't want to compile it every time
+	QRegExp chName(chNameCompiled);
+	
 	if (chName.exactMatch(value)) {
 //		if (chName.capturedText().count());
 		return QPair<QString, NVBDimension>(chName.cap(1), NVBDimension(chName.cap(2)));

@@ -44,8 +44,11 @@ QStringList CreatecFileGenerator::availableInfoFields() const {
 	}
 
 NVBAssociatedFilesInfo CreatecFileGenerator::associatedFiles(QString filename) const {
-	static QRegExp multispec = QRegExp("[/\\\\](A[0-9]*\\.[0-9]*)\\.[XMLR][0-9].*\\.VERT$", Qt::CaseInsensitive, QRegExp::RegExp);
+	static QRegExp multispecCompiled = QRegExp("[/\\\\](A[0-9]*\\.[0-9]*)\\.[XMLR][0-9].*\\.VERT$", Qt::CaseInsensitive, QRegExp::RegExp);
 
+	// QRegExp is not thread-safe, but I don;t want to compile it too often
+	QRegExp multispec(multispecCompiled);
+	
 	if (!filename.contains(multispec))
 //		if (multispec.indexIn(filename) == -1)
 		return NVBFileGenerator::associatedFiles(filename);
