@@ -304,6 +304,7 @@ void NVBMain::createMenus() {
 	QList<NVBPageToolbar*> tBars = qApp->property("toolsFactory").value<NVBToolsFactory*>()->generateToolbars(NVB::DefaultView);
 	foreach(QToolBar * tBar, tBars) {
 		addToolBar(tBar);
+		tBar->setParent(this);
 		connect(tBar, SIGNAL(actionTriggered(QAction*)), this, SLOT(redirectAction(QAction*)));
 		connect(this, SIGNAL(pageTypeChanged(NVB::PageType)), tBar, SLOT(switchPageType(NVB::PageType)));
 		connect(this, SIGNAL(viewTypeChanged(NVB::ViewType)), tBar, SLOT(switchViewType(NVB::ViewType)));
