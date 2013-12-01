@@ -24,6 +24,7 @@
 #include "NVBSpecMath.h"
 #include "NVBSpecShift.h"
 #include "NVBSpecSmooth.h"
+#include "NVBSpecFFTFilter.h"
 #include "../core/NVBFilterDelegate.h"
 #include <QMessageBox>
 
@@ -35,9 +36,10 @@ bool NVBSpecToolsProvider::hasDelegate(quint16 DID) {
 		case 0x4365 : // 'Ce' -- Curve exclusion
 		case 0x436D : // 'Cm' -- Curve mathematics
 		case 0x4373 : // 'Cs' -- Curve shift
+		case 0x4654 : // 'FT' -- Fourier filter
 
 //    case 0x506D : return true; // 'Pm' -- peak matching
-		case 0x1111 : // 'Sm' -- Smoothing
+		case 0x536D : // 'Sm' -- Smoothing
 			return true;
 
 		default :
@@ -132,8 +134,18 @@ void NVBSpecToolsProvider::activateDelegate(quint16 delegateID, NVBDataSource * 
 
 			break;
 			}
+			
+		case 0x4654 : {
+			if (source->type() == NVB::SpecPage) {
+				NVBSpecFFTFilter * filtered = new NVBSpecFFTFilter((NVBSpecDataSource*)source);
+				wnd->setSource(filtered);
+				wnd->addControlWidget(filtered->widget());
+				}
 
-		case 0x1111 : {
+			break;
+			}
+
+		case 0x536D : {
 			if (source->type() == NVB::SpecPage) {
 				NVBSpecSmoother * filtered = new NVBSpecSmoother((NVBSpecDataSource*)source);
 				wnd->setSource(filtered);
@@ -171,7 +183,11 @@ void NVBSpecToolsProvider::populateToolbar(NVB::ViewType vtype, NVBPageToolbar *
 	toolbar->addActionWithType(a, NVB::SpecPage, NVB::AnyView);
 
 	a = NVBSpecSmoother::action();
-	a->setData(0x4E531111);
+	a->setData(0x4E53536D);
+	toolbar->addActionWithType(a, NVB::SpecPage, NVB::AnyView);
+
+	a = NVBSpecFFTFilter::action();
+	a->setData(0x4E534654);
 	toolbar->addActionWithType(a, NVB::SpecPage, NVB::AnyView);
 
 	a = NVBSpecSlicerDelegate::action();

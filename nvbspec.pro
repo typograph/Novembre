@@ -12,7 +12,8 @@ HEADERS += \
 		src/filters/NVBSpecExcluder.h \
 		src/filters/NVBSpecSmooth.h \
 		src/filters/NVBPhysSpinBox.h \
-		src/filters/NVBSpecSlicer.h
+		src/filters/NVBSpecSlicer.h \
+		src/filters/NVBSpecFFTFilter.h
 
 SOURCES += \
 		src/filters/NVBSpecAverager.cpp \
@@ -23,7 +24,10 @@ SOURCES += \
 		src/filters/NVBSpecShift.cpp \
 		src/filters/NVBSpecExcluder.cpp \
 		src/filters/NVBSpecSmooth.cpp \
-		src/filters/NVBSpecSlicer.cpp
+		src/filters/NVBSpecSlicer.cpp \
+		src/filters/NVBSpecFFTFilter.cpp
+
+LIBS += -lfftw3 -lm
 
 TARGET = lib/tools/nvbspec
 
