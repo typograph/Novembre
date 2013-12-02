@@ -167,7 +167,7 @@ void NVBSpecFFTFilter::recalculateData() {
 	QSize s = sprovider->datasize();
 	int n = s.width();
 	
-	memcpy(fft_data, fft_cdata, s.width()*s.height());
+	memcpy(fft_data, fft_cdata, sizeof(double)*s.width()*s.height());
 	
 	switch(mode) {
 		case LowPass:
