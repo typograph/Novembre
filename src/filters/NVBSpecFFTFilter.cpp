@@ -130,11 +130,11 @@ NVBSpecFFTFilter::NVBSpecFFTFilter(NVBSpecDataSource * source)
 void NVBSpecFFTFilter::setMode(int i) {
 	Filter new_mode = (Filter) i;
 	if (mode != new_mode) {
-		bool changed = mode == None || new_mode == None;
-		if (changed) emit dataAboutToBeChanged();
+// 		bool changed = mode == None || new_mode == None;
+// 		if (changed) emit dataAboutToBeChanged();
 		mode = new_mode;
-		if (mode !=  None) recalculateData();
-		if (changed) emit dataChanged();
+		/*if (mode !=  None)*/ recalculateData();
+// 		if (changed) emit dataChanged();
 		}
 	}
 
@@ -284,7 +284,7 @@ void NVBSpecFFTFilter::setFilterFreq(int low, int high) {
 	if (low != f_low || high != f_high) {
 		f_low = low;
 		f_high = high;
-		if (mode != None)
+// 		if (mode != None)
 			recalculateData();
 		}
 	}
