@@ -80,18 +80,18 @@ class NVBSpecFFTFilter : public NVBSpecFilterDelegate {
 		virtual inline QList<QPointF> positions() const { return sprovider->positions(); }
 
 		virtual inline QList<QwtData*> getData() const {
-			if (mode == None)
-				return sprovider->getData();
-			else
+// 			if (mode == None)
+// 				return sprovider->getData();
+// 			else
 				return sdata;
 			}
 
 		virtual inline QSize datasize() const { return sprovider->datasize(); }
 
 		virtual inline QRectF boundingRect() const {
-			if (mode == None)
-				return sprovider->boundingRect();
-			else
+// 			if (mode == None)
+// 				return sprovider->boundingRect();
+// 			else
 				return NVBSpecDataSource::boundingRect();
 			}
 		virtual inline QRectF occupiedArea() const { return sprovider->occupiedArea(); }
