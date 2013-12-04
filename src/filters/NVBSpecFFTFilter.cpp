@@ -47,28 +47,23 @@ class XFwdData : public QwtData {
 
 NVBSpecFFTFilterWidget::NVBSpecFFTFilterWidget(int n, int f_low, int f_high, int mode): QWidget() {
 
-	setLayout(new QVBoxLayout(this));
-	QHBoxLayout * l = new QHBoxLayout();
-	layout()->addItem(l);
-	l->addWidget(new QLabel("Filter",this));
+	QGridLayout * gl = new QGridLayout(this);
+	setLayout(gl);
+	gl->addWidget(new QLabel("Filter",this),0,0);
 	filters = new QComboBox(this);
 	filters->addItems(QStringList() << "None" << "Lowpass" << "Highpass" << "Bandpass" << "Bandstop");
 	connect(filters, SIGNAL(currentIndexChanged(int)), SLOT(modeIndexChanged(int)));
 	filters->setCurrentIndex(mode);
-	l->addWidget(filters);
+	gl->addWidget(filters,0,1);
 	
-	l = new QHBoxLayout();
-	layout()->addItem(l);
-	l->addWidget(new QLabel("Low",this));
+	gl->addWidget(new QLabel("Low",this),1,0);
 	low = new QSlider(Qt::Horizontal,this);
-	l->addWidget(low);
+	gl->addWidget(low,1,1);
 	connect(low,SIGNAL(valueChanged(int)),SLOT(lowFreqChanged(int)));
 	
-	l = new QHBoxLayout();
-	layout()->addItem(l);
-	l->addWidget(new QLabel("High",this));
+	gl->addWidget(new QLabel("High",this),2,0);
 	high = new QSlider(Qt::Horizontal,this);
-	l->addWidget(high);
+	gl->addWidget(high,2,1);
 	connect(high,SIGNAL(valueChanged(int)),SLOT(highFreqChanged(int)));
 	
 	setFreqRange(n);
