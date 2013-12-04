@@ -370,7 +370,7 @@ NVBFile * NanonisFileGenerator::loadSpecAggregation(const NVBAssociatedFilesInfo
 
 	QStringList names = first.readLine().split('\t', QString::SkipEmptyParts);
 
-	for (int i = 1; i < names.count(); i++)
+	for (int i = 0; i < names.count(); i++)
 		pages << new NVBExpandableSpecPage(names.at(i), names.first());
 
 	foreach(QString filename, info) {
@@ -400,7 +400,7 @@ NVBFile * NanonisFileGenerator::loadSpecAggregation(const NVBAssociatedFilesInfo
 			QString clmns = specdata.readLine(); // Column names
 			QList<QVector<double> > cdata;
 
-			for (int i = -1; i < pages.count(); i++)
+			for (int i = 0; i < pages.count(); i++)
 				cdata << QVector<double>();
 
 			while (!specdata.atEnd()) {
@@ -426,8 +426,13 @@ NVBFile * NanonisFileGenerator::loadSpecAggregation(const NVBAssociatedFilesInfo
 						cdata[j] << vdata.at(j).toDouble();
 				}
 
+			QVector<double> tdata;
+			tdata.reserve(cdata.at(0).count());
+			for (int i = 0; i < cdata.at(0).count(); i++)
+				tdata << i;
+				
 			for (int i = 0; i < pages.count(); i++)
-				pages[i]->addNewSpecPoint(xpos, ypos, new QwtArrayData(cdata.at(0), cdata.at(i + 1)));
+				pages[i]->addNewSpecPoint(xpos, ypos, new QwtArrayData(tdata, cdata.at(i)));
 
 			// TODO Do something with z;
 			}
@@ -472,7 +477,7 @@ NVBFileInfo * NanonisFileGenerator::loadSpecAggregationInfo(const NVBAssociatedF
 		nxs += 1;
 		}
 
-	for (int i = 1; i < names.count(); i++)
+	for (int i = 0; i < names.count(); i++)
 		fi->pages.append(NVBPageInfo(names.at(i), NVB::SpecPage, QSize(nxs, info.count()), NVBPhysValue(nxs, NVBDimension()), NVBPhysValue(), QMap<QString, NVBVariant>()));
 
 	f.close();
