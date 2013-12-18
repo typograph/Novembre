@@ -50,8 +50,8 @@ class NanonisFileGenerator: public QObject, public NVBFileGenerator {
 
 		friend class NanonisTopoPage;
 
-		NVBFile * loadSpecAggregation(const NVBAssociatedFilesInfo & info) const;
-		NVBFileInfo * loadSpecAggregationInfo(const NVBAssociatedFilesInfo & info) const;
+		NVBFile * loadSpectrum(const NVBAssociatedFilesInfo & info) const;
+		NVBFileInfo * loadSpectrumInfo(const NVBAssociatedFilesInfo & info) const;
 
 		NVBFile * load3DS(const NVBAssociatedFilesInfo & info) const;
 		NVBFileInfo * load3DSInfo(const NVBAssociatedFilesInfo & info) const;
