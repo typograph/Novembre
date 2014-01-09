@@ -96,6 +96,21 @@ NVBTopoLevelerWidget::NVBTopoLevelerWidget(NVBTopoLeveler::Mode mode, NVB::ViewT
 			action->setChecked(true);
 		}
 
+		// Parabola leveling
+		{
+		QAction * action = actionCnt->addAction(QIcon(_lv_prbl),"Parabola substraction");
+		action->setCheckable(true);
+		connect(action,SIGNAL(triggered()),SLOT(parabolaModeActivated()));
+		QToolButton * tb = new QToolButton(this);
+		tb->setDefaultAction(action);
+		tb->setMinimumSize(tb->iconSize());
+		tb->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
+		l->addWidget(tb);
+		
+		if (mode == NVBTopoLeveler::Parabola)
+			action->setChecked(true);
+		}
+		
 #ifdef WITH_2DVIEW
 
 	if (vtype == NVB::TwoDView) {
@@ -113,22 +128,6 @@ NVBTopoLevelerWidget::NVBTopoLevelerWidget(NVBTopoLeveler::Mode mode, NVB::ViewT
 
 			if (mode == NVBTopoLeveler::ThreePointsLeveling)
 				action->setChecked(true);
-			}
-
-		// Parabola leveling
-			{
-			/* // TODO find the good algorithm for this
-				action = actionCnt->addAction(QIcon(_lv_prbl),"Parabola substraction");
-				action->setCheckable(true);
-				connect(action,SIGNAL(triggered()),SLOT(parabolaModeActivated()));
-				tb = new QToolButton(this);
-				tb->setDefaultAction(action);
-				tb->setMinimumSize(tb->iconSize());
-				tb->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
-				l->addWidget(tb);
-				if (mode == NVBTopoLeveler::Parabola)
-					action->setChecked(true);
-			*/
 			}
 
 		}
@@ -273,8 +272,6 @@ void NVBTopoLeveler::levelByOffset() {
 void NVBTopoLeveler::levelByLineSlope() {
 	reset();
 
-//   fdata = (double*)calloc(sizeof(double),tprovider->resolution().width()*tprovider->resolution().height());
-
 	// TODO think about using getData(x,y)
 	// FIXME This algorithm will work poorly with scans done in y direction
 
@@ -282,6 +279,14 @@ void NVBTopoLeveler::levelByLineSlope() {
 	QSize s = tprovider->resolution();
 //  memcpy(fdata, tdata, s.width());
 
+	// The X values are integers between 0 and w-1, and can be easily added together
+	int N = s.width();
+	unsigned long sx, sx2;
+	sx = N*(N-1)/2;
+	sx2 = sx*(2*N-1)/3;
+
+	double den = N*sx2-sx*sx;
+	
 	int aoff, i;
 	int cnt = 0;
 
@@ -296,22 +301,36 @@ void NVBTopoLeveler::levelByLineSlope() {
 			
 		cnt = 0;
 		
-		double slope = (tdata[aoff] - tdata[aoff + s.width() - 1]) / (s.width() - 1);
-
+		double slope = 0;
 		double offset = 0;
 
+		double sy=0, syx = 0;
+		
 		for (int j = s.width() - 1; j >= 0; j--)
 			if (FINITE(tdata[j + aoff])) {
-				offset += tdata[j + aoff];
+				sy += tdata[j + aoff];
+				syx += tdata[j + aoff]*j;
 				cnt += 1;
 				}
 
-		offset /= cnt;
+		if (cnt != N) { // Recalculate sum of x
+			unsigned long zx, zx2;
+			zx = cnt*(cnt-1)/2;
+			zx2 = zx*(2*cnt-1)/3;
+			
+			double zden = N*zx2-zx*zx;
+			
+			slope = ( N*syx - zx*sy )/zden;
+			offset = ( zx2*sy - zx*syx)/zden;
+			}
+		else {
+			slope = ( N*syx - sx*sy )/den;
+			offset = ( sx2*sy - sx*syx)/den;
+			}
 
-		offset += slope * (s.width() - 1) / 2;
 
 		for (int j = s.width() - 1; j >= 0; j--) {
-			fdata[j + aoff] = tdata[j + aoff] - offset + slope * j;
+			fdata[j + aoff] = tdata[j + aoff] - offset - slope * j;
 			}
 		}
 
@@ -320,6 +339,94 @@ void NVBTopoLeveler::levelByLineSlope() {
 	autoScaleColors();
 	}
 
+void NVBTopoLeveler::levelWithParabola() {
+	reset();
+
+	// TODO think about using getData(x,y)
+	// FIXME This algorithm will work poorly with scans done in y direction
+
+	const double * const tdata = tprovider->getData();
+	QSize s = tprovider->resolution();
+//  memcpy(fdata, tdata, s.width());
+
+	int aoff, i;
+	int cnt = 0;
+	
+	// Note: Formulae obtained by differentiating the least-square-error of a parabolic fit
+	
+	// The X values are integers between 0 and w-1, and can be easily added together
+	int N = s.width();
+	unsigned long sx1, sx2, sx3, sx4;
+	sx1 = N*(N-1)/2;
+	sx2 = sx1*(2*N-1)/3;
+	sx3 = sx1*sx1;
+	sx4 = sx2*(3*N*N - 3*N - 1)/5;
+
+	double g2 =   N*sx2 - sx3; // sx3 = sx1*sx1
+	double g3 =   N*sx3 - sx1*sx2;
+	double g4 =   N*sx4 - sx2*sx2;
+	double g4x =sx1*sx3 - sx2*sx2;
+	double g5 = sx1*sx4 - sx2*sx3;
+	double g6 = sx2*sx4 - sx3*sx3;
+	
+	double den = (g2*g4 - g3*g3)/N;
+	
+	// Iterate over lines
+	for (i = s.height(), aoff = --i * s.width() ;
+	     i >= 0; aoff = --i * s.width()) {
+		if (!FINITE(tdata[aoff]) || !FINITE(tdata[aoff + s.width() - 1])) {
+			for (int j = s.width() - 1; j >= 0; j--)
+				fdata[j + aoff] = tdata[j + aoff];
+			continue;
+			}
+			
+		cnt = 0;
+		
+		double a=0, b=0, c=0;
+		double sy1=0, syx1=0, syx2=0;
+		
+		for (int j = s.width() - 1; j >= 0; j--)
+			if (FINITE(tdata[j + aoff])) {
+				sy1  += tdata[j + aoff];
+				syx1 += tdata[j + aoff]*j;
+				syx2 += tdata[j + aoff]*j*j;
+				cnt += 1;
+				}
+
+		if (cnt != N) { // Recalculate sum of x
+			unsigned long zx1, zx2, zx3, zx4;
+			zx1 = cnt*(cnt-1)/2;
+			zx2 = zx1*(2*cnt-1)/3;
+			zx3 = zx1*zx1;
+			zx4 = zx2*(3*cnt*cnt - 3*cnt - 1)/5;
+			
+			double zg2 =   N*zx2 - zx3; // sx3 = sx1*sx1
+			double zg3 =   N*zx3 - zx1*zx2;
+			double zg4 =   N*zx4 - zx2*zx2;
+			double zg4x =zx1*zx3 - zx2*zx2;
+			double zg5 = zx1*zx4 - zx2*zx3;
+			double zg6 = zx2*zx4 - zx3*zx3;
+			
+			double zden = (zg2*zg4 - zg3*zg3)/N;
+			
+			a = ( zg4x*sy1 - zg3*syx1 + zg2 *syx2 )/zden;
+			b = (-zg5 *sy1 + zg4*syx1 - zg3 *syx2 )/zden;
+			c = ( zg6 *sy1 - zg5*syx1 + zg4x*syx2 )/zden;
+			}
+		else {
+			a = ( g4x*sy1 - g3*syx1 + g2 *syx2 )/den;
+			b = (-g5 *sy1 + g4*syx1 - g3 *syx2 )/den;
+			c = ( g6 *sy1 - g5*syx1 + g4x*syx2 )/den;
+			}
+				
+		for (int j = s.width() - 1; j >= 0; j--)
+			fdata[j + aoff] = tdata[j + aoff] - c - b*j -a*j*j;
+		}
+
+	mode = Parabola;
+	getMinMax();
+	autoScaleColors();
+	}
 #ifdef WITH_2DVIEW
 void NVBTopoLeveler::levelByThreePoints(QRectF p1, QRectF p2, QRectF p3) {
 	stopInteractiveMode();
@@ -417,11 +524,6 @@ void NVBTopoLeveler::setMode(Mode new_mode) {
 		switch (new_mode) {
 			case NoLeveling:
 				break; // Cannot happen
-#ifdef WITH_2DVIEW
-
-			case Parabola:
-				break;  // Cannot happen
-#endif
 
 			case LineLeveling: {
 				if (!isLeveling) emit dataAboutToBeChanged();
@@ -459,6 +561,18 @@ void NVBTopoLeveler::setMode(Mode new_mode) {
 				break;
 				}
 
+			case Parabola: {
+				if (!isLeveling) emit dataAboutToBeChanged();
+
+				isLeveling = true;
+				levelWithParabola();
+
+				if (!wasLeveling) emit dataChanged();
+				else emit dataAdjusted();
+
+				break;
+				}
+
 #ifdef WITH_2DVIEW
 
 			case ThreePointsLeveling: {
@@ -479,12 +593,6 @@ void NVBTopoLeveler::setMode(Mode new_mode) {
 				break;
 				}
 
-			/*
-						case Parabola: {
-							levelWithParaboloid();
-							break;
-							}
-			*/
 #endif
 			/*      default : {
 							mode = NoLeveling;
@@ -525,6 +633,11 @@ void NVBTopoLeveler::recalculate() {
 			break;
 			}
 
+		case Parabola: {
+			levelWithParabola();
+			break;
+			}
+
 #ifdef WITH_2DVIEW
 
 		case ThreePointsLeveling: {
@@ -537,11 +650,6 @@ void NVBTopoLeveler::recalculate() {
 
 #endif
 
-		/*
-				case : {
-					break;
-					}
-		*/
 		default : {
 			mode = NoLeveling;
 			isLeveling = false;

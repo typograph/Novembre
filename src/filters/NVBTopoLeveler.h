@@ -105,12 +105,11 @@ class NVBTopoLeveler : public NVB3DFilterDelegate {
 		  NoLeveling = 0,
 		  LineLeveling,
 		  OffsetLeveling,
-		  LineSlopeLeveling
+		  LineSlopeLeveling,
 #ifdef WITH_2DVIEW
-		  ,
 		  ThreePointsLeveling,
-		  Parabola
 #endif
+		  Parabola
 		};
 
 	private:
@@ -130,8 +129,7 @@ class NVBTopoLeveler : public NVB3DFilterDelegate {
 		void levelByLine();
 		void levelByOffset();
 		void levelByLineSlope();
-
-//  void levelWithParabola();
+		void levelWithParabola();
 
 #ifdef WITH_2DVIEW
 		QRect discretizeRect(QRectF rect);
@@ -234,9 +232,9 @@ class NVBTopoLevelerWidget : public QWidget {
 		void lineLevelingModeActivated() { emit levelingModeActivated(NVBTopoLeveler::LineLeveling); }
 		void offsetLevelingModeActivated() { emit levelingModeActivated(NVBTopoLeveler::OffsetLeveling); }
 		void lineSlopeLevelingModeActivated() { emit levelingModeActivated(NVBTopoLeveler::LineSlopeLeveling); }
+		void parabolaModeActivated() { emit levelingModeActivated(NVBTopoLeveler::Parabola); }
 #ifdef WITH_2DVIEW
 		void threePointsLevelingModeActivated() { emit levelingModeActivated(NVBTopoLeveler::ThreePointsLeveling); }
-		void parabolaModeActivated() { emit levelingModeActivated(NVBTopoLeveler::Parabola); }
 #endif
 	public:
 		NVBTopoLevelerWidget(NVBTopoLeveler::Mode mode, NVB::ViewType vtype,  QWidget * parent = 0);

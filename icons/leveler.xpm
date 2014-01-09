@@ -160,6 +160,46 @@ const char * _lv_slopelv[] = {
 };
 
 /* XPM */
+const char * _lv_prbl[] = {
+/*columns rows colors char-per-pixel */
+"32 32 2 1",
+"  c None",
+"X c black",
+"X X                 X X         ",
+" X X               X X X        ",
+"X X                 X X         ",
+" X X               X X          ",
+"X X X             X X X         ",
+" X X X           X X X          ",
+"  X X             X X           ",
+" X X X           X X X          ",
+"  X X X         X X X           ",
+" X X X           X X X          ",
+"  X X X         X X X           ",
+"   X X           X X            ",
+"  X X X         X X X           ",
+"   X X X       X X X            ",
+"  X X X         X X X           ",
+"   X X X       X X X            ",
+"    X X         X X             ",
+"   X X X       X X X            ",
+"    X X         X X             ",
+"   X X X       X X X            ",
+"    X X         X X             ",
+"     X X       X X              ",
+"      X X     X X               ",
+"     X X X   X X X              ",
+"      X X     X X               ",
+"     X X X   X X X              ",
+"      X X X X X X               ",
+"       X X X X X                ",
+"        X X X X                 ",
+"         X X X                  ",
+"                                ",
+"                                "
+};
+
+/* XPM */
 const char * _lv_3ptslv[] = {
 /*columns rows colors char-per-pixel */
 "32 32 3 1",
