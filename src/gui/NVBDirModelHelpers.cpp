@@ -270,6 +270,7 @@ void NVBDirEntry::populate(NVBFileFactory * fileFactory) {
 				QDir rdir(dir);
 				rdir.setPath(folder.absoluteFilePath());
 				folders << new NVBDirEntry(this, folder.fileName(), rdir, true);
+				folders.last()->filter(accepted);
 				folders.last()->sort(sorter);
 				}
 
@@ -439,6 +440,7 @@ void NVBDirEntry::addFolder(NVBDirEntry * folder) {
 	if (folders.indexOf(folder) == -1) {
 		emit beginOperation(this, folders.size(), 1, FolderInsert);
 		folders.append(folder);
+		folder->filter(accepted);
 		folder->sort(sorter);
 		emit endOperation();
 		}
@@ -448,6 +450,7 @@ void NVBDirEntry::insertFolder(int index, NVBDirEntry *folder) {
 	if (folders.indexOf(folder) == -1) {
 		emit beginOperation(this, index, 1, FolderInsert);
 		folders.insert(index, folder);
+		folder->filter(accepted);
 		folder->sort(sorter);
 		emit endOperation();
 		}
