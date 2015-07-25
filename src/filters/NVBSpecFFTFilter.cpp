@@ -98,6 +98,8 @@ void NVBSpecFFTFilterWidget::highFreqChanged(int freq) {
 		emit rangeChanged(low->value(), freq);
 	}
 
+void NVBSpecFFTFilterWidget::reset() {
+	}
 	
 QWidget * NVBSpecFFTFilter::widget() {
 	NVBSpecFFTFilterWidget * w = new NVBSpecFFTFilterWidget(sprovider->datasize().width(), f_low, f_high, mode);
