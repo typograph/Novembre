@@ -56,6 +56,9 @@ class NanonisFileGenerator: public QObject, public NVBFileGenerator {
 		NVBFile * load3DS(const NVBAssociatedFilesInfo & info) const;
 		NVBFileInfo * load3DSInfo(const NVBAssociatedFilesInfo & info) const;
 
+		NVBFile * loadSXM(const NVBAssociatedFilesInfo & info) const;
+		NVBFileInfo * loadSXMInfo(const NVBAssociatedFilesInfo & info) const;
+
 	public:
 		NanonisFileGenerator(): NVBFileGenerator() {;}
 		virtual ~NanonisFileGenerator() {;}

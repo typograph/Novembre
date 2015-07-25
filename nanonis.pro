@@ -10,6 +10,9 @@ DEFINES += WITH_SPEC_AGGR
 HEADERS += \
 	  src/files/nanonis.h
 SOURCES += \
+	  src/files/nanonis.dat.cpp \
+	  src/files/nanonis.3ds.cpp \
+	  src/files/nanonis.sxm.cpp \
 	  src/files/nanonis.cpp
 
 TARGET = lib/files/nanonis
